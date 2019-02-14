@@ -1,0 +1,26 @@
+{
+  "name": "nstrumenta",
+  "version": "1.0.1",
+  "description": "sandbox interface for nstrumenta",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "npx tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nstrumenta/nstrumenta.git"
+  },
+  "keywords": [
+    "nstrumenta"
+  ],
+  "author": "Tyler Bryant",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nstrumenta/nstrumenta/issues"
+  },
+  "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
+  "devDependencies": {
+    "typescript": "^3.3.3"
+  }
+}
