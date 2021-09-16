@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon src/index.ts",
+    "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix"
   },
   "repository": {
     "type": "git",
@@ -26,7 +27,15 @@
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
     "@types/node": "^16.7.13",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-airbnb": "^0.0.1-security",
+    "eslint-plugin-prettier": "^4.0.0",
     "nodemon": "^2.0.12",
+    "prettier": "^2.4.1",
+    "prettier-eslint": "^13.0.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.2"
   },
