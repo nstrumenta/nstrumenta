@@ -18,6 +18,7 @@
   "keywords": [
     "nstrumenta"
   ],
+  "type": "module",
   "author": "Tyler Bryant",
   "license": "MIT",
   "bugs": {
@@ -25,14 +26,20 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
+    "@types/firebase": "^3.2.1",
+    "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
     "nodemon": "^2.0.12",
+    "prettier": "^2.4.1",
     "ts-node": "^10.2.1",
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "@types/firebase": "^3.2.1",
+    "axios": "^0.21.4",
+    "colors": "^1.4.0",
     "commander": "^8.1.0",
-    "firebase": "^9.0.2"
+    "conf": "^10.0.3",
+    "firebase": "^9.0.2",
+    "inquirer": "^8.1.5"
   }
 }
