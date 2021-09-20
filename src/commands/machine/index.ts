@@ -24,13 +24,13 @@ export const list = async (projectId: string) => {
       return console.log("No project set - use 'auth set [[projectId]]' first");
     }
     console.log(`List host machines for ${magenta(current)}\n`);
-    const apiKey = config.get(`keys.${current}`, '') as string;
+    const key = config.get(`keys.${current}`, '') as string;
 
-    console.log(`api key: ${green(apiKey)}`);
+    console.log(`api key: ${green(key)}`);
     const response = await axios.get(endpoints.GET_MACHINES, {
-      data: { apiKey },
+      data: { key },
       headers: {
-        'X-API-Key': apiKey,
+        'x-api-key': key,
       },
     });
     console.log(response);
