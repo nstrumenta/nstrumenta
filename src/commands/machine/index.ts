@@ -5,19 +5,22 @@ import Colors from 'colors';
 // import { schema } from '../../schema.js';
 // import { Keys } from '../../index';
 
-const { cyan, green, yellow, magenta } = Colors;
+const { cyan, green, yellow, magenta, red } = Colors;
 
 const prompt = Inquirer.createPromptModule();
 
-const endpoints = {
-  GET_MACHINES: 'https://us-central1-nstrumenta-dev.cloudfunctions.net/getMachines',
-};
+const endpoints = process.env.LOCAL
+  ? {
+      GET_MACHINES: 'http://localhost:8080',
+    }
+  : {
+      GET_MACHINES: 'https://us-central1-nstrumenta-dev.cloudfunctions.net/getMachines',
+    };
 
 const config = new Conf();
 
 export const list = async (projectId: string) => {
   try {
-    // TODO: move this getting of api key to a command hook
     const current: string = config.get('current', '') as string;
     if (!current) {
       return console.log("No project set - use 'auth set [[projectId]]' first");
@@ -25,15 +28,19 @@ export const list = async (projectId: string) => {
     console.log(`List host machines for ${magenta(current)}\n`);
     const key = config.get(`keys.${current}`, '') as string;
 
-    console.log(`api key: ${green(key)}`);
-    const response = await axios.post(endpoints.GET_MACHINES, {
-      data: { key },
-      headers: {
-        'x-api-key': key,
-      },
-    });
-    console.log(response);
+    const headers = {
+      'x-api-key': key,
+      'Content-Type': 'application/json',
+    };
+    const response = await axios.post(
+      endpoints.GET_MACHINES,
+      {},
+      {
+        headers,
+      }
+    );
+    console.log(response.data);
   } catch (error) {
-    console.log('Something went wrong', error);
+    console.log(red('something went wrong'));
   }
 };
