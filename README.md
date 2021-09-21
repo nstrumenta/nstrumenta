@@ -23,7 +23,7 @@ npx nstrumenta --help
 
 npx nstrumenta auth set
 npx nstrumenta auth list
-npx nstrumenta machines list|ls
+npx nstrumenta machine list|ls
 ```
 
 Debug in vscode

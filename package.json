@@ -9,7 +9,8 @@
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon ts-node"
+    "dev": "nodemon ts-node",
+    "nst:local": "LOCAL=true nstrumenta"
   },
   "repository": {
     "type": "git",
