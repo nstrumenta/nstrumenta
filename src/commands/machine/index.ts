@@ -10,7 +10,6 @@ const { cyan, green, yellow, magenta } = Colors;
 const prompt = Inquirer.createPromptModule();
 
 const endpoints = {
-  // TODO: figure why the newly deployed getMachines endpoint doesn't permit
   GET_MACHINES: 'https://us-central1-nstrumenta-dev.cloudfunctions.net/getMachines',
 };
 
@@ -27,7 +26,7 @@ export const list = async (projectId: string) => {
     const key = config.get(`keys.${current}`, '') as string;
 
     console.log(`api key: ${green(key)}`);
-    const response = await axios.get(endpoints.GET_MACHINES, {
+    const response = await axios.post(endpoints.GET_MACHINES, {
       data: { key },
       headers: {
         'x-api-key': key,
