@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { auth, machine } from './commands/index.js';
+import { auth, machine } from './commands';
 
 export interface Keys {
   [key: string]: string;

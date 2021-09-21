@@ -1,6 +1,6 @@
 import Conf from 'conf';
 import Inquirer from 'inquirer';
-import { schema } from '../../schema.js';
+import { schema } from '../../schema';
 import Colors from 'colors';
 import { Keys } from '../../index';
 
@@ -36,8 +36,7 @@ export const addKey = async () => {
     config.set('current', projectId);
   } catch (error) {
     console.log((error as Error).message);
-    config.set('keys', null);
-    console.warn('Something went wrong');
+    console.warn('Something went wrongs');
   }
 };
 
