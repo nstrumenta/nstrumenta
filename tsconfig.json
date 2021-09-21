@@ -1,18 +1,13 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "moduleResolution": "node",
+    "target": "es2017",
+    "module": "commonjs",
     "lib": ["es2017", "es7", "es6", "dom"],
     "declaration": true,
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "paths": {
-      "commands": ["commands/index.js"],
-      "auth": ["commands/auth/index.js"],
-      "machines": ["commands/machines/index.js"]
-    },
     "baseUrl": "./src"
   },
   "exclude": ["node_modules", "dist"]
