@@ -10,8 +10,7 @@
       "name": "Launch Program",
       "skipFiles": ["<node_internals>/**"],
       "runtimeExecutable": "node",
-      "args": ["index.js", "auth", "list"],
-      "runtimeArgs": ["--nolazy"],
+      "args": ["index.js", "machines", "list"],
     }
   ]
 }

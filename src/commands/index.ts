@@ -1,2 +1,2 @@
 export * as auth from './auth';
-export * as machine from './machine';
+export * as machines from './machines';
