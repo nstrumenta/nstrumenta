@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from 'commander';
 
 import { auth, machines } from './commands';
