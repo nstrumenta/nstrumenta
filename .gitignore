@@ -63,3 +63,7 @@ typings/
 
 # build artifacts
 dist
+
+# ide
+.idea
+
