@@ -1,15 +1,15 @@
 {
   "name": "nstrumenta",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "cli tool for nstrumenta",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "nstrumenta": "./index.js"
+    "nstrumenta": "dist/index.js"
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon ts-node",
+    "dev": "nodemon src/index.ts -x 'machines list'",
     "nst:local": "LOCAL=true nstrumenta"
   },
   "repository": {
