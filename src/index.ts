@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 
-import { auth, machine } from './commands';
+import { auth, machines } from './commands';
 
 export interface Keys {
   [key: string]: string;
@@ -10,12 +10,12 @@ const program = new Command().version('0.0.1').option('-d, --debug', 'output ext
 // .command('run [algorithm] [input]', 'run algorithm on input')
 
 // TODO: figure some better structure later;
-const machineCommand = program.command('machine');
+const machineCommand = program.command('machines');
 machineCommand
   .command('list')
   .alias('ls')
   .description('List host machines for current project')
-  .action(machine.list);
+  .action(machines.list);
 
 const authCommand = program.command('auth');
 authCommand.command('add').description('Add API Key for project').action(auth.addKey);
