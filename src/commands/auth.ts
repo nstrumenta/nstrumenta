@@ -1,8 +1,8 @@
+import Colors from 'colors';
 import Conf from 'conf';
 import Inquirer from 'inquirer';
-import { schema } from '../schema';
-import Colors from 'colors';
 import { Keys } from '../index';
+import { schema } from '../schema';
 
 const { cyan, green, yellow } = Colors;
 

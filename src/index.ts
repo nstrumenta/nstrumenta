@@ -38,13 +38,13 @@ authCommand
   .description('Set current project')
   .action(SetProject);
 
-const connectCommand = program.command('connect')
+const connectCommand = program.command('connect');
 
 connectCommand
   .command('cli')
   .argument('[machine name]', 'Machine name')
   .description('Open command line interface (cli) connection to remote machine')
-  .action(ConnectCli)
+  .action(ConnectCli);
 
 program.parse(process.argv);
 
