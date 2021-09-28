@@ -11,8 +11,7 @@
   "scripts": {
     "build": "tsc --project ./",
     "dev": "nodemon -- connect cli",
-    "nst:local": "LOCAL=true nstrumenta",
-    "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix"
+    "nst:local": "LOCAL=true nstrumenta"
   },
   "repository": {
     "type": "git",
@@ -31,18 +30,10 @@
     "@types/firebase": "^3.2.1",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
-    "@typescript-eslint/eslint-plugin": "^4.31.1",
-    "eslint": "^7.32.0",
-    "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-airbnb": "^0.0.1-security",
-    "eslint-plugin-import": "^2.24.2",
-    "eslint-plugin-prettier": "^4.0.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
-    "prettier-eslint": "^13.0.0",
     "ts-node": "^10.2.1",
-    "typescript": "^4.1.0"
+    "typescript": "^4.4.3"
   },
   "dependencies": {
     "axios": "^0.21.4",
