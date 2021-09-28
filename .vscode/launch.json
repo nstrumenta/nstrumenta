@@ -9,8 +9,9 @@
       "request": "launch",
       "name": "Launch Program",
       "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "node",
-      "args": ["index.js", "machines", "list"],
+      "runtimeExecutable": "dist/index.js",
+      "args": ["machines", "list"],
+      "preLaunchTask": "npm: build"
     }
   ]
 }

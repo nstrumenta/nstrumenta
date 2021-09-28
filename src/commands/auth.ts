@@ -1,33 +1,31 @@
 import Conf from 'conf';
 import Inquirer from 'inquirer';
-import { schema } from '../../schema';
+import { schema } from '../schema';
 import Colors from 'colors';
-import { Keys } from '../../index';
+import { Keys } from '../index';
 
 const { cyan, green, yellow } = Colors;
 
 const prompt = Inquirer.createPromptModule();
 
-// @ts-ignore
-const config = new Conf(schema);
+const config = new Conf(schema as any);
 
 const inquiryForAuthentication = async () => {
-  // const { prompt } = (await import('inquirer')).default
   const { projectId, apiKey } = await prompt([
     { type: 'input', name: 'projectId', message: 'Project ID' },
-    { type: 'password', name: 'apiKey', message: 'API Key', mask: '🧚' },
+    { type: 'password', name: 'apiKey', message: 'API Key', mask: '●' },
   ]);
   return { projectId, apiKey };
 };
 
-const inquiryForSelecttProject = async (choices: string[]) => {
+const inquiryForSelectProject = async (choices: string[]) => {
   const { projectId } = await prompt([
     { type: 'list', name: 'projectId', message: 'Project ID', choices },
   ]);
   return projectId;
 };
 
-export const addKey = async () => {
+export const AddKey = async () => {
   try {
     console.log('Store API key');
     const { projectId, apiKey } = await inquiryForAuthentication();
@@ -36,11 +34,11 @@ export const addKey = async () => {
     config.set('current', projectId);
   } catch (error) {
     console.log((error as Error).message);
-    console.warn('Something went wrongs');
+    console.warn('Something went wrong');
   }
 };
 
-export const setProject = async (id: string) => {
+export const SetProject = async (id: string) => {
   try {
     console.log('Set current project');
 
@@ -53,7 +51,7 @@ export const setProject = async (id: string) => {
       return;
     }
     if (!id) {
-      projectId = await inquiryForSelecttProject(choices);
+      projectId = await inquiryForSelectProject(choices);
     }
 
     if (!(Object.keys(keys).length > 0) && keys[projectId]) {
@@ -64,11 +62,11 @@ export const setProject = async (id: string) => {
     config.set('current', projectId);
     console.log(`${green('>')} Project set to ${cyan(projectId)}`);
   } catch (error) {
-    console.log('Somethinng went wrong');
+    console.log('Something went wrong');
   }
 };
 
-export const list = async () => {
+export const ListProjects = async () => {
   console.log('projects \n');
   try {
     const keys = config.get('keys') as object;
