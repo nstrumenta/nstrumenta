@@ -1,25 +1,20 @@
 import Conf from 'conf';
 import axios from 'axios';
-import Inquirer from 'inquirer';
 import Colors from 'colors';
-// import { schema } from '../../schema.js';
-// import { Keys } from '../../index';
 
-const { cyan, green, yellow, magenta, red } = Colors;
-
-const prompt = Inquirer.createPromptModule();
+const { magenta, red } = Colors;
 
 const endpoints = process.env.LOCAL
   ? {
-      GET_MACHINES: 'http://localhost:8080',
-    }
+    GET_MACHINES: 'http://localhost:8080',
+  }
   : {
-      GET_MACHINES: 'https://us-central1-macro-coil-194519.cloudfunctions.net/getMachines',
-    };
+    GET_MACHINES: 'https://us-central1-macro-coil-194519.cloudfunctions.net/getMachines',
+  };
 
 const config = new Conf();
 
-export const list = async (projectId: string) => {
+export const ListMachines = async (projectId: string) => {
   try {
     const current: string = config.get('current', '') as string;
     if (!current) {

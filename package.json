@@ -5,11 +5,12 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "nstrumenta": "dist/index.js"
+    "nstrumenta": "dist/index.js",
+    "nst": "dist/index.js"
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon src/index.ts -x 'machines list'",
+    "dev": "nodemon -- connect cli",
     "nst:local": "LOCAL=true nstrumenta"
   },
   "repository": {
