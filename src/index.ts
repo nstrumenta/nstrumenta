@@ -5,12 +5,13 @@ import { ConnectCli } from './commands/connect';
 import { AddKey, ListProjects, SetProject } from './commands/auth';
 import { ListMachines } from './commands/machines';
 
+const version = require('../package.json').version;
 export interface Keys {
   [key: string]: string;
 }
 
 const program = new Command()
-  .version(process.env.npm_package_version!)
+  .version(version)
   .option('-d, --debug', 'output extra debugging');
 
 const machineCommand = program.command('machines');
