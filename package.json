@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc --project ./",
     "dev": "nodemon -- connect cli",
-    "nst:local": "LOCAL=true nstrumenta"
+    "nst:local": "LOCAL=true nstrumenta",
+    "lint": "tsc --noEmit && eslint . --ext js,ts,json --quiet --fix"
   },
   "repository": {
     "type": "git",
@@ -39,6 +40,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
+    "prettier-eslint": "^13.0.0",
     "ts-node": "^10.2.1",
     "typescript": "^4.1.0"
   },
