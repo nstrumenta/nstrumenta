@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { AddKey, ListProjects, SetProject } from './commands/auth';
 import { ConnectCli, ConnectMachine } from './commands/connect';
 import { ListMachines } from './commands/machines';
+import { SerialportList } from './commands/serialport';
 
 const version = require('../package.json').version;
 export interface Keys {
@@ -46,6 +47,12 @@ connectCommand
   .argument('[machine]', 'Machine name')
   .description('Open command line interface (cli) connection to remote machine')
   .action(ConnectMachine);
+
+const serialportCommand = program.command('serialport');
+serialportCommand
+  .command('list')
+  .description('List connected serial port devices')
+  .action(SerialportList);
 
 program.parse(process.argv);
 
