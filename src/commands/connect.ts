@@ -9,10 +9,15 @@ export const ConnectCli = async (url: string) => {
 
   ws.onopen = () => {
     console.log('connected to ', url);
+    //send subscribe message to subscribe to channels
   };
 
   ws.onmessage = (message) => {
     console.log(message.data);
+    // look for command message
+    // (if on whitelist in config)
+    // spawn process running the command
+    // post results to host vm
   };
 };
 

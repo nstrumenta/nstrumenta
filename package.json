@@ -31,6 +31,7 @@
     "@types/firebase": "^3.2.1",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
+    "@types/serialport": "^8.0.2",
     "@types/ws": "^8.2.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
@@ -45,6 +46,7 @@
     "conf": "^10.0.3",
     "firebase": "^9.0.2",
     "inquirer": "^8.1.5",
+    "serialport": "^9.2.4",
     "ws": "^8.2.2"
   }
 }
