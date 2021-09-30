@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { ConnectCli } from './commands/connect';
-
 import { AddKey, ListProjects, SetProject } from './commands/auth';
+import { ConnectCli, ConnectMachine } from './commands/connect';
 import { ListMachines } from './commands/machines';
 
 const version = require('../package.json').version;
@@ -10,9 +9,7 @@ export interface Keys {
   [key: string]: string;
 }
 
-const program = new Command()
-  .version(version)
-  .option('-d, --debug', 'output extra debugging');
+const program = new Command().version(version).option('-d, --debug', 'output extra debugging');
 
 const machineCommand = program.command('machines');
 machineCommand
@@ -22,10 +19,7 @@ machineCommand
   .action(ListMachines);
 
 const authCommand = program.command('auth');
-authCommand
-  .command('add')
-  .description('Add API Key for project')
-  .action(AddKey);
+authCommand.command('add').description('Add API Key for project').action(AddKey);
 
 authCommand
   .command('list')
@@ -42,10 +36,16 @@ authCommand
 const connectCommand = program.command('connect');
 
 connectCommand
-  .command('cli')
-  .argument('[machine name]', 'Machine name')
-  .description('Open command line interface (cli) connection to remote machine')
+  .command('ws')
+  .argument('[url]', 'WebSocket Url')
+  .description('Open command line interface (cli) connection to remote websocket port')
   .action(ConnectCli);
+
+connectCommand
+  .command('machine')
+  .argument('[machine]', 'Machine name')
+  .description('Open command line interface (cli) connection to remote machine')
+  .action(ConnectMachine);
 
 program.parse(process.argv);
 

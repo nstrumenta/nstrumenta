@@ -1,22 +1,35 @@
 import Conf from 'conf';
 import { GetMachines } from './machines';
+import { WebSocket } from 'ws';
 
 const config = new Conf();
 
-export const ConnectCli = async (machineName: string) => {
+export const ConnectCli = async (url: string) => {
+  const ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    console.log('connected to ', url);
+  };
+
+  ws.onmessage = (message) => {
+    console.log(message.data);
+  };
+};
+
+export const ConnectMachine = async (machineName: string) => {
   try {
-    console.log('Connect cli');
+    console.log('ConnectMachine');
     const machines = await GetMachines();
 
-    const machine = machineName ? machines?.data.find((machine: any) => machineName == machine.name) : machines?.data[0]
+    const machine = machineName
+      ? machines?.data.find((machine: any) => machineName == machine.name)
+      : machines?.data[0];
 
     if (machine === undefined || machine.status != 'RUNNING') {
-      throw 'machine needs to be in RUNNING state'
+      throw 'machine needs to be in RUNNING state';
     }
 
-    console.log(machine);
-
-    console.log(config.get('current'));
+    ConnectCli(machine.url);
   } catch (error) {
     console.log('Something went wrong');
   }

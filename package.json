@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon -- connect cli",
+    "dev": "nodemon -- connect ws ws://localhost:8080",
     "release": "standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
   },
@@ -31,6 +31,7 @@
     "@types/firebase": "^3.2.1",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
+    "@types/ws": "^8.2.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
     "standard-version": "^9.3.1",
@@ -43,6 +44,7 @@
     "commander": "^8.1.0",
     "conf": "^10.0.3",
     "firebase": "^9.0.2",
-    "inquirer": "^8.1.5"
+    "inquirer": "^8.1.5",
+    "ws": "^8.2.2"
   }
 }
