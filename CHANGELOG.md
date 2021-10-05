@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.14](https://github.com/nstrumenta/nstrumenta/compare/v1.0.13...v1.0.14) (2021-10-05)
+
+
+### Features
+
+* **pubsub:** adds publish and subscribe to channel ([92434fb](https://github.com/nstrumenta/nstrumenta/commit/92434fb31c7c618dc4b9ce0e6c4a0224ad87325b))
+
 ### [1.0.13](https://github.com/nstrumenta/nstrumenta/compare/v1.0.12...v1.0.13) (2021-09-30)
 
 ### [1.0.12](https://github.com/nstrumenta/nstrumenta/compare/v1.0.11...v1.0.12) (2021-09-30)
