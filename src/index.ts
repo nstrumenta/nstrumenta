@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { AddKey, ListProjects, SetProject } from './commands/auth';
-import { ConnectCli, ConnectMachine } from './commands/connect';
 import { ListMachines } from './commands/machines';
-import { SerialportList } from './commands/serialport';
+import { Publish, Subscribe } from './commands/pubsub';
 
 const version = require('../package.json').version;
 export interface Keys {
@@ -34,25 +33,15 @@ authCommand
   .description('Set current project')
   .action(SetProject);
 
-const connectCommand = program.command('connect');
+program
+  .command('publish [host] [channel]')
+  .description('publish to host on channel')
+  .action(Publish);
 
-connectCommand
-  .command('ws')
-  .argument('[url]', 'WebSocket Url')
-  .description('Open command line interface (cli) connection to remote websocket port')
-  .action(ConnectCli);
-
-connectCommand
-  .command('machine')
-  .argument('[machine]', 'Machine name')
-  .description('Open command line interface (cli) connection to remote machine')
-  .action(ConnectMachine);
-
-const serialportCommand = program.command('serialport');
-serialportCommand
-  .command('list')
-  .description('List connected serial port devices')
-  .action(SerialportList);
+program
+  .command('subscribe [host] [channel]')
+  .description('subscribe to host on channel')
+  .action(Subscribe);
 
 program.parse(process.argv);
 
