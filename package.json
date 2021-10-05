@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon -- connect ws ws://localhost:8080",
+    "dev": "nodemon -- publish ws://localhost:8080 test",
     "release": "standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
   },
@@ -28,10 +28,8 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
-    "@types/firebase": "^3.2.1",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
-    "@types/serialport": "^8.0.2",
     "@types/ws": "^8.2.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
@@ -44,9 +42,7 @@
     "colors": "^1.4.0",
     "commander": "^8.1.0",
     "conf": "^10.0.3",
-    "firebase": "^9.0.2",
     "inquirer": "^8.1.5",
-    "serialport": "^9.2.4",
     "ws": "^8.2.2"
   }
 }
