@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.15](https://github.com/nstrumenta/nstrumenta/compare/v1.0.14...v1.0.15) (2021-10-07)
+
+
+### Features
+
+* **subscribe:** handles payload and event ([1b667a8](https://github.com/nstrumenta/nstrumenta/commit/1b667a81e986fa1afde6227ea9d46a3008939aa2))
+
 ### [1.0.14](https://github.com/nstrumenta/nstrumenta/compare/v1.0.13...v1.0.14) (2021-10-05)
 
 
