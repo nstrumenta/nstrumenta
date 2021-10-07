@@ -7,7 +7,6 @@ export const Publish = async (url: string, channel: string) => {
     console.log('connected to ', url, channel);
 
     process.stdin.on('data', (payload) => {
-      console.log(String(payload));
       ws.send(JSON.stringify({ channel, payload }));
     });
   };
@@ -21,6 +20,14 @@ export const Subscribe = async (url: string, channel: string) => {
   };
 
   ws.onmessage = (message) => {
-    process.stdout.write(Buffer.from(JSON.parse(message.data.toString()).payload));
+    const messageObject: { channel: string; payload?: Buffer; event?: Record<string, unknown> } =
+      JSON.parse(message.data.toString());
+    // if is object with buffer in payload, write just the buffer
+    // otherwise pass payload as string
+    const out = messageObject.payload
+      ? Buffer.from(messageObject.payload)
+      : JSON.stringify(messageObject.event) + '\n';
+
+    process.stdout.write(out);
   };
 };
