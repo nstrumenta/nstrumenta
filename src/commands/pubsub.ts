@@ -26,7 +26,9 @@ export const Subscribe = async (url: string, channel: string) => {
     // otherwise pass payload as string
     const out = messageObject.payload
       ? Buffer.from(messageObject.payload)
-      : JSON.stringify(messageObject.event) + '\n';
+      : messageObject.event
+      ? JSON.stringify(messageObject.event) + '\n'
+      : message.data.toString() + '\n';
 
     process.stdout.write(out);
   };
