@@ -12,24 +12,34 @@ export const Publish = async (url: string, channel: string) => {
   };
 };
 
-export const Subscribe = async (url: string, channel: string) => {
+export const Subscribe = async (
+  url: string,
+  channel: string,
+  options: { messageOnly?: boolean }
+) => {
   const ws = new WebSocket(url);
 
   ws.onopen = () => {
     ws.send(JSON.stringify({ type: 'subscribe', payload: { channel } }));
   };
 
-  ws.onmessage = (message) => {
-    const messageObject: { channel: string; payload?: Buffer; event?: Record<string, unknown> } =
-      JSON.parse(message.data.toString());
+  ws.onmessage = (ev) => {
+    const messageObject: {
+      channel: string;
+      message?: string;
+      payload?: Buffer;
+      event?: Record<string, unknown>;
+    } = JSON.parse(ev.data.toString());
     // if is object with buffer in payload, write just the buffer
     // otherwise pass payload as string
-    const out = messageObject.payload
-      ? Buffer.from(messageObject.payload)
-      : messageObject.event
-      ? JSON.stringify(messageObject.event) + '\n'
-      : message.data.toString() + '\n';
-
-    process.stdout.write(out);
+    if (messageObject.payload) {
+      process.stdout.write(Buffer.from(messageObject.payload));
+    } else {
+      if (options.messageOnly && messageObject.message) {
+        process.stdout.write(messageObject.message);
+      } else {
+        process.stdout.write(ev.data.toString() + '\n');
+      }
+    }
   };
 };

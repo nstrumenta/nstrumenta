@@ -34,12 +34,17 @@ authCommand
   .action(SetProject);
 
 program
-  .command('publish [host] [channel]')
+  .command('publish')
+  .argument('<host>', 'websocket host')
+  .argument('<channel>', 'channel to publish')
   .description('publish to host on channel')
   .action(Publish);
 
 program
-  .command('subscribe [host] [channel]')
+  .command('subscribe')
+  .argument('<host>', 'websocket host')
+  .argument('<channel>', 'channel for subscription')
+  .option('-m,--message-only', 'parses json and prints only message')
   .description('subscribe to host on channel')
   .action(Subscribe);
 
