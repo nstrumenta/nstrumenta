@@ -1,17 +1,14 @@
 {
   "configurations": [
-  {
-    "name": "Launch via NPM",
-    "request": "launch",
-    "runtimeArgs": [
-      "run-script",
-      "dev"
-    ],
-    "runtimeExecutable": "npm",
-    "skipFiles": [
-      "<node_internals>/**"
-    ],
-    "type": "pwa-node"
-  }
+    {
+      "name": "Launch via NPM",
+      "request": "launch",
+      "console": "internalConsole",
+      "outputCapture": "std",
+      "runtimeArgs": ["run-script", "dev"],
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "pwa-node"
+    }
   ]
 }

@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc --project ./",
-    "dev": "nodemon -- publish ws://localhost:8080 test",
+    "dev": "nodemon -- subscribe ws://localhost:8080 test",
     "release": "standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
   },
