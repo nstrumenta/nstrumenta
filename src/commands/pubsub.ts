@@ -1,3 +1,9 @@
+import {
+  BusMessageType,
+  deserializeWireMessage,
+  makeBusMessageFromBuffer,
+  makeBusMessageFromJsonObject,
+} from '../models/BusMessage';
 import { WebSocket } from 'ws';
 
 export const Publish = async (url: string, channel: string) => {
@@ -6,8 +12,8 @@ export const Publish = async (url: string, channel: string) => {
   ws.onopen = () => {
     console.log('connected to ', url, channel);
 
-    process.stdin.on('data', (payload) => {
-      ws.send(JSON.stringify({ channel, payload }));
+    process.stdin.on('data', (buffer) => {
+      ws.send(makeBusMessageFromBuffer(channel, buffer).buffer);
     });
   };
 };
@@ -20,26 +26,23 @@ export const Subscribe = async (
   const ws = new WebSocket(url);
 
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'subscribe', payload: { channel } }));
+    ws.send(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer);
   };
 
   ws.onmessage = (ev) => {
-    const messageObject: {
-      channel: string;
-      message?: string;
-      payload?: Buffer;
-      event?: Record<string, unknown>;
-    } = JSON.parse(ev.data.toString());
-    // if is object with buffer in payload, write just the buffer
-    // otherwise pass payload as string
-    if (messageObject.payload) {
-      process.stdout.write(Buffer.from(messageObject.payload));
-    } else {
-      if (options.messageOnly && messageObject.message) {
-        process.stdout.write(messageObject.message);
-      } else {
-        process.stdout.write(ev.data.toString() + '\n');
-      }
+    const { channel, busMessageType, contents } = deserializeWireMessage(ev.data as ArrayBuffer);
+
+    switch (busMessageType) {
+      case BusMessageType.Json:
+        if (options.messageOnly) {
+          process.stdout.write(contents.message);
+        } else {
+          process.stdout.write(contents.toString() + '\n');
+        }
+        break;
+      case BusMessageType.Buffer:
+        process.stdout.write(contents);
+        break;
     }
   };
 };
