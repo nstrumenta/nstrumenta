@@ -24,19 +24,19 @@ export const makeBusMessageFromJsonObject = (
   object: Record<string, unknown>
 ): BusMessage => {
   return new ByteBuffer()
-    .writeInt32(BusMessageType.Json)
+    .writeUint32(BusMessageType.Json)
     .writeIString(channel)
     .writeIString(JSON.stringify(object));
 };
 
 export const makeBusMessageFromBuffer = (channel: string, buffer: Buffer): BusMessage => {
-  return new ByteBuffer().writeInt32(BusMessageType.Buffer).writeIString(channel).append(buffer);
+  return new ByteBuffer().writeUint32(BusMessageType.Buffer).writeIString(channel).append(buffer);
 };
 
 export const deserializeBlob: (input: Blob) => Promise<DeserializedMessage> = async (input) => {
   const arrayBuffer = await input.arrayBuffer();
 
-  const bb = new ByteBuffer();
+  const bb = new ByteBuffer(arrayBuffer.byteLength);
   new Uint8Array(arrayBuffer).forEach((byte) => {
     bb.writeUint8(byte);
   });
@@ -47,16 +47,18 @@ export const deserializeBlob: (input: Blob) => Promise<DeserializedMessage> = as
 export const deserializeWireMessage: (input: Buffer | ArrayBuffer) => DeserializedMessage = (
   input
 ) => {
-  const bb = new ByteBuffer();
   if (input instanceof ArrayBuffer) {
+    const bb = new ByteBuffer(input.byteLength);
     new Uint8Array(input).forEach((byte) => {
       bb.writeUint8(byte);
     });
     bb.flip();
+    return deserializeByteBuffer(bb);
   } else {
+    const bb = new ByteBuffer(input.byteLength);
     bb.buffer = input;
+    return deserializeByteBuffer(bb);
   }
-  return deserializeByteBuffer(bb);
 };
 
 export const deserializeByteBuffer: (busMessage: BusMessage) => DeserializedMessage = (
@@ -67,7 +69,7 @@ export const deserializeByteBuffer: (busMessage: BusMessage) => DeserializedMess
     busMessageType <= BusMessageType.BUS_MESSAGE_TYPES_BEGIN ||
     busMessageType >= BusMessageType.BUS_MESSAGE_TYPES_END
   ) {
-    console.log(`unknown busMessageType ${busMessageType}: ${busMessage}`);
+    throw `unknown busMessageType ${busMessageType}: ${busMessage}`;
   }
   const channel = busMessage.readIString();
   let contents = undefined;
