@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.21](https://github.com/nstrumenta/nstrumenta/compare/v1.0.20...v1.0.21) (2021-10-15)
+
+
+### Bug Fixes
+
+* **lib:** adds ./dist/models to exports ([6417a98](https://github.com/nstrumenta/nstrumenta/commit/6417a989d2d42bee4ab0d18d00a2b8673c0a6ecf))
+
 ### [1.0.20](https://github.com/nstrumenta/nstrumenta/compare/v1.0.19...v1.0.20) (2021-10-14)
 
 ### [1.0.19](https://github.com/nstrumenta/nstrumenta/compare/v1.0.18...v1.0.19) (2021-10-11)
