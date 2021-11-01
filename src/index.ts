@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import { AddKey, ListProjects, SetProject } from './commands/auth';
 import { ListMachines } from './commands/machines';
 import { Publish, Subscribe } from './commands/pubsub';
+import { Serve } from './commands/serve';
 
 const version = require('../package.json').version;
 export interface Keys {
@@ -47,6 +48,14 @@ program
   .option('-m,--message-only', 'parses json and prints only message')
   .description('subscribe to host on channel')
   .action(Subscribe);
+
+program
+  .command('serve')
+  .option('-p,--port <port>', 'websocket port', '8088')
+  .option('-d, --debug <debug>', 'output extra debugging')
+  .option('--project <project>', 'nstrumenta project Id')
+  .description('spin up a pubsub server')
+  .action(Serve);
 
 program.parse(process.argv);
 
