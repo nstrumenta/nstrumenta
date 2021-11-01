@@ -76,7 +76,6 @@ export const Serve = async (options: { port: string; project: string; debug: boo
     clientsCount: wss.clients.size as number,
     subscribedChannels: {},
     activeChannels: {},
-    C,
   };
 
   function updateStatus() {
