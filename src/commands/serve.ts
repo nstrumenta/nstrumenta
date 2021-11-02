@@ -157,7 +157,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
 
       subscriptions.forEach((subChannels, subWebSocket) => {
         if (subChannels.has(channel)) {
-          console.log(`sending to subscription ${channel} ${subWebSocket.url}`);
+          console.log(`sending to subscription ${channel}`);
           subWebSocket.send(busMessage);
         }
       });
