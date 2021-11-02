@@ -3,8 +3,9 @@ import {
   deserializeBlob,
   deserializeWireMessage,
   makeBusMessageFromJsonObject,
-} from '../models/BusMessage';
-import { DEFAULT_HOST_PORT } from '../index';
+} from './BusMessage';
+
+const DEFAULT_HOST_PORT = 8088;
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -29,26 +30,22 @@ export class Nstrumenta {
     this.ws = new WebSocket(this.host);
     this.subscribe = this.subscribe.bind(this);
 
+    this.ws.addEventListener('open', (message) => {
+      console.log(`client websocket opened <${this.host}>`);
+    });
     // messages from nstrumenta web app
-    addEventListener('message', async (e) => {
+    this.ws.addEventListener('message', async (e) => {
       try {
         const { channel, contents } =
           typeof Blob !== 'undefined' && e.data instanceof Blob
             ? await deserializeBlob(e.data)
             : deserializeWireMessage(e.data);
 
-        if (channel === '_command') {
-          if (contents.command === 'reload') {
-            console.log('reloading sandbox');
-            window.location.reload();
-          }
-        }
-
         this.subscriptions.get(channel)?.forEach((callback) => {
           callback(contents);
         });
       } catch (e) {
-        console.error('sandbox-client message error', e);
+        console.error('nstrumenta client message error', e);
       }
     });
   }
@@ -56,8 +53,7 @@ export class Nstrumenta {
   send(channel: string, message: Record<string, unknown>) {
     //buffer to handle messages before initial connection with parent
     console.log('sandbox-client send', channel, message);
-    // this.ws.send(makeBusMessageFromJsonObject(channel, message));
-    this.ws.send(`placeholder : send <${channel}> | ${message}`);
+    this.ws.send(makeBusMessageFromJsonObject(channel, message).buffer);
   }
 
   subscribe(channel: string, callback: SubscriptionCallback) {
@@ -65,11 +61,12 @@ export class Nstrumenta {
     const channelSubscriptions = this.subscriptions.get(channel) || [];
     channelSubscriptions.push(callback);
 
-    // this.ws.send(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
-    this.ws.send(`placeholder for command <_command'> | ${{ command: 'subscribe', channel }}`);
+    this.ws.send(
+      makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer
+    );
   }
 
-  addListener(eventType: string, callback: ListenerCallback) {
+  addListener(eventType: 'open' | 'close' | 'message', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
       this.listeners.set(eventType, []);
     }

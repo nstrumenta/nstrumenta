@@ -147,6 +147,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
 
       if (contents?.command == 'subscribe') {
         const { channel } = contents;
+        console.log(`[nstrumenta] <subscribe> ${channel}`);
         if (!subscriptions.get(ws)) {
           subscriptions.set(ws, new Set([channel]));
         } else {
