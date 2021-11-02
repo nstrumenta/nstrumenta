@@ -5,6 +5,8 @@ import { ListMachines } from './commands/machines';
 import { Publish, Subscribe } from './commands/pubsub';
 import { Serve } from './commands/serve';
 
+export const DEFAULT_HOST_PORT = '8080';
+
 const version = require('../package.json').version;
 export interface Keys {
   [key: string]: string;
