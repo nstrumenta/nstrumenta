@@ -32,7 +32,7 @@ export const AddKey = async () => {
     const { projectId, apiKey } = await inquiryForAuthentication();
     const keys = config.get('keys', {}) as Keys;
     config.set({ keys: { ...(keys as object), [projectId]: apiKey } });
-    setContextProperty({ currentProjectId: projectId });
+    setContextProperty({ projectId: projectId });
   } catch (error) {
     console.log((error as Error).message);
     console.warn('Something went wrong');
@@ -60,7 +60,7 @@ export const SetProject = async (id?: string) => {
       return;
     }
 
-    setContextProperty({ currentProjectId: projectId });
+    setContextProperty({ projectId: projectId });
     console.log(`${green('>')} Project set to ${cyan(projectId)}`);
   } catch (error) {
     console.log('Something went wrong');
@@ -71,7 +71,7 @@ export const ListProjects = async () => {
   console.log('projects \n');
   try {
     const keys = config.get('keys') as object;
-    const currentProjectId = getContextProperty('currentProjectId');
+    const projectId = getContextProperty('projectId');
 
     if (Object.keys(keys).length <= 0) {
       console.log('[no keys set]');
@@ -79,7 +79,7 @@ export const ListProjects = async () => {
     }
 
     Object.keys(keys).forEach((value) => {
-      console.log(`${value === currentProjectId ? yellow('* ') : '  '}${value}`);
+      console.log(`${value === projectId ? yellow('* ') : '  '}${value}`);
     });
   } catch (error) {
     console.log('No projects stored');
