@@ -27,10 +27,13 @@ export class NstrumentaClient {
     this.subscriptions = new Map();
     this.host = new URL(hostUrl ? hostUrl : this.host);
     this.subscribe = this.subscribe.bind(this);
+    this.init = this.init.bind(this);
   }
 
-  async init() {
-    this.ws = new WebSocket(this.host);
+  async init(
+    nodeWebSocket?: new (url: string | URL, protocols?: string | string[] | undefined) => WebSocket
+  ) {
+    this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
     this.ws.addEventListener('open', () => {
       console.log(`client websocket opened <${this.host}>`);
       this.listeners.get('open')?.forEach((callback) => callback());
@@ -66,6 +69,7 @@ export class NstrumentaClient {
     console.log(`Nstrumenta client subscribe <${channel}>`);
     const channelSubscriptions = this.subscriptions.get(channel) || [];
     channelSubscriptions.push(callback);
+    this.subscriptions.set(channel, channelSubscriptions);
 
     this.ws?.send(
       makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer
