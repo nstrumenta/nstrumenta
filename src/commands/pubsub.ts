@@ -5,9 +5,25 @@ import {
   makeBusMessageFromJsonObject,
 } from '../models/BusMessage';
 import { WebSocket } from 'ws';
+import { getCurrentContext } from '../lib';
+import { red } from 'colors';
 
-export const Publish = async (url: string, channel: string) => {
-  const ws = new WebSocket(url);
+export const Publish = async (url: string, { channel }: { channel: string }) => {
+  const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
+  url = url ? url : contextWsHost;
+  channel = channel ? channel : contextChannel;
+
+  if (!url) {
+    console.log(red('no ws host specified either as argument or in current context'));
+    return;
+  }
+
+  if (!channel) {
+    console.log(red('no ws channel specified either as cli option or in current context'));
+    return;
+  }
+
+  const ws = new WebSocket(url || contextWsHost);
 
   ws.addEventListener('open', () => {
     console.log('connected to ', url, channel);
