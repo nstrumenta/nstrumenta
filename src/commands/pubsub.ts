@@ -9,13 +9,13 @@ import { WebSocket } from 'ws';
 export const Publish = async (url: string, channel: string) => {
   const ws = new WebSocket(url);
 
-  ws.onopen = () => {
+  ws.addEventListener('open', () => {
     console.log('connected to ', url, channel);
 
     process.stdin.on('data', (buffer) => {
       ws.send(makeBusMessageFromBuffer(channel, buffer).buffer);
     });
-  };
+  });
 };
 
 export const Subscribe = async (
@@ -25,11 +25,11 @@ export const Subscribe = async (
 ) => {
   const ws = new WebSocket(url);
 
-  ws.onopen = () => {
+  ws.addEventListener('open', () => {
     ws.send(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer);
-  };
+  });
 
-  ws.onmessage = (ev) => {
+  ws.addEventListener('message', (ev) => {
     const { channel, busMessageType, contents } = deserializeWireMessage(ev.data as ArrayBuffer);
 
     switch (busMessageType) {
@@ -44,5 +44,5 @@ export const Subscribe = async (
         process.stdout.write(contents);
         break;
     }
-  };
+  });
 };

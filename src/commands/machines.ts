@@ -1,9 +1,11 @@
 import Conf from 'conf';
 import axios from 'axios';
-import Colors from 'colors';
+import Colors, { blue } from 'colors';
+import { getContextProperty } from '../lib';
 
-const { magenta, red } = Colors;
+const { red } = Colors;
 
+// TODO: add a local bool to context to handle this; or something like that
 const endpoints = process.env.LOCAL
   ? {
       GET_MACHINES: 'http://localhost:8080',
@@ -26,12 +28,12 @@ export interface Machine {
 }
 
 export const GetMachines = async () => {
-  const current: string = config.get('current', '') as string;
-  if (!current) {
+  const currentProjectId = getContextProperty('currentProjectId');
+  if (!currentProjectId) {
     return console.log("No project set - use 'auth set [[projectId]]' first");
   }
 
-  const key = config.get(`keys.${current}`, '') as string;
+  const key = config.get(`keys.${currentProjectId}`, '') as string;
   const headers = {
     'x-api-key': key,
     'Content-Type': 'application/json',
@@ -45,10 +47,10 @@ export const GetMachines = async () => {
   );
 };
 
-export const ListMachines = async (projectId: string) => {
+export const ListMachines = async () => {
   try {
     const response = await GetMachines();
-    console.log(response?.data);
+    console.log(blue(JSON.stringify(response?.data)));
   } catch (error) {
     console.log(red('something went wrong'));
   }
