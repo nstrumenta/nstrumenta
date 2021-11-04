@@ -28,12 +28,12 @@ export interface Machine {
 }
 
 export const GetMachines = async () => {
-  const currentProjectId = getContextProperty('currentProjectId');
-  if (!currentProjectId) {
+  const projectId = getContextProperty('projectId');
+  if (!projectId) {
     return console.log("No project set - use 'auth set [[projectId]]' first");
   }
 
-  const key = config.get(`keys.${currentProjectId}`, '') as string;
+  const key = config.get(`keys.${projectId}`, '') as string;
   const headers = {
     'x-api-key': key,
     'Content-Type': 'application/json',
