@@ -5,27 +5,17 @@ import {
   getContexts,
   getCurrentContext,
   setContext,
+  setContextProperty,
 } from '../lib';
 import { blue, red, yellow } from 'colors';
 import Inquirer from 'inquirer';
+import { schema } from '../schema';
 
 const prompt = Inquirer.createPromptModule();
 
-const inquiryForAddContext = async (): Promise<string> => {
-  const { name } = await prompt([{ type: 'input', name: 'name', message: 'Context Name' }]);
-  return name;
-};
-
-const inquiryForSelectContext = async (choices: string[]): Promise<string> => {
-  const { context } = await prompt([
-    { type: 'list', name: 'context', message: 'Context', choices },
-  ]);
-  return context;
-};
-
 export const AddContext = async () => {
   try {
-    const name = await inquiryForAddContext();
+    const name = await prompt([{ type: 'input', name: 'name', message: 'Context Name' }]);
     addContext(name);
   } catch (error) {
     console.log(red((error as Error).message));
@@ -34,7 +24,10 @@ export const AddContext = async () => {
 
 export const DeleteContext = async () => {
   const contexts = getContexts();
-  const context = await inquiryForSelectContext(Object.keys(contexts));
+  const result = await prompt([
+    { type: 'list', name: 'context', message: 'Context', choices: Object.keys(contexts) },
+  ]);
+  const context = result.context;
   try {
     deleteContext(context);
   } catch (error) {
@@ -44,7 +37,9 @@ export const DeleteContext = async () => {
 
 export const SetContext = async () => {
   const contexts = getContexts();
-  const context = await inquiryForSelectContext(Object.keys(contexts));
+  const context = await prompt([
+    { type: 'list', name: 'context', message: 'Context', choices: Object.keys(contexts) },
+  ]);
   try {
     setContext(context);
   } catch (error) {
@@ -75,7 +70,39 @@ export const GetCurrentContext = () => {
   }
 };
 
-// Danger, Juke Jukerson!! maybe don't publish this, it could lead to heartbreaks
+export const SetContextProperty = async (name: string, { value }: { value?: string }) => {
+  let property = name;
+  let newValue = value;
+
+  const availableProperties = Object.keys(schema.contexts.properties);
+
+  if (!name) {
+    const response = await prompt([
+      {
+        type: 'list',
+        name: 'property',
+        message: 'property',
+        choices: availableProperties,
+      },
+    ]);
+    property = response.property;
+  }
+
+  if (!availableProperties.includes(property)) {
+    console.log(red('no'));
+    return;
+  }
+
+  if (!newValue) {
+    const result = await prompt([{ type: 'input', name: 'value', message: `Set ${property} to:` }]);
+    newValue = result.value;
+  }
+
+  console.log({ newValue, property });
+  setContextProperty({ [property]: newValue });
+};
+
+// Make sure this is used in development only, not for public consumption
 export const ClearConfig = () => {
   console.log(red('💣 config is cleared'));
   clearConfig();

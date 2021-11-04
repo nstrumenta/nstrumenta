@@ -5,6 +5,7 @@ import { green } from 'colors';
 
 const config = new Conf(schema as any);
 
+// Without fancy typescripting, we need to be sure that these are synced with the Conf schema
 export interface Context {
   name: string;
   currentProjectId: string;
@@ -37,6 +38,7 @@ export const initContexts = () => {
 };
 
 export const setContextProperty = (property: Partial<Context>) => {
+  console.log('set: ', property);
   const contexts = getContexts();
   const current = config.get('current') as string;
   const currentContext = getCurrentContext();
