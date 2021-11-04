@@ -8,16 +8,17 @@ const config = new Conf(schema as any);
 // Without fancy typescripting, we need to be sure that these are synced with the Conf schema
 export interface Context {
   name: string;
-  currentProjectId: string;
-  currentHost: string;
+  projectId: string;
+  wsHost: string;
+  channel: string;
 }
 
 export type Contexts = Record<string, Context>;
 
 export const defaultContext = {
   name: 'default',
-  currentProjectId: '',
-  currentHost: '',
+  projectId: '',
+  wsHost: '',
 };
 
 export const initContexts = () => {
@@ -83,7 +84,7 @@ export const addContext = (name: string) => {
   const newContexts = {
     contexts: {
       ...(contexts as object),
-      [name]: { name, currentProjectId: '', currentHost: '' },
+      [name]: { name, projectId: '', wsHost: '' },
     },
   };
   config.set(newContexts);
