@@ -9,8 +9,9 @@ export const schema = {
     type: 'object',
     properties: {
       name: { type: 'string' },
-      currentProjectId: { type: 'string' },
-      currentHost: { type: 'string' },
+      projectId: { type: 'string' },
+      wsHost: { type: 'string' },
+      channel: { type: 'string' },
     },
   },
 };
