@@ -51,8 +51,8 @@ authCommand
 
 program
   .command('publish')
-  .argument('<host>', 'websocket host')
-  .argument('<channel>', 'channel to publish')
+  .argument('[host]', 'websocket host')
+  .option('-c,--channel <channel>', 'channel to publish')
   .description('publish to host on channel')
   .action(Publish);
 
