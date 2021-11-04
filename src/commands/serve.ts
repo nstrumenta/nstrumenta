@@ -67,7 +67,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
       });
     }
     if (logfileWriter != null) {
-      var data = JSON.stringify(event) + '\n';
+      const data = JSON.stringify(event) + '\n';
       logfileWriter.write(data);
     }
   }
@@ -138,7 +138,14 @@ export const Serve = async (options: { port: string; project: string; debug: boo
 
     ws.on('message', function incoming(busMessage: Buffer) {
       console.log(busMessage);
-      const { channel, busMessageType, contents } = deserializeWireMessage(busMessage);
+      let deserializedMessed;
+      try {
+        deserializedMessed = deserializeWireMessage(busMessage);
+      } catch (error) {
+        console.log(`Couldn't handle ${(error as Error).message}`);
+        return;
+      }
+      const { channel, busMessageType, contents } = deserializedMessed;
 
       if (channel) {
         appendToLog(contents);
@@ -181,7 +188,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
 const broadcastStatus = () => {
   if (!process.env.PROJECT_ID) return;
 
-  const hostMachineWebooksUrl = `https://us-central1-macro-coil-194519.cloudfunctions.net/hostMachineWebhooks`;
+  const hostMachineWebhooksUrl = `https://us-central1-macro-coil-194519.cloudfunctions.net/hostMachineWebhooks`;
 
   const data = {
     sandboxId: process.env.SANDBOX_ID,
@@ -204,7 +211,7 @@ const broadcastStatus = () => {
   };
 
   axios
-    .post(hostMachineWebooksUrl, data, config)
+    .post(hostMachineWebhooksUrl, data, config)
     .then(() => console.log('triggered hostMachines webhook'))
     .catch((err) => {
       console.log(err);

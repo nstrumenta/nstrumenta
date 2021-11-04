@@ -18,7 +18,7 @@ export interface NstrumentaClientOptions {
 export class NstrumentaClient {
   host: URL = new URL(`ws://localhost:${DEFAULT_HOST_PORT}`);
   listeners: Map<string, Array<ListenerCallback>>;
-  subscriptions: Map<string, Array<SubscriptionCallback>>;
+  subscriptions: Map<string, SubscriptionCallback[]>;
   ws: WebSocket | null = null;
 
   constructor({ apiKey, hostUrl, projectId }: NstrumentaClientOptions) {
