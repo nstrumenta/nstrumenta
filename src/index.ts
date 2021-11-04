@@ -12,6 +12,7 @@ import {
   GetCurrentContext,
   ListContexts,
   SetContext,
+  SetContextProperty,
 } from './commands/contexts';
 
 export const DEFAULT_HOST_PORT = '8080';
@@ -80,6 +81,12 @@ contextCommand
   .command('set')
   .description('Set current context to one of the stored contexts')
   .action(SetContext);
+contextCommand
+  .command('set-property')
+  .description('set one of the available properties on the current context')
+  .argument('[name]', 'property name')
+  .option('-v, --value <value>')
+  .action(SetContextProperty);
 
 if (process.env.NODE_ENV === 'development') {
   contextCommand.command('clear').description('** clear all local config!! **').action(ClearConfig);
