@@ -37,7 +37,7 @@ export const DeleteContext = async () => {
 
 export const SetContext = async () => {
   const contexts = getContexts();
-  const context = await prompt([
+  const { context } = await prompt([
     { type: 'list', name: 'context', message: 'Context', choices: Object.keys(contexts) },
   ]);
   try {
