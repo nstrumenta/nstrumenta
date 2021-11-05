@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.30](https://github.com/nstrumenta/nstrumenta/compare/v1.0.29...v1.0.30) (2021-11-05)
+
+
+### Bug Fixes
+
+* **serve:** moves index.ejs back to top level ; cp in build ([15218e1](https://github.com/nstrumenta/nstrumenta/commit/15218e17b97deb2b617fdaa33bdcdfaae4dd03fa))
+
 ### [1.0.29](https://github.com/nstrumenta/nstrumenta/compare/v1.0.28...v1.0.29) (2021-11-05)
 
 
