@@ -15,7 +15,7 @@ const prompt = Inquirer.createPromptModule();
 
 export const AddContext = async () => {
   try {
-    const name = await prompt([{ type: 'input', name: 'name', message: 'Context Name' }]);
+    const { name } = await prompt([{ type: 'input', name: 'name', message: 'Context Name' }]);
     addContext(name);
   } catch (error) {
     console.log(red((error as Error).message));
