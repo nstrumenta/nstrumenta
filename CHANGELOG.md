@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.29](https://github.com/nstrumenta/nstrumenta/compare/v1.0.28...v1.0.29) (2021-11-05)
+
+
+### Bug Fixes
+
+* **serve:** moves ejs to public ([104e9f4](https://github.com/nstrumenta/nstrumenta/commit/104e9f4e273de634e57cf162e2e01a51b5757ede))
+
 ### [1.0.28](https://github.com/nstrumenta/nstrumenta/compare/v1.0.27...v1.0.28) (2021-11-05)
 
 
