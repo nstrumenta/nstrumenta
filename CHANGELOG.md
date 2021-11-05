@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.28](https://github.com/nstrumenta/nstrumenta/compare/v1.0.27...v1.0.28) (2021-11-05)
+
+
+### Bug Fixes
+
+* **addContext:** fixes addcontext prompt ([abb89ba](https://github.com/nstrumenta/nstrumenta/commit/abb89ba6358c60f9863330b8ffdf3732700c24f4))
+* **setContext:** destructures context ([75e5c57](https://github.com/nstrumenta/nstrumenta/commit/75e5c574ce93d042df093b66d9af345d2f44e5d9))
+
 ### [1.0.27](https://github.com/nstrumenta/nstrumenta/compare/v1.0.25...v1.0.27) (2021-11-04)
 
 ### [1.0.26](https://github.com/nstrumenta/nstrumenta/compare/v1.0.25...v1.0.26) (2021-11-04)
