@@ -22,7 +22,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   if (options.debug) console.log(options, port, projectId);
 
   const app = express();
-  app.set('views', './public/');
+  app.set('views', '.');
   app.set('view engine', 'ejs');
 
   const server = require('http').Server(app);

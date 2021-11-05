@@ -12,7 +12,7 @@
     "nst": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc --project ./",
+    "build": "tsc --project ./ && cp index.ejs dist/index.ejs",
     "dev": "nodemon -- serve",
     "release": "npm run build ; standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
