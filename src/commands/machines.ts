@@ -1,9 +1,9 @@
 import Conf from 'conf';
 import axios from 'axios';
-import Colors, { blue } from 'colors';
+import Colors from 'colors';
 import { getContextProperty } from '../lib';
 
-const { red } = Colors;
+const { red, blue } = Colors;
 
 // TODO: add a local bool to context to handle this; or something like that
 const endpoints = process.env.LOCAL
@@ -52,6 +52,6 @@ export const ListMachines = async () => {
     const response = await GetMachines();
     console.log(blue(JSON.stringify(response?.data)));
   } catch (error) {
-    console.log(red('something went wrong'));
+    console.error(error);
   }
 };
