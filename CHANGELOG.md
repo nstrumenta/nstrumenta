@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.31](https://github.com/nstrumenta/nstrumenta/compare/v1.0.30...v1.0.31) (2021-11-09)
+
+
+### Bug Fixes
+
+* **machines:** fixes blue is not a function ([3fa9180](https://github.com/nstrumenta/nstrumenta/commit/3fa91804e4f3bdfb24b8529d435773ffadeb5e7e))
+
 ### [1.0.30](https://github.com/nstrumenta/nstrumenta/compare/v1.0.29...v1.0.30) (2021-11-05)
 
 
