@@ -70,7 +70,7 @@ nstrumenta will save your configuration scoped to the current user. Within this 
 
 - [auth](#auth)
 - [context](#context)
-- [machine](#machine)
+- [machines](#machines)
 - [subscribe](#subscribe)
 - [publish](#publish)
 - [serve](#serve)
@@ -122,6 +122,16 @@ _Set a property in the current context. Only a valid property can be set — run
 
 ***
 
+### <a name="machines"></a> machines
+
+Manage hosted virtual machines
+
+###### subcommands:
+
+`list | ls` _List running virtual machines_
+
+***
+
 ### <a name="subscribe"></a> subscribe
 
 Subscribe to a channel on the websocket host.
@@ -148,29 +158,25 @@ Will use the current context for configuration if no args/options.
 
 #### [deprecated?] serve
 
-```
-nstrumenta serve WS_HOST {-- CHANNEL}
-```
+Start websocket pubsub host locally
 
-## develop cli
-
-```
-npm i
-npm link
+```console
+$ nstrumenta serve {--project PROJECT_NAME} {--port | -p PORT} {--debug | -d}
 ```
 
-command can be run with npx
+When running this locally, set the **wsHost** property in context to `ws://localhost:PORT` and then, _publish_ and _subscribe_ can be run without arguments and will communicate via this local host. 
 
-```
-npx nstrumenta --help
+e.g.,
 
-...
-
-npx nstrumenta auth set
-npx nstrumenta auth list
-npx nstrumenta machine list|ls
+```console
+$ nstrumenta context set-property wsHost --value ws://localhost:8088
+$ nstrumenta context set-property projectId --value trax
+$ nstrumenta serve
 ```
 
-Debug in vscode
+The output is similar to the following
 
-* `note: figure how best to add cli args when debuggin; could add configs in launch.json for each possile command, but that seems silly`
+```shell
+port:  8088
+listening on *:8088
+```
