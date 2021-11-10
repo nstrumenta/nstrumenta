@@ -23,7 +23,7 @@ export const Publish = async (url: string, { channel }: { channel: string }) => 
     return;
   }
 
-  const ws = new WebSocket(url || contextWsHost);
+  const ws = new WebSocket(url);
 
   ws.addEventListener('open', () => {
     console.log('connected to ', url, channel);
@@ -36,9 +36,22 @@ export const Publish = async (url: string, { channel }: { channel: string }) => 
 
 export const Subscribe = async (
   url: string,
-  channel: string,
-  options: { messageOnly?: boolean }
+  { channel, messageOnly }: { channel?: string; messageOnly?: boolean }
 ) => {
+  const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
+  url = url ? url : contextWsHost;
+  channel = channel ? channel : contextChannel;
+
+  if (!url) {
+    console.log(red('no ws host specified either as argument or in current context'));
+    return;
+  }
+
+  if (!channel) {
+    console.log(red('no ws channel specified either as cli option or in current context'));
+    return;
+  }
+
   const ws = new WebSocket(url);
 
   ws.addEventListener('open', () => {
@@ -50,7 +63,7 @@ export const Subscribe = async (
 
     switch (busMessageType) {
       case BusMessageType.Json:
-        if (options.messageOnly) {
+        if (messageOnly) {
           process.stdout.write(contents.message);
         } else {
           process.stdout.write(contents.toString() + '\n');
