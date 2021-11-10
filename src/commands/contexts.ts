@@ -63,7 +63,7 @@ export const ListContexts = () => {
 export const GetCurrentContext = () => {
   try {
     const currentContext = getCurrentContext();
-    console.log(blue(JSON.stringify(currentContext)));
+    console.log(currentContext);
   } catch (err) {
     console.log(red((err as Error).message));
     console.log(red(`can't get current context!`));
