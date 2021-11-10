@@ -20,30 +20,30 @@ The client module can be imported in node or web based javascript
 2. Get yourself an api key for remote access to that project from https://nstrumenta.com/projects/[project name]/settings
 3. Install and configure
 
-```
-npm i -g nstrumenta
-nstrumenta auth add 
+```console
+$ npm i -g nstrumenta
+$ nstrumenta auth add 
 ```
 4. When prompted, enter the project id and the api key
 5. Open 3 terminals
 
 #### terminal 1 server
 
-```
-nstrumenta context set-property wsHost --value ws://localhost:8088
-nstrumenta serve
+```console
+$ nstrumenta context set-property wsHost --value ws://localhost:8088
+$ nstrumenta serve
 ```
 
 #### terminal 2 subscriber
 
-```
-nstrumenta subscribe
+```console
+$ nstrumenta subscribe
 ```
 
 #### terminal 3 publisher
 
-```
-nstrumenta publish 
+```console
+$ nstrumenta publish 
 ```
 
 At this point you can send messages from the the terminal with the publishing process, and they'll be read and displayed by any subscriber process. Try typing something and pressing enter. Next up, try piping from the subscribe to another process or a file.
@@ -53,88 +53,104 @@ At this point you can send messages from the the terminal with the publishing pr
 ### install
 
 ```
-npm install -g nstrumenta
+$ npm install -g nstrumenta
 ```
 
 ### usage
 
 ```
-nstrumenta [command]
+nstrumenta [command] {arguments --options}
 ```
 
-nstrumenta will save your configuration. Within this configuration, you can define a set of individual contexts which will store information about the project you're currently working with and how you want to interact with this project. You can set the working project, a websocket server to work to act as a broker for all your sensor and client interactions, the channel you want to communicate with, etc. These settings can be overridden with arguments and options if needed.  
+* Note: `[command]` is required, and `[arguments]` are required or `{optional}`
+
+nstrumenta will save your configuration scoped to the current user. Within this configuration, you can define a set of contexts which will store information about the project you're currently working with and how you want to interact with this project. You can set the working project, a websocket server to work to act as a broker for all your sensor and client interactions, the channel you want to communicate with, etc. These settings can be overridden with arguments and options if needed.  
 
 ### commands
 
-- auth
-- context
-- subscribe
-- publish
-- serve
+- [auth](#auth)
+- [context](#context)
+- [machine](#machine)
+- [subscribe](#subscribe)
+- [publish](#publish)
+- [serve](#serve)
 
 ***
 
-#### auth
+### <a name="auth"></a> auth
 
-manage project api keys
+Manage project api keys
 
-e.g. `nstrumenta auth set my-project`
+e.g. `nstrumenta auth set PROJECT_NAME`
 
 ###### subcommands:
 
-##### `add`
+`add` _add an api key associated with a project. You'll be prompted for the project name and the api key._
 
-Add an api key associated with a project. You'll be prompted for the project name and the api key.
+> Generate a project scoped api key from https://nstrumenta.com/projects/[your-project-name]/settings 
 
-*note* Generate et a project scoped api key from https://nstrumenta.com/projects/[your-project-name]/settings 
+`set PROJECT_NAME` s*et the current working project. This affects the current context. If you don't supply an argument, you'll be prompted to select one of projects already configured*
 
-##### `set <project_name>`
-
-Set the current working project. This affects the current context.
-
-If you don't supply an argument, you'll be prompted to select one of projects already configured
-
-##### `list / ls`
+`list / ls` _list all locally configured projects_
 
 ***
 
-#### context
+### <a name="context"></a> context
 
-manage contexts
+Manage local contexts
 
-e.g. `nstrumenta context set-property wsHost --value ws://localhost:8088`
+ e.g. `nstrumenta context set-property wsHost --value ws://localhost:8088`
+
+There will always be a default context, which is editable. Additional contexts can be added to work locally or remotely within the same project, for instance, or to work with different projects or to stream to different channels. 
 
 ###### subcommands:
 
-##### `add <name>`
+`add CONTEXT_NAME`
 
-##### `list`
+`list` _List all context names_
 
-##### `show`
+`show` _Display the values of the properties of the current context_ 
 
-Show the values of the properties of the current context 
+`delete`
 
-##### `delete`
-
-##### `set <context_name>`
+`set {CONTEXT_NAME}` _Will prompt to select an existing context if no arg_
 
 Set the current working context
 
-##### `set-property <property_name> --{value | v} [value]`
-
-Set a property in the current context. Only a valid property can be set — run without argument to be presented with an option list of possible properties
-
-***
-
-#### subscribe
+`set-property {PROPERTY_NAME} --{value | v VALUE}`
+_Set a property in the current context. Only a valid property can be set — run without argument to be presented with an option list of possible properties_
 
 ***
 
-#### publish
+### <a name="subscribe"></a> subscribe
+
+Subscribe to a channel on the websocket host.
+
+```
+subscribe {WS_HOST} --{channel | c CHANNEL}
+```
+
+Will use the current context for configuration if no args/options.  
 
 ***
 
-#### serve
+### <a name="publish"></a>publish
+
+Publish to a channel on the websocket host. Pipe a process reading from a sensor into `nstrumenta publish`
+
+```
+publish {WS_HOST} --{channel | c CHANNEL}
+```
+
+Will use the current context for configuration if no args/options.
+
+***
+
+#### [deprecated?] serve
+
+```
+nstrumenta serve WS_HOST {-- CHANNEL}
+```
 
 ## develop cli
 
