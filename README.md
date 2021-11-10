@@ -8,7 +8,7 @@ Use the cli to:
 - ~~manage~~ list your vm servers
 - ~~publish your sandbox~~
 
-### [nstrumenta javascript client module](#client)
+### [nstrumenta javascript client module](#module)
 
 The client module can be imported in node or web based javascript 
 
@@ -179,4 +179,35 @@ The output is similar to the following
 ```shell
 port:  8088
 listening on *:8088
+```
+
+Websockets provide a full duplex, always on message based connection. The server will _receive_ messages from a **publisher** on a specified channel, and will _broadcast_ messages to all **subscribers** to that channel. These subscribers and publishers can be isntantiated with the cli for piping between processes, or can be created and used in a node or web based app using the nstrumenta [client module](#module). 
+
+## <a name="module"></a> Client Module
+
+### Install
+
+Install the nstrumenta package in a javascript project:
+
+```console
+$ npm i nstrumenta
+$ nstrumenta auth add
+```
+
+Usage
+
+```javascript
+// index.js
+const { NstrumentaClient } = require('nstrumenta/dist/module/client');
+const nst = new NstrumentaClient({ hostUrl: "ws://localhost:8088" });
+
+nst.addListener('open', () => {
+  nst.subscribe('CHANNEL', (event) => {
+    console.log(event);
+  });
+});
+```
+
+```console
+$ node index.js
 ```
