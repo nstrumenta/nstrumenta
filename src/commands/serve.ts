@@ -6,6 +6,7 @@ import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../models/
 // first step: pull nst-compute into nstrumenta command; next, remove host.js layer... does that mean remove serve-index?
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
+import { getCurrentContext } from '../lib';
 
 const FormData = require('form-data');
 
@@ -16,9 +17,15 @@ export interface ServerStatus {
 }
 
 export const Serve = async (options: { port: string; project: string; debug: boolean }) => {
-  const port = Number(options.port);
+  const { projectId: contextProjectId, wsHost: contextWSHost } = getCurrentContext();
+  const contextWSPortRegExResult = /.*\:(\d+)$/.exec(contextWSHost);
+
+  const port = Number(
+    options.port ? options.port : contextWSPortRegExResult ? contextWSPortRegExResult[1] : 8088
+  );
   console.log('port: ', port);
-  const projectId = options.project;
+
+  const projectId = options.project ? options.project : contextProjectId;
   if (options.debug) console.log(options, port, projectId);
 
   const app = express();

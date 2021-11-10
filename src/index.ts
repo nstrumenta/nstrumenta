@@ -66,7 +66,7 @@ program
 
 program
   .command('serve')
-  .option('-p,--port <port>', 'websocket port', '8088')
+  .option('-p,--port <port>', 'websocket port')
   .option('-d, --debug <debug>', 'output extra debugging')
   .option('--project <project>', 'nstrumenta project Id')
   .description('spin up a pubsub server')
