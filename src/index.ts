@@ -58,15 +58,15 @@ program
 
 program
   .command('subscribe')
-  .argument('<host>', 'websocket host')
-  .argument('<channel>', 'channel for subscription')
+  .argument('[host]', 'websocket host')
+  .option('<channel>', 'channel for subscription')
   .option('-m,--message-only', 'parses json and prints only message')
   .description('subscribe to host on channel')
   .action(Subscribe);
 
 program
   .command('serve')
-  .option('-p,--port <port>', 'websocket port', '8088')
+  .option('-p,--port <port>', 'websocket port')
   .option('-d, --debug <debug>', 'output extra debugging')
   .option('--project <project>', 'nstrumenta project Id')
   .description('spin up a pubsub server')
