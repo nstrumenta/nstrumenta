@@ -70,6 +70,7 @@ typings/
 
 # build artifacts
 dist
+bin
 
 # ide
 .idea
