@@ -2,7 +2,10 @@ import axios from 'axios';
 import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
-import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../models/BusMessage';
+import {
+  deserializeWireMessage,
+  makeBusMessageFromJsonObject,
+} from '../../modules/models/BusMessage';
 // first step: pull nst-compute into nstrumenta command; next, remove host.js layer... does that mean remove serve-index?
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -23,7 +26,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   const port = Number(
     options.port ? options.port : contextWSPortRegExResult ? contextWSPortRegExResult[1] : 8088
   );
-  console.log('port: ', port);
+  console.log('porto!: ', port);
 
   const projectId = options.project ? options.project : contextProjectId;
   if (options.debug) console.log(options, port, projectId);

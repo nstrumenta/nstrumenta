@@ -3,7 +3,7 @@ import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from '../models/BusMessage';
+} from '../../modules/models/BusMessage';
 import { WebSocket } from 'ws';
 import { getCurrentContext } from '../lib';
 import { red } from 'colors';
@@ -19,7 +19,7 @@ export const Publish = async (url: string, { channel }: { channel: string }) => 
   }
 
   if (!channel) {
-    console.log(red('no ws channel specified either as cli option or in current context'));
+    console.log(red('no ws channel specified either as modules option or in current context'));
     return;
   }
 
@@ -48,7 +48,7 @@ export const Subscribe = async (
   }
 
   if (!channel) {
-    console.log(red('no ws channel specified either as cli option or in current context'));
+    console.log(red('no ws channel specified either as modules option or in current context'));
     return;
   }
 
