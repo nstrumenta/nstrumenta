@@ -2,10 +2,7 @@ import axios from 'axios';
 import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
-import {
-  deserializeWireMessage,
-  makeBusMessageFromJsonObject,
-} from '../../modules/models/BusMessage';
+import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../models/BusMessage';
 // first step: pull nst-compute into nstrumenta command; next, remove host.js layer... does that mean remove serve-index?
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';

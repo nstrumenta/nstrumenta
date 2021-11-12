@@ -5,16 +5,14 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./dist"
+    "./dist/models/": "./dist/models/"
   },
   "bin": {
-    "nstrumenta": "bin/src/index.js",
-    "nst": "bin/src/index.js"
+    "nstrumenta": "dist/index.js",
+    "nst": "dist/index.js"
   },
   "scripts": {
-    "build:cli": "tsc --project ./src && cp index.ejs bin/index.ejs",
-    "build:module": "tsc --project ./modules",
-    "build": "npm run build:cli && npm run build:module",
+    "build": "tsc --project ./ && cp index.ejs dist/index.ejs",
     "dev": "nodemon -- machines list",
     "release": "npm run build ; standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"

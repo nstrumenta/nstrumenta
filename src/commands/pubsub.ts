@@ -3,7 +3,7 @@ import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from '../../modules/models/BusMessage';
+} from '../models/BusMessage';
 import { WebSocket } from 'ws';
 import { getCurrentContext } from '../lib';
 import { red } from 'colors';
