@@ -26,7 +26,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   const port = Number(
     options.port ? options.port : contextWSPortRegExResult ? contextWSPortRegExResult[1] : 8088
   );
-  console.log('porto!: ', port);
+  console.log('port: ', port);
 
   const projectId = options.project ? options.project : contextProjectId;
   if (options.debug) console.log(options, port, projectId);
