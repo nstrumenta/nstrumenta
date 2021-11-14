@@ -9,6 +9,7 @@
     "nst": "dist/cli/index.js"
   },
   "files": [
+    "dist/**",
     "index.ejs",
     "public/**"
   ],
