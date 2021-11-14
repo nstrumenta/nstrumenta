@@ -29,7 +29,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   if (options.debug) console.log(options, port, projectId);
 
   const app = express();
-  app.set('views', '.');
+  app.set('views', __dirname + '/../..');
   app.set('view engine', 'ejs');
 
   const server = require('http').Server(app);
@@ -127,7 +127,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
     updateStatus();
   }, 3000);
 
-  app.use(express.static('./public'));
+  app.use(express.static(__dirname + '/../../public'));
   app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
   app.get('/', function (req, res) {

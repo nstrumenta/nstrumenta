@@ -8,10 +8,14 @@
     "nstrumenta": "dist/cli/index.js",
     "nst": "dist/cli/index.js"
   },
+  "files": [
+    "index.ejs",
+    "public/**"
+  ],
   "scripts": {
     "clean": "rm -rf dist",
     "build": "tsc --project ./",
-    "dev": "nodemon -- machines list",
+    "dev": "nodemon -- serve",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
   },
