@@ -3,9 +3,9 @@ import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from '../models/BusMessage';
+} from '../lib/busMessage';
 import { WebSocket } from 'ws';
-import { getCurrentContext } from '../lib';
+import { getCurrentContext } from '../lib/context';
 import { red } from 'colors';
 
 export const Publish = async (url: string, { channel }: { channel: string }) => {

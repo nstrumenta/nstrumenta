@@ -2,11 +2,11 @@ import axios from 'axios';
 import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
-import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../models/BusMessage';
+import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../lib/busMessage';
 // first step: pull nst-compute into nstrumenta command; next, remove host.js layer... does that mean remove serve-index?
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
-import { getCurrentContext } from '../lib';
+import { getCurrentContext } from '../lib/context';
 
 const FormData = require('form-data');
 
@@ -29,7 +29,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   if (options.debug) console.log(options, port, projectId);
 
   const app = express();
-  app.set('views', '.');
+  app.set('views', __dirname + '/../..');
   app.set('view engine', 'ejs');
 
   const server = require('http').Server(app);
@@ -127,7 +127,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
     updateStatus();
   }, 3000);
 
-  app.use(express.static('./public'));
+  app.use(express.static(__dirname + '/../../public'));
   app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
   app.get('/', function (req, res) {

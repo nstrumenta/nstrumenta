@@ -2,19 +2,21 @@
   "name": "nstrumenta",
   "version": "1.0.34",
   "description": "cli tool for nstrumenta",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "exports": {
-    "./dist/models/": "./dist/models/"
-  },
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
   "bin": {
-    "nstrumenta": "dist/index.js",
-    "nst": "dist/index.js"
+    "nstrumenta": "dist/cli/index.js",
+    "nst": "dist/cli/index.js"
   },
+  "files": [
+    "index.ejs",
+    "public/**"
+  ],
   "scripts": {
-    "build": "tsc --project ./ && cp index.ejs dist/index.ejs",
-    "dev": "nodemon -- machines list",
-    "release": "npm run build ; standard-version --release-as patch",
+    "clean": "rm -rf dist",
+    "build": "tsc --project ./",
+    "dev": "nodemon -- serve",
+    "release": "npm run clean; npm run build ; standard-version --release-as patch",
     "nst:local": "LOCAL=true nstrumenta"
   },
   "repository": {
