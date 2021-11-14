@@ -1,9 +1,9 @@
 import Colors from 'colors';
 import Conf from 'conf';
 import Inquirer from 'inquirer';
-import { Keys } from '../index';
+import { Keys } from '../cli/index';
 import { schema } from '../schema';
-import { getContextProperty, setContextProperty } from '../lib';
+import { getContextProperty, setContextProperty } from '../lib/context';
 
 const { cyan, green, yellow } = Colors;
 
