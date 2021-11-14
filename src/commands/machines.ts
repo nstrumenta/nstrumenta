@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Conf from 'conf';
-import { getContextProperty } from '../lib';
+import { getContextProperty } from '../lib/context';
 
 // TODO: add a local bool to context to handle this; or something like that
 const endpoints = process.env.LOCAL
