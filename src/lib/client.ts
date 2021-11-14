@@ -2,7 +2,7 @@ import {
   deserializeBlob,
   deserializeWireMessage,
   makeBusMessageFromJsonObject,
-} from './BusMessage';
+} from './busMessage';
 
 const DEFAULT_HOST_PORT = 8088;
 
@@ -11,7 +11,7 @@ type SubscriptionCallback = (message?: any) => void;
 
 export interface NstrumentaClientOptions {
   apiKey: string;
-  hostUrl?: string;
+  wsUrl?: string;
   projectId: string;
 }
 
@@ -21,11 +21,11 @@ export class NstrumentaClient {
   subscriptions: Map<string, SubscriptionCallback[]>;
   ws: WebSocket | null = null;
 
-  constructor({ apiKey, hostUrl, projectId }: NstrumentaClientOptions) {
+  constructor({ apiKey, wsUrl, projectId }: NstrumentaClientOptions) {
     // TODO: validation of apiKey and projectId
     this.listeners = new Map();
     this.subscriptions = new Map();
-    this.host = new URL(hostUrl ? hostUrl : this.host);
+    this.host = new URL(wsUrl ? wsUrl : this.host);
     this.subscribe = this.subscribe.bind(this);
     this.init = this.init.bind(this);
   }

@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { AddKey, ListProjects, SetProject } from './commands/auth';
-import { ListMachines } from './commands/machines';
-import { Publish, Subscribe } from './commands/pubsub';
-import { Serve } from './commands/serve';
-import { initContexts } from './lib';
+import { AddKey, ListProjects, SetProject } from '../commands/auth';
+import { ListMachines } from '../commands/machines';
+import { Publish, Subscribe } from '../commands/pubsub';
+import { Serve } from '../commands/serve';
+import { initContexts } from '../lib/context';
 import {
   AddContext,
   ClearConfig,
@@ -13,11 +13,11 @@ import {
   ListContexts,
   SetContext,
   SetContextProperty,
-} from './commands/contexts';
+} from '../commands/contexts';
 
 export const DEFAULT_HOST_PORT = '8080';
 
-const version = require('../package.json').version;
+const version = require('../../package.json').version;
 
 export interface Keys {
   [key: string]: string;

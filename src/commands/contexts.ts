@@ -6,7 +6,7 @@ import {
   getCurrentContext,
   setContext,
   setContextProperty,
-} from '../lib';
+} from '../lib/context';
 import { blue, red, yellow } from 'colors';
 import Inquirer from 'inquirer';
 import { schema } from '../schema';
