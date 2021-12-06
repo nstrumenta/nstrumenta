@@ -1,18 +1,50 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+  <title>nstrumenta serve</title>
+</head>
+
 <body>
-  <div id="host-status">host status</div>
-  <form id="form">
-    <label>channel: <input type="text" id="channel" value="test"></label>
-    <label>message: <input type="text" id="message" value="hello world!"></label>
-    <button type="button" onclick="send()">Send Json</button>
-  </form>
-  <form id="form">
-    <label>channel: <input type="text" id="subscribeChannel" value="test"></label>
-    <button type="button" onclick="subscribe()">Subscribe</button>
-  </form>
-  <textarea id="outputTextArea" style="width: 100%;height: 500px;"></textarea>
+  <div class="mdl-layout mdl-js-layout">
+    <div class="mdl-grid">
+      <div class="mdl-cell mdl-cell--8-col">
+        <form id="form">
+          <h4>Send on channel:</h4>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="channel">
+            <label class="mdl-textfield__label" for="channel">channel: </label>
+          </div>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="message">
+            <label class="mdl-textfield__label" for="message">message: </label>
+          </div>
+          <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" type="button"
+            onclick="send()">Send
+            Json</button>
+        </form>
+      </div>
+      <div class="mdl-cell mdl-cell--8-col">
+        <form id="form">
+          <h4>Add subscription:</h4>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+            <input class="mdl-textfield__input" type="text" id="subscribeChannel">
+            <label class="mdl-textfield__label" for="subscribeChannel">channel: </label>
+          </div>
+          <button class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" type="button"
+            onclick="subscribe()">Subscribe</button>
+        </form>
+      </div>
+      <textarea class="mdl-textfield" id="outputTextArea" style="width: 100%;height: 500px;"></textarea>
+      <div class="mdl-textfield" id="host-status">host status</div>
+    </div>
+  </div>
+
+  <!-- material design lite start -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+  <!-- material design lite end -->
 
   <script src='placeholder.js'></script>
   <script async src="sandbox-client.js"></script>
