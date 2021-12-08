@@ -127,8 +127,12 @@ export const Serve = async (options: { port: string; project: string; debug: boo
     updateStatus();
   }, 3000);
 
+  // serves from npm path for admin page
   app.use(express.static(__dirname + '/../../public'));
   app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
+
+  //serves public subfolder from execution path for serving sandboxes 
+  app.use('/sandbox', express.static('public'), serveIndex('public', { icons: false }));
 
   app.get('/', function (req, res) {
     res.render('index', { src: src || 'placeholder.html' });
