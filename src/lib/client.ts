@@ -1,6 +1,7 @@
 import {
   deserializeBlob,
   deserializeWireMessage,
+  makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from './busMessage';
 
@@ -63,6 +64,12 @@ export class NstrumentaClient {
     //buffer to handle messages before initial connection with parent
     console.log('sandbox-client send', channel, message);
     this.ws?.send(makeBusMessageFromJsonObject(channel, message).buffer);
+  }
+
+  sendBuffer(channel: string, buffer: ArrayBufferLike) {
+    //buffer to handle messages before initial connection with parent
+    console.log('sandbox-client sendBuffer', channel, buffer);
+    this.ws?.send(makeBusMessageFromBuffer(channel, buffer));
   }
 
   subscribe(channel: string, callback: SubscriptionCallback) {
