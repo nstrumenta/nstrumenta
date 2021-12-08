@@ -29,7 +29,7 @@ export const Publish = async (url: string, { channel }: { channel: string }) => 
     console.log('connected to ', url, channel);
 
     process.stdin.on('data', (buffer) => {
-      ws.send(makeBusMessageFromBuffer(channel, buffer).buffer);
+      ws.send(makeBusMessageFromBuffer(channel, buffer));
     });
   });
 };

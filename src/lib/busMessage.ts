@@ -1,6 +1,6 @@
 import ByteBuffer from 'bytebuffer';
 
-export class BusMessage extends ByteBuffer {}
+export class BusMessage extends ByteBuffer { }
 export enum BusMessageType {
   BUS_MESSAGE_TYPES_BEGIN = 100,
   Json,
@@ -29,8 +29,15 @@ export const makeBusMessageFromJsonObject = (
     .writeIString(JSON.stringify(object));
 };
 
-export const makeBusMessageFromBuffer = (channel: string, buffer: Buffer): BusMessage => {
-  return new ByteBuffer().writeUint32(BusMessageType.Buffer).writeIString(channel).append(buffer);
+export const makeBusMessageFromBuffer = (channel: string, buffer: ArrayBufferLike): ArrayBuffer => {
+  const busMessageBuffer = new ByteBuffer()
+    .writeUint32(BusMessageType.Buffer)
+    .writeIString(channel)
+    .append(buffer)
+    .flip()
+    .toBuffer();
+
+  return busMessageBuffer;
 };
 
 export const deserializeBlob: (input: Blob) => Promise<DeserializedMessage> = async (input) => {
