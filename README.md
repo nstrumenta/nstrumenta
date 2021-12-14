@@ -146,7 +146,7 @@ Will use the current context for configuration if no args/options.
 
 ### <a name="publish"></a>publish
 
-Publish to a channel on the websocket host. Pipe a process reading from a sensor into `nstrumenta publish`
+Send to a channel on the websocket host. Pipe a process reading from a sensor into `nstrumenta publish`
 
 ```
 publish {WS_HOST} --{channel | c CHANNEL}

@@ -2,7 +2,7 @@
 import { Command } from 'commander';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import { ListMachines } from '../commands/machines';
-import { Publish, Subscribe } from '../commands/pubsub';
+import { Send, Subscribe } from '../commands/pubsub';
 import { Serve } from '../commands/serve';
 import { initContexts } from '../lib/context';
 import {
@@ -50,11 +50,11 @@ authCommand
   .action(SetProject);
 
 program
-  .command('publish')
+  .command('send')
   .argument('[host]', 'websocket host')
-  .option('-c,--channel <channel>', 'channel to publish')
-  .description('publish to host on channel')
-  .action(Publish);
+  .option('-c,--channel <channel>', 'channel to send')
+  .description('send to host on channel')
+  .action(Send);
 
 program
   .command('subscribe')

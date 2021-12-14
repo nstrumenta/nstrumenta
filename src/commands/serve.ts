@@ -98,7 +98,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
       });
     });
 
-    //publish host status to all subscribers
+    //send host status to all subscribers
     const channel = '_host-status';
     subscriptions.forEach((subChannels, subWebSocket) => {
       if (subChannels.has(channel)) {
@@ -131,7 +131,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
   app.use(express.static(__dirname + '/../../public'));
   app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
-  //serves public subfolder from execution path for serving sandboxes 
+  //serves public subfolder from execution path for serving sandboxes
   app.use('/sandbox', express.static('public'), serveIndex('public', { icons: false }));
 
   app.get('/', function (req, res) {

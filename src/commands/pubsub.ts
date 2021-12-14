@@ -8,7 +8,7 @@ import { WebSocket } from 'ws';
 import { getCurrentContext } from '../lib/context';
 import { red } from 'colors';
 
-export const Publish = async (url: string, { channel }: { channel: string }) => {
+export const Send = async (url: string, { channel }: { channel: string }) => {
   const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
   url = url ? url : contextWsHost;
   channel = channel ? channel : contextChannel;
