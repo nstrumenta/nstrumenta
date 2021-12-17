@@ -4,9 +4,9 @@
 
 Use the cli to:
 
-- subscribe and publish to a websocket server and pipe between files or processes 
+- subscribe and send to a websocket server and pipe between files or processes 
 - ~~manage~~ list your vm servers
-- ~~publish your sandbox~~
+- ~~send your sandbox~~
 
 ### [nstrumenta javascript client module](#module)
 
@@ -40,13 +40,13 @@ $ nstrumenta serve
 $ nstrumenta subscribe
 ```
 
-#### terminal 3 publisher
+#### terminal 3 sender
 
 ```console
-$ nstrumenta publish 
+$ nstrumenta send 
 ```
 
-At this point you can send messages from the the terminal with the publishing process, and they'll be read and displayed by any subscriber process. Try typing something and pressing enter. Next up, try piping from the subscribe to another process or a file.
+At this point you can send messages from the the terminal with the sending process, and they'll be read and displayed by any subscriber process. Try typing something and pressing enter. Next up, try piping from the subscribe to another process or a file.
 
 ## cli reference
 
@@ -72,7 +72,7 @@ nstrumenta will save your configuration scoped to the current user. Within this 
 - [context](#context)
 - [machines](#machines)
 - [subscribe](#subscribe)
-- [publish](#publish)
+- [send](#send)
 - [serve](#serve)
 
 ***
@@ -144,12 +144,12 @@ Will use the current context for configuration if no args/options.
 
 ***
 
-### <a name="publish"></a>publish
+### <a name="send"></a>send
 
-Publish to a channel on the websocket host. Pipe a process reading from a sensor into `nstrumenta publish`
+Send to a channel on the websocket host. Pipe a process reading from a sensor into `nstrumenta send`
 
 ```
-publish {WS_HOST} --{channel | c CHANNEL}
+send {WS_HOST} --{channel | c CHANNEL}
 ```
 
 Will use the current context for configuration if no args/options.
@@ -164,7 +164,7 @@ Start websocket pubsub host locally
 $ nstrumenta serve {--project PROJECT_NAME} {--port | -p PORT} {--debug | -d}
 ```
 
-When running this locally, set the **wsHost** property in context to `ws://localhost:PORT` and then, _publish_ and _subscribe_ can be run without arguments and will communicate via this local host. 
+When running this locally, set the **wsHost** property in context to `ws://localhost:PORT` and then, _send_ and _subscribe_ can be run without arguments and will communicate via this local host. 
 
 e.g.,
 
@@ -181,7 +181,7 @@ port:  8088
 listening on *:8088
 ```
 
-Websockets provide a full duplex, always on message based connection. The server will _receive_ messages from a **publisher** on a specified channel, and will _broadcast_ messages to all **subscribers** to that channel. These subscribers and publishers can be isntantiated with the cli for piping between processes, or can be created and used in a node or web based app using the nstrumenta [client module](#module). 
+Websockets provide a full duplex, always on message based connection. The server will _receive_ messages from a **sender** on a specified channel, and will _broadcast_ messages to all **subscribers** to that channel. These subscribers and senders can be isntantiated with the cli for piping between processes, or can be created and used in a node or web based app using the nstrumenta [client module](#module). 
 
 ## <a name="module"></a> Client Module
 
