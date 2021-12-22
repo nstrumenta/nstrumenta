@@ -1,4 +1,7 @@
 import fs from 'fs/promises';
+import { getCurrentContext } from '../lib/context';
+import { asyncSpawn } from '../lib';
+import axios from 'axios';
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
@@ -8,17 +11,6 @@ export interface Module {
   folder: string;
   entry: string;
 }
-
-// map of module types to upload promises
-const uploadHandlers: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
-  sandbox: (module) => {
-    console.log(`sandbox ${module.name}`);
-    // return uploadSandboxFromFolder(module, projectDir, projectId, commitId); // <<= expand this fn right here
-    return new Promise((res) => res); // TODO: wip
-  },
-  nodejs: (module: Module) => new Promise((res) => res), // placeholder
-  algorithm: (module: Module) => new Promise((res) => res), // placeholder
-};
 
 export const Publish = async ({ name }: { name?: string }) => {
   let config: { [key: string]: unknown; modules: Module[] };
@@ -33,9 +25,51 @@ export const Publish = async ({ name }: { name?: string }) => {
   }
 
   const modules = name ? config.modules.filter((m) => m.name === name) : config.modules;
-  console.log('modules: ', modules);
-  const promises = modules.map((module) => uploadHandlers[module.type]);
+  console.log(
+    `publish modules ${modules.map(({ name }) => name).join(', ')} to project ${
+      getCurrentContext().name
+    }`
+  );
+
+  const promises = modules.map(publishModule);
   const results = await Promise.all(promises);
 
   console.log(results);
+};
+
+export const publishModule = async (module: Module) => {
+  const filename = `${module.name}.tar.gz`;
+  const { folder } = module;
+  let url = '';
+
+  // first, make tarball
+  try {
+    await asyncSpawn('tar', ['-czvf', filename, folder], { cwd: process.cwd() });
+  } catch (e) {
+    console.warn(`Error: problem creating ${filename} from ${folder}`);
+    throw e;
+  }
+
+  // then, get an upload url to put the tarball into storage
+  try {
+    url = await axios.post(
+      'https://us-central1-macro-coil-194519.cloudfunctions.net/getSignedUploadUrl',
+      {
+        path: `${module.type}/${filename}`,
+      },
+      {
+        headers: {
+          contentType: 'application/json',
+          'x-api-key': getCurrentContext().projectId,
+        },
+      }
+    );
+  } catch (e) {
+    console.warn('Error: problem getting upload url');
+    throw e;
+  }
+  console.log(`url: ${url}`);
+
+  // start the request, return promise
+  return axios.put(url);
 };
