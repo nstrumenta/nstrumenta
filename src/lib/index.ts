@@ -1,7 +1,8 @@
-export { NstrumentaClient } from "./client";
+export { NstrumentaClient } from './client';
 export {
-    BusMessage,
-    deserializeBlob,
-    deserializeWireMessage,
-    makeBusMessageFromJsonObject,
+  BusMessage,
+  deserializeBlob,
+  deserializeWireMessage,
+  makeBusMessageFromJsonObject,
 } from './busMessage';
+export { asyncSpawn } from './utils';
