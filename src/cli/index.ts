@@ -14,6 +14,7 @@ import {
   SetContext,
   SetContextProperty,
 } from '../commands/contexts';
+import { Publish } from '../commands/publish';
 
 export const DEFAULT_HOST_PORT = '8080';
 
@@ -71,6 +72,13 @@ program
   .option('--project <project>', 'nstrumenta project Id')
   .description('spin up a pubsub server')
   .action(Serve);
+
+const moduleCommand = program.command('module');
+moduleCommand
+  .command('publish')
+  .option('-n, --name <name>', 'specify single module from config')
+  .description('publish modules')
+  .action(Publish);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);
