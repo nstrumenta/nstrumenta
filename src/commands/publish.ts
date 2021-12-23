@@ -2,6 +2,11 @@ import fs from 'fs/promises';
 import { getCurrentContext } from '../lib/context';
 import { asyncSpawn } from '../lib';
 import axios from 'axios';
+import Conf from 'conf';
+import { schema } from '../schema';
+import { Keys } from '../cli';
+
+const config = new Conf(schema as any);
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
@@ -52,7 +57,8 @@ export const publishModule = async (module: Module) => {
 
   // then, get an upload url to put the tarball into storage
   try {
-    url = await axios.post(
+    const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+    const response = await axios.post(
       'https://us-central1-macro-coil-194519.cloudfunctions.net/getSignedUploadUrl',
       {
         path: `${module.type}/${filename}`,
@@ -60,15 +66,17 @@ export const publishModule = async (module: Module) => {
       {
         headers: {
           contentType: 'application/json',
-          'x-api-key': getCurrentContext().projectId,
+          'x-api-key': apiKey,
         },
       }
     );
+
+    url = response.data?.uploadUrl;
   } catch (e) {
     console.warn('Error: problem getting upload url');
     throw e;
   }
-  console.log(`url: ${url}`);
+  console.log(`url: `, url);
 
   // start the request, return promise
   return axios.put(url);
