@@ -80,8 +80,15 @@ export const publishModule = async (module: Module) => {
     console.warn('Error: problem getting upload url');
     throw e;
   }
-  console.log(`url: `, url);
+
+  const fileBuffer = await fs.readFile(filename);
 
   // start the request, return promise
-  return axios.put(url);
+  axios.interceptors.request.use((r) => {
+    console.log('axios intercept: ', r);
+    r.headers.contentLength = `${size}`;
+    r.headers.contentLengthRange = `bytes 0-${size - 1}/${size}`;
+    return r;
+  });
+  return axios.put(url, fileBuffer);
 };
