@@ -10,8 +10,8 @@ export { asyncSpawn } from './utils';
 // TODO: add a local bool to context to handle this; or something like that
 export const endpoints = process.env.LOCAL
   ? {
-      GET_MACHINES: 'http://localhost:8080',
-      GET_SIGNED_UPLOAD_URL: 'http://localhost:8080',
+      GET_MACHINES: 'http://localhost:8080/getMachines',
+      GET_SIGNED_UPLOAD_URL: 'http://localhost:8080/getSignedUploadUrl',
     }
   : {
       GET_MACHINES: 'https://us-central1-macro-coil-194519.cloudfunctions.net/getMachines',
