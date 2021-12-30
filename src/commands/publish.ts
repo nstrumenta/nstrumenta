@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import { getCurrentContext } from '../lib/context';
-import { asyncSpawn } from '../lib';
+import { asyncSpawn, endpoints } from '../lib';
 import axios from 'axios';
 import Conf from 'conf';
 import { schema } from '../schema';
@@ -46,10 +46,12 @@ export const publishModule = async (module: Module) => {
   const filename = `${module.name}.tar.gz`;
   const { folder } = module;
   let url = '';
+  let size = 0;
 
   // first, make tarball
   try {
     await asyncSpawn('tar', ['-czvf', filename, folder], { cwd: process.cwd() });
+    size = (await fs.stat(filename)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${filename} from ${folder}`);
     throw e;
@@ -58,10 +60,12 @@ export const publishModule = async (module: Module) => {
   // then, get an upload url to put the tarball into storage
   try {
     const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+    console.log(endpoints.GET_SIGNED_UPLOAD_URL, apiKey);
     const response = await axios.post(
-      'https://us-central1-macro-coil-194519.cloudfunctions.net/getSignedUploadUrl',
+      endpoints.GET_SIGNED_UPLOAD_URL,
       {
         path: `${module.type}/${filename}`,
+        size,
       },
       {
         headers: {
@@ -76,8 +80,15 @@ export const publishModule = async (module: Module) => {
     console.warn('Error: problem getting upload url');
     throw e;
   }
-  console.log(`url: `, url);
+
+  const fileBuffer = await fs.readFile(filename);
 
   // start the request, return promise
-  return axios.put(url);
+  axios.interceptors.request.use((r) => {
+    console.log('axios intercept: ', r);
+    r.headers.contentLength = `${size}`;
+    r.headers.contentLengthRange = `bytes 0-${size - 1}/${size}`;
+    return r;
+  });
+  return axios.put(url, fileBuffer);
 };
