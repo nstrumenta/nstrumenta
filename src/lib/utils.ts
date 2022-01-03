@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import fs from 'fs/promises';
 
 export async function asyncSpawn(
   cmd: string,
@@ -31,3 +32,26 @@ export async function asyncSpawn(
   console.log(`spawn ${cmd} output ${output}`);
   return output;
 }
+
+export const getTmpDir = async () => {
+  const cwd = `${__dirname}/tmp`;
+
+  try {
+    await fs.mkdir(cwd);
+  } catch (err) {
+    // exists... hopefully?
+  }
+
+  try {
+    const stat = await fs.stat(cwd);
+    if (!stat.isDirectory()) {
+      throw new Error('no tmp dir');
+    }
+  } catch (err) {
+    console.warn((err as Error).message);
+    throw err;
+  }
+
+  console.log(`get tmp dir: ${cwd}`);
+  return cwd;
+};
