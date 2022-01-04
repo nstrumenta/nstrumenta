@@ -1,11 +1,3 @@
-export {
-  BusMessage,
-  deserializeBlob,
-  deserializeWireMessage,
-  makeBusMessageFromJsonObject,
-} from '../lib/busMessage';
-export { NstrumentaClient } from '../lib/client';
-
 const BASE_URL = process.env.LOCAL
   ? 'http://localhost:8080'
   : 'https://us-central1-macro-coil-194519.cloudfunctions.net';
