@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.44](https://github.com/nstrumenta/nstrumenta/compare/v1.0.43...v1.0.44) (2022-01-04)
+
+
+### Bug Fixes
+
+* **index:** restores lib/index ([dbcd76f](https://github.com/nstrumenta/nstrumenta/commit/dbcd76f76b95ad08d48a00e044a5730a0a86f46d))
+
 ### [1.0.43](https://github.com/nstrumenta/nstrumenta/compare/v1.0.42...v1.0.43) (2022-01-04)
 
 
