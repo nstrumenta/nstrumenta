@@ -1,7 +1,7 @@
 import axios from 'axios';
 import Conf from 'conf';
 import { getContextProperty } from '../lib/context';
-import { endpoints } from '../lib';
+import { endpoints } from '../shared';
 
 const config = new Conf();
 

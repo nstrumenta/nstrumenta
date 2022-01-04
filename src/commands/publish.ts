@@ -1,11 +1,11 @@
-import fs from 'fs/promises';
-import { getCurrentContext } from '../lib/context';
-import { asyncSpawn, endpoints } from '../lib';
 import axios from 'axios';
 import Conf from 'conf';
-import { schema } from '../schema';
+import fs from 'fs/promises';
+import { endpoints } from '../shared';
 import { Keys } from '../cli';
-import { getTmpDir } from '../lib/utils';
+import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { getCurrentContext } from '../lib/context';
+import { schema } from '../schema';
 
 const config = new Conf(schema as any);
 
