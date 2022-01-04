@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.43](https://github.com/nstrumenta/nstrumenta/compare/v1.0.42...v1.0.43) (2022-01-04)
+
+
+### Features
+
+* **session:** getToken on init ([1901223](https://github.com/nstrumenta/nstrumenta/commit/19012230573cf69599a8872e5b9e44558fd53c6a))
+
 ### [1.0.42](https://github.com/nstrumenta/nstrumenta/compare/v1.0.41...v1.0.42) (2022-01-03)
 
 ### [1.0.41](https://github.com/nstrumenta/nstrumenta/compare/v1.0.40...v1.0.41) (2021-12-08)
