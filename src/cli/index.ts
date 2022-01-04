@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import fs from 'fs/promises';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
-import { ListMachines } from '../commands/machines';
-import { Send, Subscribe } from '../commands/pubsub';
-import { Serve } from '../commands/serve';
-import { getCurrentContext, initContexts } from '../lib/context';
 import {
   AddContext,
   ClearConfig,
@@ -14,9 +11,12 @@ import {
   SetContext,
   SetContextProperty,
 } from '../commands/contexts';
+import { ListMachines } from '../commands/machines';
 import { Module, Publish } from '../commands/publish';
-import fs from 'fs/promises';
-import { asyncSpawn } from '../lib';
+import { Send, Subscribe } from '../commands/pubsub';
+import { Serve } from '../commands/serve';
+import { asyncSpawn } from './utils';
+import { initContexts } from '../lib/context';
 
 export const DEFAULT_HOST_PORT = '8080';
 

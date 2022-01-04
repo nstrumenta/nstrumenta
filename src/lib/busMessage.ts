@@ -1,6 +1,6 @@
 import ByteBuffer from 'bytebuffer';
 
-export class BusMessage extends ByteBuffer { }
+export class BusMessage extends ByteBuffer {}
 export enum BusMessageType {
   BUS_MESSAGE_TYPES_BEGIN = 100,
   Json,

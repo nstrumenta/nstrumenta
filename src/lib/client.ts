@@ -1,3 +1,5 @@
+import axios from 'axios';
+import { endpoints } from '../shared';
 import {
   deserializeBlob,
   deserializeWireMessage,
@@ -13,17 +15,17 @@ type SubscriptionCallback = (message?: any) => void;
 export interface NstrumentaClientOptions {
   apiKey: string;
   wsUrl?: string;
-  projectId: string;
 }
 
 export class NstrumentaClient {
   host: URL = new URL(`ws://localhost:${DEFAULT_HOST_PORT}`);
+  apiKey: string;
   listeners: Map<string, Array<ListenerCallback>>;
   subscriptions: Map<string, SubscriptionCallback[]>;
   ws: WebSocket | null = null;
 
-  constructor({ apiKey, wsUrl, projectId }: NstrumentaClientOptions) {
-    // TODO: validation of apiKey and projectId
+  constructor({ apiKey, wsUrl }: NstrumentaClientOptions) {
+    this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.host = new URL(wsUrl ? wsUrl : this.host);
@@ -31,9 +33,20 @@ export class NstrumentaClient {
     this.init = this.init.bind(this);
   }
 
-  async init(
-    nodeWebSocket?: new (url: string | URL, protocols?: string | string[] | undefined) => WebSocket
-  ) {
+  async init(nodeWebSocket?: new (url: string | URL) => WebSocket) {
+    const headers = {
+      'x-api-key': this.apiKey,
+      'Content-Type': 'application/json',
+    };
+    //TODO use the returned token
+    axios
+      .get<{ token: string }>(endpoints.GET_TOKEN, {
+        headers,
+      })
+      .then((res) => {
+        console.log('getToken', res);
+      });
+
     this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
     this.ws.addEventListener('open', () => {
       console.log(`client websocket opened <${this.host}>`);
