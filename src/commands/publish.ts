@@ -72,9 +72,9 @@ export const publishModule = async (module: Module) => {
   // then, get an upload url to put the tarball into storage
   try {
     const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    console.log(endpoints.GET_SIGNED_UPLOAD_URL, apiKey);
+    console.log(endpoints.GET_UPLOAD_URL, apiKey);
     const response = await axios.post(
-      endpoints.GET_SIGNED_UPLOAD_URL,
+      endpoints.GET_UPLOAD_URL,
       {
         path: remoteFileLocation,
         size,

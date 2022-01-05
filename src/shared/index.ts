@@ -4,7 +4,7 @@ const BASE_URL = process.env.LOCAL
 
 export const endpoints = {
   GET_MACHINES: `${BASE_URL}/getMachines`,
-  GET_SIGNED_UPLOAD_URL: `${BASE_URL}/getSignedUploadUrl`,
+  GET_UPLOAD_URL: `${BASE_URL}/getUploadUrl`,
   GET_TOKEN: `${BASE_URL}/getToken`,
   VERIFY_TOKEN: `${BASE_URL}/verifyToken`,
 };

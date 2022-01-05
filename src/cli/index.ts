@@ -113,7 +113,7 @@ agentCommand
     try {
       result = await asyncSpawn('node', [filename]);
     } catch (err) {
-      console.log('problem');
+      console.log('problem', err);
     }
 
     console.log('spawned agent ended', result);
