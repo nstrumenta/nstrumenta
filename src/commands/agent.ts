@@ -6,6 +6,7 @@ import { blue, red } from 'colors';
 import Conf from 'conf';
 import { Keys } from '../cli';
 import { getCurrentContext } from '../lib/context';
+import { schema } from '../schema';
 
 const prompt = Inquirer.createPromptModule();
 const config = new Conf(schema as any);
