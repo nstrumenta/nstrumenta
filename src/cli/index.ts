@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import fs from 'fs/promises';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -12,10 +11,10 @@ import {
   SetContextProperty,
 } from '../commands/contexts';
 import { ListMachines } from '../commands/machines';
-import { Module, Publish } from '../commands/publish';
+import { Publish } from '../commands/publish';
 import { Send, Subscribe } from '../commands/pubsub';
 import { Serve } from '../commands/serve';
-import { asyncSpawn } from './utils';
+import { Agent } from '../commands/agent';
 import { initContexts } from '../lib/context';
 
 export const DEFAULT_HOST_PORT = '8080';
@@ -82,42 +81,13 @@ moduleCommand
   .description('publish modules')
   .action(Publish);
 
-// Do we need a manual agent start, based on the current directory's .nstrumenta config?
+// Do we need a manual agent.ts start, based on the current directory's .nstrumenta config?
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
   .option('-n, --name <name>', 'specify single module from config')
   .description('WIP')
-  .action(async () => {
-    let config: { [key: string]: unknown; modules: Module[] };
-    try {
-      config = JSON.parse(
-        await fs.readFile(`.nstrumenta/config.json`, {
-          encoding: 'utf8',
-        })
-      );
-    } catch (error) {
-      throw Error(error as string);
-    }
-
-    const modules: Module[] = config.modules;
-    const [module] = modules; // just playing around here
-
-    if (module.type !== 'nodejs') {
-      console.log(`for now, nst needs a nodejs script to spawn, not ${module.type}`);
-      return;
-    }
-
-    const filename = `./${module.folder}/${module.entry}`;
-    let result;
-    try {
-      result = await asyncSpawn('node', [filename]);
-    } catch (err) {
-      console.log('problem', err);
-    }
-
-    console.log('spawned agent ended', result);
-  });
+  .action(Agent);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);

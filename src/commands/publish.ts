@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import Conf from 'conf';
 import fs from 'fs/promises';
 import { endpoints } from '../shared';
@@ -43,7 +43,7 @@ export const Publish = async ({ name }: { name?: string }) => {
   const promises = modules.map(publishModule);
   const results = await Promise.all(promises);
 
-  console.log(results.map((p) => p.status));
+  console.log(results.map((p) => typeof p === 'object' ? p.status : p));
 };
 
 export const publishModule = async (module: Module) => {
@@ -89,9 +89,10 @@ export const publishModule = async (module: Module) => {
 
     url = response.data?.uploadUrl;
   } catch (e) {
-    // @ts-ignore
-    console.log('::>');
-    throw new Error(`Can't upload`);
+    if (axios.isAxiosError(e)) {
+      return `Can't upload: ${e.response?.data}`;
+    }
+    throw new Error(`Can't upload: unknown error`);
   }
 
   const fileBuffer = await fs.readFile(tmpFileLocation);
