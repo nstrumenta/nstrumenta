@@ -85,8 +85,13 @@ moduleCommand
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
-  .option('-n, --name <name>', 'specify single module from config')
-  .description('WIP')
+  .option('-n, --name <name>', 'specify module name')
+  .option(
+    '-l, --noBackplane',
+    'require module locally in the current .nstrumenta project dir; --name also required here'
+  )
+  .option('-p, --path <path>', 'specify path (complete filename) of published module')
+  .description('start agent')
   .action(Agent);
 
 const contextCommand = program.command('context');
