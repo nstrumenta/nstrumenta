@@ -51,7 +51,7 @@ export const Agent = async function ({
   }
 
   // By this point, we need to have the files in place in
-  const result = await adapters[module.type](module);
+  const result = await adapters[module.type](module, noBackplane);
 
   console.log('=>', result);
 };
@@ -69,7 +69,7 @@ const useLocalModule = async (moduleName?: string) => {
   } catch (error) {
     throw Error(error as string);
   }
-
+  
   const modules: Module[] = config.modules;
   if (name === undefined) {
     name = await inquiryForSelectModule(modules.map((module) => module.name));
@@ -178,12 +178,12 @@ const getModuleFromStorage = async ({
 // Assumes that the files are already in place
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
+const adapters: Record<ModuleTypes, (module: Module, noBackplane?: boolean) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module) => {
+  nodejs: async (module, noBackplane) => {
     console.log(`adapt ${module.name} in ${module.folder}`);
 
-    const filename = `${getTmpDir()}/${module.folder}/${module.entry}`;
+    const filename = `${noBackplane ? '.' : await getTmpDir()}/${module.folder}/${module.entry}`;
     let result;
     try {
       const cwd = `./${module.folder}`;
