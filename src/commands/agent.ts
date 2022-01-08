@@ -51,7 +51,7 @@ export const Agent = async function ({
   }
 
   // By this point, we need to have the files in place in
-  const result = await adapters[module.type](module, noBackplane);
+  const result = await adapters[module.type](module);
 
   console.log('=>', result);
 };
@@ -75,7 +75,15 @@ const useLocalModule = async (moduleName?: string) => {
     name = await inquiryForSelectModule(modules.map((module) => module.name));
   }
 
-  return modules.find((module) => module.name === name);
+  // TODO: (*) get module def from nst-config.json within the module folder
+  const module = modules.find((module) => module.name === name);
+  if (!module) {
+    throw new Error('problem finding module in config');
+  }
+  return {
+    ...module,
+    folder: `${process.cwd()}/${module.folder}`,
+  };
 };
 
 const getModuleFromStorage = async ({
@@ -153,8 +161,6 @@ const getModuleFromStorage = async ({
     console.log('get url', url);
     const download = await axios.get(url, { responseType: 'stream' });
     const writeStream = createWriteStream(file);
-    console.log(writeStream instanceof WriteStream ? 'writesrea' : 'no stream');
-    console.log(download.data instanceof Stream ? 'data srea' : 'no stream');
 
     await pipeline(download.data, writeStream);
     console.log(`file written to ${file}`);
@@ -163,8 +169,7 @@ const getModuleFromStorage = async ({
   }
 
   // extract tar into subdir of tmp
-  const tarred = await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
-  console.log({ tarred });
+  await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
 
   // TODO: update 'publish' to publish Module config as metadata; pull that in here
   return {
@@ -182,12 +187,12 @@ const getModuleFromStorage = async ({
 // Assumes that the files are already in place
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: Module, noBackplane?: boolean) => Promise<unknown>> = {
+const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module, noBackplane) => {
+  nodejs: async (module) => {
     console.log(`adapt ${module.name} in ${module.folder}`);
 
-    const filename = `${noBackplane ? '.' : await getTmpDir()}/${module.folder}/${module.entry}`;
+    const filename = `${module.folder}/${module.entry}`;
     let result;
     try {
       const cwd = `${module.folder}`;
