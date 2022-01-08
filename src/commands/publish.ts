@@ -11,17 +11,20 @@ const config = new Conf(schema as any);
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
+// TODO: (*) redefine Module, as nst-config.json within each module folder won't need the 'folder' property
 export interface Module {
   version: string;
   type: ModuleTypes;
   name: string;
   folder: string;
   entry: string;
+  excludes?: string[];
 }
 
 export const Publish = async ({ name }: { name?: string }) => {
   let nstrumentaConfig: { [key: string]: unknown; modules: Module[] };
   try {
+    // TODO: (*) scan subdirectories for nst-config.json files for module defs
     nstrumentaConfig = JSON.parse(
       await fs.readFile(`.nstrumenta/config.json`, {
         encoding: 'utf8',
@@ -31,6 +34,7 @@ export const Publish = async ({ name }: { name?: string }) => {
     throw Error(error as string);
   }
 
+  // TODO: (*) scan subdirectories for nst-config.json files for module defs
   const modules = name
     ? nstrumentaConfig.modules.filter((m) => m.name === name)
     : nstrumentaConfig.modules;
@@ -40,21 +44,28 @@ export const Publish = async ({ name }: { name?: string }) => {
     }`
   );
 
-  const promises = modules.map(publishModule);
-  const results = await Promise.all(promises);
+  // TODO: (*) scan subdirectories for nst-config.json files for module defs
+  try {
+    const promises = modules.map(publishModule);
+    const results = await Promise.all(promises);
 
-  console.log(results.map((p) => typeof p === 'object' ? p.status : p));
+    console.log(results);
+  } catch (err) {
+    console.log('error', (err as Error).message);
+  } finally {
+    await fs.rm(await getTmpFileLocation());
+  }
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name } = module;
+  const { version, folder, name, excludes } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const tmpFileLocation = `${await getTmpDir()}/${fileName}`;
+  const tmpFileLocation = await getTmpFileLocation();
   const remoteFileLocation = `modules/${name}/${fileName}`;
   let url = '';
   let size = 0;
@@ -62,7 +73,11 @@ export const publishModule = async (module: Module) => {
   // first, make tarball
   try {
     // Could make tmp directoy at __dirname__, where the script is located?
-    await asyncSpawn('tar', ['-czvf', tmpFileLocation, folder], { cwd: process.cwd() });
+    const excludeArgs = excludes
+      ? excludes.map((pattern) => `--exclude="${pattern}"`)
+      : ['--exclude="./node_modules"'];
+    const args = [...excludeArgs, '-czvf', tmpFileLocation, '-C', folder, '.'];
+    const result = await asyncSpawn('tar', args, { cwd: process.cwd(), shell: true });
     size = (await fs.stat(tmpFileLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
@@ -72,7 +87,6 @@ export const publishModule = async (module: Module) => {
   // then, get an upload url to put the tarball into storage
   try {
     const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    console.log(endpoints.GET_UPLOAD_URL, apiKey);
     const response = await axios.post(
       endpoints.GET_UPLOAD_URL,
       {
@@ -95,6 +109,7 @@ export const publishModule = async (module: Module) => {
     throw new Error(`Can't upload: unknown error`);
   }
 
+  // this could be streamed...
   const fileBuffer = await fs.readFile(tmpFileLocation);
 
   // start the request, return promise
@@ -103,5 +118,10 @@ export const publishModule = async (module: Module) => {
     r.headers.contentLengthRange = `bytes 0-${size - 1}/${size}`;
     return r;
   });
-  return axios.put(url, fileBuffer);
+  await axios.put(url, fileBuffer);
+  return remoteFileLocation;
+};
+
+export const getTmpFileLocation = async () => {
+  return `${await getTmpDir()}/tmp.tar.gz`;
 };
