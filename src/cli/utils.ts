@@ -4,7 +4,7 @@ import fs from 'fs/promises';
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
-  options?: { cwd?: string },
+  options?: { cwd?: string; shell?: boolean },
   errCB?: (code: number) => void
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);

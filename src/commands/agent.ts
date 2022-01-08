@@ -1,7 +1,7 @@
 import { Module, ModuleTypes } from '../commands/publish';
 import fs from 'fs/promises';
-import { createWriteStream } from 'fs';
-import { pipeline as streamPipeline } from 'stream';
+import { createWriteStream, WriteStream } from 'fs';
+import { pipeline as streamPipeline, Stream } from 'stream';
 import { promisify } from 'util';
 import Inquirer from 'inquirer';
 import { asyncSpawn, getTmpDir } from '../cli/utils';
@@ -69,7 +69,7 @@ const useLocalModule = async (moduleName?: string) => {
   } catch (error) {
     throw Error(error as string);
   }
-  
+
   const modules: Module[] = config.modules;
   if (name === undefined) {
     name = await inquiryForSelectModule(modules.map((module) => module.name));
@@ -121,38 +121,42 @@ const getModuleFromStorage = async ({
 
   console.log(`get [${blue(path)}] from storage`);
 
-  let downloadUrlResponse;
+  // get the download url
+  let url;
   try {
     const downloadUrlConfig = {
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     };
     const downloadUrlData = { path };
-    downloadUrlResponse = await axios.post(
+    const downloadUrlResponse = await axios.post(
       endpoints.GET_DOWNLOAD_URL,
       downloadUrlData,
       downloadUrlConfig
     );
+    url = downloadUrlResponse.data;
   } catch (err) {
     throw new Error(`bad times, path: ${path}`);
   }
 
-  console.log(`download url: ${downloadUrlResponse.data.url}`);
+  // make sure we have a path to save to
   const tmp = await getTmpDir();
-  const file = `${tmp}/${path}`;
+  const file = `${tmp}/tmp.tar.gz`;
   const folder = `${tmp}/${path.replace('.tar.gz', '')}`;
-
-  const { url } = downloadUrlResponse.data;
+  try {
+    await fs.mkdir(folder, { recursive: true });
+  } catch (err) {
+    console.log('error making dir, probably exists');
+  }
 
   try {
     // get the file, write to the temp directory
-    const download = await axios.get(url);
-    console.log('download request:', download.data);
-    try {
-      await fs.mkdir(folder);
-    } catch (err) {
-      console.log('error making dir, probably exists');
-    }
-    await pipeline(download.data, createWriteStream(file));
+    console.log('get url', url);
+    const download = await axios.get(url, { responseType: 'stream' });
+    const writeStream = createWriteStream(file);
+    console.log(writeStream instanceof WriteStream ? 'writesrea' : 'no stream');
+    console.log(download.data instanceof Stream ? 'data srea' : 'no stream');
+
+    await pipeline(download.data, writeStream);
     console.log(`file written to ${file}`);
   } catch (err) {
     console.log(':(');
@@ -186,7 +190,7 @@ const adapters: Record<ModuleTypes, (module: Module, noBackplane?: boolean) => P
     const filename = `${noBackplane ? '.' : await getTmpDir()}/${module.folder}/${module.entry}`;
     let result;
     try {
-      const cwd = `./${module.folder}`;
+      const cwd = `${module.folder}`;
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
