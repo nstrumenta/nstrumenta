@@ -202,7 +202,14 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      result = await asyncSpawn('npm', ['run', 'start'], { cwd });
+      const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+      // for now passing apiKey to nodejs module as a command line arg
+      // this may be replaced by messages from the backplane 
+      result = await asyncSpawn(
+        'npm',
+        ['run', 'start', '--', `--apiKey=${apiKey}`],
+        { cwd, stdio: 'inherit', shell: true }
+      );
     } catch (err) {
       console.log('problem', err);
     }
