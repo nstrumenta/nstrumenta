@@ -4,19 +4,23 @@ import fs from 'fs/promises';
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
-  options?: { cwd?: string; shell?: boolean },
+  options?: { cwd?: string; shell?: boolean; stdio?: 'pipe' | 'inherit' },
   errCB?: (code: number) => void
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
+  args = args || [];
+  options = { ...options };
   const process = spawn(cmd, args, options);
 
   let output = '';
-  for await (const chunk of process.stdout) {
-    output += chunk;
-  }
   let error = '';
-  for await (const chunk of process.stderr) {
-    error += chunk;
+  if (process.stdout && process.stderr) {
+    for await (const chunk of process.stdout) {
+      output += chunk;
+    }
+    for await (const chunk of process.stderr) {
+      error += chunk;
+    }
   }
   const code: number = await new Promise((resolve) => {
     process.on('close', resolve);
