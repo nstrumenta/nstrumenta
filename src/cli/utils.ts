@@ -34,7 +34,7 @@ export async function asyncSpawn(
 }
 
 export const getTmpDir = async () => {
-  const cwd = `${__dirname}/tmp`;
+  const cwd = `${__dirname}/.nst`;
 
   try {
     await fs.mkdir(cwd);
@@ -45,13 +45,13 @@ export const getTmpDir = async () => {
   try {
     const stat = await fs.stat(cwd);
     if (!stat.isDirectory()) {
-      throw new Error('no tmp dir');
+      throw new Error('no .nst temp dir');
     }
   } catch (err) {
     console.warn((err as Error).message);
     throw err;
   }
 
-  console.log(`get tmp dir: ${cwd}`);
+  console.log(`get .nst temp dir: ${cwd}`);
   return cwd;
 };
