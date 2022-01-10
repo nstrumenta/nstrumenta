@@ -4,19 +4,23 @@ import fs from 'fs/promises';
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
-  options?: { cwd?: string; shell?: boolean },
+  options?: { cwd?: string; shell?: boolean; stdio?: 'pipe' | 'inherit' },
   errCB?: (code: number) => void
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
+  args = args || [];
+  options = { ...options };
   const process = spawn(cmd, args, options);
 
   let output = '';
-  for await (const chunk of process.stdout) {
-    output += chunk;
-  }
   let error = '';
-  for await (const chunk of process.stderr) {
-    error += chunk;
+  if (process.stdout && process.stderr) {
+    for await (const chunk of process.stdout) {
+      output += chunk;
+    }
+    for await (const chunk of process.stderr) {
+      error += chunk;
+    }
   }
   const code: number = await new Promise((resolve) => {
     process.on('close', resolve);
@@ -34,7 +38,7 @@ export async function asyncSpawn(
 }
 
 export const getTmpDir = async () => {
-  const cwd = `${__dirname}/tmp`;
+  const cwd = `${__dirname}/.nst`;
 
   try {
     await fs.mkdir(cwd);
@@ -45,13 +49,13 @@ export const getTmpDir = async () => {
   try {
     const stat = await fs.stat(cwd);
     if (!stat.isDirectory()) {
-      throw new Error('no tmp dir');
+      throw new Error('no .nst temp dir');
     }
   } catch (err) {
     console.warn((err as Error).message);
     throw err;
   }
 
-  console.log(`get tmp dir: ${cwd}`);
+  console.log(`get .nst temp dir: ${cwd}`);
   return cwd;
 };

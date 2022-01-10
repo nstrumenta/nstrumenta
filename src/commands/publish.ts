@@ -1,11 +1,11 @@
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import Conf from 'conf';
 import fs from 'fs/promises';
-import { endpoints } from '../shared';
 import { Keys } from '../cli';
 import { asyncSpawn, getTmpDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
+import { endpoints } from '../shared';
 
 const config = new Conf(schema as any);
 
@@ -17,7 +17,6 @@ export interface Module {
   type: ModuleTypes;
   name: string;
   folder: string;
-  entry: string;
   excludes?: string[];
 }
 
@@ -53,7 +52,9 @@ export const Publish = async ({ name }: { name?: string }) => {
   } catch (err) {
     console.log('error', (err as Error).message);
   } finally {
-    await fs.rm(await getTmpFileLocation());
+    // let's not clean up files here, keep them as a cache
+    // TODO check for existence of the download before downloading
+    // TODO add a clear cache / clean command
   }
 };
 
@@ -65,7 +66,7 @@ export const publishModule = async (module: Module) => {
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const tmpFileLocation = await getTmpFileLocation();
+  const downloadLocation = `${await getTmpDir()}/${fileName}`;
   const remoteFileLocation = `modules/${name}/${fileName}`;
   let url = '';
   let size = 0;
@@ -76,9 +77,9 @@ export const publishModule = async (module: Module) => {
     const excludeArgs = excludes
       ? excludes.map((pattern) => `--exclude="${pattern}"`)
       : ['--exclude="./node_modules"'];
-    const args = [...excludeArgs, '-czvf', tmpFileLocation, '-C', folder, '.'];
-    const result = await asyncSpawn('tar', args, { cwd: process.cwd(), shell: true });
-    size = (await fs.stat(tmpFileLocation)).size;
+    const args = [...excludeArgs, '-czvf', downloadLocation, '-C', folder, '.'];
+    await asyncSpawn('tar', args, { cwd: process.cwd(), shell: true });
+    size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
     throw e;
@@ -104,13 +105,13 @@ export const publishModule = async (module: Module) => {
     url = response.data?.uploadUrl;
   } catch (e) {
     if (axios.isAxiosError(e)) {
-      return `Can't upload: ${e.response?.data}`;
+      return `${fileName} ${e.response?.data}`;
     }
     throw new Error(`Can't upload: unknown error`);
   }
 
   // this could be streamed...
-  const fileBuffer = await fs.readFile(tmpFileLocation);
+  const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise
   axios.interceptors.request.use((r) => {

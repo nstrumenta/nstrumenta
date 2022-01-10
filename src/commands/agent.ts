@@ -1,16 +1,17 @@
-import { Module, ModuleTypes } from '../commands/publish';
-import fs from 'fs/promises';
-import { createWriteStream, WriteStream } from 'fs';
-import { pipeline as streamPipeline, Stream } from 'stream';
-import { promisify } from 'util';
-import Inquirer from 'inquirer';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
-import { blue, red } from 'colors';
+import axios from 'axios';
+import { blue } from 'colors';
 import Conf from 'conf';
+import { createWriteStream } from 'fs';
+import fs from 'fs/promises';
+import Inquirer from 'inquirer';
+import semver from 'semver';
+import { pipeline as streamPipeline } from 'stream';
+import { promisify } from 'util';
 import { Keys } from '../cli';
+import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { Module, ModuleTypes } from '../commands/publish';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
-import axios from 'axios';
 import { endpoints } from '../shared';
 
 const pipeline = promisify(streamPipeline);
@@ -25,16 +26,16 @@ const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
 
 export const Agent = async function ({
   name,
-  noBackplane,
+  local,
   path,
 }: {
   name?: string;
-  noBackplane?: boolean;
+  local?: boolean;
   path?: string;
 }): Promise<void> {
   let module;
 
-  switch (noBackplane) {
+  switch (local) {
     case true:
       module = await useLocalModule(name);
       break;
@@ -44,9 +45,7 @@ export const Agent = async function ({
 
   if (module === undefined) {
     throw new Error(
-      `module: ${blue(name || '--')} isn't defined ${
-        noBackplane ? 'in nstrumenta config' : 'in project'
-      }`
+      `module: ${blue(name || '--')} isn't defined ${local ? 'in nstrumenta config' : 'in project'}`
     );
   }
 
@@ -72,7 +71,12 @@ const useLocalModule = async (moduleName?: string) => {
 
   const modules: Module[] = config.modules;
   if (name === undefined) {
-    name = await inquiryForSelectModule(modules.map((module) => module.name));
+    name = await inquiryForSelectModule(
+      modules
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .map((module) => module.name)
+    );
   }
 
   // TODO: (*) get module def from nst-config.json within the module folder
@@ -93,7 +97,7 @@ const getModuleFromStorage = async ({
   name?: string;
   path?: string;
 }): Promise<Module> => {
-  let modules: Record<string, string[]>;
+  let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
   const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
 
@@ -103,24 +107,26 @@ const getModuleFromStorage = async ({
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
   });
 
-  // TODO: This mess transforms a list of modules in storage into a record
-  //  of module name keys assigned as value a list of the available versions
-  //  maybe it should live somewhere shared
-  modules = response.data.reduce((acc: Record<string, string[]>, next: string) => {
-    const nextAccumulator = { ...acc };
-    const match = /^([^/]+)\/(.*)/.exec(next);
-    const [, module] = match ? match : [];
-    if (module) {
-      nextAccumulator[module] = [...(nextAccumulator[module] ? nextAccumulator[module] : []), next];
+  response.data.forEach((path: string) => {
+    const name = path.split('/')[0];
+    const match = /(\d+)\.(\d+).(\d+)/.exec(path);
+    const version: string = match ? match[0] : '';
+    if (!serverModules[name]) {
+      serverModules[name] = [];
     }
-    return nextAccumulator;
-  }, {});
+    serverModules[name].push({ path, version });
+  });
 
   if (name === undefined && path === undefined) {
     // If user hasn't specified module name, ask for it here
-    name = await inquiryForSelectModule(Object.keys(modules));
-    const chosenModule = await inquiryForSelectModule(modules[name]);
-    path = chosenModule;
+    name = await inquiryForSelectModule(Object.keys(serverModules));
+    const chosenVersion = await inquiryForSelectModule(
+      serverModules[name]
+        .map((module) => module.version)
+        .sort(semver.compare)
+        .reverse()
+    );
+    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
   }
 
   if (!path) {
@@ -177,7 +183,6 @@ const getModuleFromStorage = async ({
     type: 'nodejs',
     folder,
     version: 'x.x.x',
-    entry: 'index.js',
   };
 };
 
@@ -191,15 +196,20 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
   nodejs: async (module) => {
     console.log(`adapt ${module.name} in ${module.folder}`);
-
-    const filename = `${module.folder}/${module.entry}`;
     let result;
     try {
       const cwd = `${module.folder}`;
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      result = await asyncSpawn('node', [filename]);
+      const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+      // for now passing apiKey to nodejs module as a command line arg
+      // this may be replaced by messages from the backplane 
+      result = await asyncSpawn(
+        'npm',
+        ['run', 'start', '--', `--apiKey=${apiKey}`],
+        { cwd, stdio: 'inherit', shell: true }
+      );
     } catch (err) {
       console.log('problem', err);
     }
