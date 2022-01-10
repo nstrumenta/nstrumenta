@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.47](https://github.com/nstrumenta/nstrumenta/compare/v1.0.46...v1.0.47) (2022-01-10)
+
+
+### Features
+
+* **agent start:** renames noBackplane to local ; fixes tmp file collisions ([c1193fa](https://github.com/nstrumenta/nstrumenta/commit/c1193fa6d0e6e8f2be59ea9e0473867d7417293e))
+
 ### [1.0.46](https://github.com/nstrumenta/nstrumenta/compare/v1.0.45...v1.0.46) (2022-01-10)
 
 ### [1.0.45](https://github.com/nstrumenta/nstrumenta/compare/v1.0.44...v1.0.45) (2022-01-07)
