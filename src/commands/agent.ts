@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { blue } from 'colors';
 import Conf from 'conf';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
@@ -18,6 +17,10 @@ const pipeline = promisify(streamPipeline);
 
 const prompt = Inquirer.createPromptModule();
 const config = new Conf(schema as any);
+
+const blue = (text: string) => {
+  return text;
+};
 
 const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
   const { module } = await prompt([{ type: 'list', name: 'module', message: 'Module', choices }]);
@@ -204,12 +207,12 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
       console.log(blue(`start the module...`));
       const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
       // for now passing apiKey to nodejs module as a command line arg
-      // this may be replaced by messages from the backplane 
-      result = await asyncSpawn(
-        'npm',
-        ['run', 'start', '--', `--apiKey=${apiKey}`],
-        { cwd, stdio: 'inherit', shell: true }
-      );
+      // this may be replaced by messages from the backplane
+      result = await asyncSpawn('npm', ['run', 'start', '--', `--apiKey=${apiKey}`], {
+        cwd,
+        stdio: 'inherit',
+        shell: true,
+      });
     } catch (err) {
       console.log('problem', err);
     }

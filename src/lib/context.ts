@@ -1,7 +1,10 @@
 import Conf from 'conf';
-import { schema } from '../schema';
 import { SetProject } from '../commands/auth';
-import { green } from 'colors';
+import { schema } from '../schema';
+
+const green = (text: string) => {
+  return text;
+};
 
 const config = new Conf(schema as any);
 

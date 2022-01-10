@@ -1,3 +1,4 @@
+import Inquirer from 'inquirer';
 import {
   addContext,
   clearConfig,
@@ -5,11 +6,17 @@ import {
   getContexts,
   getCurrentContext,
   setContext,
-  setContextProperty,
+  setContextProperty
 } from '../lib/context';
-import { blue, red, yellow } from 'colors';
-import Inquirer from 'inquirer';
 import { schema } from '../schema';
+
+const red = (text: string) => {
+  return text;
+};
+
+const yellow = (text: string) => {
+  return text;
+};
 
 const prompt = Inquirer.createPromptModule();
 
