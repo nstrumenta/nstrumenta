@@ -1,45 +1,51 @@
-import { Module, ModuleTypes } from '../commands/publish';
+import axios from 'axios';
+import { blue } from 'colors';
+import Conf from 'conf';
+import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
-import { blue, red } from 'colors';
-import Conf from 'conf';
+import semver from 'semver';
+import { pipeline as streamPipeline } from 'stream';
+import { promisify } from 'util';
 import { Keys } from '../cli';
+import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { Module, ModuleTypes } from '../commands/publish';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
+import { endpoints } from '../shared';
+
+const pipeline = promisify(streamPipeline);
 
 const prompt = Inquirer.createPromptModule();
 const config = new Conf(schema as any);
 
 const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
-  const { projectId } = await prompt([
-    { type: 'list', name: 'projectId', message: 'Project ID', choices },
-  ]);
-  return projectId;
+  const { module } = await prompt([{ type: 'list', name: 'module', message: 'Module', choices }]);
+  return module;
 };
 
 export const Agent = async function ({
   name,
-  noBackplane,
+  local,
+  path,
 }: {
   name?: string;
-  noBackplane?: boolean;
+  local?: boolean;
+  path?: string;
 }): Promise<void> {
   let module;
 
-  switch (noBackplane) {
+  switch (local) {
     case true:
       module = await useLocalModule(name);
       break;
     default:
-      module = await getModuleFromStorage(name);
+      module = await getModuleFromStorage({ name, path });
   }
 
   if (module === undefined) {
     throw new Error(
-      `module: ${blue(name || '--')} isn't defined ${
-        noBackplane ? 'in nstrumenta config' : 'in project'
-      }`
+      `module: ${blue(name || '--')} isn't defined ${local ? 'in nstrumenta config' : 'in project'}`
     );
   }
 
@@ -51,6 +57,8 @@ export const Agent = async function ({
 
 const useLocalModule = async (moduleName?: string) => {
   let config: { [key: string]: unknown; modules: Module[] };
+  let name = moduleName;
+
   try {
     config = JSON.parse(
       await fs.readFile(`.nstrumenta/config.json`, {
@@ -62,25 +70,120 @@ const useLocalModule = async (moduleName?: string) => {
   }
 
   const modules: Module[] = config.modules;
-  if (moduleName === undefined) {
-    moduleName = await inquiryForSelectModule(modules.map((module) => module.name));
-  }
-
-  return modules.find((module) => module.name === moduleName);
-};
-
-const getModuleFromStorage = async (name?: string) => {
   if (name === undefined) {
-    throw new Error(
-      `module name required; for now use ${red('--name')} option, or ${red(
-        '--noBackplane'
-      )} to use local modules`
+    name = await inquiryForSelectModule(
+      modules
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .map((module) => module.name)
     );
   }
 
+  // TODO: (*) get module def from nst-config.json within the module folder
+  const module = modules.find((module) => module.name === name);
+  if (!module) {
+    throw new Error('problem finding module in config');
+  }
+  return {
+    ...module,
+    folder: `${process.cwd()}/${module.folder}`,
+  };
+};
+
+const getModuleFromStorage = async ({
+  name: moduleName,
+  path,
+}: {
+  name?: string;
+  path?: string;
+}): Promise<Module> => {
+  let serverModules: Record<string, { path: string; version: string }[]> = {};
+  let name = moduleName;
   const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
 
-  console.log(`get [${blue(name)}] from storage`);
+  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
+  let response = await axios(endpoints.LIST_MODULES, {
+    method: 'post',
+    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+  });
+
+  response.data.forEach((path: string) => {
+    const name = path.split('/')[0];
+    const match = /(\d+)\.(\d+).(\d+)/.exec(path);
+    const version: string = match ? match[0] : '';
+    if (!serverModules[name]) {
+      serverModules[name] = [];
+    }
+    serverModules[name].push({ path, version });
+  });
+
+  if (name === undefined && path === undefined) {
+    // If user hasn't specified module name, ask for it here
+    name = await inquiryForSelectModule(Object.keys(serverModules));
+    const chosenVersion = await inquiryForSelectModule(
+      serverModules[name]
+        .map((module) => module.version)
+        .sort(semver.compare)
+        .reverse()
+    );
+    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
+  }
+
+  if (!path) {
+    throw new Error('no module and version chosen, or no path specified');
+  }
+
+  console.log(`get [${blue(path)}] from storage`);
+
+  // get the download url
+  let url;
+  try {
+    const downloadUrlConfig = {
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    };
+    const downloadUrlData = { path };
+    const downloadUrlResponse = await axios.post(
+      endpoints.GET_DOWNLOAD_URL,
+      downloadUrlData,
+      downloadUrlConfig
+    );
+    url = downloadUrlResponse.data;
+  } catch (err) {
+    throw new Error(`bad times, path: ${path}`);
+  }
+
+  // make sure we have a path to save to
+  const tmp = await getTmpDir();
+  const file = `${tmp}/tmp.tar.gz`;
+  const folder = `${tmp}/${path.replace('.tar.gz', '')}`;
+  try {
+    await fs.mkdir(folder, { recursive: true });
+  } catch (err) {
+    console.log('error making dir, probably exists');
+  }
+
+  try {
+    // get the file, write to the temp directory
+    console.log('get url', url);
+    const download = await axios.get(url, { responseType: 'stream' });
+    const writeStream = createWriteStream(file);
+
+    await pipeline(download.data, writeStream);
+    console.log(`file written to ${file}`);
+  } catch (err) {
+    console.log(':(');
+  }
+
+  // extract tar into subdir of tmp
+  await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
+
+  // TODO: update 'publish' to publish Module config as metadata; pull that in here
+  return {
+    name: 'whatever',
+    type: 'nodejs',
+    folder,
+    version: 'x.x.x',
+  };
 };
 
 // adapters/handlers for each type of module, run files (maybe memory??) in the
@@ -93,15 +196,20 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
   nodejs: async (module) => {
     console.log(`adapt ${module.name} in ${module.folder}`);
-
-    const filename = `${getTmpDir()}/${module.folder}/${module.entry}`;
     let result;
     try {
-      const cwd = `./${module.folder}`;
+      const cwd = `${module.folder}`;
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      result = await asyncSpawn('node', [filename]);
+      const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+      // for now passing apiKey to nodejs module as a command line arg
+      // this may be replaced by messages from the backplane 
+      result = await asyncSpawn(
+        'npm',
+        ['run', 'start', '--', `--apiKey=${apiKey}`],
+        { cwd, stdio: 'inherit', shell: true }
+      );
     } catch (err) {
       console.log('problem', err);
     }

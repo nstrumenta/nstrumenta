@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { Agent } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -8,13 +9,12 @@ import {
   GetCurrentContext,
   ListContexts,
   SetContext,
-  SetContextProperty,
+  SetContextProperty
 } from '../commands/contexts';
 import { ListMachines } from '../commands/machines';
 import { Publish } from '../commands/publish';
 import { Send, Subscribe } from '../commands/pubsub';
 import { Serve } from '../commands/serve';
-import { Agent } from '../commands/agent';
 import { initContexts } from '../lib/context';
 
 export const DEFAULT_HOST_PORT = '8080';
@@ -85,8 +85,13 @@ moduleCommand
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
-  .option('-n, --name <name>', 'specify single module from config')
-  .description('WIP')
+  .option('-n, --name <name>', 'specify module name')
+  .option(
+    '-l, --local',
+    'require module locally in the current .nstrumenta project dir; --name also required here'
+  )
+  .option('-p, --path <path>', 'specify path (complete filename) of published module')
+  .description('start agent')
   .action(Agent);
 
 const contextCommand = program.command('context');
