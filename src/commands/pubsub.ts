@@ -1,12 +1,15 @@
+import { WebSocket } from 'ws';
 import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject,
+  makeBusMessageFromJsonObject
 } from '../lib/busMessage';
-import { WebSocket } from 'ws';
 import { getCurrentContext } from '../lib/context';
-import { red } from 'colors';
+
+const red = (text: string) => {
+  return text;
+};
 
 export const Send = async (url: string, { channel }: { channel: string }) => {
   const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();

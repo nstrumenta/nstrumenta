@@ -1,11 +1,20 @@
-import Colors from 'colors';
 import Conf from 'conf';
 import Inquirer from 'inquirer';
 import { Keys } from '../cli/index';
-import { schema } from '../schema';
 import { getContextProperty, setContextProperty } from '../lib/context';
+import { schema } from '../schema';
 
-const { cyan, green, yellow } = Colors;
+const cyan = (text: string) => {
+  return text;
+};
+
+const green = (text: string) => {
+  return text;
+};
+
+const yellow = (text: string) => {
+  return text;
+};
 
 const prompt = Inquirer.createPromptModule();
 
