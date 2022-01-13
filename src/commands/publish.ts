@@ -2,11 +2,12 @@ import axios from 'axios';
 import Conf from 'conf';
 import fs from 'fs/promises';
 import { Keys } from '../cli';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { asyncSpawn, getTmpDir, walkDirectory } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
 
+export const MODULE_FILENAME = 'nst-config.json';
 const config = new Conf(schema as any);
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
@@ -16,36 +17,40 @@ export interface Module {
   version: string;
   type: ModuleTypes;
   name: string;
-  folder: string;
   excludes?: string[];
 }
 
 export const Publish = async ({ name }: { name?: string }) => {
   let nstrumentaConfig: { [key: string]: unknown; modules: Module[] };
-  try {
-    // TODO: (*) scan subdirectories for nst-config.json files for module defs
-    nstrumentaConfig = JSON.parse(
-      await fs.readFile(`.nstrumenta/config.json`, {
-        encoding: 'utf8',
-      })
-    );
-  } catch (error) {
-    throw Error(error as string);
+  let modules: Module[] = [];
+  console.log(`Traversing max 3 levels for modules (use --maxDepth to change) [TODO]`);
+  for await (const f of walkDirectory(process.cwd(), { maxDepth: 3 })) {
+    if (f.includes('node_modules')) {
+      continue;
+    }
+
+    if (new RegExp(`.*\/${MODULE_FILENAME}$`).exec(f)) {
+      const config: Module = JSON.parse(await fs.readFile(f, { encoding: 'utf8' }));
+      console.log(config);
+      modules = [...modules, config];
+    }
   }
 
   // TODO: (*) scan subdirectories for nst-config.json files for module defs
-  const modules = name
-    ? nstrumentaConfig.modules.filter((m) => m.name === name)
-    : nstrumentaConfig.modules;
   console.log(
-    `publish modules ${modules.map(({ name }) => name).join(', ')} to project ${
-      getCurrentContext().projectId
-    }`
+    `publish ${modules.length} modules: [${modules
+      .map(({ name }) => name)
+      .join(', ')}] to project ${getCurrentContext().projectId}`
   );
 
   // TODO: (*) scan subdirectories for nst-config.json files for module defs
   try {
-    const promises = modules.map(publishModule);
+    const promises = modules.map((module) =>
+      publishModule({
+        ...module,
+        folder: '',
+      })
+    );
     const results = await Promise.all(promises);
 
     console.log(results);
@@ -58,7 +63,7 @@ export const Publish = async ({ name }: { name?: string }) => {
   }
 };
 
-export const publishModule = async (module: Module) => {
+export const publishModule = async (module: Module & { folder: string }) => {
   const { version, folder, name, excludes } = module;
 
   if (!version) {
