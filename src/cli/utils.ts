@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
+import path from 'path';
 
 export async function asyncSpawn(
   cmd: string,
@@ -59,3 +60,16 @@ export const getTmpDir = async () => {
   console.log(`get .nst temp dir: ${cwd}`);
   return cwd;
 };
+
+export async function* walkDirectory(
+  dir: string,
+  { maxDepth }: { maxDepth?: number } = {}
+): AsyncGenerator<string> {
+  const max = maxDepth ? maxDepth : Infinity;
+  for await (const file of await fs.opendir(dir)) {
+    if (max < 1) continue;
+    const entry = path.join(dir, file.name);
+    if (file.isDirectory()) yield* walkDirectory(entry, { maxDepth: max - 1 });
+    else if (file.isFile()) yield entry;
+  }
+}
