@@ -186,6 +186,8 @@ const getModuleFromStorage = async ({
     type: 'nodejs',
     folder,
     version: 'x.x.x',
+    config: '',
+    run: 'npm run start',
   };
 };
 

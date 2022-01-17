@@ -73,7 +73,9 @@ nstrumenta will save your configuration scoped to the current user. Within this 
 - [machines](#machines)
 - [subscribe](#subscribe)
 - [send](#send)
-- [serve](#serve)
+- [serve](#serve) _...deprecated??_
+- [module](#module)
+- [agent](#module) _need doc_
 
 ***
 
@@ -181,7 +183,64 @@ port:  8088
 listening on *:8088
 ```
 
-Websockets provide a full duplex, always on message based connection. The server will _receive_ messages from a **sender** on a specified channel, and will _broadcast_ messages to all **subscribers** to that channel. These subscribers and senders can be isntantiated with the cli for piping between processes, or can be created and used in a node or web based app using the nstrumenta [client module](#module). 
+Websockets provide a full duplex, always on message based connection. The server will _receive_ messages from a **sender** on a specified channel, and will _broadcast_ messages to all **subscribers** to that channel. These subscribers and senders can be isntantiated with the cli for piping between processes, or can be created and used in a node or web based app using the nstrumenta [client module](#module).
+
+### <a name="module"></a> module
+
+Manage modules
+
+examples: 
+
+```shell
+# publishes all modules listed in .nstrumenta/config.json
+nst module publish
+
+# publish a single named module, listed in .nstrumenta/config.json
+nst module publish gpio-rpi
+```
+
+Modules are referenced in `.nstrumenta/config.json`
+
+```json
+{
+  "modules": [
+    {
+      "name": "gpio-rpi",
+      "folder": "./gpio-rpi",
+      "config": "nst-config.json"
+    },
+    {
+      // ...
+    }
+  ],
+  // ...
+}
+```
+
+The modules are configured within their respective folders in the `config` file, with the properties in the following example:
+
+```json
+{
+    "type": "nodejs",
+    "name": "gpio-rpi",
+    "run": "npm run start",
+    "version": "0.0.13",
+    "excludes": ["node_modules/"] // optional
+}
+```
+
+`type` can be *nodejs*, *sandbox* (for web app sandboxes), or *algorithm*
+`run` is the command to run when an agent loads a module
+`version` is a unique semver string; publishing with an existing version will fail
+`excludes` defaults to `["node_modules"]`; is a list of patterns to exclude from the module folder when publishing. Publishing with node modules is unnecessary and will consume excessive space. 
+
+###### subcommands:
+
+`publish {MODULE_NAME}`
+
+Publish modules. If no MODULE_NAME is given, all the modules lsited in project config (`.nstrumenta/config.json`) will be published
+
+***
 
 ## <a name="module"></a> Client Module
 
