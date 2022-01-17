@@ -1,61 +1,86 @@
 import axios from 'axios';
+import path from 'path';
 import Conf from 'conf';
 import fs from 'fs/promises';
+import tar from 'tar';
 import { Keys } from '../cli';
-import { asyncSpawn, getTmpDir, walkDirectory } from '../cli/utils';
+import { getTmpDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
 
-export const MODULE_FILENAME = 'nst-config.json';
 const config = new Conf(schema as any);
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
-// TODO: (*) redefine Module, as nst-config.json within each module folder won't need the 'folder' property
-export interface Module {
+export interface ModuleConfig {
   version: string;
   type: ModuleTypes;
-  name: string;
-  excludes?: string[];
+  run: string;
+  exclude?: string[];
 }
 
-export const Publish = async ({ name }: { name?: string }) => {
-  let nstrumentaConfig: { [key: string]: unknown; modules: Module[] };
-  let modules: Module[] = [];
-  console.log(`Traversing max 3 levels for modules (use --maxDepth to change) [TODO]`);
-  for await (const f of walkDirectory(process.cwd(), { maxDepth: 3 })) {
-    if (f.includes('node_modules')) {
-      continue;
-    }
+export interface ModuleMeta {
+  name: string;
+  folder: string; // relative dir to the module
+  config: string; // the config file name
+}
 
-    if (new RegExp(`.*\/${MODULE_FILENAME}$`).exec(f)) {
-      const config: Module = JSON.parse(await fs.readFile(f, { encoding: 'utf8' }));
-      console.log(config);
-      modules = [...modules, config];
-    }
+export type Module = ModuleConfig & ModuleMeta;
+
+export const Publish = async ({ name }: { name?: string }) => {
+  let modulesMeta: ModuleMeta[];
+  let modules: Module[] = [];
+
+  // First, let's check the nst project configuration for modules
+  try {
+    const file = await fs.readFile(`.nstrumenta/config.json`, {
+      encoding: 'utf8',
+    });
+    const { modules: modulesFromFile }: { [key: string]: unknown; modules: ModuleMeta[] } =
+      JSON.parse(file);
+    modulesMeta = modulesFromFile;
+    console.log(`nst project defines ${modulesMeta.length} modules...`);
+  } catch (error) {
+    throw Error(error as string);
   }
 
-  // TODO: (*) scan subdirectories for nst-config.json files for module defs
+  // Now, check for and read the configs
+  // Check each given module for config file
+  const promises = modulesMeta.map(async (meta) => {
+    const { name, config } = meta;
+    const folder = path.resolve(meta.folder);
+
+    try {
+      const moduleConfig: ModuleConfig = JSON.parse(
+        await fs.readFile(`${path.resolve(folder)}/${config}`, { encoding: 'utf8' })
+      );
+      return { ...moduleConfig, name, config, folder };
+    } catch (e) {
+      console.log(`No config file found in ${path.resolve(folder)}\n`);
+    }
+  });
+
+  const results = await Promise.all(promises);
+  modules = results.filter((m): m is Module => Boolean(m));
+
   console.log(
     `publish ${modules.length} modules: [${modules
       .map(({ name }) => name)
-      .join(', ')}] to project ${getCurrentContext().projectId}`
+      .join(', ')}] to project ${getCurrentContext().projectId}\n`
   );
 
-  // TODO: (*) scan subdirectories for nst-config.json files for module defs
   try {
     const promises = modules.map((module) =>
       publishModule({
         ...module,
-        folder: '',
       })
     );
     const results = await Promise.all(promises);
 
     console.log(results);
   } catch (err) {
-    console.log('error', (err as Error).message);
+    console.log((err as Error).message);
   } finally {
     // let's not clean up files here, keep them as a cache
     // TODO check for existence of the download before downloading
@@ -63,8 +88,8 @@ export const Publish = async ({ name }: { name?: string }) => {
   }
 };
 
-export const publishModule = async (module: Module & { folder: string }) => {
-  const { version, folder, name, excludes } = module;
+export const publishModule = async (module: Module) => {
+  const { version, folder, name, exclude = ['node_modules'] } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
@@ -79,12 +104,22 @@ export const publishModule = async (module: Module & { folder: string }) => {
   // first, make tarball
   try {
     // Could make tmp directoy at __dirname__, where the script is located?
-    const excludeArgs = excludes
-      ? excludes.map((pattern) => `--exclude="${pattern}"`)
-      : ['--exclude="./node_modules"'];
-    const args = [...excludeArgs, '-czvf', downloadLocation, '-C', folder, '.'];
-    await asyncSpawn('tar', args, { cwd: process.cwd(), shell: true });
+    const options = {
+      gzip: true,
+      file: downloadLocation,
+      cwd: folder,
+      filter: (path: string) => {
+        return (
+          // basic filtering of exact string items in the 'exclude' array
+          exclude.findIndex((p) => {
+            return path.includes(p);
+          }) === -1
+        );
+      },
+    };
+    const mytar = await tar.create(options, ['.']);
     size = (await fs.stat(downloadLocation)).size;
+    console.log({ size, mytar });
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
     throw e;
@@ -109,10 +144,14 @@ export const publishModule = async (module: Module & { folder: string }) => {
 
     url = response.data?.uploadUrl;
   } catch (e) {
+    let message = `can't upload ${name}`;
     if (axios.isAxiosError(e)) {
-      return `${fileName} ${e.response?.data}`;
+      if (e.response?.status === 409) {
+        message = `${message}: Conflict: version ${version} exists`;
+      }
+      message = `${message} [${(e as Error).message}]`;
     }
-    throw new Error(`Can't upload: unknown error`);
+    throw new Error(message);
   }
 
   // this could be streamed...
