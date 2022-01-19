@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
+    "@types/tar": "^6.1.1",
     "axios": "^0.21.4",
     "bytebuffer": "^5.0.1",
     "commander": "^8.1.0",
@@ -58,6 +59,7 @@
     "inquirer": "^8.1.5",
     "semver": "^7.3.5",
     "serve-index": "^1.9.1",
+    "tar": "^6.1.11",
     "ws": "^8.2.2"
   }
 }
