@@ -1,6 +1,6 @@
 import axios from 'axios';
 import Conf from 'conf';
-import { createWriteStream } from 'fs';
+import { createWriteStream, Dirent } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
 import semver from 'semver';
@@ -186,12 +186,14 @@ const getModuleFromStorage = async ({
     type: 'nodejs',
     folder,
     version: 'x.x.x',
+    config: '',
+    run: 'npm run start',
   };
 };
 
 // adapters/handlers for each type of module, run files (maybe memory??) in the
 // running agent's environment
-//
+
 // Assumes that the files are already in place
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
