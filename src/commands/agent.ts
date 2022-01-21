@@ -1,18 +1,18 @@
 import axios from 'axios';
 import Conf from 'conf';
-import { createWriteStream, Dirent } from 'fs';
+import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
 import semver from 'semver';
 import { pipeline as streamPipeline } from 'stream';
+import tar from 'tar';
 import { promisify } from 'util';
 import { Keys } from '../cli';
 import { asyncSpawn, getTmpDir } from '../cli/utils';
-import { Module, ModuleConfig, ModuleMeta, ModuleTypes } from '../commands/publish';
+import { Module, ModuleConfig, ModuleTypes } from '../commands/publish';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
-import tar from 'tar';
 
 const pipeline = promisify(streamPipeline);
 
@@ -79,10 +79,10 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
     let moduleConfig: ModuleConfig | undefined;
     try {
       moduleConfig = JSON.parse(
-        await fs.readFile(`${folder}/nst-config.json`, { encoding: 'utf8' })
+        await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' })
       );
     } catch (err) {
-      console.warn(`Couldn't read ${folder}/nst-config.json`);
+      console.warn(`Couldn't read ${folder}/module.json`);
     }
     return { ...moduleMeta, ...moduleConfig };
   });
@@ -215,7 +215,7 @@ const getModuleFromStorage = async ({
 
   let moduleConfig: ModuleConfig;
   try {
-    const file = await fs.readFile(`${folder}/nst-config.json`, { encoding: 'utf8' });
+    const file = await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' });
     moduleConfig = JSON.parse(file);
   } catch (err) {
     console.warn(`Error, can't find or parse the module's config file`);
@@ -223,10 +223,8 @@ const getModuleFromStorage = async ({
   }
 
   return {
-    // TODO: where should these first three params live? They're not in ModuleConfig, they come from the publisheing project's .nstrumenta/config.json
     name: name ? name : '',
     folder: folder,
-    config: 'nst-config.json',
     ...moduleConfig,
   };
 };
