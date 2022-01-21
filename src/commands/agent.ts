@@ -8,10 +8,11 @@ import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
 import { Keys } from '../cli';
 import { asyncSpawn, getTmpDir } from '../cli/utils';
-import { Module, ModuleTypes } from '../commands/publish';
+import { Module, ModuleConfig, ModuleMeta, ModuleTypes } from '../commands/publish';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
+import tar from 'tar';
 
 const pipeline = promisify(streamPipeline);
 
@@ -36,7 +37,7 @@ export const Agent = async function ({
   local?: boolean;
   path?: string;
 }): Promise<void> {
-  let module;
+  let module: Module;
 
   switch (local) {
     case true:
@@ -52,16 +53,16 @@ export const Agent = async function ({
     );
   }
 
-  // By this point, we need to have the files in place in
   const result = await adapters[module.type](module);
 
   console.log('=>', result);
 };
 
-const useLocalModule = async (moduleName?: string) => {
+const useLocalModule = async (moduleName?: string): Promise<Module> => {
   let config: { [key: string]: unknown; modules: Module[] };
   let name = moduleName;
 
+  // Locate the module config via the .nstrumenta/config.json
   try {
     config = JSON.parse(
       await fs.readFile(`.nstrumenta/config.json`, {
@@ -72,7 +73,22 @@ const useLocalModule = async (moduleName?: string) => {
     throw Error(error as string);
   }
 
-  const modules: Module[] = config.modules;
+  // Read the module configs
+  const promises = config.modules.map(async (moduleMeta) => {
+    const { folder } = moduleMeta;
+    let moduleConfig: ModuleConfig | undefined;
+    try {
+      moduleConfig = JSON.parse(
+        await fs.readFile(`${folder}/nst-config.json`, { encoding: 'utf8' })
+      );
+    } catch (err) {
+      console.warn(`Couldn't read ${folder}/nst-config.json`);
+    }
+    return { ...moduleMeta, ...moduleConfig };
+  });
+
+  // Sort the module version
+  const modules: Module[] = await Promise.all(promises);
   if (name === undefined) {
     name = await inquiryForSelectModule(
       modules
@@ -82,14 +98,18 @@ const useLocalModule = async (moduleName?: string) => {
     );
   }
 
-  // TODO: (*) get module def from nst-config.json within the module folder
-  const module = modules.find((module) => module.name === name);
-  if (!module) {
+  // Find the particular module we need
+  // TODO: Allow choosing a version; For now, this just grabs the latest version
+  const module: Module | undefined = modules.find((module) => module.name === name);
+  if (module === undefined) {
     throw new Error('problem finding module in config');
   }
+
+  const folder = `${process.cwd()}/${module.folder}`;
+
   return {
     ...module,
-    folder: `${process.cwd()}/${module.folder}`,
+    folder,
   };
 };
 
@@ -180,14 +200,34 @@ const getModuleFromStorage = async ({
   // extract tar into subdir of tmp
   await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
 
-  // TODO: update 'publish' to publish Module config as metadata; pull that in here
+  try {
+    // Could make tmp directoy at __dirname__, where the script is located?
+    const options = {
+      gzip: true,
+      file: file,
+      cwd: folder,
+    };
+    const mytar = await tar.extract(options);
+  } catch (err) {
+    console.warn(`Error, problem extracting tar ${file} to ${folder}`);
+    throw err;
+  }
+
+  let moduleConfig: ModuleConfig;
+  try {
+    const file = await fs.readFile(`${folder}/nst-config.json`, { encoding: 'utf8' });
+    moduleConfig = JSON.parse(file);
+  } catch (err) {
+    console.warn(`Error, can't find or parse the module's config file`);
+    throw err;
+  }
+
   return {
-    name: 'whatever',
-    type: 'nodejs',
-    folder,
-    version: 'x.x.x',
-    config: '',
-    run: 'npm run start',
+    // TODO: where should these first three params live? They're not in ModuleConfig, they come from the publisheing project's .nstrumenta/config.json
+    name: name ? name : '',
+    folder: folder,
+    config: 'nst-config.json',
+    ...moduleConfig,
   };
 };
 
