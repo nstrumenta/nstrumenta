@@ -207,12 +207,17 @@ Modules are referenced in `.nstrumenta/config.json`
     {
       "name": "gpio-rpi",
       "folder": "./gpio-rpi",
-      "config": "nst-config.json"
+      "config": "module.json",
     },
     {
       // ...
     }
   ],
+  "stacks": [
+    // all modules running in the stack
+    // channel mappings (graph definition)
+  ]
+
   // ...
 }
 ```
@@ -225,7 +230,8 @@ The modules are configured within their respective folders in the `config` file,
     "name": "gpio-rpi",
     "run": "npm run start",
     "version": "0.0.13",
-    "excludes": ["node_modules/"] // optional
+    "excludes": ["node_modules/"], // optional
+    "channels": [{"channel": "gpio-in", "type": "subscribe"},]
 }
 ```
 

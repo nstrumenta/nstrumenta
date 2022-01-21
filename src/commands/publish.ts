@@ -1,7 +1,7 @@
 import axios from 'axios';
-import path from 'path';
 import Conf from 'conf';
 import fs from 'fs/promises';
+import path from 'path';
 import tar from 'tar';
 import { Keys } from '../cli';
 import { getTmpDir } from '../cli/utils';
@@ -16,14 +16,12 @@ export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 export interface ModuleConfig {
   version: string;
   type: ModuleTypes;
-  run: string;
   exclude?: string[];
 }
 
 export interface ModuleMeta {
   name: string;
   folder: string; // relative dir to the module
-  config: string; // the config file name
 }
 
 export type Module = ModuleConfig & ModuleMeta;
@@ -48,14 +46,14 @@ export const Publish = async ({ name }: { name?: string }) => {
   // Now, check for and read the configs
   // Check each given module for config file
   const promises = modulesMeta.map(async (meta) => {
-    const { name, config } = meta;
+    const { name } = meta;
     const folder = path.resolve(meta.folder);
 
     try {
       const moduleConfig: ModuleConfig = JSON.parse(
-        await fs.readFile(`${path.resolve(folder)}/${config}`, { encoding: 'utf8' })
+        await fs.readFile(`${path.resolve(folder)}/module.json`, { encoding: 'utf8' })
       );
-      return { ...moduleConfig, name, config, folder };
+      return { ...moduleConfig, name, folder };
     } catch (e) {
       console.log(`No config file found in ${path.resolve(folder)}\n`);
     }
