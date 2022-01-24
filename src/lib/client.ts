@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { endpoints } from '../shared';
 import {
   deserializeBlob,
@@ -28,7 +28,11 @@ export class NstrumentaClient {
     this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
-    this.host = new URL(wsUrl ? wsUrl : this.host);
+    try {
+      this.host = new URL(wsUrl ? wsUrl : this.host);
+    } catch (e) {
+      this.host = new URL(this.host);
+    }
     this.subscribe = this.subscribe.bind(this);
     this.init = this.init.bind(this);
   }
@@ -38,14 +42,25 @@ export class NstrumentaClient {
       'x-api-key': this.apiKey,
       'Content-Type': 'application/json',
     };
-    //TODO use the returned token
-    axios
-      .get<{ token: string }>(endpoints.GET_TOKEN, {
+
+    // TODO: use the returned token
+    let token;
+    try {
+      const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
         headers,
-      })
-      .then((res) => {
-        console.log('getToken', res);
       });
+      token = data.token;
+    } catch (err) {
+      const message = 'Failure to connect to nstrumenta';
+      if (err && (err as AxiosError).response) {
+        const { data, status } = (err as AxiosError).response!;
+        console.log(message, { data, status });
+      } else if (err && (err as AxiosError).request) {
+        console.log(message, (err as AxiosError).request);
+      }
+      console.log(message, err);
+      throw err;
+    }
 
     this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
     this.ws.addEventListener('open', () => {
