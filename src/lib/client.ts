@@ -62,8 +62,6 @@ export class NstrumentaClient {
       throw err;
     }
 
-    console.log('token?', token);
-
     this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
     this.ws.addEventListener('open', () => {
       console.log(`client websocket opened <${this.host}>`);
