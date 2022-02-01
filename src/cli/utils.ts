@@ -5,7 +5,7 @@ import path from 'path';
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
-  options?: { cwd?: string; shell?: boolean; stdio?: 'pipe' | 'inherit' },
+  options?: { cwd?: string; shell?: boolean; stdio?: 'pipe' | 'inherit', env?: Record<string, string> },
   errCB?: (code: number) => void
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);

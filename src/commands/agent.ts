@@ -13,6 +13,7 @@ import { Module, ModuleConfig, ModuleTypes } from '../commands/publish';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
+import { Command } from 'commander';
 
 const pipeline = promisify(streamPipeline);
 
@@ -28,15 +29,18 @@ const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
   return module;
 };
 
-export const Agent = async function ({
-  name,
-  local,
-  path,
-}: {
-  name?: string;
-  local?: boolean;
-  path?: string;
-}): Promise<void> {
+export const Agent = async function (
+  {
+    name,
+    local,
+    path,
+  }: {
+    name?: string;
+    local?: boolean;
+    path?: string;
+  },
+  { args }: Command
+): Promise<void> {
   let module: Module;
 
   switch (local) {
@@ -53,7 +57,7 @@ export const Agent = async function ({
     );
   }
 
-  const result = await adapters[module.type](module);
+  const result = await adapters[module.type](module, args);
 
   console.log('=>', result);
 };
@@ -78,9 +82,7 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
     const { folder } = moduleMeta;
     let moduleConfig: ModuleConfig | undefined;
     try {
-      moduleConfig = JSON.parse(
-        await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' })
-      );
+      moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
     } catch (err) {
       console.warn(`Couldn't read ${folder}/module.json`);
     }
@@ -235,10 +237,11 @@ const getModuleFromStorage = async ({
 // Assumes that the files are already in place
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
+const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module) => {
-    console.log(`adapt ${module.name} in ${module.folder}`);
+  nodejs: async (module, args: string[] = []) => {
+    console.log(`adapt ${module.name} in ${module.folder} with args ${{ args }}`);
+
     let result;
     try {
       const cwd = `${module.folder}`;
@@ -246,12 +249,16 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
       const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+
+      const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
+      const [command, ...entryArgs] = entry.split(' ');
       // for now passing apiKey to nodejs module as a command line arg
       // this may be replaced by messages from the backplane
-      result = await asyncSpawn('npm', ['run', 'start', '--', `--apiKey=${apiKey}`], {
+      result = await asyncSpawn(command, [...entryArgs, ...args], {
         cwd,
         stdio: 'inherit',
         shell: true,
+        env: { ...process.env, API_KEY: apiKey },
       });
     } catch (err) {
       console.log('problem', err);
@@ -259,11 +266,11 @@ const adapters: Record<ModuleTypes, (module: Module) => Promise<unknown>> = {
     return result;
   },
   sandbox: async (module) => {
-    console.log('adapt', module);
+    console.log('adapt', module.name);
     return '';
   },
   algorithm: async (module) => {
-    console.log('adapt', module);
+    console.log('adapt', module.name);
     return '';
   },
 };
