@@ -241,6 +241,7 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
   // For now, run a script with npm dependencies in an environment that has node/npm
   nodejs: async (module, args: string[] = []) => {
     console.log(`adapt ${module.name} in ${module.folder} with args ${{ args }}`);
+
     let result;
     try {
       const cwd = `${module.folder}`;
@@ -248,9 +249,12 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
       const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+
+      const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
+      const [command, ...entryArgs] = entry.split(' ');
       // for now passing apiKey to nodejs module as a command line arg
       // this may be replaced by messages from the backplane
-      result = await asyncSpawn('npm', ['run', 'start', '--', `--apiKey=${apiKey}`, ...args], {
+      result = await asyncSpawn(command, [...entryArgs, ...args], {
         cwd,
         stdio: 'inherit',
         shell: true,
