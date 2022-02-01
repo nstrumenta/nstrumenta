@@ -17,6 +17,7 @@ export interface ModuleConfig {
   version: string;
   type: ModuleTypes;
   exclude?: string[];
+  entry: string;
 }
 
 export interface ModuleMeta {
