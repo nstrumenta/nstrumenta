@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { DEFAULT_HOST_PORT } from '../shared';
 import { Start } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
@@ -16,8 +17,6 @@ import { Publish, Run } from '../commands/module';
 import { Send, Subscribe } from '../commands/pubsub';
 import { Serve } from '../commands/serve';
 import { initContexts } from '../lib/context';
-
-export const DEFAULT_HOST_PORT = '8080';
 
 const version = require('../../package.json').version;
 

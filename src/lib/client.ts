@@ -1,13 +1,11 @@
 import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import { endpoints, DEFAULT_HOST_PORT } from '../shared';
 import {
   deserializeBlob,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from './busMessage';
-
-const DEFAULT_HOST_PORT = 8088;
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
