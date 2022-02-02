@@ -1,276 +1,260 @@
 import axios from 'axios';
+import { Command } from 'commander';
 import Conf from 'conf';
-import { createWriteStream } from 'fs';
-import fs from 'fs/promises';
-import Inquirer from 'inquirer';
-import semver from 'semver';
-import { pipeline as streamPipeline } from 'stream';
-import tar from 'tar';
-import { promisify } from 'util';
-import { Keys } from '../cli';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
-import { Module, ModuleConfig, ModuleTypes } from '../commands/publish';
+import * as crypto from 'crypto';
+import express from 'express';
+import * as fs from 'fs';
+import serveIndex from 'serve-index';
+import { WebSocket, WebSocketServer } from 'ws';
+import { DEFAULT_HOST_PORT, Keys } from '../cli';
+import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../lib/busMessage';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
-import { endpoints } from '../shared';
-import { Command } from 'commander';
 
-const pipeline = promisify(streamPipeline);
-
-const prompt = Inquirer.createPromptModule();
 const config = new Conf(schema as any);
 
-const blue = (text: string) => {
-  return text;
-};
-
-const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
-  const { module } = await prompt([{ type: 'list', name: 'module', message: 'Module', choices }]);
-  return module;
-};
-
-export const Agent = async function (
-  {
-    name,
-    local,
-    path,
-  }: {
-    name?: string;
-    local?: boolean;
-    path?: string;
-  },
+export const Start = async function (
+  options: { port: string; project: string; debug: boolean },
   { args }: Command
 ): Promise<void> {
-  let module: Module;
-
-  switch (local) {
-    case true:
-      module = await useLocalModule(name);
-      break;
-    default:
-      module = await getModuleFromStorage({ name, path });
-  }
-
-  if (module === undefined) {
+  console.log(options);
+  const configKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+  const apiKey = configKey
+    ? configKey
+    : process.env.NSTRUMENTA_API_KEY
+    ? process.env.NSTRUMENTA_API_KEY
+    : undefined;
+  if (!apiKey)
     throw new Error(
-      `module: ${blue(name || '--')} isn't defined ${local ? 'in nstrumenta config' : 'in project'}`
+      'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
     );
-  }
 
-  const result = await adapters[module.type](module, args);
+  console.log(apiKey);
 
-  console.log('=>', result);
+  await Serve({
+    port: DEFAULT_HOST_PORT,
+    project: '',
+    debug: true,
+  });
 };
 
-const useLocalModule = async (moduleName?: string): Promise<Module> => {
-  let config: { [key: string]: unknown; modules: Module[] };
-  let name = moduleName;
+const FormData = require('form-data');
 
-  // Locate the module config via the .nstrumenta/config.json
-  try {
-    config = JSON.parse(
-      await fs.readFile(`.nstrumenta/config.json`, {
-        encoding: 'utf8',
-      })
-    );
-  } catch (error) {
-    throw Error(error as string);
-  }
+export interface ServerStatus {
+  clientsCount: number;
+  subscribedChannels: { [key: string]: { count: number } };
+  activeChannels: { [key: string]: { timestamp: number } };
+}
 
-  // Read the module configs
-  const promises = config.modules.map(async (moduleMeta) => {
-    const { folder } = moduleMeta;
-    let moduleConfig: ModuleConfig | undefined;
-    try {
-      moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
-    } catch (err) {
-      console.warn(`Couldn't read ${folder}/module.json`);
-    }
-    return { ...moduleMeta, ...moduleConfig };
-  });
+export const Serve = async (options: { port: string; project: string; debug: boolean }) => {
+  const { projectId: contextProjectId, wsHost: contextWSHost } = getCurrentContext();
+  const contextWSPortRegExResult = /.*\:(\d+)$/.exec(contextWSHost);
 
-  // Sort the module version
-  const modules: Module[] = await Promise.all(promises);
-  if (name === undefined) {
-    name = await inquiryForSelectModule(
-      modules
-        .sort((a, b) => semver.compare(a.version, b.version))
-        .reverse()
-        .map((module) => module.name)
-    );
-  }
+  const port = Number(
+    options.port ? options.port : contextWSPortRegExResult ? contextWSPortRegExResult[1] : 8088
+  );
+  console.log('port: ', port);
 
-  // Find the particular module we need
-  // TODO: Allow choosing a version; For now, this just grabs the latest version
-  const module: Module | undefined = modules.find((module) => module.name === name);
-  if (module === undefined) {
-    throw new Error('problem finding module in config');
-  }
+  const projectId = options.project ? options.project : contextProjectId;
+  if (options.debug) console.log(options, port, projectId);
 
-  const folder = `${process.cwd()}/${module.folder}`;
+  const app = express();
+  app.set('views', __dirname + '/../..');
+  app.set('view engine', 'ejs');
 
-  return {
-    ...module,
-    folder,
-  };
-};
+  const server = require('http').Server(app);
 
-const getModuleFromStorage = async ({
-  name: moduleName,
-  path,
-}: {
-  name?: string;
-  path?: string;
-}): Promise<Module> => {
-  let serverModules: Record<string, { path: string; version: string }[]> = {};
-  let name = moduleName;
-  const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+  const wss = new WebSocketServer({ server: server });
 
-  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
-  let response = await axios(endpoints.LIST_MODULES, {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-  });
+  let src: string | undefined = undefined;
 
-  response.data.forEach((path: string) => {
-    const name = path.split('/')[0];
-    const match = /(\d+)\.(\d+).(\d+)/.exec(path);
-    const version: string = match ? match[0] : '';
-    if (!serverModules[name]) {
-      serverModules[name] = [];
-    }
-    serverModules[name].push({ path, version });
-  });
+  //file stream
+  let logfileWriter: fs.WriteStream | null = null;
 
-  if (name === undefined && path === undefined) {
-    // If user hasn't specified module name, ask for it here
-    name = await inquiryForSelectModule(Object.keys(serverModules));
-    const chosenVersion = await inquiryForSelectModule(
-      serverModules[name]
-        .map((module) => module.version)
-        .sort(semver.compare)
-        .reverse()
-    );
-    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
-  }
+  function appendToLog(event: unknown) {
+    if (logfileWriter == null) {
+      if (!fs.existsSync('./logs')) {
+        fs.mkdirSync('./logs');
+      }
+      const dataDirectory = './logs/';
+      const fileName = `nst${Date.now()}.ldjson`;
+      const filePath = dataDirectory + fileName;
+      logfileWriter = fs.createWriteStream(filePath, { flags: 'a' });
+      console.log('starting log', fileName);
 
-  if (!path) {
-    throw new Error('no module and version chosen, or no path specified');
-  }
+      logfileWriter.on('finish', () => {
+        console.log(filePath, 'write finished');
+        if (projectId) {
+          console.log(`posting file ${filePath} to projectId ${projectId}`);
+          const nstrumentaProjectUrl = `https://us-central1-nstrumenta-dev.cloudfunctions.net/uploadFile?projectId=${projectId}`;
 
-  console.log(`get [${blue(path)}] from storage`);
-
-  // get the download url
-  let url;
-  try {
-    const downloadUrlConfig = {
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    };
-    const downloadUrlData = { path };
-    const downloadUrlResponse = await axios.post(
-      endpoints.GET_DOWNLOAD_URL,
-      downloadUrlData,
-      downloadUrlConfig
-    );
-    url = downloadUrlResponse.data;
-  } catch (err) {
-    throw new Error(`bad times, path: ${path}`);
-  }
-
-  // make sure we have a path to save to
-  const tmp = await getTmpDir();
-  const file = `${tmp}/tmp.tar.gz`;
-  const folder = `${tmp}/${path.replace('.tar.gz', '')}`;
-  try {
-    await fs.mkdir(folder, { recursive: true });
-  } catch (err) {
-    console.log('error making dir, probably exists');
-  }
-
-  try {
-    // get the file, write to the temp directory
-    console.log('get url', url);
-    const download = await axios.get(url, { responseType: 'stream' });
-    const writeStream = createWriteStream(file);
-
-    await pipeline(download.data, writeStream);
-    console.log(`file written to ${file}`);
-  } catch (err) {
-    console.log(':(');
-  }
-
-  // extract tar into subdir of tmp
-  await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
-
-  try {
-    // Could make tmp directoy at __dirname__, where the script is located?
-    const options = {
-      gzip: true,
-      file: file,
-      cwd: folder,
-    };
-    const mytar = await tar.extract(options);
-  } catch (err) {
-    console.warn(`Error, problem extracting tar ${file} to ${folder}`);
-    throw err;
-  }
-
-  let moduleConfig: ModuleConfig;
-  try {
-    const file = await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' });
-    moduleConfig = JSON.parse(file);
-  } catch (err) {
-    console.warn(`Error, can't find or parse the module's config file`);
-    throw err;
-  }
-
-  return {
-    name: name ? name : '',
-    folder: folder,
-    ...moduleConfig,
-  };
-};
-
-// adapters/handlers for each type of module, run files (maybe memory??) in the
-// running agent's environment
-
-// Assumes that the files are already in place
-// TODO: Accept a well-defined runnable module definition object, specifically with the actual
-//  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise<unknown>> = {
-  // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module, args: string[] = []) => {
-    console.log(`adapt ${module.name} in ${module.folder} with args ${{ args }}`);
-
-    let result;
-    try {
-      const cwd = `${module.folder}`;
-      console.log(blue(`[cwd: ${cwd}] npm install...`));
-      await asyncSpawn('npm', ['install'], { cwd });
-      console.log(blue(`start the module...`));
-      const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-
-      const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
-      const [command, ...entryArgs] = entry.split(' ');
-      // for now passing apiKey to nodejs module as a command line arg
-      // this may be replaced by messages from the backplane
-      result = await asyncSpawn(command, [...entryArgs, ...args], {
-        cwd,
-        stdio: 'inherit',
-        shell: true,
-        env: { ...process.env, API_KEY: apiKey },
+          const form = new FormData();
+          form.append('file', fs.readFileSync(filePath), fileName);
+          const formHeaders = form.getHeaders();
+          const request_config = {
+            headers: {
+              ...formHeaders,
+              'Content-Type': 'multipart/form-data',
+            },
+          };
+          axios.post(nstrumentaProjectUrl, form, request_config).catch((err) => {
+            console.log(err);
+          });
+        }
       });
-    } catch (err) {
-      console.log('problem', err);
     }
-    return result;
-  },
-  sandbox: async (module) => {
-    console.log('adapt', module.name);
-    return '';
-  },
-  algorithm: async (module) => {
-    console.log('adapt', module.name);
-    return '';
-  },
+    if (logfileWriter != null) {
+      const data = JSON.stringify(event) + '\n';
+      logfileWriter.write(data);
+    }
+  }
+
+  let status: ServerStatus = {
+    clientsCount: wss.clients.size as number,
+    subscribedChannels: {},
+    activeChannels: {},
+  };
+
+  function updateStatus() {
+    status.clientsCount = wss.clients.size;
+    status.subscribedChannels = {};
+    subscriptions.forEach((channels) => {
+      channels.forEach((channel) => {
+        if (!status.subscribedChannels[channel]) {
+          status.subscribedChannels[channel] = { count: 1 };
+        } else {
+          status.subscribedChannels[channel].count += 1;
+        }
+      });
+    });
+
+    //send host status to all subscribers
+    const channel = '_host-status';
+    subscriptions.forEach((subChannels, subWebSocket) => {
+      if (subChannels.has(channel)) {
+        console.log(`sending to subscription ${channel} ${subWebSocket.url}`);
+        const busMessage = makeBusMessageFromJsonObject(
+          '_host-status',
+          JSON.parse(JSON.stringify(status))
+        );
+        subWebSocket.send(busMessage.buffer);
+      }
+    });
+
+    //check for disconnected sensors
+    for (const key in status.activeChannels) {
+      if (status.activeChannels.hasOwnProperty(key)) {
+        const element = status.activeChannels[key];
+        //remove channel after 3s
+        if (Date.now() - element.timestamp > 3e3) {
+          delete status.activeChannels[key];
+        }
+      }
+    }
+  }
+
+  setInterval(() => {
+    updateStatus();
+  }, 3000);
+
+  // serves from npm path for admin page
+  app.use(express.static(__dirname + '/../../public'));
+  app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
+
+  //serves public subfolder from execution path for serving sandboxes
+  app.use('/sandbox', express.static('public'), serveIndex('public', { icons: false }));
+
+  app.get('/', function (req, res) {
+    res.render('index', { src: src || 'placeholder.html' });
+  });
+
+  app.get('/health', function (req, res) {
+    res.status(200).send('OK');
+  });
+
+  const subscriptions: Map<WebSocket, Set<string>> = new Map();
+
+  wss.on('connection', function connection(ws) {
+    console.log('a user connected - clientsCount = ' + wss.clients.size);
+
+    ws.on('message', function incoming(busMessage: Buffer) {
+      console.log(busMessage);
+      let deserializedMessed;
+      try {
+        deserializedMessed = deserializeWireMessage(busMessage);
+      } catch (error) {
+        console.log(`Couldn't handle ${(error as Error).message}`);
+        return;
+      }
+      const { channel, busMessageType, contents } = deserializedMessed;
+
+      if (channel) {
+        appendToLog(contents);
+        status.activeChannels[channel] = { timestamp: Date.now() };
+      }
+
+      if (contents?.command == 'subscribe') {
+        const { channel } = contents;
+        console.log(`[nstrumenta] <subscribe> ${channel}`);
+        if (!subscriptions.get(ws)) {
+          subscriptions.set(ws, new Set([channel]));
+        } else {
+          subscriptions.get(ws)!.add(channel);
+        }
+      }
+
+      subscriptions.forEach((subChannels, subWebSocket) => {
+        if (subChannels.has(channel)) {
+          console.log(`sending to subscription ${channel}`);
+          subWebSocket.send(busMessage);
+        }
+      });
+
+      if (options.debug) {
+        console.log(channel, busMessageType, contents);
+      }
+    });
+    ws.on('close', function () {
+      console.log('client disconnected - clientsCount = ', wss.clients.size);
+      subscriptions.delete(ws);
+    });
+  });
+
+  server.listen(port, function () {
+    console.log('listening on *:' + port);
+    broadcastStatus();
+  });
+};
+
+const broadcastStatus = () => {
+  if (!process.env.PROJECT_ID) return;
+
+  const hostMachineWebhooksUrl = `https://us-central1-macro-coil-194519.cloudfunctions.net/hostMachineWebhooks`;
+
+  const data = {
+    sandboxId: process.env.SANDBOX_ID,
+    sandboxInstanceId: process.env.SANDBOX_INSTANCE_ID,
+    projectId: process.env.PROJECT_ID,
+    hostInstanceId: process.env.HOST_INSTANCE_ID,
+  };
+
+  console.log('make webhook request with data', data);
+
+  const digest = crypto
+    .createHmac('sha1', 'nstrumenta') // TODO: make secret; but this webhook is also limiting to vpc internal traffix
+    .update(JSON.stringify(data))
+    .digest('hex');
+
+  const config = {
+    headers: {
+      'x-hub-signature': `sha1=${digest}`,
+    },
+  };
+
+  axios
+    .post(hostMachineWebhooksUrl, data, config)
+    .then(() => console.log('triggered hostMachines webhook'))
+    .catch((err) => {
+      console.log(err);
+    });
 };
