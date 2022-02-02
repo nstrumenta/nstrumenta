@@ -1,14 +1,10 @@
 {
-  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://nstrumenta.com/module.schema.json",
   "title": "Module",
   "description": "An Nstrumenta module",
   "type": "object",
   "properties": {
-    "nst-version": {
-        "type": "string",
-        "description": "Version of nst used to make/update this module"
-    },
     "type": {
         "type": "string",
         "description": "Type of module",
