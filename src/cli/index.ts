@@ -9,7 +9,7 @@ import {
   GetCurrentContext,
   ListContexts,
   SetContext,
-  SetContextProperty
+  SetContextProperty,
 } from '../commands/contexts';
 import { ListMachines } from '../commands/machines';
 import { Publish } from '../commands/publish';
@@ -92,7 +92,7 @@ agentCommand
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
   .description('start agent')
-  .action(Agent);
+  .action(Agent); // TODO: imporve encapsulation pattern for all the cli actions (maybe use classes for each top level command, then its methods for the the actions, or something like that)
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);
@@ -117,4 +117,4 @@ if (process.env.NODE_ENV === 'development') {
 program.parse(process.argv);
 
 const options = program.opts();
-if (options.debug) console.log(options);
+if (options.debug) console.log(options, program.args);
