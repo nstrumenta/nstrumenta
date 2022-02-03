@@ -4,4 +4,5 @@ export {
   deserializeWireMessage,
   makeBusMessageFromJsonObject,
 } from './busMessage';
-export { NstrumentaClient } from './client';
+export { NstrumentaClient, ClientStatus } from './client';
+export { NstrumentaServer } from './server';

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import { endpoints, DEFAULT_HOST_PORT } from '../shared';
 import {
   deserializeBlob,
   deserializeWireMessage,
@@ -7,31 +7,44 @@ import {
   makeBusMessageFromJsonObject,
 } from './busMessage';
 
-const DEFAULT_HOST_PORT = 8088;
-
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
 
 export interface NstrumentaClientOptions {
   apiKey: string;
-  wsUrl?: string;
+  wsUrl: string;
+}
+
+export enum ClientStatus {
+  INIT = 0,
+  READY = 1,
+  CONNECTED = 2,
+  DISCONNECTED = 3,
+  CONNECTING = 4,
+}
+
+export interface Connection {
+  status: ClientStatus;
 }
 
 export class NstrumentaClient {
-  host: URL = new URL(`ws://localhost:${DEFAULT_HOST_PORT}`);
-  apiKey: string;
-  listeners: Map<string, Array<ListenerCallback>>;
-  subscriptions: Map<string, SubscriptionCallback[]>;
-  ws: WebSocket | null = null;
+  private host: URL;
+  private apiKey: string;
+  private ws: WebSocket | null = null;
+
+  public listeners: Map<string, Array<ListenerCallback>>;
+  public subscriptions: Map<string, SubscriptionCallback[]>;
+  public connection: Connection = { status: ClientStatus.CONNECTED };
 
   constructor({ apiKey, wsUrl }: NstrumentaClientOptions) {
     this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
     try {
-      this.host = new URL(wsUrl ? wsUrl : this.host);
+      this.host = new URL(wsUrl);
     } catch (e) {
-      this.host = new URL(this.host);
+      console.warn('Problem with the given websocket url');
+      throw e;
     }
     this.subscribe = this.subscribe.bind(this);
     this.init = this.init.bind(this);
@@ -65,11 +78,13 @@ export class NstrumentaClient {
     this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
     this.ws.addEventListener('open', () => {
       console.log(`client websocket opened <${this.host}>`);
+      this.connection.status = ClientStatus.CONNECTED;
       this.listeners.get('open')?.forEach((callback) => callback());
     });
-    this.ws.addEventListener('close', () => {
+    this.ws.addEventListener('close', (status) => {
+      this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
-      console.log(`client websocket closed <${this.host}>`);
+      console.log(`client websocket closed <${this.host}>`, status);
     });
     // messages from nstrumenta web app
     this.ws.addEventListener('message', async (e) => {
@@ -86,6 +101,8 @@ export class NstrumentaClient {
         console.error('nstrumenta client message error', e);
       }
     });
+
+    return this.connection;
   }
 
   send(channel: string, message: Record<string, unknown>) {
