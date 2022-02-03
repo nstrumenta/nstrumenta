@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import { endpoints, DEFAULT_HOST_PORT } from '../shared';
 import {
   deserializeBlob,
   deserializeWireMessage,

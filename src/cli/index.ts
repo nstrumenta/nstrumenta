@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { Agent } from '../commands/agent';
+import { DEFAULT_HOST_PORT } from '../shared';
+import { Start } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -12,12 +13,10 @@ import {
   SetContextProperty,
 } from '../commands/contexts';
 import { ListMachines } from '../commands/machines';
-import { Publish } from '../commands/publish';
+import { Publish, Run } from '../commands/module';
 import { Send, Subscribe } from '../commands/pubsub';
 import { Serve } from '../commands/serve';
 import { initContexts } from '../lib/context';
-
-export const DEFAULT_HOST_PORT = '8080';
 
 const version = require('../../package.json').version;
 
@@ -27,7 +26,9 @@ export interface Keys {
 
 initContexts();
 
-const program = new Command().version(version).option('-d, --debug', 'output extra debugging');
+const program = new Command()
+  .version(version, '-v, --version', 'output the current version')
+  .option('-d, --debug', 'output extra debugging');
 
 const machineCommand = program.command('machines');
 machineCommand
@@ -81,18 +82,25 @@ moduleCommand
   .description('publish modules')
   .action(Publish);
 
-// Do we need a manual agent.ts start, based on the current directory's .nstrumenta config?
-const agentCommand = program.command('agent');
-agentCommand
-  .command('start')
+moduleCommand
+  .command('run')
   .option('-n, --name <name>', 'specify module name')
   .option(
     '-l, --local',
     'require module locally in the current .nstrumenta project dir; --name also required here'
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
+  .description('run module')
+  .action(Run);
+
+const agentCommand = program.command('agent');
+agentCommand
+  .command('start')
+  .option('-p,--port <port>', 'websocket port', DEFAULT_HOST_PORT)
+  .option('-d, --debug <debug>', 'output extra debugging', false)
+  .option('--project <project>', 'nstrumenta project Id')
   .description('start agent')
-  .action(Agent); // TODO: imporve encapsulation pattern for all the cli actions (maybe use classes for each top level command, then its methods for the the actions, or something like that)
+  .action(Start);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);
