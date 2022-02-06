@@ -1,7 +1,9 @@
-import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import {
+  deserializeWireMessage,
+  makeBusMessageFromBuffer,
+  makeBusMessageFromJsonObject
+} from './busMessage';
 import { getToken } from './sessionToken';
-import { makeBusMessageFromBuffer, makeBusMessageFromJsonObject } from './busMessage';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -31,11 +33,13 @@ export class NstrumentaClient {
   listeners: Map<string, Array<ListenerCallback>>;
   subscriptions: Map<string, SubscriptionCallback[]>;
   connection: Connection = { status: ClientStatus.CONNECTED };
+  messageBuffer: Array<ArrayBufferLike>;
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
+    this.messageBuffer = [];
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
@@ -49,12 +53,10 @@ export class NstrumentaClient {
     console.log(token);
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
-    this.ws.addEventListener('open', () => {
+    this.ws.addEventListener('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
       this.ws?.send(token);
       this.reconnectionAttempts = 0;
-      this.connection.status = ClientStatus.CONNECTED;
-      this.listeners.get('open')?.forEach((callback) => callback());
     });
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
@@ -64,16 +66,53 @@ export class NstrumentaClient {
       this.reconnectionAttempts += 1;
       //this.connect({ nodeWebSocket, wsUrl });
     });
+    this.ws.addEventListener('message', (event) => {
+      const busMessage: ArrayBuffer = event.data;
+      console.log('nstClient received message', busMessage);
+      let deserializedMessage;
+      try {
+        deserializedMessage = deserializeWireMessage(busMessage);
+      } catch (error) {
+        console.log(`Couldn't handle ${(error as Error).message}`);
+        return;
+      }
+      const { channel, busMessageType, contents } = deserializedMessage;
+      if (channel == '_nstrumenta') {
+        const { verified } = contents;
+        if (verified) {
+          this.connection.status = ClientStatus.CONNECTED;
+          this.listeners.get('open')?.forEach((callback) => callback());
+          this.messageBuffer.forEach((message) => {
+            this.ws?.send(message);
+          });
+          this.messageBuffer = [];
+        }
+      }
+
+      this.subscriptions.get(channel)?.forEach((subscription) => () => {
+        subscription(contents);
+      });
+    });
 
     return this.connection;
   }
 
   send(channel: string, message: Record<string, unknown>) {
-    this.ws?.send(makeBusMessageFromJsonObject(channel, message).buffer);
+    this.bufferedSend(makeBusMessageFromJsonObject(channel, message).buffer);
   }
 
   sendBuffer(channel: string, buffer: ArrayBufferLike) {
-    this.ws?.send(makeBusMessageFromBuffer(channel, buffer));
+    this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
+  }
+
+  bufferedSend(message: ArrayBufferLike) {
+    //buffers messages sent before initial connection
+    if (!(this.ws?.readyState === this.ws?.OPEN)) {
+      console.log('adding to messageBuffer, length:', this.messageBuffer.length);
+      this.messageBuffer.push(message);
+    } else {
+      this.ws?.send(message);
+    }
   }
 
   addSubscription(channel: string, callback: SubscriptionCallback) {
@@ -82,7 +121,7 @@ export class NstrumentaClient {
     channelSubscriptions.push(callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.ws?.send(
+    this.bufferedSend(
       makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer
     );
   }

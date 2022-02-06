@@ -120,9 +120,10 @@ export class NstrumentaServer {
             .then(() => {
               console.log('verified', req.socket.remoteAddress);
               verifiedConnections.push(ws);
+              ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }).buffer);
             })
-            .catch(() => {
-              console.log('unable to verify client, invalid token, closing connection');
+            .catch((err) => {
+              console.log('unable to verify client, invalid token, closing connection', err);
               ws.close();
             });
           return;
