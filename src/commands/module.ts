@@ -209,7 +209,7 @@ const getModuleFromStorage = async ({
       file: file,
       cwd: folder,
     };
-    const mytar = await tar.extract(options);
+    await tar.extract(options);
   } catch (err) {
     console.warn(`Error, problem extracting tar ${file} to ${folder}`);
     throw err;
@@ -380,9 +380,8 @@ export const publishModule = async (module: Module) => {
         );
       },
     };
-    const mytar = await tar.create(options, ['.']);
+    await tar.create(options, ['.']);
     size = (await fs.stat(downloadLocation)).size;
-    console.log({ size, mytar });
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
     throw e;
@@ -421,12 +420,14 @@ export const publishModule = async (module: Module) => {
   const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise
-  axios.interceptors.request.use((r) => {
-    r.headers.contentLength = `${size}`;
-    r.headers.contentLengthRange = `bytes 0-${size - 1}/${size}`;
-    return r;
+  await axios.put(url, fileBuffer, {
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
+    headers: {
+      contentLength: `${size}`,
+      contentLengthRange: `bytes 0-${size - 1}/${size}`,
+    },
   });
-  await axios.put(url, fileBuffer);
   return remoteFileLocation;
 };
 
