@@ -1,7 +1,8 @@
+import throttle from 'lodash/throttle';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject
+  makeBusMessageFromJsonObject,
 } from './busMessage';
 import { getToken } from './sessionToken';
 
@@ -19,21 +20,24 @@ export enum ClientStatus {
   CONNECTED = 2,
   DISCONNECTED = 3,
   CONNECTING = 4,
+  ERROR = 5,
 }
 
 export interface Connection {
   status: ClientStatus;
 }
 
-export class NstrumentaClient {
-  apiKey: string;
-  ws: WebSocket | null = null;
-  reconnectionAttempts = 0;
+let CLIENT_CONNECT_THROTTLE_TIME = 50;
 
-  listeners: Map<string, Array<ListenerCallback>>;
-  subscriptions: Map<string, SubscriptionCallback[]>;
-  connection: Connection = { status: ClientStatus.CONNECTED };
-  messageBuffer: Array<ArrayBufferLike>;
+export class NstrumentaClient {
+  private apiKey: string;
+  private ws: WebSocket | null = null;
+  private listeners: Map<string, Array<ListenerCallback>>;
+  private subscriptions: Map<string, SubscriptionCallback[]>;
+  private reconnectionAttempts = 0;
+  private messageBuffer: Array<ArrayBufferLike>;
+
+  public connection: Connection = { status: ClientStatus.CONNECTED };
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -45,7 +49,9 @@ export class NstrumentaClient {
     this.connect = this.connect.bind(this);
   }
 
-  async connect({ nodeWebSocket, wsUrl }: ConnectOptions) {
+  public connect = throttle(this._connect, CLIENT_CONNECT_THROTTLE_TIME);
+
+  private async _connect({ nodeWebSocket, wsUrl }: ConnectOptions) {
     if (this.reconnectionAttempts > 10) {
       throw new Error('Too many reconnection attempts, stopping');
     }
@@ -57,6 +63,7 @@ export class NstrumentaClient {
       console.log(`client websocket opened <${wsUrl}>`);
       this.ws?.send(token);
       this.reconnectionAttempts = 0;
+      this.connection.status = ClientStatus.CONNECTING;
     });
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
@@ -65,6 +72,10 @@ export class NstrumentaClient {
       // reconnect on close
       this.reconnectionAttempts += 1;
       //this.connect({ nodeWebSocket, wsUrl });
+    });
+    this.ws.addEventListener('error', (err) => {
+      console.log(`Error in websocket connection`);
+      this.connection.status = ClientStatus.ERROR;
     });
     this.ws.addEventListener('message', (event) => {
       const busMessage: ArrayBuffer = event.data;
@@ -97,15 +108,15 @@ export class NstrumentaClient {
     return this.connection;
   }
 
-  send(channel: string, message: Record<string, unknown>) {
+  public send(channel: string, message: Record<string, unknown>) {
     this.bufferedSend(makeBusMessageFromJsonObject(channel, message).buffer);
   }
 
-  sendBuffer(channel: string, buffer: ArrayBufferLike) {
+  private sendBuffer(channel: string, buffer: ArrayBufferLike) {
     this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
   }
 
-  bufferedSend(message: ArrayBufferLike) {
+  private bufferedSend(message: ArrayBufferLike) {
     //buffers messages sent before initial connection
     if (!(this.ws?.readyState === this.ws?.OPEN)) {
       console.log('adding to messageBuffer, length:', this.messageBuffer.length);
@@ -115,7 +126,7 @@ export class NstrumentaClient {
     }
   }
 
-  addSubscription(channel: string, callback: SubscriptionCallback) {
+  public addSubscription(channel: string, callback: SubscriptionCallback) {
     console.log(`Nstrumenta client subscribe <${channel}>`);
     const channelSubscriptions = this.subscriptions.get(channel) || [];
     channelSubscriptions.push(callback);
@@ -126,7 +137,7 @@ export class NstrumentaClient {
     );
   }
 
-  addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
+  public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
       this.listeners.set(eventType, []);
     }
