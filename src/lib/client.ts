@@ -2,7 +2,7 @@ import throttle from 'lodash/throttle';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject
+  makeBusMessageFromJsonObject,
 } from './busMessage';
 import { getToken } from './sessionToken';
 
