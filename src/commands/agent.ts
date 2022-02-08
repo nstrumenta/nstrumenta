@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
 import serveIndex from 'serve-index';
+import { NstrumentaServer } from '../lib';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Keys } from '../cli';
 import { DEFAULT_HOST_PORT } from '../shared';
@@ -32,11 +33,9 @@ export const Start = async function (
 
   console.log(apiKey);
 
-  await Serve({
-    port: DEFAULT_HOST_PORT,
-    project: '',
-    debug: true,
-  });
+  const server = new NstrumentaServer({ apiKey });
+
+  await server.run();
 };
 
 const FormData = require('form-data');

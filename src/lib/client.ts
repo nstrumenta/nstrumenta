@@ -1,18 +1,17 @@
-import axios, { AxiosError } from 'axios';
-import { endpoints, DEFAULT_HOST_PORT } from '../shared';
+import throttle from 'lodash/throttle';
 import {
-  deserializeBlob,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from './busMessage';
+import { getToken } from './sessionToken';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
 
-export interface NstrumentaClientOptions {
-  apiKey: string;
-  wsUrl: string;
+export interface ConnectOptions {
+  nodeWebSocket?: new (url: string | URL) => WebSocket;
+  wsUrl: URL;
 }
 
 export enum ClientStatus {
@@ -21,114 +20,124 @@ export enum ClientStatus {
   CONNECTED = 2,
   DISCONNECTED = 3,
   CONNECTING = 4,
+  ERROR = 5,
 }
 
 export interface Connection {
   status: ClientStatus;
 }
 
+let CLIENT_CONNECT_THROTTLE_TIME = 50;
+
 export class NstrumentaClient {
-  private host: URL;
   private apiKey: string;
   private ws: WebSocket | null = null;
+  private listeners: Map<string, Array<ListenerCallback>>;
+  private subscriptions: Map<string, SubscriptionCallback[]>;
+  private reconnectionAttempts = 0;
+  private messageBuffer: Array<ArrayBufferLike>;
 
-  public listeners: Map<string, Array<ListenerCallback>>;
-  public subscriptions: Map<string, SubscriptionCallback[]>;
   public connection: Connection = { status: ClientStatus.CONNECTED };
 
-  constructor({ apiKey, wsUrl }: NstrumentaClientOptions) {
+  constructor(apiKey: string) {
     this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
-    try {
-      this.host = new URL(wsUrl);
-    } catch (e) {
-      console.warn('Problem with the given websocket url');
-      throw e;
-    }
-    this.subscribe = this.subscribe.bind(this);
-    this.init = this.init.bind(this);
+    this.messageBuffer = [];
+    this.addSubscription = this.addSubscription.bind(this);
+    this.addListener = this.addListener.bind(this);
+    this.connect = this.connect.bind(this);
   }
 
-  async init(nodeWebSocket?: new (url: string | URL) => WebSocket) {
-    const headers = {
-      'x-api-key': this.apiKey,
-      'Content-Type': 'application/json',
-    };
+  public connect = throttle(this._connect, CLIENT_CONNECT_THROTTLE_TIME);
 
-    // TODO: use the returned token
-    let token;
-    try {
-      const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
-        headers,
-      });
-      token = data.token;
-    } catch (err) {
-      const message = 'Failure to connect to nstrumenta';
-      if (err && (err as AxiosError).response) {
-        const { data, status } = (err as AxiosError).response!;
-        console.log(message, { data, status });
-      } else if (err && (err as AxiosError).request) {
-        console.log(message, (err as AxiosError).request);
-      }
-      console.log(message, err);
-      throw err;
+  private async _connect({ nodeWebSocket, wsUrl }: ConnectOptions) {
+    if (this.reconnectionAttempts > 10) {
+      throw new Error('Too many reconnection attempts, stopping');
     }
+    const token = await getToken(this.apiKey);
+    console.log(token);
 
-    this.ws = nodeWebSocket ? new nodeWebSocket(this.host) : new WebSocket(this.host);
-    this.ws.addEventListener('open', () => {
-      console.log(`client websocket opened <${this.host}>`);
-      this.connection.status = ClientStatus.CONNECTED;
-      this.listeners.get('open')?.forEach((callback) => callback());
+    this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
+    this.ws.addEventListener('open', async () => {
+      console.log(`client websocket opened <${wsUrl}>`);
+      this.ws?.send(token);
+      this.reconnectionAttempts = 0;
+      this.connection.status = ClientStatus.CONNECTING;
     });
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
-      console.log(`client websocket closed <${this.host}>`, status);
+      console.log(`client websocket closed <${wsUrl}>`, status);
+      // reconnect on close
+      this.reconnectionAttempts += 1;
+      this.connect({ nodeWebSocket, wsUrl });
     });
-    // messages from nstrumenta web app
-    this.ws.addEventListener('message', async (e) => {
+    this.ws.addEventListener('error', (err) => {
+      console.log(`Error in websocket connection`);
+      this.connection.status = ClientStatus.ERROR;
+    });
+    this.ws.addEventListener('message', (event) => {
+      const busMessage: ArrayBuffer = event.data;
+      console.log('nstClient received message', busMessage);
+      let deserializedMessage;
       try {
-        const { channel, contents } =
-          typeof Blob !== 'undefined' && e.data instanceof Blob
-            ? await deserializeBlob(e.data)
-            : deserializeWireMessage(e.data);
-
-        this.subscriptions.get(channel)?.forEach((callback) => {
-          callback(contents);
-        });
-      } catch (e) {
-        console.error('nstrumenta client message error', e);
+        deserializedMessage = deserializeWireMessage(busMessage);
+      } catch (error) {
+        console.log(`Couldn't handle ${(error as Error).message}`);
+        return;
       }
+      const { channel, busMessageType, contents } = deserializedMessage;
+      if (channel == '_nstrumenta') {
+        const { verified } = contents;
+        if (verified) {
+          this.connection.status = ClientStatus.CONNECTED;
+          this.listeners.get('open')?.forEach((callback) => callback());
+          this.messageBuffer.forEach((message) => {
+            this.ws?.send(message);
+          });
+          this.messageBuffer = [];
+        }
+      }
+
+      this.subscriptions.get(channel)?.forEach((subscription) => () => {
+        subscription(contents);
+      });
     });
 
     return this.connection;
   }
 
-  send(channel: string, message: Record<string, unknown>) {
-    //buffer to handle messages before initial connection with parent
-    console.log('sandbox-client send', channel, message);
-    this.ws?.send(makeBusMessageFromJsonObject(channel, message).buffer);
+  public send(channel: string, message: Record<string, unknown>) {
+    this.bufferedSend(makeBusMessageFromJsonObject(channel, message).buffer);
   }
 
-  sendBuffer(channel: string, buffer: ArrayBufferLike) {
-    //buffer to handle messages before initial connection with parent
-    console.log('sandbox-client sendBuffer', channel, buffer);
-    this.ws?.send(makeBusMessageFromBuffer(channel, buffer));
+  public sendBuffer(channel: string, buffer: ArrayBufferLike) {
+    this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
   }
 
-  subscribe(channel: string, callback: SubscriptionCallback) {
+  private bufferedSend(message: ArrayBufferLike) {
+    //buffers messages sent before initial connection
+    if (!(this.ws?.readyState === this.ws?.OPEN)) {
+      console.log('adding to messageBuffer, length:', this.messageBuffer.length);
+      this.messageBuffer.push(message);
+    } else {
+      this.ws?.send(message);
+    }
+  }
+
+  public addSubscription(channel: string, callback: SubscriptionCallback) {
     console.log(`Nstrumenta client subscribe <${channel}>`);
     const channelSubscriptions = this.subscriptions.get(channel) || [];
     channelSubscriptions.push(callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.ws?.send(
+    this.bufferedSend(
       makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer
     );
   }
 
-  addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
+  public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
       this.listeners.set(eventType, []);
     }
