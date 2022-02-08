@@ -71,7 +71,7 @@ export class NstrumentaClient {
       console.log(`client websocket closed <${wsUrl}>`, status);
       // reconnect on close
       this.reconnectionAttempts += 1;
-      //this.connect({ nodeWebSocket, wsUrl });
+      this.connect({ nodeWebSocket, wsUrl });
     });
     this.ws.addEventListener('error', (err) => {
       console.log(`Error in websocket connection`);
