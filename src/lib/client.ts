@@ -112,7 +112,7 @@ export class NstrumentaClient {
     this.bufferedSend(makeBusMessageFromJsonObject(channel, message).buffer);
   }
 
-  private sendBuffer(channel: string, buffer: ArrayBufferLike) {
+  public sendBuffer(channel: string, buffer: ArrayBufferLike) {
     this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
   }
 
