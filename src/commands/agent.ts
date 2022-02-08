@@ -5,12 +5,11 @@ import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
 import serveIndex from 'serve-index';
-import { NstrumentaServer } from '../lib';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Keys } from '../cli';
-import { DEFAULT_HOST_PORT } from '../shared';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../lib/busMessage';
 import { getCurrentContext } from '../lib/context';
+import { NstrumentaServer } from '../lib/server';
 import { schema } from '../schema';
 
 const config = new Conf(schema as any);
