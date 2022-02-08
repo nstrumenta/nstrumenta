@@ -1,9 +1,9 @@
-import axios, { AxiosError } from 'axios';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
-import { WebSocket, WebSocketServer } from 'ws';
 import express from 'express';
-import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
 import serveIndex from 'serve-index';
+import { WebSocket, WebSocketServer } from 'ws';
+import { DEFAULT_HOST_PORT } from '../shared';
+import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
+import { verifyToken } from './sessionToken';
 
 export interface ServerStatus {
   clientsCount: number;
@@ -33,29 +33,6 @@ export class NstrumentaServer {
   async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
-    const headers = {
-      'x-api-key': apiKey,
-      'Content-Type': 'application/json',
-    };
-
-    // TODO: use the returned token
-    let token;
-    try {
-      const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
-        headers,
-      });
-      token = data.token;
-    } catch (err) {
-      const message = 'Failure to connect to nstrumenta';
-      if (err && (err as AxiosError).response) {
-        const { data, status } = (err as AxiosError).response!;
-        console.log(message, { data, status });
-      } else if (err && (err as AxiosError).request) {
-        console.log(message, (err as AxiosError).request);
-      }
-      console.log(message, err);
-      throw err;
-    }
 
     const app = express();
     app.set('views', __dirname + '/../..');
@@ -130,21 +107,37 @@ export class NstrumentaServer {
       res.status(200).send('OK');
     });
 
+    const verifiedConnections: Array<WebSocket> = [];
     const subscriptions: Map<WebSocket, Set<string>> = new Map();
 
-    wss.on('connection', function connection(ws) {
+    wss.on('connection', async function connection(ws, req) {
       console.log('a user connected - clientsCount = ' + wss.clients.size);
-
-      ws.on('message', function incoming(busMessage: Buffer) {
+      ws.on('message', async function incoming(busMessage: Buffer) {
+        if (!verifiedConnections.includes(ws)) {
+          console.log('attempting to verify token');
+          // first message from a connected websocket must be a token
+          verifyToken({ token: busMessage.toString(), apiKey })
+            .then(() => {
+              console.log('verified', req.socket.remoteAddress);
+              verifiedConnections.push(ws);
+              ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }).buffer);
+            })
+            .catch((err) => {
+              console.log('unable to verify client, invalid token, closing connection', err);
+              ws.close();
+            });
+          return;
+        }
         console.log(busMessage);
-        let deserializedMessed;
+
+        let deserializedMessage;
         try {
-          deserializedMessed = deserializeWireMessage(busMessage);
+          deserializedMessage = deserializeWireMessage(busMessage);
         } catch (error) {
           console.log(`Couldn't handle ${(error as Error).message}`);
           return;
         }
-        const { channel, busMessageType, contents } = deserializedMessed;
+        const { channel, busMessageType, contents } = deserializedMessage;
 
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
