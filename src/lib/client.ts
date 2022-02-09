@@ -52,11 +52,10 @@ export class NstrumentaClient {
   public connect = throttle(this._connect, CLIENT_CONNECT_THROTTLE_TIME);
 
   private async _connect({ nodeWebSocket, wsUrl }: ConnectOptions) {
-    if (this.reconnectionAttempts > 10) {
+    if (this.reconnectionAttempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
     const token = await getToken(this.apiKey);
-    console.log(token);
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.addEventListener('open', async () => {
@@ -70,8 +69,10 @@ export class NstrumentaClient {
       this.listeners.get('close')?.forEach((callback) => callback());
       console.log(`client websocket closed <${wsUrl}>`, status);
       // reconnect on close
+      setTimeout(() => {
+        this._connect({ nodeWebSocket, wsUrl });
+      }, this.rollOff(this.reconnectionAttempts));
       this.reconnectionAttempts += 1;
-      this.connect({ nodeWebSocket, wsUrl });
     });
     this.ws.addEventListener('error', (err) => {
       console.log(`Error in websocket connection`);
@@ -100,12 +101,19 @@ export class NstrumentaClient {
         }
       }
 
-      this.subscriptions.get(channel)?.forEach((subscription) => () => {
+      this.subscriptions.get(channel)?.forEach((subscription) => {
         subscription(contents);
       });
     });
 
     return this.connection;
+  }
+
+  private rollOff(attempts: number) {
+    if (attempts == 0) return 0;
+    // rolls off exponentially until a max of 30 minutes
+    // 100 attempts is about 1.5 days
+    return Math.min(Math.pow(attempts, 2) * 1000, 30 * 60 * 1000);
   }
 
   public send(channel: string, message: Record<string, unknown>) {
