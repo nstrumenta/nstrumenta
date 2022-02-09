@@ -248,7 +248,10 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+      const apiKey =
+        (config.get('keys') as Keys)[getCurrentContext().projectId] ||
+        process.env.NSTRUMENTA_API_KEY ||
+        '';
 
       const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
       const [command, ...entryArgs] = entry.split(' ');
@@ -258,7 +261,6 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
         cwd,
         stdio: 'inherit',
         shell: true,
-        env: { ...process.env, API_KEY: apiKey },
       });
     } catch (err) {
       console.log('problem', err);
