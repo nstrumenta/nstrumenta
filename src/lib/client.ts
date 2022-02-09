@@ -68,6 +68,7 @@ export class NstrumentaClient {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
       console.log(`client websocket closed <${wsUrl}>`, status);
+      this.subscriptions.clear();
       // reconnect on close
       setTimeout(() => {
         this._connect({ nodeWebSocket, wsUrl });
