@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.4](https://github.com/nstrumenta/nstrumenta/compare/v2.0.3...v2.0.4) (2022-02-10)
+
+
+### Features
+
+* **apiKey:** uses environment var for key if avaliable ([1b950de](https://github.com/nstrumenta/nstrumenta/commit/1b950de80f39b4055f05b2012ef467f66a399c01))
+
 ### [2.0.3](https://github.com/nstrumenta/nstrumenta/compare/v2.0.2...v2.0.3) (2022-02-09)
 
 ### [2.0.2](https://github.com/nstrumenta/nstrumenta/compare/v2.0.1...v2.0.2) (2022-02-09)
