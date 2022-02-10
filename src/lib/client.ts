@@ -1,4 +1,3 @@
-import throttle from 'lodash/throttle';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
@@ -12,6 +11,7 @@ type SubscriptionCallback = (message?: any) => void;
 export interface ConnectOptions {
   nodeWebSocket?: new (url: string | URL) => WebSocket;
   wsUrl: URL;
+  apiKey?: string;
 }
 
 export enum ClientStatus {
@@ -30,7 +30,6 @@ export interface Connection {
 let CLIENT_CONNECT_THROTTLE_TIME = 50;
 
 export class NstrumentaClient {
-  private apiKey: string;
   private ws: WebSocket | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
@@ -39,8 +38,7 @@ export class NstrumentaClient {
 
   public connection: Connection = { status: ClientStatus.CONNECTED };
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
+  constructor() {
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.messageBuffer = [];
@@ -49,13 +47,17 @@ export class NstrumentaClient {
     this.connect = this.connect.bind(this);
   }
 
-  public connect = throttle(this._connect, CLIENT_CONNECT_THROTTLE_TIME);
-
-  private async _connect({ nodeWebSocket, wsUrl }: ConnectOptions) {
+  public async connect({ nodeWebSocket, wsUrl, apiKey }: ConnectOptions) {
     if (this.reconnectionAttempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
-    const token = await getToken(this.apiKey);
+    const nstrumentaApiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
+    if (!nstrumentaApiKey) {
+      throw new Error(
+        'nstrumenta api key is missing, pass it to connect for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+      );
+    }
+    const token = await getToken(nstrumentaApiKey);
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.addEventListener('open', async () => {
@@ -71,7 +73,7 @@ export class NstrumentaClient {
       this.subscriptions.clear();
       // reconnect on close
       setTimeout(() => {
-        this._connect({ nodeWebSocket, wsUrl });
+        this.connect({ nodeWebSocket, wsUrl });
       }, this.rollOff(this.reconnectionAttempts));
       this.reconnectionAttempts += 1;
     });
