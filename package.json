@@ -59,7 +59,6 @@
     "express": "^4.17.1",
     "form-data": "^4.0.0",
     "inquirer": "^8.1.5",
-    "lodash-es": "^4.17.21",
     "semver": "^7.3.5",
     "serve-index": "^1.9.1",
     "tar": "^6.1.11",
