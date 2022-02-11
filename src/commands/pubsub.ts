@@ -58,7 +58,7 @@ export const Subscribe = async (
   const ws = new WebSocket(url);
 
   ws.addEventListener('open', () => {
-    ws.send(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer);
+    ws.send(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
   });
 
   ws.addEventListener('message', (ev) => {

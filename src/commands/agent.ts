@@ -20,10 +20,10 @@ export const Start = async function (
 ): Promise<void> {
   console.log(options);
   const configKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-  const apiKey = configKey
-    ? configKey
-    : process.env.NSTRUMENTA_API_KEY
+  const apiKey = process.env.NSTRUMENTA_API_KEY
     ? process.env.NSTRUMENTA_API_KEY
+    : configKey
+    ? configKey
     : undefined;
   if (!apiKey)
     throw new Error(
@@ -136,7 +136,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
           '_host-status',
           JSON.parse(JSON.stringify(status))
         );
-        subWebSocket.send(busMessage.buffer);
+        subWebSocket.send(busMessage);
       }
     });
 

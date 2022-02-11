@@ -106,7 +106,7 @@ export const Serve = async (options: { port: string; project: string; debug: boo
           '_host-status',
           JSON.parse(JSON.stringify(status))
         );
-        subWebSocket.send(busMessage.buffer);
+        subWebSocket.send(busMessage);
       }
     });
 

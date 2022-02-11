@@ -22,11 +22,13 @@ export type DeserializedMessage = {
 export const makeBusMessageFromJsonObject = (
   channel: string,
   object: Record<string, unknown>
-): BusMessage => {
+): ArrayBuffer => {
   return new ByteBuffer()
     .writeUint32(BusMessageType.Json)
     .writeIString(channel)
-    .writeIString(JSON.stringify(object));
+    .writeIString(JSON.stringify(object))
+    .flip()
+    .toBuffer();
 };
 
 export const makeBusMessageFromBuffer = (channel: string, buffer: ArrayBufferLike): ArrayBuffer => {

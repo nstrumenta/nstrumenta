@@ -26,14 +26,11 @@ export enum ClientStatus {
 export interface Connection {
   status: ClientStatus;
 }
-
-let CLIENT_CONNECT_THROTTLE_TIME = 50;
-
 export class NstrumentaClient {
   private ws: WebSocket | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
-  private reconnectionAttempts = 0;
+  private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
 
   public connection: Connection = { status: ClientStatus.CONNECTED };
@@ -47,8 +44,9 @@ export class NstrumentaClient {
     this.connect = this.connect.bind(this);
   }
 
-  public async connect({ nodeWebSocket, wsUrl, apiKey }: ConnectOptions) {
-    if (this.reconnectionAttempts > 100) {
+  public async connect(connectOptions: ConnectOptions) {
+    const { nodeWebSocket, wsUrl, apiKey } = connectOptions;
+    if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
     const nstrumentaApiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
@@ -60,10 +58,11 @@ export class NstrumentaClient {
     const token = await getToken(nstrumentaApiKey);
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
+    this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
       this.ws?.send(token);
-      this.reconnectionAttempts = 0;
+      this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
     this.ws.addEventListener('close', (status) => {
@@ -72,23 +71,26 @@ export class NstrumentaClient {
       console.log(`client websocket closed <${wsUrl}>`, status);
       this.subscriptions.clear();
       // reconnect on close
-      setTimeout(() => {
-        this.connect({ nodeWebSocket, wsUrl });
-      }, this.rollOff(this.reconnectionAttempts));
-      this.reconnectionAttempts += 1;
+      if (this.reconnection.hasVerified) {
+        setTimeout(() => {
+          console.log(`attempting to reconnect, attempts: ${this.reconnection.attempts}`);
+          this.connect(connectOptions);
+        }, this.rollOff(this.reconnection.attempts));
+        this.reconnection.attempts += 1;
+      }
     });
     this.ws.addEventListener('error', (err) => {
       console.log(`Error in websocket connection`);
       this.connection.status = ClientStatus.ERROR;
     });
     this.ws.addEventListener('message', (event) => {
-      const busMessage: ArrayBuffer = event.data;
-      console.log('nstClient received message', busMessage);
+      const wireMessage = event.data as ArrayBuffer;
+      //console.log('nstClient received message', wireMessage);
       let deserializedMessage;
       try {
-        deserializedMessage = deserializeWireMessage(busMessage);
+        deserializedMessage = deserializeWireMessage(wireMessage as ArrayBuffer);
       } catch (error) {
-        console.log(`Couldn't handle ${(error as Error).message}`);
+        console.log(`Couldn't deserialize message ${JSON.stringify(error)}`);
         return;
       }
       const { channel, busMessageType, contents } = deserializedMessage;
@@ -96,6 +98,7 @@ export class NstrumentaClient {
         const { verified } = contents;
         if (verified) {
           this.connection.status = ClientStatus.CONNECTED;
+          this.reconnection.hasVerified = true;
           this.listeners.get('open')?.forEach((callback) => callback());
           this.messageBuffer.forEach((message) => {
             this.ws?.send(message);
@@ -120,7 +123,7 @@ export class NstrumentaClient {
   }
 
   public send(channel: string, message: Record<string, unknown>) {
-    this.bufferedSend(makeBusMessageFromJsonObject(channel, message).buffer);
+    this.bufferedSend(makeBusMessageFromJsonObject(channel, message));
   }
 
   public sendBuffer(channel: string, buffer: ArrayBufferLike) {
@@ -143,9 +146,7 @@ export class NstrumentaClient {
     channelSubscriptions.push(callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.bufferedSend(
-      makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }).buffer
-    );
+    this.bufferedSend(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
   }
 
   public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
