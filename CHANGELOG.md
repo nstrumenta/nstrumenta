@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.7](https://github.com/nstrumenta/nstrumenta/compare/v2.0.6...v2.0.7) (2022-02-11)
+
+
+### Features
+
+* **reconnection:** fixes verification and apiKey for react clients ([3f8930b](https://github.com/nstrumenta/nstrumenta/commit/3f8930be3ca26cc05672562bf779b50eac429705))
+
 ### [2.0.6](https://github.com/nstrumenta/nstrumenta/compare/v2.0.5...v2.0.6) (2022-02-10)
 
 ### [2.0.5](https://github.com/nstrumenta/nstrumenta/compare/v2.0.4...v2.0.5) (2022-02-10)
