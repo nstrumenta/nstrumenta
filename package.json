@@ -18,7 +18,7 @@
     "build": "tsc --project ./",
     "dev": "nodemon -- agent start",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:local": "LOCAL=true nstrumenta"
+    "nst:local": "NSTRUMENTA_LOCAL=true nstrumenta"
   },
   "repository": {
     "type": "git",

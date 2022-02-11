@@ -63,19 +63,6 @@ export class NstrumentaServer {
         });
       });
 
-      //send host status to all subscribers
-      const channel = '_host-status';
-      subscriptions.forEach((subChannels, subWebSocket) => {
-        if (subChannels.has(channel)) {
-          console.log(`sending to subscription ${channel} ${subWebSocket.url}`);
-          const busMessage = makeBusMessageFromJsonObject(
-            '_host-status',
-            JSON.parse(JSON.stringify(status))
-          );
-          subWebSocket.send(busMessage.buffer);
-        }
-      });
-
       //check for disconnected sensors
       for (const key in status.activeChannels) {
         if (status.activeChannels.hasOwnProperty(key)) {
@@ -120,7 +107,7 @@ export class NstrumentaServer {
             .then(() => {
               console.log('verified', req.socket.remoteAddress);
               verifiedConnections.push(ws);
-              ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }).buffer);
+              ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
             })
             .catch((err) => {
               console.log('unable to verify client, invalid token, closing connection', err);
