@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://nstrumenta.com/config.schema.json",
+    "title": "nstrumenta repository config",
+    "description": "nstrumenta repository configuration specifying the folders containing modules",
+    "type": "object",
+    "properties": {
+        "folder": {
+            "type": "string",
+            "description": "relative path to folder containing an nstrumenta module with module.json",
+        },
+        "name": {
+            "type": "string",
+            "description": "name of the module"
+        }
+    },
+    "required": [
+        "folder",
+        "name"
+    ]
+}

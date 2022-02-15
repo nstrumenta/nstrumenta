@@ -52,7 +52,7 @@ export class NstrumentaClient {
     const nstrumentaApiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
     if (!nstrumentaApiKey) {
       throw new Error(
-        'nstrumenta api key is missing, pass it as an argument to NsrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+        'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
       );
     }
     const token = await getToken(nstrumentaApiKey);
