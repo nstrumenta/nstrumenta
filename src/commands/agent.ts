@@ -5,7 +5,7 @@ import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
 import serveIndex from 'serve-index';
-import { DEFAULT_HOST_PORT } from 'shared';
+import { DEFAULT_HOST_PORT } from '../shared';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Keys } from '../cli';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../lib/busMessage';
