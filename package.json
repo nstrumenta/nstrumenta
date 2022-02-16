@@ -34,7 +34,6 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
-    "@types/bytebuffer": "^5.0.42",
     "@types/inquirer": "^8.1.1",
     "@types/lodash": "^4.14.178",
     "@types/lodash-es": "^4.17.6",
@@ -50,6 +49,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
+    "@types/bytebuffer": "^5.0.42",
     "@types/tar": "^6.1.1",
     "axios": "^0.21.4",
     "bytebuffer": "^5.0.1",

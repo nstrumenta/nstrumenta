@@ -19,12 +19,15 @@ export const Start = async function (
   { args }: Command
 ): Promise<void> {
   console.log(options);
-  const configKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-  const apiKey = process.env.NSTRUMENTA_API_KEY
-    ? process.env.NSTRUMENTA_API_KEY
-    : configKey
-    ? configKey
-    : undefined;
+  let apiKey = process.env.NSTRUMENTA_API_KEY;
+  if (!apiKey) {
+    try {
+      apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+    } catch {}
+  } else {
+    console.log('using NSTRUMENTA_API_KEY from environment variable');
+  }
+
   if (!apiKey)
     throw new Error(
       'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
