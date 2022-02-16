@@ -5,6 +5,7 @@ import * as crypto from 'crypto';
 import express from 'express';
 import * as fs from 'fs';
 import serveIndex from 'serve-index';
+import { DEFAULT_HOST_PORT } from 'shared';
 import { WebSocket, WebSocketServer } from 'ws';
 import { Keys } from '../cli';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from '../lib/busMessage';
@@ -19,6 +20,7 @@ export const Start = async function (
   { args }: Command
 ): Promise<void> {
   console.log(options);
+  const { port } = options;
   let apiKey = process.env.NSTRUMENTA_API_KEY;
   if (!apiKey) {
     try {
@@ -33,9 +35,7 @@ export const Start = async function (
       'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
     );
 
-  console.log(apiKey);
-
-  const server = new NstrumentaServer({ apiKey });
+  const server = new NstrumentaServer({ apiKey, port: port || DEFAULT_HOST_PORT });
 
   await server.run();
 };
