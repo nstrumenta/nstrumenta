@@ -21,10 +21,6 @@ export class NstrumentaServer {
   options: NstrumentaServerOptions;
 
   constructor(options: NstrumentaServerOptions) {
-    if (!process.env.NODE)
-      throw new Error(
-        'NstrumentaServer requires a node environment (browser does not support running a Websocket Server)'
-      );
     this.options = options;
     console.log('starting NstrumentaServer');
     this.run = this.run.bind(this);
