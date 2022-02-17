@@ -18,8 +18,10 @@
     "build": "tsc --project ./",
     "dev": "nodemon -- agent start",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:local": "NSTRUMENTA_LOCAL=true nstrumenta"
-  },
+    "nst:local": "NSTRUMENTA_LOCAL=true nstrumenta",
+    "test": "jest integration --watch",
+    "test:clear": "jest --clearCache"
+   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nstrumenta/nstrumenta.git"
@@ -34,14 +36,18 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
+    "@types/http-server": "^0.12.1",
     "@types/inquirer": "^8.1.1",
+    "@types/jest": "^27.4.0",
     "@types/node": "^16.7.13",
     "@types/semver": "^7.3.9",
     "@types/serve-index": "^1.9.1",
     "@types/ws": "^8.2.0",
+    "jest": "^27.5.1",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
     "standard-version": "^9.3.1",
+    "ts-jest": "^27.1.3",
     "ts-node": "^10.2.1",
     "typescript": "^4.5.4"
   },

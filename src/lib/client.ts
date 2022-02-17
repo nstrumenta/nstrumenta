@@ -26,18 +26,44 @@ export enum ClientStatus {
 export interface Connection {
   status: ClientStatus;
 }
+
+// export type WSEventTypes = CloseEvent | Event | MessageEvent<any>;
+export type WSEventTypes = 'close' | 'open' | 'message' | 'error';
+export type WSEventListener<T extends WSEventTypes> = T extends 'close'
+  ? CloseEvent
+  : T extends 'open'
+  ? Event
+  : T extends 'message'
+  ? MessageEvent<any>
+  : T extends 'error'
+  ? ErrorEvent
+  : never;
+
+export type WSEventListenerByEventType<T extends WSEventTypes> = (
+  this: WebSocket,
+  ev: WSEventListener<T>
+) => any;
+
+export interface ListenersMap<T extends WSEventTypes>
+  extends Map<T, WSEventListenerByEventType<T>> {
+  get<K extends T>(key: K): WSEventListenerByEventType<K> | undefined;
+  set<K extends T>(key: K, value: WSEventListenerByEventType<K>): this;
+}
+
 export class NstrumentaClient {
   private ws: WebSocket | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
+  private wsListeners: ListenersMap<WSEventTypes>;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
   constructor() {
     this.listeners = new Map();
     this.subscriptions = new Map();
+    this.wsListeners = new Map();
     this.messageBuffer = [];
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
@@ -61,13 +87,16 @@ export class NstrumentaClient {
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
-    this.ws.addEventListener('open', async () => {
+    this.ws.addEventListener('open', (ev) => console.log(ev));
+
+    // define the listeners and make sure we have refs so we can remove them on teardown
+    this.wsListeners.set('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
       this.ws?.send(token);
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
-    this.ws.addEventListener('close', (status) => {
+    this.wsListeners.set('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
       console.log(`client websocket closed <${wsUrl}>`, status);
@@ -81,11 +110,11 @@ export class NstrumentaClient {
         this.reconnection.attempts += 1;
       }
     });
-    this.ws.addEventListener('error', (err) => {
+    this.wsListeners.set('error', (err) => {
       console.log(`Error in websocket connection`);
       this.connection.status = ClientStatus.ERROR;
     });
-    this.ws.addEventListener('message', (event) => {
+    this.wsListeners.set('message', (event) => {
       const wireMessage = event.data as ArrayBuffer;
       //console.log('nstClient received message', wireMessage);
       let deserializedMessage;
@@ -113,6 +142,12 @@ export class NstrumentaClient {
         subscription(contents);
       });
     });
+
+    // add the listeners
+    for (const [event, listener] of this.wsListeners) {
+      console.log(event);
+      this.ws.addEventListener(event, listener);
+    }
 
     return this.connection;
   }
@@ -158,6 +193,15 @@ export class NstrumentaClient {
     const listenerCallbacks = this.listeners.get(eventType);
     if (listenerCallbacks) {
       listenerCallbacks.push(callback);
+    }
+  }
+
+  public async close() {
+    this.ws?.close();
+    this.listeners.clear();
+    this.subscriptions.clear();
+    for (const [event, listener] of this.wsListeners) {
+      this.ws?.removeEventListener(event, listener);
     }
   }
 }

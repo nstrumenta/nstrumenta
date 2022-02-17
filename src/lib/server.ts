@@ -3,6 +3,7 @@ import { ChildProcess } from 'child_process';
 import { asyncSpawn } from '../cli/utils';
 import express from 'express';
 import { createWriteStream } from 'fs';
+import http from 'http';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
@@ -48,6 +49,7 @@ export interface NstrumentaServerOptions {
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
+  server: http.Server | undefined;
   backplaneClient?: NstrumentaClient;
   allowCrossProjectApiKey: boolean;
   listeners: Map<string, Array<ListenerCallback>>;
@@ -150,7 +152,7 @@ export class NstrumentaServer {
     app.set('views', __dirname + '/../..');
     app.set('view engine', 'ejs');
 
-    const server = require('http').Server(app);
+    const server = new http.Server(app);
 
     const wss = new WebSocketServer({ server: server });
 
