@@ -53,6 +53,7 @@ const closeNstrumentas = async ({
   server: NstrumentaServer;
 }) => {
   await client.close();
+  await server.close();
   console.log(`client status after close: ${client.connection.status}`);
 };
 
