@@ -32,7 +32,19 @@
             "items": {
                 "type": "string"
             }
-        }
+        },
+        "publish": {
+            "type": "object",
+            "properties": {
+                "description": "optional pre-publish step",
+                "build": {
+                    "type": "string",
+                    "description": "build command"
+                }, "path": {
+                    "type": "string",
+                    "description": "location of folder to publish, e.g., destination of output from build command"
+                }
+            }
     },
     "required": [
         "type",
