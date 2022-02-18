@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.12](https://github.com/nstrumenta/nstrumenta/compare/v2.0.11...v2.0.12) (2022-02-18)
+
+
+### Features
+
+* **backplane:** adds getBackplaneUrl to server.ts ([6fab0bc](https://github.com/nstrumenta/nstrumenta/commit/6fab0bcdd6550554905e6e5cce1304eac7dbd21e))
+
 ### [2.0.11](https://github.com/nstrumenta/nstrumenta/compare/v2.0.10...v2.0.11) (2022-02-16)
 
 
