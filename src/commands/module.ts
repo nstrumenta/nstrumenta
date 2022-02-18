@@ -234,9 +234,9 @@ const getModuleFromStorage = async ({
   }
 
   return {
-    name: name ? name : '',
     folder: folder,
     ...moduleConfig,
+    name: name ? name : '',
   };
 };
 
@@ -289,10 +289,15 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
 export interface ModuleConfig {
+  name: string;
   version: string;
   type: ModuleTypes;
   exclude?: string[];
-  entry: string;
+  entry?: string;
+  publish?: {
+    build?: string;
+    path?: string;
+  };
 }
 
 export interface ModuleMeta {
