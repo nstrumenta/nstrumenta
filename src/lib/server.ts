@@ -4,6 +4,7 @@ import { asyncSpawn } from '../cli/utils';
 import express from 'express';
 import { createWriteStream } from 'fs';
 import http from 'http';
+import { AddressInfo } from 'net';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
@@ -55,6 +56,10 @@ export class NstrumentaServer {
   listeners: Map<string, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
+  server?: http.Server;
+  runningPort: number = 0;
+  ws?: WebSocket;
+  wss?: WebSocketServer;
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
@@ -154,18 +159,18 @@ export class NstrumentaServer {
 
     const server = new http.Server(app);
 
-    const wss = new WebSocketServer({ server: server });
+    this.wss = new WebSocketServer({ server: server });
 
     let src: string | undefined = undefined;
 
     let status: ServerStatus = {
-      clientsCount: wss.clients.size as number,
+      clientsCount: this.wss.clients.size as number,
       subscribedChannels: {},
       activeChannels: {},
     };
 
-    function updateStatus() {
-      status.clientsCount = wss.clients.size;
+    const updateStatus = () => {
+      status.clientsCount = this.wss?.clients.size || 0;
       status.subscribedChannels = {};
       subscriptions.forEach((channels) => {
         channels.forEach((channel) => {
@@ -187,7 +192,7 @@ export class NstrumentaServer {
           }
         }
       }
-    }
+    };
 
     setInterval(() => {
       updateStatus();
@@ -212,12 +217,12 @@ export class NstrumentaServer {
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Set<string>> = new Map();
 
-    wss.on('connection', async (ws, req) => {
+    this.wss.on('connection', async (ws, req) => {
       console.log(req.headers);
       const clientId: string = req.headers['sec-websocket-key']!;
 
-      console.log('a user connected - clientsCount = ' + wss.clients.size);
-      ws.on('message', async (busMessage: Buffer) => {
+      console.log('a user connected - clientsCount = ' + this.wss.clients.size);
+      this.ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
           console.log('attempting to verify token');
           // first message from a connected websocket must be a token
@@ -270,14 +275,31 @@ export class NstrumentaServer {
           console.log(channel, busMessageType, contents);
         }
       });
-      ws.on('close', function () {
-        console.log('client disconnected - clientsCount = ', wss.clients.size);
+      this.ws?.on('close', () => {
+        console.log('client disconnected - clientsCount = ', this.wss?.clients.size);
         subscriptions.delete(ws);
       });
     });
 
-    server.listen(port, function () {
-      console.log('listening on *:' + port);
+    return new Promise((resolve) => {
+      server.listen(process.env.NODE_ENV === 'test' ? 0 : port, () => {
+        const addressInfo = server?.address();
+        const runningPort = addressInfo
+          ? typeof addressInfo === 'string'
+            ? null
+            : addressInfo.port
+          : null;
+        console.log('listening on *:' + runningPort);
+        this.runningPort = runningPort ? runningPort : 0;
+        return resolve(server);
+      });
     });
+  }
+
+  async close() {
+    await this.ws?.close();
+    await this.wss?.close();
+    await this.server?.close();
+    console.log('server ws and wss closed');
   }
 }

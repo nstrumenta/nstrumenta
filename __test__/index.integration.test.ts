@@ -1,5 +1,5 @@
 // import { asyncSpawn } from '../src/cli/utils';
-import { ClientStatus, NstrumentaClient } from '../src/lib/client';
+import { ClientStatus, NstrumentaClient, SubscriptionCallback } from '../src/lib/client';
 import { NstrumentaServer, NstrumentaServerOptions } from '../src/lib/server';
 import ws from 'ws';
 import { URL } from 'url';
@@ -15,29 +15,35 @@ const url = new URL(urlString);
 // const minimalPath = './fixtures/nodejs/index.ts';
 const serverOptions: NstrumentaServerOptions = { apiKey: VALID_API_KEY, port: PORT };
 
-// test data
-const data: Record<string, string> = { message: 'hi' };
+const createClientTest =
+  ({
+    subscriptions,
+    data,
+    port,
+  }: {
+    subscriptions: [channel: string, cb: SubscriptionCallback][];
+    data: any;
+    port: number;
+  }) =>
+  async () => {
+    const nstClient = new NstrumentaClient();
 
-const createClientTest = () => async () => {
-  const nstClient = new NstrumentaClient();
-  let result;
-
-  nstClient.addListener('open', () => {
-    nstClient.addSubscription('time', (message) => {
-      result = message;
+    nstClient.addListener('open', () => {
+      console.log(`nstClient OPEN: ${{ status: nstClient.connection.status }}`);
+      subscriptions.forEach(([channel, cb]) => nstClient.addSubscription(channel, cb));
     });
-  });
 
-  await nstClient.connect({
-    apiKey: VALID_API_KEY,
-    nodeWebSocket: ws as any,
-    wsUrl: url,
-  });
+    await nstClient.connect({
+      apiKey: VALID_API_KEY,
+      nodeWebSocket: ws as any,
+      wsUrl: url,
+    });
 
-  nstClient.send('time', data);
+    console.log(`nstClient.connect run, status: ${nstClient.connection.status}`);
+    nstClient.send('time', data);
 
-  return nstClient;
-};
+    return nstClient;
+  };
 
 const closeNstrumentas = async ({
   client,
@@ -47,24 +53,37 @@ const closeNstrumentas = async ({
   server: NstrumentaServer;
 }) => {
   await client.close();
+  console.log(`client status after close: ${client.connection.status}`);
 };
 
 test('connect client to server and send message', async () => {
+  let receivedMessage; // we'll assign this the received message on the client
+  const data: Record<string, string> = { message: 'hi' };
+
+  // Start the server for the client to listen to
+  const server = new NstrumentaServer(serverOptions);
+  await server.run();
+  console.log(`server running on port ${server.runningPort}`);
+
+  const subscriptions: [string, SubscriptionCallback][] = [
+    [
+      'time',
+      (message) => {
+        receivedMessage = message;
+      },
+    ],
+  ];
+
+  const run = createClientTest({ subscriptions, data, port: server.runningPort });
+  // const spawned = await asyncSpawn('nst', ['agent', 'start'], {
+  //   env: { NSTRUMENTA_API_KEY: VALID_API_KEY, NSTRUMENTA_PORT: PORT },
+  // });
+
+  const client = await run();
   try {
-    const run = createClientTest();
-    // const spawned = await asyncSpawn('nst', ['agent', 'start'], {
-    //   env: { NSTRUMENTA_API_KEY: VALID_API_KEY, NSTRUMENTA_PORT: PORT },
-    // });
-
-    // Start the server for the client to listen to
-    const server = new NstrumentaServer(serverOptions);
-    server.run();
-
-    const client = await run();
-    // expect(result).toEqual(data);
+    // expect(receivedMessage).toEqual(data);
     expect(client.connection.status).toBe(ClientStatus.CONNECTED);
+  } finally {
     await closeNstrumentas({ client, server });
-  } catch (e) {
-    console.log('errer');
   }
 });

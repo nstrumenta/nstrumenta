@@ -5,8 +5,8 @@ import {
 } from './busMessage';
 import { getToken } from './sessionToken';
 
-type ListenerCallback = (event?: any) => void;
-type SubscriptionCallback = (message?: any) => void;
+export type ListenerCallback = (event?: any) => void;
+export type SubscriptionCallback = (message?: any) => void;
 
 export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocket;
@@ -87,7 +87,6 @@ export class NstrumentaClient {
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
-    this.ws.addEventListener('open', (ev) => console.log(ev));
 
     // define the listeners and make sure we have refs so we can remove them on teardown
     this.wsListeners.set('open', async () => {
@@ -111,7 +110,7 @@ export class NstrumentaClient {
       }
     });
     this.wsListeners.set('error', (err) => {
-      console.log(`Error in websocket connection`);
+      console.log(`Error in websocket connection`, err.message);
       this.connection.status = ClientStatus.ERROR;
     });
     this.wsListeners.set('message', (event) => {
@@ -126,6 +125,7 @@ export class NstrumentaClient {
       }
       const { channel, busMessageType, contents } = deserializedMessage;
       if (channel == '_nstrumenta') {
+        console.log('received from channel _nstrumenta:', busMessageType, contents);
         const { verified } = contents;
         if (verified) {
           this.connection.status = ClientStatus.CONNECTED;
@@ -145,7 +145,6 @@ export class NstrumentaClient {
 
     // add the listeners
     for (const [event, listener] of this.wsListeners) {
-      console.log(event);
       this.ws.addEventListener(event, listener);
     }
 
