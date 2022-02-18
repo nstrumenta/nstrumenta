@@ -1,8 +1,10 @@
+import axios from 'axios';
 import express from 'express';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
-import { DEFAULT_HOST_PORT } from '../shared';
+import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
+import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
 
 export interface ServerStatus {
@@ -15,20 +17,49 @@ export interface NstrumentaServerOptions {
   apiKey: string;
   port?: string;
   debug?: boolean;
+  noBackplane?: boolean;
 }
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
+  backplaneClient?: NstrumentaClient;
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     console.log('starting NstrumentaServer');
     this.run = this.run.bind(this);
+    if (!options.noBackplane) {
+      this.backplaneClient = new NstrumentaClient();
+    }
   }
 
   async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
+
+    if (this.backplaneClient) {
+      try {
+        //get backplane url
+        let response = await axios(endpoints.GET_BACKPLANE_URL, {
+          method: 'post',
+          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+        });
+        const backplaneUrl = response.data;
+        if (backplaneUrl) {
+          this.backplaneClient.addListener('open', () => {
+            console.log('Connected to backplane');
+          });
+
+          this.backplaneClient.connect({
+            apiKey,
+            nodeWebSocket: WebSocket as any,
+            wsUrl: backplaneUrl,
+          });
+        }
+      } catch (err) {
+        console.warn('failed to get backplaneUrl');
+      }
+    }
 
     const app = express();
     app.set('views', __dirname + '/../..');
