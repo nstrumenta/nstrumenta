@@ -368,10 +368,31 @@ export const Publish = async ({ name }: { name?: string }) => {
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name, exclude = ['node_modules'] } = module;
+  const { version, folder, name, exclude = ['node_modules'], publish } = module;
+  let subdir = '';
+  let prePublishCommand: string | undefined;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
+  }
+
+  if (publish) {
+    const { build, path } = publish;
+    subdir = path ? `/${path}` : '';
+    prePublishCommand = build ? build : undefined;
+  }
+
+  console.log({ module });
+  if (prePublishCommand) {
+    try {
+      const cwd = folder;
+      console.log(blue(`[cwd: ${cwd}] pre-publish build step`));
+      const [cmd, ...args] = prePublishCommand.split(' ');
+      await asyncSpawn(cmd, args, { cwd });
+    } catch (err) {
+      console.log(`Failed on pre-publish command: ${(err as Error).message}`);
+      throw err;
+    }
   }
 
   const fileName = `${name}-${version}.tar.gz`;
@@ -380,13 +401,13 @@ export const publishModule = async (module: Module) => {
   let url = '';
   let size = 0;
 
-  // first, make tarball
+  // make tarball
   try {
     // Could make tmp directoy at __dirname__, where the script is located?
     const options = {
       gzip: true,
       file: downloadLocation,
-      cwd: folder,
+      cwd: `${folder}${subdir}`,
       filter: (path: string) => {
         return (
           // basic filtering of exact string items in the 'exclude' array
