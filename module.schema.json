@@ -34,17 +34,19 @@
             }
         },
         "publish": {
+            "description": "optional pre-publish step",
             "type": "object",
             "properties": {
-                "description": "optional pre-publish step",
                 "build": {
                     "type": "string",
                     "description": "build command"
-                }, "path": {
+                },
+                "path": {
                     "type": "string",
                     "description": "location of folder to publish, e.g., destination of output from build command"
                 }
             }
+        }
     },
     "required": [
         "type",
