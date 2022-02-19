@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.13](https://github.com/nstrumenta/nstrumenta/compare/v2.0.12...v2.0.13) (2022-02-19)
+
+
+### Bug Fixes
+
+* **deps:** audit fix ([50e8e05](https://github.com/nstrumenta/nstrumenta/commit/50e8e056a5a07526e4c794f6e33e5dfdd653df66))
+
 ### [2.0.12](https://github.com/nstrumenta/nstrumenta/compare/v2.0.11...v2.0.12) (2022-02-18)
 
 
