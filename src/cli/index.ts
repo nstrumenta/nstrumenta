@@ -15,7 +15,6 @@ import {
 import { ListMachines } from '../commands/machines';
 import { Publish, Run } from '../commands/module';
 import { Send, Subscribe } from '../commands/pubsub';
-import { Serve } from '../commands/serve';
 import { initContexts } from '../lib/context';
 
 const version = require('../../package.json').version;
@@ -66,14 +65,6 @@ program
   .option('-m,--message-only', 'parses json and prints only message')
   .description('subscribe to host on channel')
   .action(Subscribe);
-
-program
-  .command('serve')
-  .option('-p,--port <port>', 'websocket port')
-  .option('-d, --debug <debug>', 'output extra debugging')
-  .option('--project <project>', 'nstrumenta project Id')
-  .description('spin up a pubsub server')
-  .action(Serve);
 
 const moduleCommand = program.command('module');
 moduleCommand

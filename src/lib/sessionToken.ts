@@ -27,9 +27,11 @@ export const getToken = async (apiKey: string): Promise<string> => {
 export const verifyToken = async ({
   token,
   apiKey,
+  allowCrossProjectApiKey,
 }: {
   token: string;
   apiKey: string;
+  allowCrossProjectApiKey: boolean;
 }): Promise<boolean> => {
   const headers = {
     'x-api-key': apiKey,
@@ -38,7 +40,7 @@ export const verifyToken = async ({
   try {
     await axios.post(
       endpoints.VERIFY_TOKEN,
-      { token },
+      { token, allowCrossProjectApiKey },
       {
         headers,
       }
