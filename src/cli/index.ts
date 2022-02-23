@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { DEFAULT_HOST_PORT } from '../shared';
-import { List, Start } from '../commands/agent';
+import Conf from 'conf';
+import { List as ListAgents, Start } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -15,13 +15,35 @@ import {
 import { ListMachines } from '../commands/machines';
 import { Publish, Run } from '../commands/module';
 import { Send, Subscribe } from '../commands/pubsub';
-import { initContexts } from '../lib/context';
+import { getCurrentContext, initContexts } from '../lib/context';
+import { schema } from '../schema';
+import { DEFAULT_HOST_PORT } from '../shared';
 
 const version = require('../../package.json').version;
 
 export interface Keys {
   [key: string]: string;
 }
+
+const config = new Conf(schema as any);
+
+export const resolveApiKey = () => {
+  let apiKey = process.env.NSTRUMENTA_API_KEY;
+  if (!apiKey) {
+    try {
+      apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+    } catch {}
+  } else {
+    console.log('using NSTRUMENTA_API_KEY from environment variable');
+  }
+
+  if (!apiKey)
+    throw new Error(
+      'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+    );
+
+  return apiKey;
+};
 
 initContexts();
 
@@ -93,11 +115,7 @@ agentCommand
   .description('start agent')
   .action(Start);
 
-agentCommand
-  .command('list')
-  .option('--project <project>', 'nstrumenta project Id')
-  .description('list running agents in project')
-  .action(List);
+agentCommand.command('list').description('list running agents in project').action(ListAgents);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);
