@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { DEFAULT_HOST_PORT } from '../shared';
-import { Start } from '../commands/agent';
+import { List, Start } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -92,6 +92,12 @@ agentCommand
   .option('--project <project>', 'nstrumenta project Id')
   .description('start agent')
   .action(Start);
+
+agentCommand
+  .command('list')
+  .option('--project <project>', 'nstrumenta project Id')
+  .description('list running agents in project')
+  .action(List);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);
