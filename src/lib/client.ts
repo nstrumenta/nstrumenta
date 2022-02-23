@@ -49,6 +49,8 @@ export class NstrumentaClient {
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
+    // intentionally not using cli resolveApiKey here since we
+    // support browser clients that don't import the Conf lib
     const nstrumentaApiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
     if (!nstrumentaApiKey) {
       throw new Error(
