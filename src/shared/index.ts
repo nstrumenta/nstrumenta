@@ -11,7 +11,8 @@ if (process.env.NSTRUMENTA_LOCAL) {
 export const endpoints = {
   GET_MACHINES: `${BASE_URL}/getMachines`,
   GET_UPLOAD_URL: `${BASE_URL}/getUploadUrl`,
-  GET_BACKPLANE_URL: `${BASE_URL}/getBackplaneUrl`,
+  REGISTER_AGENT: `${BASE_URL}/registerAgent`,
+  LIST_AGENTS: `${BASE_URL}/listAgents`,
   GET_DOWNLOAD_URL: `${BASE_URL}/getDownloadUrl`,
   LIST_MODULES: `${BASE_URL}/listModules`,
   GET_TOKEN: `${BASE_URL}/getToken`,

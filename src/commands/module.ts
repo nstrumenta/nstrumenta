@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { Command } from 'commander';
-import Conf from 'conf';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
@@ -9,16 +8,14 @@ import semver from 'semver';
 import { pipeline as streamPipeline } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
-import { Keys } from '../cli';
+import { resolveApiKey } from '../cli';
 import { asyncSpawn, getTmpDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
-import { schema } from '../schema';
 import { endpoints } from '../shared';
 
 const pipeline = promisify(streamPipeline);
 
 const prompt = Inquirer.createPromptModule();
-const config = new Conf(schema as any);
 
 const blue = (text: string) => {
   return text;
@@ -130,7 +127,7 @@ const getModuleFromStorage = async ({
 }): Promise<Module> => {
   let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
-  const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+  const apiKey = resolveApiKey();
 
   // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
   let response = await axios(endpoints.LIST_MODULES, {
@@ -257,10 +254,7 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      const apiKey =
-        (config.get('keys') as Keys)[getCurrentContext().projectId] ||
-        process.env.NSTRUMENTA_API_KEY ||
-        '';
+      const apiKey = resolveApiKey();
 
       const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
       const [command, ...entryArgs] = entry.split(' ');
@@ -426,7 +420,7 @@ export const publishModule = async (module: Module) => {
 
   // then, get an upload url to put the tarball into storage
   try {
-    const apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
+    const apiKey = resolveApiKey();
     const response = await axios.post(
       endpoints.GET_UPLOAD_URL,
       {

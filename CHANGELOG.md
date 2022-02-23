@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.16](https://github.com/nstrumenta/nstrumenta/compare/v2.0.15...v2.0.16) (2022-02-23)
+
+
+### Features
+
+* **keys:** uses common resolveApiKey ([35cd6b4](https://github.com/nstrumenta/nstrumenta/commit/35cd6b48fc6ef5d45eb29ce8e13af590884c40ca))
+
+### [2.0.15](https://github.com/nstrumenta/nstrumenta/compare/v2.0.14...v2.0.15) (2022-02-23)
+
+### [2.0.14](https://github.com/nstrumenta/nstrumenta/compare/v2.0.13...v2.0.14) (2022-02-22)
+
+
+### Features
+
+* **backplane:** adds server events ([#40](https://github.com/nstrumenta/nstrumenta/issues/40)) ([7e369bb](https://github.com/nstrumenta/nstrumenta/commit/7e369bb1ba77d5b5ee4b66162ca9f42ee6346c4f))
+
+### [2.0.13](https://github.com/nstrumenta/nstrumenta/compare/v2.0.12...v2.0.13) (2022-02-19)
+
+
+### Bug Fixes
+
+* **deps:** audit fix ([50e8e05](https://github.com/nstrumenta/nstrumenta/commit/50e8e056a5a07526e4c794f6e33e5dfdd653df66))
+
 ### [2.0.12](https://github.com/nstrumenta/nstrumenta/compare/v2.0.11...v2.0.12) (2022-02-18)
 
 

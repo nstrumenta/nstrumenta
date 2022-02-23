@@ -1,9 +1,7 @@
 import axios from 'axios';
-import Conf from 'conf';
+import { resolveApiKey } from 'cli';
 import { getContextProperty } from '../lib/context';
 import { endpoints } from '../shared';
-
-const config = new Conf();
 
 export interface Machine {
   name: string;
@@ -22,9 +20,9 @@ export const GetMachines = async () => {
     return console.log("No project set - use 'auth set [[projectId]]' first");
   }
 
-  const key = config.get(`keys.${projectId}`, '') as string;
+  const apiKey = resolveApiKey();
   const headers = {
-    'x-api-key': key,
+    'x-api-key': apiKey,
     'Content-Type': 'application/json',
   };
   return axios.post<Array<Machine>>(

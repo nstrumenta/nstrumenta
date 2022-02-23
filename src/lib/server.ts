@@ -7,6 +7,7 @@ import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessa
 import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
 
+type ListenerCallback = (event?: any) => void;
 export interface ServerStatus {
   clientsCount: number;
   subscribedChannels: { [key: string]: { count: number } };
@@ -18,36 +19,64 @@ export interface NstrumentaServerOptions {
   port?: string;
   debug?: boolean;
   noBackplane?: boolean;
+  allowCrossProjectApiKey?: boolean;
 }
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
+  allowCrossProjectApiKey: boolean;
+  listeners: Map<string, Array<ListenerCallback>>;
+  idIncrement = 0;
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
+    this.listeners = new Map();
     console.log('starting NstrumentaServer');
     this.run = this.run.bind(this);
     if (!options.noBackplane) {
       this.backplaneClient = new NstrumentaClient();
     }
+    this.allowCrossProjectApiKey =
+      options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
   }
 
-  async run() {
+  public addListener(
+    eventType: 'clients' | 'subscriptions' | 'status',
+    callback: ListenerCallback
+  ) {
+    if (!this.listeners.get(eventType)) {
+      this.listeners.set(eventType, []);
+    }
+    const listenerCallbacks = this.listeners.get(eventType);
+    if (listenerCallbacks) {
+      listenerCallbacks.push(callback);
+    }
+  }
+
+  public async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
 
     if (this.backplaneClient) {
       try {
         //get backplane url
-        let response = await axios(endpoints.GET_BACKPLANE_URL, {
+        let response = await axios(endpoints.REGISTER_AGENT, {
           method: 'post',
           headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
         });
-        const backplaneUrl = response.data;
+        const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
             console.log('Connected to backplane');
+            this.backplaneClient?.addSubscription(agentId, (message) => {
+              console.log('message from backplane', message);
+            });
+            this.backplaneClient?.send('_nstrumenta', {
+              command: 'registerAgent',
+              agentId,
+              actionsCollectionPath,
+            });
           });
 
           this.backplaneClient.connect({
@@ -104,6 +133,7 @@ export class NstrumentaServer {
 
     setInterval(() => {
       updateStatus();
+      this.listeners.get('status')?.forEach((callback) => callback(status));
     }, 3000);
 
     // serves from npm path for admin page
@@ -121,20 +151,27 @@ export class NstrumentaServer {
       res.status(200).send('OK');
     });
 
-    const verifiedConnections: Array<WebSocket> = [];
+    const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Set<string>> = new Map();
 
-    wss.on('connection', async function connection(ws, req) {
+    wss.on('connection', async (ws, req) => {
+      console.log(req.headers);
+      const clientId: string = req.headers['sec-websocket-key']!;
+
       console.log('a user connected - clientsCount = ' + wss.clients.size);
-      ws.on('message', async function incoming(busMessage: Buffer) {
-        if (!verifiedConnections.includes(ws)) {
+      ws.on('message', async (busMessage: Buffer) => {
+        if (!verifiedConnections.has(clientId)) {
           console.log('attempting to verify token');
           // first message from a connected websocket must be a token
-          verifyToken({ token: busMessage.toString(), apiKey })
+          const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
+          verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey })
             .then(() => {
-              console.log('verified', req.socket.remoteAddress);
-              verifiedConnections.push(ws);
+              console.log('verified', clientId, req.socket.remoteAddress);
+              verifiedConnections.set(clientId, ws);
               ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
+              this.listeners
+                .get('clients')
+                ?.forEach((callback) => callback([...verifiedConnections.keys()]));
             })
             .catch((err) => {
               console.log('unable to verify client, invalid token, closing connection', err);
@@ -161,6 +198,7 @@ export class NstrumentaServer {
           } else {
             subscriptions.get(ws)!.add(channel);
           }
+          this.listeners.get('subscriptions')?.forEach((callback) => callback(subscriptions));
         }
 
         subscriptions.forEach((subChannels, subWebSocket) => {
