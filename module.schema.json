@@ -33,19 +33,16 @@
                 "type": "string"
             }
         },
-        "publish": {
-            "description": "optional pre-publish step",
-            "type": "object",
-            "properties": {
-                "build": {
-                    "type": "string",
-                    "description": "build command"
-                },
-                "path": {
-                    "type": "string",
-                    "description": "location of folder to publish, e.g., destination of output from build command"
-                }
+        "includes": {
+            "description": "List of string patterns to include from packaging module for publish (e.g., node_modules likely always)",
+            "type": "array",
+            "items": {
+                "type": "string"
             }
+        },
+        "prePublishCommand": {
+            "description": "build command to run prior to publish",
+            "type": "string"
         }
     },
     "required": [

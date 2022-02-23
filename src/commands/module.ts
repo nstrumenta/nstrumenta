@@ -286,12 +286,10 @@ export interface ModuleConfig {
   name: string;
   version: string;
   type: ModuleTypes;
-  exclude?: string[];
+  excludes?: string[];
+  includes?: string[];
   entry?: string;
-  publish?: {
-    build?: string;
-    path?: string;
-  };
+  prePublishCommand?: string;
 }
 
 export interface ModuleMeta {
@@ -362,18 +360,17 @@ export const Publish = async ({ name }: { name?: string }) => {
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name, exclude = ['node_modules'], publish } = module;
-  let subdir = '';
-  let prePublishCommand: string | undefined;
+  const {
+    version,
+    folder,
+    name,
+    excludes = ['node_modules'],
+    includes,
+    prePublishCommand,
+  } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
-  }
-
-  if (publish) {
-    const { build, path } = publish;
-    subdir = path ? `/${path}` : '';
-    prePublishCommand = build ? build : undefined;
   }
 
   console.log({ module });
@@ -401,14 +398,18 @@ export const publishModule = async (module: Module) => {
     const options = {
       gzip: true,
       file: downloadLocation,
-      cwd: `${folder}${subdir}`,
+      cwd: `${folder}`,
       filter: (path: string) => {
-        return (
-          // basic filtering of exact string items in the 'exclude' array
-          exclude.findIndex((p) => {
+        const isNotExcluded =
+          excludes.findIndex((p) => {
             return path.includes(p);
-          }) === -1
-        );
+          }) === -1;
+
+        return includes
+          ? includes.findIndex((p) => {
+              return path.includes(p);
+            }) !== -1 && isNotExcluded
+          : isNotExcluded;
       },
     };
     await tar.create(options, ['.']);
