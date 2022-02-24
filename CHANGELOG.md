@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.17](https://github.com/nstrumenta/nstrumenta/compare/v2.0.16...v2.0.17) (2022-02-24)
+
+
+### Bug Fixes
+
+* **apiKey:** fixes import in machines.ts ([ba437d4](https://github.com/nstrumenta/nstrumenta/commit/ba437d4ed4127c5d505113f978d5f38549c9b844))
+
 ### [2.0.16](https://github.com/nstrumenta/nstrumenta/compare/v2.0.15...v2.0.16) (2022-02-23)
 
 
