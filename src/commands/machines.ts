@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { resolveApiKey } from 'cli';
+import { resolveApiKey } from '../cli';
 import { getContextProperty } from '../lib/context';
 import { endpoints } from '../shared';
 
