@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.18](https://github.com/nstrumenta/nstrumenta/compare/v2.0.17...v2.0.18) (2022-02-28)
+
+
+### Features
+
+* **publish:** continue on failing promise ([1b854ea](https://github.com/nstrumenta/nstrumenta/commit/1b854ea85cf8ba7f3062ffb557ae467865a2ac68))
+
 ### [2.0.17](https://github.com/nstrumenta/nstrumenta/compare/v2.0.16...v2.0.17) (2022-02-24)
 
 
