@@ -161,6 +161,7 @@ const getModuleFromStorage = async ({
   }
 
   // make sure we have a path to save to
+  console.log('path:', path);
   const tmp = await getTmpDir();
   const file = `${tmp}/tmp.tar.gz`;
   const folder = `${tmp}/${path.replace('.tar.gz', '')}`;
@@ -308,7 +309,6 @@ export const Publish = async ({ name }: { name?: string }) => {
     const { modules: modulesFromFile }: { [key: string]: unknown; modules: ModuleMeta[] } =
       JSON.parse(file);
     modulesMeta = modulesFromFile;
-    console.log(`nst project defines ${modulesMeta.length} modules...`);
   } catch (error) {
     throw Error(error as string);
   }
@@ -333,12 +333,13 @@ export const Publish = async ({ name }: { name?: string }) => {
   modules = results.filter((m): m is Module => Boolean(m));
 
   console.log(
-    `publish ${modules.length} modules: [${modules
+    `publishing ${modules.length} modules: [${modules
       .map(({ name }) => name)
       .join(', ')}] to project ${getCurrentContext().projectId}\n`
   );
 
   try {
+    console.log(modules);
     const promises = modules.map((module) =>
       publishModule({
         ...module,
@@ -371,7 +372,6 @@ export const publishModule = async (module: Module) => {
 
   // first, make tarball
   try {
-    // Could make tmp directoy at __dirname__, where the script is located?
     const options = {
       gzip: true,
       file: downloadLocation,
@@ -414,14 +414,14 @@ export const publishModule = async (module: Module) => {
     let message = `can't upload ${name}`;
     if (axios.isAxiosError(e)) {
       if (e.response?.status === 409) {
-        message = `${message}: Conflict: version ${version} exists`;
+        console.log(`Conflict: version ${version} exists, using server version`);
+        return remoteFileLocation;
       }
       message = `${message} [${(e as Error).message}]`;
     }
     throw new Error(message);
   }
 
-  // this could be streamed...
   const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise

@@ -5,7 +5,12 @@ import path from 'path';
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
-  options?: { cwd?: string; shell?: boolean; stdio?: 'pipe' | 'inherit', env?: Record<string, string> },
+  options?: {
+    cwd?: string;
+    shell?: boolean;
+    stdio?: 'pipe' | 'inherit';
+    env?: Record<string, string>;
+  },
   errCB?: (code: number) => void
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
@@ -41,11 +46,7 @@ export async function asyncSpawn(
 export const getTmpDir = async () => {
   const cwd = `${__dirname}/.nst`;
 
-  try {
-    await fs.mkdir(cwd);
-  } catch (err) {
-    // exists... hopefully?
-  }
+  await fs.mkdir(cwd, { recursive: true });
 
   try {
     const stat = await fs.stat(cwd);
@@ -56,8 +57,6 @@ export const getTmpDir = async () => {
     console.warn((err as Error).message);
     throw err;
   }
-
-  console.log(`get .nst temp dir: ${cwd}`);
   return cwd;
 };
 
