@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.19](https://github.com/nstrumenta/nstrumenta/compare/v2.0.18...v2.0.19) (2022-03-01)
+
+
+### Features
+
+* **agentActions:** adds agent set-action command ([adbf20a](https://github.com/nstrumenta/nstrumenta/commit/adbf20a8aa308246c9ea558b4d05665fb3737050))
+
 ### [2.0.18](https://github.com/nstrumenta/nstrumenta/compare/v2.0.17...v2.0.18) (2022-02-28)
 
 
