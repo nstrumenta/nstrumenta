@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "2.0.18",
+  "version": "2.0.19",
   "description": "cli tool for nstrumenta",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
