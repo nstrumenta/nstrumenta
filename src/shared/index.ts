@@ -13,6 +13,7 @@ export const endpoints = {
   GET_UPLOAD_URL: `${BASE_URL}/getUploadUrl`,
   REGISTER_AGENT: `${BASE_URL}/registerAgent`,
   LIST_AGENTS: `${BASE_URL}/listAgents`,
+  SET_AGENT_ACTION: `${BASE_URL}/setAgentAction`,
   GET_DOWNLOAD_URL: `${BASE_URL}/getDownloadUrl`,
   LIST_MODULES: `${BASE_URL}/listModules`,
   GET_TOKEN: `${BASE_URL}/getToken`,

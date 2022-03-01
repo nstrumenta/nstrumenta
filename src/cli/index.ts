@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import Conf from 'conf';
-import { List as ListAgents, Start } from '../commands/agent';
+import { List as ListAgents, Start, SetAction as SetAgentAction } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -116,6 +116,12 @@ agentCommand
   .action(Start);
 
 agentCommand.command('list').description('list running agents in project').action(ListAgents);
+agentCommand
+  .command('set-action')
+  .argument('[agentId]', 'agent Id')
+  .option('-a,--action <action>', 'action to set')
+  .description('sets action on agent')
+  .action(SetAgentAction);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);

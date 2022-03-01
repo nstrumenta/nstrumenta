@@ -33,3 +33,25 @@ export const List = async () => {
     console.error('Error:', (err as Error).message);
   }
 };
+
+export const SetAction = async (agentId: string, options: { action: string }) => {
+  const { action: actionString } = options;
+  const action = JSON.parse(actionString);
+  const apiKey = resolveApiKey();
+
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: endpoints.SET_AGENT_ACTION,
+      headers: {
+        contentType: 'application/json',
+        'x-api-key': apiKey,
+      },
+      data: { agentId, action },
+    });
+
+    console.log(response.data);
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
+};
