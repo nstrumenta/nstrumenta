@@ -286,7 +286,8 @@ export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 export interface ModuleConfig {
   version: string;
   type: ModuleTypes;
-  exclude?: string[];
+  excludes?: string[];
+  includes?: string[];
   entry: string;
 }
 
@@ -297,7 +298,7 @@ export interface ModuleMeta {
 
 export type Module = ModuleConfig & ModuleMeta;
 
-export const Publish = async ({ name }: { name?: string }) => {
+export const Publish = async () => {
   let modulesMeta: ModuleMeta[];
   let modules: Module[] = [];
 
@@ -358,7 +359,7 @@ export const Publish = async ({ name }: { name?: string }) => {
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name, exclude = ['node_modules'] } = module;
+  const { version, folder, name, includes = ['.'], excludes = ['node_modules'] } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
@@ -379,13 +380,13 @@ export const publishModule = async (module: Module) => {
       filter: (path: string) => {
         return (
           // basic filtering of exact string items in the 'exclude' array
-          exclude.findIndex((p) => {
+          excludes.findIndex((p) => {
             return path.includes(p);
           }) === -1
         );
       },
     };
-    await tar.create(options, ['.']);
+    await tar.create(options, includes);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
