@@ -1,5 +1,8 @@
 import axios from 'axios';
+import { ChildProcess } from 'child_process';
+import { asyncSpawn } from '../cli/utils';
 import express from 'express';
+import { createWriteStream } from 'fs';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
@@ -13,6 +16,27 @@ export interface ServerStatus {
   subscribedChannels: { [key: string]: { count: number } };
   activeChannels: { [key: string]: { timestamp: number } };
 }
+
+export interface CommandRunModuleData {
+  module: string;
+  args?: string[];
+}
+export interface CommandStopModuleData {
+  module: string;
+}
+export type AgentActionStatus = 'pending' | 'complete';
+
+export type BackplaneCommand =
+  | {
+      task: 'runModule';
+      status: AgentActionStatus;
+      data: CommandRunModuleData;
+    }
+  | {
+      task: 'stopModule';
+      status: AgentActionStatus;
+      data: CommandStopModuleData;
+    };
 
 export interface NstrumentaServerOptions {
   apiKey: string;
@@ -28,6 +52,7 @@ export class NstrumentaServer {
   allowCrossProjectApiKey: boolean;
   listeners: Map<string, Array<ListenerCallback>>;
   idIncrement = 0;
+  children: Map<string, ChildProcess> = new Map();
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
@@ -69,8 +94,39 @@ export class NstrumentaServer {
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
             console.log('Connected to backplane');
-            this.backplaneClient?.addSubscription(agentId, (message) => {
-              console.log('message from backplane', message);
+            this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
+              switch (message.task) {
+                case 'runModule':
+                  if (!message.data || !message.data.module) {
+                    console.log('Aborting: runModule command needs to specify data.module');
+                    return;
+                  }
+                  const {
+                    data: { module: moduleName, args },
+                  } = message;
+                  const logPath = `${__dirname}/${moduleName}-${Date.now()}.txt`;
+                  console.log(`starting logging ${logPath}`);
+                  const stream = createWriteStream(logPath);
+                  const process = await asyncSpawn(
+                    'nstrumenta',
+                    [
+                      'module',
+                      'run',
+                      `--name=${moduleName}`,
+                      '--non-interactive',
+                      ...(args ? args : []),
+                    ],
+                    undefined,
+                    undefined,
+                    stream
+                  );
+                  this.children.set(String(process.pid), process);
+                  break;
+                case 'stopModule':
+                  const { data } = message;
+                default:
+                  console.log('message from backplane', message);
+              }
             });
             this.backplaneClient?.send('_nstrumenta', {
               command: 'registerAgent',

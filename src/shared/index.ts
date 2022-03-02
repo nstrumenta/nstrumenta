@@ -14,6 +14,7 @@ export const endpoints = {
   REGISTER_AGENT: `${BASE_URL}/registerAgent`,
   LIST_AGENTS: `${BASE_URL}/listAgents`,
   SET_AGENT_ACTION: `${BASE_URL}/setAgentAction`,
+  CLEAN_AGENT_ACTIONS: `${BASE_URL}/cleanAgentActions`,
   GET_DOWNLOAD_URL: `${BASE_URL}/getDownloadUrl`,
   LIST_MODULES: `${BASE_URL}/listModules`,
   GET_TOKEN: `${BASE_URL}/getToken`,
