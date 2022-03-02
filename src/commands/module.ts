@@ -163,14 +163,16 @@ const getModuleFromStorage = async ({
   try {
     if (nonInteractive) {
       console.log(name, serverModules[name!]);
-      const version = serverModules[name!].map(({ version }) => version).sort(semver.compare).pop()
+      const version = serverModules[name!]
+        .map(({ version }) => version)
+        .sort(semver.compare)
+        .pop();
       path = serverModules[name!].find((module) => module.version === version)?.path;
     }
   } catch (error) {
-    console.warn(`name ${name} not found in`,  Object.keys(serverModules));
+    console.warn(`name ${name} not found in`, Object.keys(serverModules));
     throw new Error('invalid module name');
   }
-
 
   if (name === undefined && path === undefined) {
     // If user hasn't specified module name, ask for it here
@@ -275,7 +277,7 @@ const getModuleFromStorage = async ({
 const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
   nodejs: async (module, args: string[] = []) => {
-    console.log(`adapt ${module.name} in ${module.folder} with args ${{ args }}`);
+    console.log(`adapt ${module.name} in ${module.folder} with args`, args);
 
     let result;
     try {

@@ -104,7 +104,9 @@ export class NstrumentaServer {
                   const {
                     data: { module: moduleName, args },
                   } = message;
-                  const stream = createWriteStream('log.txt');
+                  const logPath = `${__dirname}/${moduleName}-${Date.now()}.txt`;
+                  console.log(`starting logging ${logPath}`);
+                  const stream = createWriteStream(logPath);
                   const process = await asyncSpawn(
                     'nstrumenta',
                     [

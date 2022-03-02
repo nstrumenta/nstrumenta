@@ -9,8 +9,8 @@ type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
 
 export interface ConnectOptions {
-  nodeWebSocket?: new (url: string | URL) => WebSocket;
-  wsUrl: URL;
+  nodeWebSocket?: new (url: string) => WebSocket;
+  wsUrl: string;
   apiKey?: string;
 }
 
@@ -33,7 +33,7 @@ export class NstrumentaClient {
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
 
-  public connection: Connection = { status: ClientStatus.CONNECTED };
+  public connection: Connection = { status: ClientStatus.INIT };
 
   constructor() {
     this.listeners = new Map();

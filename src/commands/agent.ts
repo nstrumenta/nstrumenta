@@ -50,7 +50,9 @@ export const SetAction = async (agentId: string, options: { action: string }) =>
       data: { agentId, action },
     });
 
-    console.log(response.data);
+    const actionId: string | undefined =
+      response.data?._path?.segments[response.data?._path?.segments.length - 1];
+    console.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
