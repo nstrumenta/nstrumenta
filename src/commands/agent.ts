@@ -55,3 +55,21 @@ export const SetAction = async (agentId: string, options: { action: string }) =>
     console.error('Error:', (err as Error).message);
   }
 };
+
+export const CleanActions = async (agentId: string) => {
+  const apiKey = resolveApiKey();
+
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: endpoints.CLEAN_AGENT_ACTIONS,
+      headers: {
+        contentType: 'application/json',
+        'x-api-key': apiKey,
+      },
+      data: { agentId },
+    });
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
+};
