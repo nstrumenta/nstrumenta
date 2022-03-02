@@ -31,21 +31,35 @@ export const Run = async function (
     name,
     local,
     path,
+    nonInteractive,
   }: {
     name?: string;
     local?: boolean;
     path?: string;
+    nonInteractive?: boolean;
   },
   { args }: Command
 ): Promise<void> {
   let module: Module;
 
-  switch (local) {
-    case true:
-      module = await useLocalModule(name);
-      break;
+  if (nonInteractive) {
+    if (!name) {
+      throw new Error('module name required for non-interactive mode');
+    }
+
+    if (local) {
+      console.log('non-interactive overrides local, fetches latest version from server');
+    }
+  }
+
+  switch (nonInteractive) {
+    case false:
+      if (Boolean(local)) {
+        module = await useLocalModule(name);
+        break;
+      }
     default:
-      module = await getModuleFromStorage({ name, path });
+      module = await getModuleFromStorage({ name, path, nonInteractive });
   }
 
   if (module === undefined) {
@@ -121,9 +135,11 @@ function getVersionFromPath(path: string) {
 const getModuleFromStorage = async ({
   name: moduleName,
   path,
+  nonInteractive,
 }: {
   name?: string;
   path?: string;
+  nonInteractive?: boolean;
 }): Promise<Module> => {
   let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
@@ -143,6 +159,20 @@ const getModuleFromStorage = async ({
     }
     serverModules[name].push({ path, version });
   });
+
+  try {
+    if (nonInteractive) {
+      console.log(name, serverModules[name!]);
+      const version = serverModules[name!]
+        .map(({ version }) => version)
+        .sort(semver.compare)
+        .pop();
+      path = serverModules[name!].find((module) => module.version === version)?.path;
+    }
+  } catch (error) {
+    console.warn(`name ${name} not found in`, Object.keys(serverModules));
+    throw new Error('invalid module name');
+  }
 
   if (name === undefined && path === undefined) {
     // If user hasn't specified module name, ask for it here
@@ -247,7 +277,7 @@ const getModuleFromStorage = async ({
 const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise<unknown>> = {
   // For now, run a script with npm dependencies in an environment that has node/npm
   nodejs: async (module, args: string[] = []) => {
-    console.log(`adapt ${module.name} in ${module.folder} with args ${{ args }}`);
+    console.log(`adapt ${module.name} in ${module.folder} with args`, args);
 
     let result;
     try {
@@ -286,7 +316,8 @@ export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 export interface ModuleConfig {
   version: string;
   type: ModuleTypes;
-  exclude?: string[];
+  excludes?: string[];
+  includes?: string[];
   entry: string;
 }
 
@@ -297,7 +328,7 @@ export interface ModuleMeta {
 
 export type Module = ModuleConfig & ModuleMeta;
 
-export const Publish = async ({ name }: { name?: string }) => {
+export const Publish = async () => {
   let modulesMeta: ModuleMeta[];
   let modules: Module[] = [];
 
@@ -358,7 +389,7 @@ export const Publish = async ({ name }: { name?: string }) => {
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name, exclude = ['node_modules'] } = module;
+  const { version, folder, name, includes = ['.'], excludes = ['node_modules'] } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
@@ -379,13 +410,13 @@ export const publishModule = async (module: Module) => {
       filter: (path: string) => {
         return (
           // basic filtering of exact string items in the 'exclude' array
-          exclude.findIndex((p) => {
+          excludes.findIndex((p) => {
             return path.includes(p);
           }) === -1
         );
       },
     };
-    await tar.create(options, ['.']);
+    await tar.create(options, includes);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
