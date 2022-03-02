@@ -31,21 +31,35 @@ export const Run = async function (
     name,
     local,
     path,
+    nonInteractive,
   }: {
     name?: string;
     local?: boolean;
     path?: string;
+    nonInteractive?: boolean;
   },
   { args }: Command
 ): Promise<void> {
   let module: Module;
 
-  switch (local) {
-    case true:
-      module = await useLocalModule(name);
-      break;
+  if (nonInteractive) {
+    if (!name) {
+      throw new Error('module name required for non-interactive mode');
+    }
+
+    if (local) {
+      console.log('non-interactive overrides local, fetches latest version from server');
+    }
+  }
+
+  switch (nonInteractive) {
+    case false:
+      if (Boolean(local)) {
+        module = await useLocalModule(name);
+        break;
+      }
     default:
-      module = await getModuleFromStorage({ name, path });
+      module = await getModuleFromStorage({ name, path, nonInteractive });
   }
 
   if (module === undefined) {
@@ -121,9 +135,11 @@ function getVersionFromPath(path: string) {
 const getModuleFromStorage = async ({
   name: moduleName,
   path,
+  nonInteractive,
 }: {
   name?: string;
   path?: string;
+  nonInteractive?: boolean;
 }): Promise<Module> => {
   let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
@@ -143,6 +159,18 @@ const getModuleFromStorage = async ({
     }
     serverModules[name].push({ path, version });
   });
+
+  try {
+    if (nonInteractive) {
+      console.log(name, serverModules[name!]);
+      const version = serverModules[name!].map(({ version }) => version).sort(semver.compare).pop()
+      path = serverModules[name!].find((module) => module.version === version)?.path;
+    }
+  } catch (error) {
+    console.warn(`name ${name} not found in`,  Object.keys(serverModules));
+    throw new Error('invalid module name');
+  }
+
 
   if (name === undefined && path === undefined) {
     // If user hasn't specified module name, ask for it here
