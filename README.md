@@ -25,28 +25,12 @@ $ npm i -g nstrumenta
 $ nstrumenta auth add 
 ```
 4. When prompted, enter the project id and the api key
-5. Open 3 terminals
 
-#### terminal 1 server
-
-```console
-$ nstrumenta context set-property wsHost --value ws://localhost:8088
-$ nstrumenta serve
-```
-
-#### terminal 2 subscriber
+5. start an agent that will be able to run modules
 
 ```console
-$ nstrumenta subscribe
+$ nstrumenta agent start
 ```
-
-#### terminal 3 sender
-
-```console
-$ nstrumenta send 
-```
-
-At this point you can send messages from the the terminal with the sending process, and they'll be read and displayed by any subscriber process. Try typing something and pressing enter. Next up, try piping from the subscribe to another process or a file.
 
 ## cli reference
 
@@ -73,7 +57,6 @@ nstrumenta will save your configuration scoped to the current user. Within this 
 - [machines](#machines)
 - [subscribe](#subscribe)
 - [send](#send)
-- [serve](#serve) _...deprecated??_
 - [module](#module)
 - [agent](#module) _need doc_
 
@@ -158,22 +141,12 @@ Will use the current context for configuration if no args/options.
 
 ***
 
-#### [deprecated?] serve
+#### agent start
 
 Start websocket pubsub host locally
 
 ```console
-$ nstrumenta serve {--project PROJECT_NAME} {--port | -p PORT} {--debug | -d}
-```
-
-When running this locally, set the **wsHost** property in context to `ws://localhost:PORT` and then, _send_ and _subscribe_ can be run without arguments and will communicate via this local host. 
-
-e.g.,
-
-```console
-$ nstrumenta context set-property wsHost --value ws://localhost:8088
-$ nstrumenta context set-property projectId --value trax
-$ nstrumenta serve
+$ nstrumenta agent serve
 ```
 
 The output is similar to the following

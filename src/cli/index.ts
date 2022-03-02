@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import Conf from 'conf';
-import { List as ListAgents, Start, SetAction as SetAgentAction } from '../commands/agent';
+import {
+  List as ListAgents,
+  Start,
+  SetAction as SetAgentAction,
+  CleanActions as CleanAgentActions,
+} from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
   AddContext,
@@ -103,6 +108,7 @@ moduleCommand
     'require module locally in the current .nstrumenta project dir; --name also required here'
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
+  .option('--non-interactive', 'requires module name, uses latest version from server')
   .description('run module')
   .action(Run);
 
@@ -122,6 +128,12 @@ agentCommand
   .option('-a,--action <action>', 'action to set')
   .description('sets action on agent')
   .action(SetAgentAction);
+
+agentCommand
+  .command('clean-actions')
+  .argument('[agentId]', 'agent Id')
+  .description('cancels all pending actions for an agent')
+  .action(CleanAgentActions);
 
 const contextCommand = program.command('context');
 contextCommand.command('add').description('Add a context').action(AddContext);

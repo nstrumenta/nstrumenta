@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { WriteStream } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -11,25 +12,29 @@ export async function asyncSpawn(
     stdio?: 'pipe' | 'inherit';
     env?: Record<string, string>;
   },
-  errCB?: (code: number) => void
+  errCB?: (code: number) => void,
+  stream?: WriteStream
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
   args = args || [];
   options = { ...options };
-  const process = spawn(cmd, args, options);
+  const childProcess = spawn(cmd, args, options);
 
   let output = '';
   let error = '';
-  if (process.stdout && process.stderr) {
-    for await (const chunk of process.stdout) {
+  if (stream) {
+    childProcess.stdout?.pipe(stream);
+  }
+  if (childProcess.stdout && childProcess.stderr) {
+    for await (const chunk of childProcess.stdout) {
       output += chunk;
     }
-    for await (const chunk of process.stderr) {
+    for await (const chunk of childProcess.stderr) {
       error += chunk;
     }
   }
   const code: number = await new Promise((resolve) => {
-    process.on('close', resolve);
+    childProcess.on('close', resolve);
   });
   if (code) {
     if (errCB) {
@@ -40,7 +45,7 @@ export async function asyncSpawn(
   }
 
   console.log(`spawn ${cmd} output ${output}`);
-  return output;
+  return childProcess;
 }
 
 export const getTmpDir = async () => {
