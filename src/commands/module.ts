@@ -145,7 +145,6 @@ const getModuleFromStorage = async ({
   let name = moduleName;
   const apiKey = resolveApiKey();
 
-  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
   let response = await axios(endpoints.LIST_MODULES, {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
@@ -319,6 +318,7 @@ export interface ModuleConfig {
   excludes?: string[];
   includes?: string[];
   entry: string;
+  prePublishCommand?: string;
 }
 
 export interface ModuleMeta {
@@ -389,7 +389,14 @@ export const Publish = async () => {
 };
 
 export const publishModule = async (module: Module) => {
-  const { version, folder, name, includes = ['.'], excludes = ['node_modules'] } = module;
+  const {
+    version,
+    folder,
+    name,
+    includes = ['.'],
+    excludes = ['node_modules'],
+    prePublishCommand,
+  } = module;
 
   if (!version) {
     throw new Error(`module [${name}] requires version`);
@@ -400,6 +407,18 @@ export const publishModule = async (module: Module) => {
   const remoteFileLocation = `modules/${name}/${fileName}`;
   let url = '';
   let size = 0;
+
+  if (prePublishCommand) {
+    try {
+      const cwd = folder;
+      console.log(blue(`[cwd: ${cwd}] pre-publish build step`));
+      const [cmd, ...args] = prePublishCommand.split(' ');
+      await asyncSpawn(cmd, args, { cwd });
+    } catch (err) {
+      console.log(`Failed on pre-publish command: ${(err as Error).message}`);
+      throw err;
+    }
+  }
 
   // first, make tarball
   try {
@@ -465,8 +484,4 @@ export const publishModule = async (module: Module) => {
     },
   });
   return remoteFileLocation;
-};
-
-export const getTmpFileLocation = async () => {
-  return `${await getTmpDir()}/tmp.tar.gz`;
 };
