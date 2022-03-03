@@ -145,6 +145,7 @@ const getModuleFromStorage = async ({
   let name = moduleName;
   const apiKey = resolveApiKey();
 
+  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
   let response = await axios(endpoints.LIST_MODULES, {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
