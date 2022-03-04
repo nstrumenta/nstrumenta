@@ -10,7 +10,7 @@ import { pipeline as streamPipeline } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 import { resolveApiKey } from '../cli';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { asyncSpawn, getNstDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { endpoints } from '../shared';
 
@@ -258,19 +258,19 @@ export const getFolderFromStorage = async (
   options: { apiKey: string; baseDir?: string }
 ) => {
   const { apiKey, baseDir = '' } = options;
-  const tmp = await getTmpDir();
-  const file = `${tmp}/tmp.tar.gz`;
-  const folder = nodePath.join(tmp, baseDir, storagePath.replace('.tar.gz', ''));
-  let exists: boolean = false;
+  const nstDir = await getNstDir();
+  const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
+  const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
   try {
-    await fs.access(folder);
-    exists = true;
-    console.log(`using cached version`);
+    await fs.access(extractFolder);
   } catch {
-    await fs.mkdir(folder, { recursive: true });
+    await fs.mkdir(extractFolder, { recursive: true });
   }
 
-  if (!exists) {
+  try {
+    await fs.stat(file);
+    console.log(`using cached version of ${file}`);
+  } catch {
     console.log(`get [${blue(storagePath)}] from storage`);
 
     // get the download url
@@ -291,7 +291,7 @@ export const getFolderFromStorage = async (
     }
 
     try {
-      // get the file, write to the temp directory
+      // get the file, write to the nst directory
       console.log('get url', url);
       const download = await axios.get(url, { responseType: 'stream' });
       const writeStream = createWriteStream(file);
@@ -299,26 +299,23 @@ export const getFolderFromStorage = async (
       await pipeline(download.data, writeStream);
       console.log(`file written to ${file}`);
     } catch (err) {
-      console.log(':(');
+      console.log(':(', err);
     }
-
-    // extract tar into subdir of tmp
-    await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
 
     try {
       const options = {
         gzip: true,
         file: file,
-        cwd: folder,
+        cwd: extractFolder,
       };
       await tar.extract(options);
     } catch (err) {
-      console.warn(`Error, problem extracting tar ${file} to ${folder}`);
+      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
       throw err;
     }
   }
 
-  return folder;
+  return extractFolder;
 };
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
@@ -414,7 +411,7 @@ export const publishModule = async (module: Module) => {
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const downloadLocation = `${await getTmpDir()}/${fileName}`;
+  const downloadLocation = `${await getNstDir()}/${fileName}`;
   const remoteFileLocation = `modules/${name}/${fileName}`;
   let url = '';
   let size = 0;

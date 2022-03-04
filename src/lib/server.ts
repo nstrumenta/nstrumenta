@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { asyncSpawn, getNstDir } from '../cli/utils';
 import express from 'express';
 import { createWriteStream } from 'fs';
 import serveIndex from 'serve-index';
@@ -204,8 +204,8 @@ export class NstrumentaServer {
     app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
     //serves public subfolder from execution path for serving sandboxes
-    const sandboxPath = `${await getTmpDir()}/modules`;
-    app.use('/sandbox', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
+    const sandboxPath = `${await getNstDir()}/modules`;
+    app.use('/modules', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
 
     app.get('/', function (req, res) {
       res.render('index', { src: src || 'placeholder.html' });
