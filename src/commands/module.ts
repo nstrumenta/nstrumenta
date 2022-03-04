@@ -1,4 +1,5 @@
 import axios from 'axios';
+import nodePath from 'path';
 import { Command } from 'commander';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
@@ -9,7 +10,7 @@ import { pipeline as streamPipeline } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 import { resolveApiKey } from '../cli';
-import { asyncSpawn, getTmpDir } from '../cli/utils';
+import { asyncSpawn, getNstDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { endpoints } from '../shared';
 
@@ -126,13 +127,13 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
   };
 };
 
-function getVersionFromPath(path: string) {
+export function getVersionFromPath(path: string) {
   const match = /(\d+)\.(\d+).(\d+)/.exec(path);
   const version: string = match ? match[0] : '';
   return version;
 }
 
-const getModuleFromStorage = async ({
+export const getModuleFromStorage = async ({
   name: moduleName,
   path,
   nonInteractive,
@@ -190,67 +191,8 @@ const getModuleFromStorage = async ({
     throw new Error('no module and version chosen, or no path specified');
   }
 
-  // make sure we have a path to save to
-  console.log('path:', path);
-  const tmp = await getTmpDir();
-  const file = `${tmp}/tmp.tar.gz`;
-  const folder = `${tmp}/${path.replace('.tar.gz', '')}`;
-  let exists: boolean = false;
-  try {
-    await fs.access(folder);
-    exists = true;
-    console.log(`using cached version`);
-  } catch {
-    await fs.mkdir(folder, { recursive: true });
-  }
-
-  if (!exists) {
-    console.log(`get [${blue(path)}] from storage`);
-
-    // get the download url
-    let url;
-    try {
-      const downloadUrlConfig = {
-        headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-      };
-      const downloadUrlData = { path };
-      const downloadUrlResponse = await axios.post(
-        endpoints.GET_DOWNLOAD_URL,
-        downloadUrlData,
-        downloadUrlConfig
-      );
-      url = downloadUrlResponse.data;
-    } catch (err) {
-      throw new Error(`bad times, path: ${path}`);
-    }
-
-    try {
-      // get the file, write to the temp directory
-      console.log('get url', url);
-      const download = await axios.get(url, { responseType: 'stream' });
-      const writeStream = createWriteStream(file);
-
-      await pipeline(download.data, writeStream);
-      console.log(`file written to ${file}`);
-    } catch (err) {
-      console.log(':(');
-    }
-
-    // extract tar into subdir of tmp
-    await asyncSpawn('tar', ['-xzf', file, '-C', folder]);
-
-    try {
-      const options = {
-        gzip: true,
-        file: file,
-        cwd: folder,
-      };
-      await tar.extract(options);
-    } catch (err) {
-      console.warn(`Error, problem extracting tar ${file} to ${folder}`);
-      throw err;
-    }
-  }
+  const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
+  console.log(`saved ${moduleName} to ${folder}`);
 
   let moduleConfig: ModuleConfig;
   try {
@@ -309,6 +251,71 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
     console.log('adapt', module.name);
     return '';
   },
+};
+
+export const getFolderFromStorage = async (
+  storagePath: string,
+  options: { apiKey: string; baseDir?: string }
+) => {
+  const { apiKey, baseDir = '' } = options;
+  const nstDir = await getNstDir();
+  const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
+  const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
+  try {
+    await fs.access(extractFolder);
+  } catch {
+    await fs.mkdir(extractFolder, { recursive: true });
+  }
+
+  try {
+    await fs.stat(file);
+    console.log(`using cached version of ${file}`);
+  } catch {
+    console.log(`get [${blue(storagePath)}] from storage`);
+
+    // get the download url
+    let url;
+    try {
+      const downloadUrlConfig = {
+        headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+      };
+      const downloadUrlData = { path: storagePath };
+      const downloadUrlResponse = await axios.post(
+        endpoints.GET_DOWNLOAD_URL,
+        downloadUrlData,
+        downloadUrlConfig
+      );
+      url = downloadUrlResponse.data;
+    } catch (err) {
+      throw new Error(`bad times, path: ${storagePath}`);
+    }
+
+    try {
+      // get the file, write to the nst directory
+      console.log('get url', url);
+      const download = await axios.get(url, { responseType: 'stream' });
+      const writeStream = createWriteStream(file);
+
+      await pipeline(download.data, writeStream);
+      console.log(`file written to ${file}`);
+    } catch (err) {
+      console.log(':(', err);
+    }
+
+    try {
+      const options = {
+        gzip: true,
+        file: file,
+        cwd: extractFolder,
+      };
+      await tar.extract(options);
+    } catch (err) {
+      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
+      throw err;
+    }
+  }
+
+  return extractFolder;
 };
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
@@ -404,7 +411,7 @@ export const publishModule = async (module: Module) => {
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const downloadLocation = `${await getTmpDir()}/${fileName}`;
+  const downloadLocation = `${await getNstDir()}/${fileName}`;
   const remoteFileLocation = `modules/${name}/${fileName}`;
   let url = '';
   let size = 0;
@@ -436,7 +443,7 @@ export const publishModule = async (module: Module) => {
         );
       },
     };
-    await tar.create(options, includes);
+    await tar.create(options, ['module.json', ...includes]);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);

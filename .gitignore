@@ -74,3 +74,5 @@ dist
 # ide
 .idea
 
+# exclude locally downloaded modules in dev
+src/cli/.nst

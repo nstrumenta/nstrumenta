@@ -6,7 +6,6 @@ import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 export type ListAgentsResponse = [string, object][];
 
 export const Start = async function (options: { port: string }): Promise<void> {
-  console.log({ options });
   const { port } = options;
   const apiKey = resolveApiKey();
 
