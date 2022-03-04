@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.2](https://github.com/nstrumenta/nstrumenta/compare/v2.1.1...v2.1.2) (2022-03-04)
+
+
+### Features
+
+* adds 'includes' field to Module interface ([f1ccf74](https://github.com/nstrumenta/nstrumenta/commit/f1ccf74e0dedd94c914d38458d14767328ef0bf2))
+* **module:** add optional prePublishCommand step ([5c6a2be](https://github.com/nstrumenta/nstrumenta/commit/5c6a2be8e4b2b65fcf9a8c48766c7b0a96b69e93))
+
 ### [2.1.1](https://github.com/nstrumenta/nstrumenta/compare/v2.1.0...v2.1.1) (2022-03-02)
 
 ## [2.1.0](https://github.com/nstrumenta/nstrumenta/compare/v2.0.19...v2.1.0) (2022-03-02)
