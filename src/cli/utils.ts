@@ -48,7 +48,7 @@ export async function asyncSpawn(
   return childProcess;
 }
 
-export const getTmpDir = async () => {
+export const getNstDir = async () => {
   const cwd = `${__dirname}/.nst`;
 
   await fs.mkdir(cwd, { recursive: true });
