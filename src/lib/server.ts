@@ -18,6 +18,7 @@ export interface ServerStatus {
   clientsCount: number;
   subscribedChannels: { [key: string]: { count: number } };
   activeChannels: { [key: string]: { timestamp: number } };
+  children: number;
 }
 
 export interface CommandRunModuleData {
@@ -129,6 +130,7 @@ export class NstrumentaServer {
                     stream
                   );
                   this.children.set(String(process.pid), process);
+                  process.on('disconnect', () => this.children.delete(String(process.pid)));
                   break;
                 case 'stopModule':
                   const { data } = message;
@@ -171,6 +173,7 @@ export class NstrumentaServer {
       clientsCount: wss.clients.size as number,
       subscribedChannels: {},
       activeChannels: {},
+      children: this.children.size,
     };
 
     function updateStatus() {
