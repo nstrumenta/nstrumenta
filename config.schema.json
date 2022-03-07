@@ -7,7 +7,7 @@
     "properties": {
         "folder": {
             "type": "string",
-            "description": "relative path to folder containing an nstrumenta module with module.json",
+            "description": "relative path to folder containing an nstrumenta module with module.json"
         },
         "name": {
             "type": "string",
