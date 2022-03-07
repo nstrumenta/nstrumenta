@@ -1,18 +1,16 @@
 {
   "configurations": [
-  {
-    "name": "Attach",
-    "port": 9229,
-    "request": "attach",
-    "program": "${workspaceFolder}/dist/cli/index.js",
-    "skipFiles": [
-      "<node_internals>/**"
-    ],
-    "type": "node",
-    "autoAttachFilter": "smart",
-    "sourceMaps": true,
-    "runtimeExecutable": "/Users/kayvon/.nvm/versions/node/v16.14.0/bin/node"
-  },
+    {
+      "name": "Attach",
+      "port": 9229,
+      "request": "attach",
+      "program": "${workspaceFolder}/dist/cli/index.js",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node",
+      "autoAttachFilter": "smart",
+      "sourceMaps": true,
+      "runtimeExecutable": "/Users/kayvon/.nvm/versions/node/v16.14.0/bin/node"
+    },
     {
       "name": "Launch via NPM",
       "request": "launch",
