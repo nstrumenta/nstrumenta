@@ -65,6 +65,28 @@ export const getNstDir = async () => {
   return cwd;
 };
 
+export const getNearestConfigJson = async () => {
+  let currentDir = '';
+  let nextDir = process.cwd();
+  let file;
+
+  while (!file && currentDir !== nextDir) {
+    try {
+      currentDir = nextDir;
+      file = await fs.readFile(path.join(currentDir, `.nstrumenta/config.json`), {
+        encoding: 'utf8',
+      });
+    } catch (error) {
+      nextDir = path.join(currentDir, '..');
+    }
+  }
+
+  if (file === undefined) {
+    throw new Error('No nstrumenta config found');
+  }
+  return { file, cwd: currentDir };
+};
+
 export async function* walkDirectory(
   dir: string,
   { maxDepth }: { maxDepth?: number } = {}
