@@ -46,6 +46,7 @@ export type BackplaneCommand =
 export interface NstrumentaServerOptions {
   apiKey: string;
   port?: string;
+  tag?: string;
   debug?: boolean;
   noBackplane?: boolean;
   allowCrossProjectApiKey?: boolean;
@@ -91,9 +92,11 @@ export class NstrumentaServer {
     if (this.backplaneClient) {
       try {
         //get backplane url
+        const data = this.options.tag ? { tag: this.options.tag } : undefined;
         let response = await axios(endpoints.REGISTER_AGENT, {
           method: 'post',
           headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+          data,
         });
         const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
         if (backplaneUrl) {
@@ -137,6 +140,7 @@ export class NstrumentaServer {
               command: 'registerAgent',
               agentId,
               actionsCollectionPath,
+              tag: this.options.tag,
             });
           });
 
