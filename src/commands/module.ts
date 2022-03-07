@@ -244,7 +244,7 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
     return result;
   },
   sandbox: async (module) => {
-    console.log('adapt', module.name);
+    const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
     return '';
   },
   algorithm: async (module) => {
