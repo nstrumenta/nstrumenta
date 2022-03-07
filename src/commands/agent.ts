@@ -31,8 +31,8 @@ export const List = async () => {
   }
 };
 
-export const SetAction = async (agentId: string, options: { action: string }) => {
-  const { action: actionString } = options;
+export const SetAction = async (agentId: string, options: { action: string; tag: string }) => {
+  const { action: actionString, tag } = options;
   const action = JSON.parse(actionString);
   const apiKey = resolveApiKey();
 
@@ -44,7 +44,7 @@ export const SetAction = async (agentId: string, options: { action: string }) =>
         contentType: 'application/json',
         'x-api-key': apiKey,
       },
-      data: { agentId, action },
+      data: { action, agentId, tag },
     });
 
     const actionId: string | undefined =

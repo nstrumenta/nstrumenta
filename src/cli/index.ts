@@ -127,6 +127,7 @@ agentCommand
   .command('set-action')
   .argument('[agentId]', 'agent Id')
   .option('-a,--action <action>', 'action to set')
+  .option('-t,--tag <tag>', 'specify tag in lieu of agentId')
   .description('sets action on agent')
   .action(SetAgentAction);
 
