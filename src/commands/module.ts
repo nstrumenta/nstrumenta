@@ -10,7 +10,7 @@ import { pipeline as streamPipeline } from 'stream';
 import tar from 'tar';
 import { promisify } from 'util';
 import { resolveApiKey } from '../cli';
-import { asyncSpawn, getNstDir } from '../cli/utils';
+import { asyncSpawn, getNearestConfigJson, getNstDir } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { endpoints } from '../shared';
 
@@ -342,9 +342,12 @@ export const Publish = async () => {
 
   // First, let's check the nst project configuration for modules
   try {
-    const file = await fs.readFile(`.nstrumenta/config.json`, {
-      encoding: 'utf8',
-    });
+    const { file, cwd } = await getNearestConfigJson();
+
+    // For the rest of this run, we'll want to chdir to the main project folder
+    process.chdir(cwd);
+    console.log({ cwd });
+    console.log(`cwd: ${process.cwd()}`);
     const { modules: modulesFromFile }: { [key: string]: unknown; modules: ModuleMeta[] } =
       JSON.parse(file);
     modulesMeta = modulesFromFile;
