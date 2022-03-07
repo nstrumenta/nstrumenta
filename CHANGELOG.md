@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.3](https://github.com/nstrumenta/nstrumenta/compare/v2.1.2...v2.1.3) (2022-03-07)
+
+
+### Features
+
+* **agent:** when a sandbox module is run by an agent, the module files are copied to hosted modules directory ([#49](https://github.com/nstrumenta/nstrumenta/issues/49)) ([c4db8f0](https://github.com/nstrumenta/nstrumenta/commit/c4db8f0a75384b94a6ae59c02996bc1f38f9c8ca))
+* **util:** Adds find nearest `.nstrumenta/config.json` up the dir tree ([#54](https://github.com/nstrumenta/nstrumenta/issues/54)) ([8e4f379](https://github.com/nstrumenta/nstrumenta/commit/8e4f37972672d0a067152d3db9d0a59f19dc6a42))
+
 ### [2.1.2](https://github.com/nstrumenta/nstrumenta/compare/v2.1.1...v2.1.2) (2022-03-04)
 
 
