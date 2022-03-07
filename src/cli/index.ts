@@ -118,6 +118,7 @@ agentCommand
   .option('-p,--port <port>', 'websocket port', DEFAULT_HOST_PORT)
   .option('-d, --debug <debug>', 'output extra debugging', false)
   .option('--project <project>', 'nstrumenta project Id')
+  .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
   .action(Start);
 
@@ -126,6 +127,7 @@ agentCommand
   .command('set-action')
   .argument('[agentId]', 'agent Id')
   .option('-a,--action <action>', 'action to set')
+  .option('-t,--tag <tag>', 'specify tag in lieu of agentId')
   .description('sets action on agent')
   .action(SetAgentAction);
 

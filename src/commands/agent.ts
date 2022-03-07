@@ -3,13 +3,11 @@ import { resolveApiKey } from '../cli';
 import { NstrumentaServer } from '../lib/server';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 
-export type ListAgentsResponse = [string, object][];
-
-export const Start = async function (options: { port: string }): Promise<void> {
-  const { port } = options;
+export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
+  const { port, tag } = options;
   const apiKey = resolveApiKey();
 
-  const server = new NstrumentaServer({ apiKey, port: port || DEFAULT_HOST_PORT });
+  const server = new NstrumentaServer({ apiKey, port: port || DEFAULT_HOST_PORT, tag });
 
   await server.run();
 };
@@ -33,8 +31,8 @@ export const List = async () => {
   }
 };
 
-export const SetAction = async (agentId: string, options: { action: string }) => {
-  const { action: actionString } = options;
+export const SetAction = async (agentId: string, options: { action: string; tag: string }) => {
+  const { action: actionString, tag } = options;
   const action = JSON.parse(actionString);
   const apiKey = resolveApiKey();
 
@@ -46,7 +44,7 @@ export const SetAction = async (agentId: string, options: { action: string }) =>
         contentType: 'application/json',
         'x-api-key': apiKey,
       },
-      data: { agentId, action },
+      data: { action, agentId, tag },
     });
 
     const actionId: string | undefined =
@@ -61,7 +59,7 @@ export const CleanActions = async (agentId: string) => {
   const apiKey = resolveApiKey();
 
   try {
-    const response = await axios({
+    await axios({
       method: 'POST',
       url: endpoints.CLEAN_AGENT_ACTIONS,
       headers: {
