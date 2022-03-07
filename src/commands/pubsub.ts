@@ -3,7 +3,7 @@ import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject
+  makeBusMessageFromJsonObject,
 } from '../lib/busMessage';
 import { getCurrentContext } from '../lib/context';
 
