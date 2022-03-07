@@ -6,7 +6,7 @@ import {
   getContexts,
   getCurrentContext,
   setContext,
-  setContextProperty
+  setContextProperty,
 } from '../lib/context';
 import { schema } from '../schema';
 
