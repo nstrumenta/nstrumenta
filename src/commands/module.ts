@@ -22,7 +22,7 @@ const blue = (text: string) => {
   return text;
 };
 
-const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
+export const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
   const { module } = await prompt([{ type: 'list', name: 'module', message: 'Module', choices }]);
   return module;
 };

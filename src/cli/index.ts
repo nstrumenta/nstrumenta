@@ -6,6 +6,7 @@ import {
   Start,
   SetAction as SetAgentAction,
   CleanActions as CleanAgentActions,
+  RunModule,
 } from '../commands/agent';
 import { AddKey, ListProjects, SetProject } from '../commands/auth';
 import {
@@ -121,6 +122,14 @@ agentCommand
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
   .action(Start);
+
+agentCommand
+  .command('run-module')
+  .option('--agentId [agentId]', 'agent Id')
+  .option('-m,--module [module]', 'name of the module to run')
+  .option('-t,--tag [tag]', 'tag in lieu of agentId')
+  .description('run module on an active agent')
+  .action(RunModule);
 
 agentCommand.command('list').description('list running agents in project').action(ListAgents);
 agentCommand
