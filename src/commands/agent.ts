@@ -1,7 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { resolveApiKey } from '../cli';
 import { NstrumentaServer } from '../lib/server';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { inquiryForSelectModule } from './module';
 
 export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
   const { port, tag } = options;
@@ -31,7 +32,46 @@ export const List = async () => {
   }
 };
 
-export const SetAction = async (agentId: string, options: { action: string; tag: string }) => {
+export const RunModule = async ({
+  agentId,
+  tag,
+  module: moduleName,
+}: {
+  tag?: string;
+  module: string;
+  agentId: string | undefined;
+}) => {
+  const apiKey = resolveApiKey();
+  let module = moduleName;
+  let serverModules = new Set<string>();
+
+  if (!module) {
+    let response = await axios(endpoints.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    });
+
+    response.data.forEach((path: string) => {
+      const name = path.split('/')[0];
+      serverModules.add(name);
+    });
+
+    module = await inquiryForSelectModule(Array.from(serverModules));
+  }
+
+  const action = JSON.stringify({
+    task: 'runModule',
+    status: 'pending',
+    data: { module, tag },
+  });
+
+  SetAction(agentId, { action, tag });
+};
+
+export const SetAction = async (
+  agentId: string | undefined,
+  options: { action: string; tag?: string }
+) => {
   const { action: actionString, tag } = options;
   const action = JSON.parse(actionString);
   const apiKey = resolveApiKey();
@@ -51,7 +91,7 @@ export const SetAction = async (agentId: string, options: { action: string; tag:
       response.data?._path?.segments[response.data?._path?.segments.length - 1];
     console.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
-    console.error('Error:', (err as Error).message);
+    console.error('Error:', (err as AxiosError).response?.data);
   }
 };
 
