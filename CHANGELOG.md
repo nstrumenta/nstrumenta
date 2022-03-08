@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.4](https://github.com/nstrumenta/nstrumenta/compare/v2.1.3...v2.1.4) (2022-03-08)
+
+
+### Features
+
+* **agent:** adds `module-run [--tag ...] [--agentId] [--module]` command: module is optional, one of tag or agentId is required ([#59](https://github.com/nstrumenta/nstrumenta/issues/59)) ([cad655c](https://github.com/nstrumenta/nstrumenta/commit/cad655ca85dc691870448eba46495784b8c6421b))
+
 ### [2.1.3](https://github.com/nstrumenta/nstrumenta/compare/v2.1.2...v2.1.3) (2022-03-07)
 
 
