@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.5](https://github.com/nstrumenta/nstrumenta/compare/v2.1.4...v2.1.5) (2022-03-09)
+
+
+### Features
+
+* **agent:** run module with args ([1ba6ab5](https://github.com/nstrumenta/nstrumenta/commit/1ba6ab51d697a82c7ada25d21711c5c84f57ea21))
+
 ### [2.1.4](https://github.com/nstrumenta/nstrumenta/compare/v2.1.3...v2.1.4) (2022-03-08)
 
 
