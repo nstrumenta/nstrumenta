@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { Command } from 'commander';
 import { resolveApiKey } from '../cli';
 import { NstrumentaServer } from '../lib/server';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
@@ -32,15 +33,18 @@ export const List = async () => {
   }
 };
 
-export const RunModule = async ({
-  agentId,
-  tag,
-  module: moduleName,
-}: {
-  tag?: string;
-  module: string;
-  agentId: string | undefined;
-}) => {
+export const RunModule = async (
+  {
+    agentId,
+    tag,
+    module: moduleName,
+  }: {
+    tag?: string;
+    module: string;
+    agentId: string | undefined;
+  },
+  { args }: Command
+) => {
   const apiKey = resolveApiKey();
   let module = moduleName;
   let serverModules = new Set<string>();
@@ -62,7 +66,7 @@ export const RunModule = async ({
   const action = JSON.stringify({
     task: 'runModule',
     status: 'pending',
-    data: { module, tag },
+    data: { module, tag, args },
   });
 
   SetAction(agentId, { action, tag });
