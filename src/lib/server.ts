@@ -123,6 +123,7 @@ export class NstrumentaServer {
                       'run',
                       `--name=${moduleName}`,
                       '--non-interactive',
+                      '--',
                       ...(args ? args : []),
                     ],
                     undefined,
