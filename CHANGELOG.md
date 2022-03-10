@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.6](https://github.com/nstrumenta/nstrumenta/compare/v2.1.5...v2.1.6) (2022-03-10)
+
+
+### Features
+
+* **connection:** simplifies error messages for token issues ([#60](https://github.com/nstrumenta/nstrumenta/issues/60)) ([9b0ee99](https://github.com/nstrumenta/nstrumenta/commit/9b0ee9957d1ff243ffab404f76b06636759c9775))
+
 ### [2.1.5](https://github.com/nstrumenta/nstrumenta/compare/v2.1.4...v2.1.5) (2022-03-09)
 
 
