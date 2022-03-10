@@ -12,14 +12,8 @@ export const getToken = async (apiKey: string): Promise<string> => {
     });
     return data.token;
   } catch (err) {
-    const message = 'Failure to connect to nstrumenta';
-    if (err && (err as AxiosError).response) {
-      const { data, status } = (err as AxiosError).response!;
-      console.log(message, { data, status });
-    } else if (err && (err as AxiosError).request) {
-      console.log(message, (err as AxiosError).request);
-    }
-    console.log(message, err);
+    const message = 'Problem getting token';
+    console.log(message);
     throw err;
   }
 };
@@ -47,14 +41,8 @@ export const verifyToken = async ({
     );
     return true;
   } catch (err) {
-    const message = 'Failure to connect to nstrumenta';
-    if (err && (err as AxiosError).response) {
-      const { data, status } = (err as AxiosError).response!;
-      console.log(message, { data, status });
-    } else if (err && (err as AxiosError).request) {
-      console.log(message, (err as AxiosError).request);
-    }
-    console.log(message, err);
+    const message = 'Failed to verify token';
+    console.log(message);
     throw err;
   }
 };

@@ -246,7 +246,15 @@ export class NstrumentaServer {
                 ?.forEach((callback) => callback([...verifiedConnections.keys()]));
             })
             .catch((err) => {
-              console.log('unable to verify client, invalid token, closing connection', err);
+              console.log(
+                'unable to verify client, invalid token, closing connection',
+                err.message
+              );
+              ws.send(
+                makeBusMessageFromJsonObject('_nstrumenta', {
+                  error: 'unable to verify client, invalid token, closing connection',
+                })
+              );
               ws.close();
             });
           return;
