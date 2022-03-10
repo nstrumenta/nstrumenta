@@ -70,7 +70,9 @@ export class NstrumentaClient {
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
-      console.log(`client websocket closed <${wsUrl}>`, status);
+      console.log(
+        `client websocket closed ${wsUrl} code:${status.code} wasClean:${status.wasClean}`
+      );
       this.subscriptions.clear();
       // reconnect on close
       if (this.reconnection.hasVerified) {
@@ -106,6 +108,8 @@ export class NstrumentaClient {
             this.ws?.send(message);
           });
           this.messageBuffer = [];
+        } else {
+          console.error(contents);
         }
       }
 
