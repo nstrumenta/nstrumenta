@@ -192,7 +192,7 @@ export const getModuleFromStorage = async ({
       const version = serverModules[name!]
         .map(({ version }) => version)
         .sort(semver.compare)
-        .pop();
+        .shift();
       path = serverModules[name!].find((module) => module.version === version)?.path;
     }
   } catch (error) {
