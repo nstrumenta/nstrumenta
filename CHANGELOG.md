@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.9](https://github.com/nstrumenta/nstrumenta/compare/v2.1.8...v2.1.9) (2022-03-11)
+
+
+### Features
+
+* **agent:** tags with host_instance_id if set ([cf06da0](https://github.com/nstrumenta/nstrumenta/commit/cf06da08636bca0b0ea4b8c38e457ab215bb15f9))
+
 ### [2.1.8](https://github.com/nstrumenta/nstrumenta/compare/v2.1.7...v2.1.8) (2022-03-11)
 
 
