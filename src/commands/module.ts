@@ -4,13 +4,13 @@ import fs from 'fs/promises';
 import path from 'path';
 import semver from 'semver';
 import tar from 'tar';
-import { resolveApiKey } from '../cli/utils';
 import {
   asyncSpawn,
   getModuleFromStorage,
   getNearestConfigJson,
   getNstDir,
   inquiryForSelectModule,
+  resolveApiKey,
 } from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { endpoints } from '../shared';
