@@ -8,7 +8,11 @@ export const Start = async function (options: { port: string; tag?: string }): P
   const { port, tag } = options;
   const apiKey = resolveApiKey();
 
-  const server = new NstrumentaServer({ apiKey, port: port || DEFAULT_HOST_PORT, tag });
+  const server = new NstrumentaServer({
+    apiKey,
+    port: port || DEFAULT_HOST_PORT,
+    tag: tag ? tag : process.env.HOST_INSTANCE_ID,
+  });
 
   await server.run();
 };
