@@ -1,16 +1,14 @@
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
-import { asyncSpawn, getNstDir } from '../cli/utils';
 import express from 'express';
 import { createWriteStream } from 'fs';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
+import { asyncSpawn, getNstDir } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
 import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
-import semver from 'semver';
-import { getFolderFromStorage, getVersionFromPath } from '../commands/module';
 
 type ListenerCallback = (event?: any) => void;
 
@@ -158,8 +156,6 @@ export class NstrumentaServer {
       }
     }
 
-    await this.getSandboxFiles();
-
     const app = express();
     app.set('views', __dirname + '/../..');
     app.set('view engine', 'ejs');
@@ -302,36 +298,4 @@ export class NstrumentaServer {
       console.log('listening on *:' + port);
     });
   }
-
-  private getSandboxFiles = async () => {
-    let modules: Record<string, { path: string; version: string }> = {};
-    try {
-      const response = await axios(endpoints.LIST_MODULES, {
-        method: 'get',
-        headers: { 'x-api-key': this.options.apiKey, 'content-type': 'application/json' },
-      });
-
-      // organize by module => storage path of the latest version of each module in the project
-      response.data.forEach((path: string) => {
-        const name = path.split('/')[0];
-        const version = getVersionFromPath(path);
-        if (
-          !modules[name] ||
-          (modules[name] && semver.compare(version, modules[name].version) === 1)
-        ) {
-          modules[name] = { path, version };
-        }
-      });
-
-      const promises = Object.keys(modules).map((module) => {
-        const { path } = modules[module];
-        return getFolderFromStorage(path, { apiKey: this.options.apiKey, baseDir: 'modules' });
-      });
-
-      const result = await Promise.all(promises);
-      console.log('getFiles:', result);
-    } catch (error) {
-      console.log((error as Error).message);
-    }
-  };
 }

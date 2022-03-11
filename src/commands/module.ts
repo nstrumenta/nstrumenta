@@ -1,30 +1,22 @@
 import axios from 'axios';
-import nodePath from 'path';
 import { Command } from 'commander';
-import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
-import Inquirer from 'inquirer';
 import path from 'path';
 import semver from 'semver';
-import { pipeline as streamPipeline } from 'stream';
 import tar from 'tar';
-import { promisify } from 'util';
-import { resolveApiKey } from '../cli';
-import { asyncSpawn, getNearestConfigJson, getNstDir } from '../cli/utils';
+import {
+  asyncSpawn,
+  getModuleFromStorage,
+  getNearestConfigJson,
+  getNstDir,
+  inquiryForSelectModule,
+  resolveApiKey,
+} from '../cli/utils';
 import { getCurrentContext } from '../lib/context';
 import { endpoints } from '../shared';
 
-const pipeline = promisify(streamPipeline);
-
-const prompt = Inquirer.createPromptModule();
-
 const blue = (text: string) => {
   return text;
-};
-
-export const inquiryForSelectModule = async (choices: string[]): Promise<string> => {
-  const { module } = await prompt([{ type: 'list', name: 'module', message: 'Module', choices }]);
-  return module;
 };
 
 export const Run = async function (
@@ -127,89 +119,6 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
   };
 };
 
-export function getVersionFromPath(path: string) {
-  const match = /(\d+)\.(\d+).(\d+)/.exec(path);
-  const version: string = match ? match[0] : '';
-  return version;
-}
-
-export const getModuleFromStorage = async ({
-  name: moduleName,
-  path,
-  nonInteractive,
-}: {
-  name?: string;
-  path?: string;
-  nonInteractive?: boolean;
-}): Promise<Module> => {
-  let serverModules: Record<string, { path: string; version: string }[]> = {};
-  let name = moduleName;
-  const apiKey = resolveApiKey();
-
-  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
-  let response = await axios(endpoints.LIST_MODULES, {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-  });
-
-  response.data.forEach((path: string) => {
-    const name = path.split('/')[0];
-    const version = getVersionFromPath(path);
-    if (!serverModules[name]) {
-      serverModules[name] = [];
-    }
-    serverModules[name].push({ path, version });
-  });
-
-  try {
-    if (nonInteractive) {
-      console.log(name, serverModules[name!]);
-      const version = serverModules[name!]
-        .map(({ version }) => version)
-        .sort(semver.compare)
-        .pop();
-      path = serverModules[name!].find((module) => module.version === version)?.path;
-    }
-  } catch (error) {
-    console.warn(`name ${name} not found in`, Object.keys(serverModules));
-    throw new Error('invalid module name');
-  }
-
-  if (name === undefined && path === undefined) {
-    // If user hasn't specified module name, ask for it here
-    name = await inquiryForSelectModule(Object.keys(serverModules));
-    const chosenVersion = await inquiryForSelectModule(
-      serverModules[name]
-        .map((module) => module.version)
-        .sort(semver.compare)
-        .reverse()
-    );
-    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
-  }
-
-  if (!path) {
-    throw new Error('no module and version chosen, or no path specified');
-  }
-
-  const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
-  console.log(`saved ${moduleName} to ${folder}`);
-
-  let moduleConfig: ModuleConfig;
-  try {
-    const file = await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' });
-    moduleConfig = JSON.parse(file);
-  } catch (err) {
-    console.warn(`Error, can't find or parse the module's config file`);
-    throw err;
-  }
-
-  return {
-    name: name ? name : '',
-    folder: folder,
-    ...moduleConfig,
-  };
-};
-
 // adapters/handlers for each type of module, run files (maybe memory??) in the
 // running agent's environment
 
@@ -227,12 +136,10 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
       console.log(blue(`[cwd: ${cwd}] npm install...`));
       await asyncSpawn('npm', ['install'], { cwd });
       console.log(blue(`start the module...`));
-      const apiKey = resolveApiKey();
 
-      const { entry = `npm run start -- --apiKey=${apiKey}` } = module;
+      // module will resolve NSTRUMENTA_API_KEY from env var
+      const { entry = `npm run start -- ` } = module;
       const [command, ...entryArgs] = entry.split(' ');
-      // for now passing apiKey to nodejs module as a command line arg
-      // this may be replaced by messages from the backplane
       result = await asyncSpawn(command, [...entryArgs, ...args], {
         cwd,
         stdio: 'inherit',
@@ -251,71 +158,6 @@ const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise
     console.log('adapt', module.name);
     return '';
   },
-};
-
-export const getFolderFromStorage = async (
-  storagePath: string,
-  options: { apiKey: string; baseDir?: string }
-) => {
-  const { apiKey, baseDir = '' } = options;
-  const nstDir = await getNstDir();
-  const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
-  const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
-  try {
-    await fs.access(extractFolder);
-  } catch {
-    await fs.mkdir(extractFolder, { recursive: true });
-  }
-
-  try {
-    await fs.stat(file);
-    console.log(`using cached version of ${file}`);
-  } catch {
-    console.log(`get [${blue(storagePath)}] from storage`);
-
-    // get the download url
-    let url;
-    try {
-      const downloadUrlConfig = {
-        headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-      };
-      const downloadUrlData = { path: storagePath };
-      const downloadUrlResponse = await axios.post(
-        endpoints.GET_DOWNLOAD_URL,
-        downloadUrlData,
-        downloadUrlConfig
-      );
-      url = downloadUrlResponse.data;
-    } catch (err) {
-      throw new Error(`bad times, path: ${storagePath}`);
-    }
-
-    try {
-      // get the file, write to the nst directory
-      console.log('get url', url);
-      const download = await axios.get(url, { responseType: 'stream' });
-      const writeStream = createWriteStream(file);
-
-      await pipeline(download.data, writeStream);
-      console.log(`file written to ${file}`);
-    } catch (err) {
-      console.log(':(', err);
-    }
-
-    try {
-      const options = {
-        gzip: true,
-        file: file,
-        cwd: extractFolder,
-      };
-      await tar.extract(options);
-    } catch (err) {
-      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
-      throw err;
-    }
-  }
-
-  return extractFolder;
 };
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';

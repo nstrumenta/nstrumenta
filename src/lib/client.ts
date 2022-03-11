@@ -57,7 +57,13 @@ export class NstrumentaClient {
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
       );
     }
-    const token = await getToken(nstrumentaApiKey);
+    let token: string;
+    try {
+      token = await getToken(nstrumentaApiKey);
+    } catch (error) {
+      console.error((error as Error).message);
+      return;
+    }
 
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
@@ -99,7 +105,10 @@ export class NstrumentaClient {
       }
       const { channel, busMessageType, contents } = deserializedMessage;
       if (channel == '_nstrumenta') {
-        const { verified } = contents;
+        const { verified, error } = contents;
+        if (error) {
+          console.error(error);
+        }
         if (verified) {
           this.connection.status = ClientStatus.CONNECTED;
           this.reconnection.hasVerified = true;
@@ -108,8 +117,6 @@ export class NstrumentaClient {
             this.ws?.send(message);
           });
           this.messageBuffer = [];
-        } else {
-          console.error(contents);
         }
       }
 

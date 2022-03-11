@@ -1,6 +1,6 @@
 import Conf from 'conf';
 import Inquirer from 'inquirer';
-import { Keys } from '../cli/index';
+import { Keys } from '../cli/utils';
 import { getContextProperty, setContextProperty } from '../lib/context';
 import { schema } from '../schema';
 
