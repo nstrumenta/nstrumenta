@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.8](https://github.com/nstrumenta/nstrumenta/compare/v2.1.7...v2.1.8) (2022-03-11)
+
+
+### Features
+
+* **agent:** fixes module version compare sort order ([128579a](https://github.com/nstrumenta/nstrumenta/commit/128579a0071f3edb2b1d1ad43edda87a406119d2))
+
 ### [2.1.7](https://github.com/nstrumenta/nstrumenta/compare/v2.1.6...v2.1.7) (2022-03-11)
 
 
