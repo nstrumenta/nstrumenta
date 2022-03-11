@@ -2,7 +2,7 @@ var nstrumenta;
 
 function initNstrumenta() {
   console.log('initNstrumenta');
-  nstrumenta = new Nstrumenta.SandboxClient();
+  // nstrumenta = new Nstrumenta.SandboxClient();
 
   console.log('subscribing to _host-status');
   nstrumenta.subscribe('_host-status', (message) => {
