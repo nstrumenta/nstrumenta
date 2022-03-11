@@ -1,9 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
-import { resolveApiKey } from '../cli';
+import { inquiryForSelectModule, resolveApiKey } from '../cli/utils';
 import { NstrumentaServer } from '../lib/server';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
-import { inquiryForSelectModule } from './module';
 
 export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
   const { port, tag } = options;
