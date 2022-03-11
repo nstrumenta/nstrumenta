@@ -12,9 +12,8 @@ export const getToken = async (apiKey: string): Promise<string> => {
     });
     return data.token;
   } catch (err) {
-    const message = 'Problem getting token';
-    console.log(message);
-    throw err;
+    const message = 'Problem getting token, check api key';
+    throw new Error(message);
   }
 };
 
