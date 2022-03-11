@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.7](https://github.com/nstrumenta/nstrumenta/compare/v2.1.6...v2.1.7) (2022-03-11)
+
+
+### Features
+
+* **backplane:** separates cli from server ; removes auto copy of sandbox files ([#62](https://github.com/nstrumenta/nstrumenta/issues/62)) ([350d80b](https://github.com/nstrumenta/nstrumenta/commit/350d80b5969bd5c29136d3de9c93e0cadbd37119))
+
 ### [2.1.6](https://github.com/nstrumenta/nstrumenta/compare/v2.1.5...v2.1.6) (2022-03-10)
 
 
