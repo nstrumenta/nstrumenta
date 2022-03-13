@@ -256,10 +256,13 @@ export const publishModule = async (module: Module) => {
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const downloadLocation = `${await getNstDir()}/${fileName}`;
+  const tarFileLocalPath = `${await getNstDir()}/${fileName}`;
   const remoteFileLocation = `modules/${name}/${fileName}`;
-  let url = '';
+  const remoteModuleFileLocation = `modules/${name}/module-${version}.json`;
+  const moduleFileLocalPath = `${path.resolve(folder)}/module.json`;
+  let urls = ['', ''];
   let size = 0;
+  let moduleFileSize = 0;
 
   if (prePublishCommand) {
     try {
@@ -277,7 +280,7 @@ export const publishModule = async (module: Module) => {
   try {
     const options = {
       gzip: true,
-      file: downloadLocation,
+      file: tarFileLocalPath,
       cwd: folder,
       filter: (path: string) => {
         return (
@@ -289,30 +292,47 @@ export const publishModule = async (module: Module) => {
       },
     };
     await tar.create(options, ['module.json', ...includes]);
-    size = (await fs.stat(downloadLocation)).size;
+    size = (await fs.stat(tarFileLocalPath)).size;
+    moduleFileSize = (await fs.stat(moduleFileLocalPath)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
     throw e;
   }
 
-  // then, get an upload url to put the tarball into storage
+  // then, get a pair upload urls to put the tarball + module.json into storage
   try {
     const apiKey = resolveApiKey();
-    const response = await axios.post(
-      endpoints.GET_UPLOAD_URL,
-      {
-        path: remoteFileLocation,
-        size,
-      },
-      {
-        headers: {
-          contentType: 'application/json',
-          'x-api-key': apiKey,
+    const promises = [
+      axios.post(
+        endpoints.GET_UPLOAD_URL,
+        {
+          path: remoteFileLocation,
+          size,
         },
-      }
-    );
+        {
+          headers: {
+            contentType: 'application/json',
+            'x-api-key': apiKey,
+          },
+        }
+      ),
+      axios.post(
+        endpoints.GET_UPLOAD_URL,
+        {
+          path: remoteModuleFileLocation,
+          size: moduleFileSize,
+        },
+        {
+          headers: {
+            contentType: 'application/json',
+            'x-api-key': apiKey,
+          },
+        }
+      ),
+    ];
 
-    url = response.data?.uploadUrl;
+    const [responseTar, responseModuleJSON] = await Promise.all(promises);
+    urls = [responseTar.data?.uploadUrl, responseModuleJSON.data?.uploadUrl];
   } catch (e) {
     let message = `can't upload ${name}`;
     if (axios.isAxiosError(e)) {
@@ -325,16 +345,38 @@ export const publishModule = async (module: Module) => {
     throw new Error(message);
   }
 
-  const fileBuffer = await fs.readFile(downloadLocation);
+  let fileBuffers;
+  try {
+    const fileBufferPromises = [fs.readFile(tarFileLocalPath), fs.readFile(moduleFileLocalPath)];
+    fileBuffers = await Promise.all(fileBufferPromises);
+  } catch (error) {
+    throw new Error('Error processing files for upload: ' + (error as Error)?.message);
+  }
 
-  // start the request, return promise
-  await axios.put(url, fileBuffer, {
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    headers: {
-      contentLength: `${size}`,
-      contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    },
-  });
+  try {
+    const putFilePromises = [
+      axios.put(urls[0], fileBuffers[0], {
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        headers: {
+          contentLength: `${size}`,
+          contentLengthRange: `bytes 0-${size - 1}/${size}`,
+        },
+      }),
+      axios.put(urls[1], fileBuffers[1], {
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        headers: {
+          contentLength: `${moduleFileSize}`,
+          contentLengthRange: `bytes 0-${moduleFileSize - 1}/${moduleFileSize}`,
+        },
+      }),
+    ];
+
+    await Promise.all(putFilePromises);
+  } catch (error) {
+    throw new Error('Error uploading files: ' + (error as Error)?.message);
+  }
+
   return remoteFileLocation;
 };
