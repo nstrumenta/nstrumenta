@@ -223,7 +223,7 @@ export const Publish = async () => {
   );
 
   try {
-    console.log(modules);
+    console.log(modules.map(({ folder }) => folder));
     const promises = modules.map((module) =>
       publishModule({
         ...module,
