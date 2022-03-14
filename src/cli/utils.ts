@@ -64,6 +64,7 @@ export async function asyncSpawn(
   let error = '';
   if (stream) {
     childProcess.stdout?.pipe(stream);
+    childProcess.stdout?.pipe(process.stdout);
   }
   if (childProcess.stdout && childProcess.stderr) {
     for await (const chunk of childProcess.stdout) {
