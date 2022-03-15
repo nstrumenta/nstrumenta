@@ -54,7 +54,7 @@ export async function asyncSpawn(
     env?: Record<string, string>;
   },
   errCB?: (code: number) => void,
-  stream?: WriteStream
+  streams: Writable[] = []
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
   args = args || [];
@@ -63,10 +63,7 @@ export async function asyncSpawn(
 
   let output = '';
   let error = '';
-  if (stream) {
-    childProcess.stdout?.pipe(stream);
-    childProcess.stdout?.pipe(process.stdout);
-  }
+  [...streams, process.stdout].map((stream) => childProcess.stdout?.pipe(stream));
   if (childProcess.stdout && childProcess.stderr) {
     for await (const chunk of childProcess.stdout) {
       output += chunk;
