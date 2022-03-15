@@ -75,27 +75,55 @@ export const RunModule = async (
   SetAction(agentId, { action, tag });
 };
 
+const getAgentIdByTag = async (apiKey: string, tag: string): Promise<string | undefined> => {
+  let agentId: string | undefined;
+
+  try {
+    const response: { data: string } = await axios({
+      method: 'POST',
+      url: endpoints.GET_AGENT_ID_BY_TAG,
+      headers: {
+        contentType: 'application/json',
+        'x-api-key': apiKey,
+      },
+      data: { tag },
+    });
+
+    agentId = response.data;
+  } catch (error) {
+    console.error((error as Error).message);
+  }
+
+  return agentId;
+};
+
 export const SetAction = async (
-  agentId: string | undefined,
+  agentIdArg: string | undefined,
   options: { action: string; tag?: string }
 ) => {
   const { action: actionString, tag } = options;
   const action = JSON.parse(actionString);
   const apiKey = resolveApiKey();
 
+  const agentId = agentIdArg ? agentIdArg : tag ? await getAgentIdByTag(apiKey, tag) : null;
+
+  if (!agentId) {
+    console.error(`Agent id required`);
+    return;
+  }
+
   try {
-    const response = await axios({
+    const response: { data: string } = await axios({
       method: 'POST',
       url: endpoints.SET_AGENT_ACTION,
       headers: {
         contentType: 'application/json',
         'x-api-key': apiKey,
       },
-      data: { action, agentId, tag },
+      data: { action, agentId },
     });
 
-    const actionId: string | undefined =
-      response.data?._path?.segments[response.data?._path?.segments.length - 1];
+    const actionId = response.data;
     console.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
     console.error('Error:', (err as AxiosError).response?.data);
