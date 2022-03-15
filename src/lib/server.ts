@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import express from 'express';
 import { createWriteStream } from 'fs';
+import { Writable } from 'stream';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, getNstDir } from '../cli/utils';
@@ -21,6 +22,7 @@ export interface ServerStatus {
 
 export interface CommandRunModuleData {
   module: string;
+  actionId: string;
   args?: string[];
 }
 
@@ -109,11 +111,16 @@ export class NstrumentaServer {
                     return;
                   }
                   const {
-                    data: { module: moduleName, args },
+                    data: { module: moduleName, actionId, args },
                   } = message;
-                  const logPath = `${__dirname}/${moduleName}-${Date.now()}.txt`;
+                  const logPath = `${__dirname}/${moduleName}-${actionId}.txt`;
                   console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
+                  const backplaneStream = new Writable();
+                  backplaneStream._write = (chunk, enc, next) => {
+                    this.backplaneClient?.send(`${actionId}/stdout`, chunk);
+                    next();
+                  };
                   const process = await asyncSpawn(
                     'nstrumenta',
                     [
@@ -126,7 +133,7 @@ export class NstrumentaServer {
                     ],
                     undefined,
                     undefined,
-                    stream
+                    [stream, backplaneStream]
                   );
                   this.children.set(String(process.pid), process);
                   process.on('disconnect', () => this.children.delete(String(process.pid)));
