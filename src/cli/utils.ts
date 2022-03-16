@@ -2,7 +2,8 @@ import axios from 'axios';
 import { spawn } from 'child_process';
 import { Module, ModuleConfig } from 'commands/module';
 import Conf from 'conf';
-import { createWriteStream, WriteStream } from 'fs';
+import { createWriteStream } from 'fs';
+import { Writable } from 'stream';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
 import nodePath from 'node:path';
@@ -53,7 +54,7 @@ export async function asyncSpawn(
     env?: Record<string, string>;
   },
   errCB?: (code: number) => void,
-  stream?: WriteStream
+  streams: Writable[] = []
 ) {
   console.log(`spawn [${cmd} ${args?.join(' ')}]`);
   args = args || [];
@@ -62,9 +63,7 @@ export async function asyncSpawn(
 
   let output = '';
   let error = '';
-  if (stream) {
-    childProcess.stdout?.pipe(stream);
-  }
+  [...streams, process.stdout].map((stream) => childProcess.stdout?.pipe(stream));
   if (childProcess.stdout && childProcess.stderr) {
     for await (const chunk of childProcess.stdout) {
       output += chunk;
