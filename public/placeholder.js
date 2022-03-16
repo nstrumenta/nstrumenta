@@ -1,33 +1,52 @@
-var nstrumenta;
+import { NstrumentaClient } from 'nstrumenta';
 
-function initNstrumenta() {
-  console.log('initNstrumenta');
-  nstrumenta = new Nstrumenta.SandboxClient();
+const client = new NstrumentaClient();
 
-  console.log('subscribing to _host-status');
-  nstrumenta.subscribe('_host-status', (message) => {
-    console.log('sandbox index.js subscribe', message);
-    document.getElementById('host-status').innerText = JSON.stringify(message);
+const init = async () => {
+  if (document.readyState !== 'complete') {
+    return;
+  }
+
+  client.addListener('open', () => {
+    console.log('yay subbed');
   });
-}
 
-function send() {
-  const channel = document.getElementById('channel').value;
-  const message = document.getElementById('message').value;
+  const { apiKey } = Object.fromEntries(new URL(window.location).searchParams);
+  client.connect({ apiKey, wsUrl: 'ws://localhost:8079' });
+};
 
-  nstrumenta.send(channel, message);
-}
+document.addEventListener('readystatechange', init);
 
-const receivedMessages = [];
-function subscribe() {
-  const channel = document.getElementById('subscribeChannel').value;
-  nstrumenta.subscribe(channel, (contents) => {
-    const message =
-      contents instanceof ArrayBuffer
-        ? new TextDecoder('utf-8').decode(contents)
-        : JSON.stringify(contents);
-
-    receivedMessages.push(message);
-    document.getElementById('outputTextArea').value = receivedMessages.slice(-100).join('\n');
-  });
-}
+// var nstrumenta;
+//
+// function initNstrumenta() {
+//   console.log('initNstrumenta');
+//   nstrumenta = new Nstrumenta.SandboxClient();
+//
+//   console.log('subscribing to _host-status');
+//   nstrumenta.subscribe('_host-status', (message) => {
+//     console.log('sandbox index.js subscribe', message);
+//     document.getElementById('host-status').innerText = JSON.stringify(message);
+//   });
+// }
+//
+// function send() {
+//   const channel = document.getElementById('channel').value;
+//   const message = document.getElementById('message').value;
+//
+//   nstrumenta.send(channel, message);
+// }
+//
+// const receivedMessages = [];
+// function subscribe() {
+//   const channel = document.getElementById('subscribeChannel').value;
+//   nstrumenta.subscribe(channel, (contents) => {
+//     const message =
+//       contents instanceof ArrayBuffer
+//         ? new TextDecoder('utf-8').decode(contents)
+//         : JSON.stringify(contents);
+//
+//     receivedMessages.push(message);
+//     document.getElementById('outputTextArea').value = receivedMessages.slice(-100).join('\n');
+//   });
+// }
