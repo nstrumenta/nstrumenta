@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.10](https://github.com/nstrumenta/nstrumenta/compare/v2.1.9...v2.1.10) (2022-03-17)
+
+
+### Features
+
+* **agent:** updates run-module to get agent id from tag ([41f3d1d](https://github.com/nstrumenta/nstrumenta/commit/41f3d1d76fddf01a6779ec7c0648c445f19ecd10))
+* **server:** add backplane stream to pipe child process stdout to ([41ea6b1](https://github.com/nstrumenta/nstrumenta/commit/41ea6b1d6956edd0a56198a28e0f39f24a1f8ab0))
+* **utils:** accepts array of writable streams to pipe asyncSpawn's stdout to ([eebf92e](https://github.com/nstrumenta/nstrumenta/commit/eebf92e03bce7e16f9158432890d27061332eeb7))
+
+
+### Bug Fixes
+
+* **spawn:** asyncSpawn maintains child.stdout pipe to parent stdout even when passed a stream ([ff7d69b](https://github.com/nstrumenta/nstrumenta/commit/ff7d69bd236b113c6d12cb8053f7a4e8f5bb7ef5))
+
 ### [2.1.9](https://github.com/nstrumenta/nstrumenta/compare/v2.1.8...v2.1.9) (2022-03-11)
 
 
