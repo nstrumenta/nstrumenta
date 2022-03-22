@@ -33,7 +33,7 @@ export const Run = async function (
   },
   { args }: Command
 ): Promise<void> {
-  let module: Module;
+  let module: ModuleExtended;
 
   if (nonInteractive) {
     if (!name) {
@@ -66,8 +66,8 @@ export const Run = async function (
   console.log('=>', result);
 };
 
-const useLocalModule = async (moduleName?: string): Promise<Module> => {
-  let config: { [key: string]: unknown; modules: Module[] };
+const useLocalModule = async (moduleName?: string): Promise<ModuleExtended> => {
+  let config: { [key: string]: unknown; modules: ModuleExtended[] };
   let name = moduleName;
 
   // Locate the module config via the .nstrumenta/config.json
@@ -84,7 +84,7 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
   // Read the module configs
   const promises = config.modules.map(async (moduleMeta) => {
     const { folder } = moduleMeta;
-    let moduleConfig: ModuleConfig | undefined;
+    let moduleConfig: Module | undefined;
     try {
       moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
     } catch (err) {
@@ -94,7 +94,7 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
   });
 
   // Sort the module version
-  const modules: Module[] = await Promise.all(promises);
+  const modules: ModuleExtended[] = await Promise.all(promises);
   if (name === undefined) {
     name = await inquiryForSelectModule(
       modules
@@ -106,7 +106,7 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
 
   // Find the particular module we need
   // TODO: Allow choosing a version; For now, this just grabs the latest version
-  const module: Module | undefined = modules.find((module) => module.name === name);
+  const module: ModuleExtended | undefined = modules.find((module) => module.name === name);
   if (module === undefined) {
     throw new Error('problem finding module in config');
   }
@@ -125,44 +125,46 @@ const useLocalModule = async (moduleName?: string): Promise<Module> => {
 // Assumes that the files are already in place
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: Module, args?: string[]) => Promise<unknown>> = {
-  // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module, args: string[] = []) => {
-    console.log(`adapt ${module.name} in ${module.folder} with args`, args);
+const adapters: Record<ModuleTypes, (module: ModuleExtended, args?: string[]) => Promise<unknown>> =
+  {
+    // For now, run a script with npm dependencies in an environment that has node/npm
+    nodejs: async (module, args: string[] = []) => {
+      console.log(`adapt ${module.name} in ${module.folder} with args`, args);
 
-    let result;
-    try {
-      const cwd = `${module.folder}`;
-      console.log(blue(`[cwd: ${cwd}] npm install...`));
-      await asyncSpawn('npm', ['install'], { cwd });
-      console.log(blue(`start the module...`));
+      let result;
+      try {
+        const cwd = `${module.folder}`;
+        console.log(blue(`[cwd: ${cwd}] npm install...`));
+        await asyncSpawn('npm', ['install'], { cwd });
+        console.log(blue(`start the module...`));
 
-      // module will resolve NSTRUMENTA_API_KEY from env var
-      const { entry = `npm run start -- ` } = module;
-      const [command, ...entryArgs] = entry.split(' ');
-      result = await asyncSpawn(command, [...entryArgs, ...args], {
-        cwd,
-        stdio: 'inherit',
-        shell: true,
-      });
-    } catch (err) {
-      console.log('problem', err);
-    }
-    return result;
-  },
-  sandbox: async (module) => {
-    const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
-    return '';
-  },
-  algorithm: async (module) => {
-    console.log('adapt', module.name);
-    return '';
-  },
-};
+        // module will resolve NSTRUMENTA_API_KEY from env var
+        const { entry = `npm run start -- ` } = module;
+        const [command, ...entryArgs] = entry.split(' ');
+        result = await asyncSpawn(command, [...entryArgs, ...args], {
+          cwd,
+          stdio: 'inherit',
+          shell: true,
+        });
+      } catch (err) {
+        console.log('problem', err);
+      }
+      return result;
+    },
+    sandbox: async (module) => {
+      const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
+      return '';
+    },
+    algorithm: async (module) => {
+      console.log('adapt', module.name);
+      return '';
+    },
+  };
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
-export interface ModuleConfig {
+export interface Module {
+  name: string;
   version: string;
   type: ModuleTypes;
   excludes?: string[];
@@ -176,11 +178,11 @@ export interface ModuleMeta {
   folder: string; // relative dir to the module
 }
 
-export type Module = ModuleConfig & ModuleMeta;
+export type ModuleExtended = Module & ModuleMeta;
 
 export const Publish = async () => {
   let modulesMeta: ModuleMeta[];
-  let modules: Module[] = [];
+  let modules: ModuleExtended[] = [];
 
   // First, let's check the nst project configuration for modules
   try {
@@ -204,7 +206,7 @@ export const Publish = async () => {
     const folder = path.resolve(meta.folder);
 
     try {
-      const moduleConfig: ModuleConfig = JSON.parse(
+      const moduleConfig: Module = JSON.parse(
         await fs.readFile(`${path.resolve(folder)}/module.json`, { encoding: 'utf8' })
       );
       return { ...moduleConfig, name, folder };
@@ -214,7 +216,7 @@ export const Publish = async () => {
   });
 
   const results = await Promise.all(promises);
-  modules = results.filter((m): m is Module => Boolean(m));
+  modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
   console.log(
     `publishing ${modules.length} modules: [${modules
@@ -241,7 +243,7 @@ export const Publish = async () => {
   }
 };
 
-export const publishModule = async (module: Module) => {
+export const publishModule = async (module: ModuleExtended) => {
   const {
     version,
     folder,
@@ -303,6 +305,7 @@ export const publishModule = async (module: Module) => {
       {
         path: remoteFileLocation,
         size,
+        meta: module,
       },
       {
         headers: {

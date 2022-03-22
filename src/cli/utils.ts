@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { spawn } from 'child_process';
-import { Module, ModuleConfig } from 'commands/module';
+import { ModuleExtended, Module } from 'commands/module';
 import Conf from 'conf';
 import { createWriteStream } from 'fs';
 import { Writable } from 'stream';
@@ -165,7 +165,7 @@ export const getModuleFromStorage = async ({
   name?: string;
   path?: string;
   nonInteractive?: boolean;
-}): Promise<Module> => {
+}): Promise<ModuleExtended> => {
   let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
   const apiKey = resolveApiKey();
@@ -218,7 +218,7 @@ export const getModuleFromStorage = async ({
   const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
   console.log(`saved ${moduleName} to ${folder}`);
 
-  let moduleConfig: ModuleConfig;
+  let moduleConfig: Module;
   try {
     const file = await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' });
     moduleConfig = JSON.parse(file);
@@ -228,7 +228,6 @@ export const getModuleFromStorage = async ({
   }
 
   return {
-    name: name ? name : '',
     folder: folder,
     ...moduleConfig,
   };
