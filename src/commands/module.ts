@@ -259,7 +259,7 @@ export const publishModule = async (module: ModuleExtended) => {
 
   const fileName = `${name}-${version}.tar.gz`;
   const downloadLocation = `${await getNstDir()}/${fileName}`;
-  const remoteFileLocation = `modules/${name}/${fileName}`;
+  const remoteFileLocation = `modules/${name}/versions/${fileName}`;
   let url = '';
   let size = 0;
 
