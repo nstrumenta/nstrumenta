@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.12](https://github.com/nstrumenta/nstrumenta/compare/v2.1.11...v2.1.12) (2022-03-24)
+
+
+### Features
+
+* **agent:** uses .nst folder in current working dir for servers ([#72](https://github.com/nstrumenta/nstrumenta/issues/72)) ([795a322](https://github.com/nstrumenta/nstrumenta/commit/795a322a2875d79e2664eeb399b1eb1d69f99279))
+
 ### [2.1.11](https://github.com/nstrumenta/nstrumenta/compare/v2.1.10...v2.1.11) (2022-03-24)
 
 
