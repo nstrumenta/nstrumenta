@@ -35,11 +35,13 @@ export type AgentActionStatus = 'pending' | 'complete';
 export type BackplaneCommand =
   | {
       task: 'runModule';
+      actionId: string;
       status: AgentActionStatus;
       data: CommandRunModuleData;
     }
   | {
       task: 'stopModule';
+      actionId: string;
       status: AgentActionStatus;
       data: CommandStopModuleData;
     };
@@ -89,6 +91,7 @@ export class NstrumentaServer {
   public async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
+    console.log(`nstrumenta working directory: ${await getNstDir()}`);
 
     if (this.backplaneClient) {
       try {
@@ -104,16 +107,18 @@ export class NstrumentaServer {
           this.backplaneClient.addListener('open', () => {
             console.log('Connected to backplane');
             this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
-              switch (message.task) {
+              const { task, actionId } = message;
+              switch (task) {
                 case 'runModule':
                   if (!message.data || !message.data.module) {
                     console.log('Aborting: runModule command needs to specify data.module');
                     return;
                   }
                   const {
-                    data: { module: moduleName, actionId, args },
+                    data: { module: moduleName, args },
                   } = message;
-                  const logPath = `${__dirname}/${moduleName}-${actionId}.txt`;
+                  const nstDir = await getNstDir();
+                  const logPath = `${nstDir}/${moduleName}-${actionId}.txt`;
                   console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
@@ -205,11 +210,6 @@ export class NstrumentaServer {
       }
     }
 
-    setInterval(() => {
-      updateStatus();
-      this.listeners.get('status')?.forEach((callback) => callback(status));
-    }, 3000);
-
     // serves from npm path for admin page
     app.use(express.static(__dirname + '/../../public'));
     app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
@@ -228,6 +228,11 @@ export class NstrumentaServer {
 
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Set<string>> = new Map();
+
+    setInterval(() => {
+      updateStatus();
+      this.listeners.get('status')?.forEach((callback) => callback(status));
+    }, 3000);
 
     wss.on('connection', async (ws, req) => {
       console.log(req.headers);
