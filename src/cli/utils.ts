@@ -186,13 +186,14 @@ export const getModuleFromStorage = async ({
   });
 
   try {
-    if (nonInteractive) {
-      console.log(name, serverModules[name!]);
-      const version = serverModules[name!]
+    if (nonInteractive && name) {
+      console.log(name, serverModules[name]);
+      const version = serverModules[name]
         .map(({ version }) => version)
         .sort(semver.compare)
+        .reverse()
         .shift();
-      path = serverModules[name!].find((module) => module.version === version)?.path;
+      path = serverModules[name].find((module) => module.version === version)?.path;
     }
   } catch (error) {
     console.warn(`name ${name} not found in`, Object.keys(serverModules));
@@ -214,7 +215,7 @@ export const getModuleFromStorage = async ({
   if (!path) {
     throw new Error('no module and version chosen, or no path specified');
   }
-
+  
   const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
   console.log(`saved ${moduleName} to ${folder}`);
 
@@ -240,12 +241,12 @@ export function getVersionFromPath(path: string) {
 }
 
 export const getNstDir = async () => {
-  const cwd = `${__dirname}/.nst`;
+  const nstDir = `${process.cwd()}/.nst/`;
 
-  await fs.mkdir(cwd, { recursive: true });
+  await fs.mkdir(nstDir, { recursive: true });
 
   try {
-    const stat = await fs.stat(cwd);
+    const stat = await fs.stat(nstDir);
     if (!stat.isDirectory()) {
       throw new Error('no .nst temp dir');
     }
@@ -253,7 +254,7 @@ export const getNstDir = async () => {
     console.warn((err as Error).message);
     throw err;
   }
-  return cwd;
+  return nstDir;
 };
 
 export const getNearestConfigJson = async () => {
