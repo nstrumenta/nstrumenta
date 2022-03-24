@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.11](https://github.com/nstrumenta/nstrumenta/compare/v2.1.10...v2.1.11) (2022-03-24)
+
+
+### Features
+
+* **agent run-module:** uses cwd from process ; actionId ([#71](https://github.com/nstrumenta/nstrumenta/issues/71)) ([18e1cf7](https://github.com/nstrumenta/nstrumenta/commit/18e1cf79d9c7e20ff17840c52634e578c4b67550))
+
 ### [2.1.10](https://github.com/nstrumenta/nstrumenta/compare/v2.1.9...v2.1.10) (2022-03-17)
 
 
