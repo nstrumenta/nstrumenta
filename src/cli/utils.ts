@@ -215,7 +215,7 @@ export const getModuleFromStorage = async ({
   if (!path) {
     throw new Error('no module and version chosen, or no path specified');
   }
-  
+
   const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
   console.log(`saved ${moduleName} to ${folder}`);
 
@@ -241,8 +241,24 @@ export function getVersionFromPath(path: string) {
 }
 
 export const getNstDir = async () => {
-  const nstDir = `${process.cwd()}/.nst/`;
+  // first look for .nst in cwd
+  // agent run creates .nst in it's cwd for supporting
+  // multiple independent agents on the same machine
+  const cwdNstDir = `${process.cwd()}/.nst`;
+  try {
+    const stat = await fs.stat(cwdNstDir);
+    if (stat.isDirectory()) {
+      return cwdNstDir;
+    }
+  } catch {
+    // no cwd /.nst found, use __dirname/.nst below
+  }
 
+  // use __dirname/.nst , which is the location of installed .js
+  // this is the typical case for running e.g. module publish
+  // as a developer
+
+  const nstDir = `${__dirname}/.nst`;
   await fs.mkdir(nstDir, { recursive: true });
 
   try {

@@ -2,8 +2,9 @@ import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import express from 'express';
 import { createWriteStream } from 'fs';
-import { Writable } from 'stream';
+import fs from 'fs/promises';
 import serveIndex from 'serve-index';
+import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, getNstDir } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
@@ -91,6 +92,12 @@ export class NstrumentaServer {
   public async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
+
+    // server makes a local .nst folder at the cwd
+    // this allows multiple servers and working directories on the same machine
+    const cwdNstDir = `${process.cwd()}/.nst`;
+    await fs.mkdir(cwdNstDir, { recursive: true });
+
     console.log(`nstrumenta working directory: ${await getNstDir()}`);
 
     if (this.backplaneClient) {
