@@ -19,7 +19,7 @@
     "dev": "nodemon -- agent start",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:tag": "nodemon -- agent start --tag=geriatric"
+    "nst:tag": "nodemon -- agent start --tag=morty"
   },
   "repository": {
     "type": "git",

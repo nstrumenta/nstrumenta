@@ -110,7 +110,7 @@ export class NstrumentaServer {
           headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
           data,
         });
-        const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
+        const { backplaneUrl, agentId, actionsCollectionPath, agentPath } = response.data;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
             console.log('Connected to backplane');
@@ -226,8 +226,11 @@ export class NstrumentaServer {
     const sandboxPath = `${await getNstDir(this.cwd)}/modules`;
     app.use('/modules', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
 
-    app.get('/', function (req, res) {
-      res.render('index', { src: src || 'placeholder.html' });
+    app.get('/', (req, res) => {
+      res.render('index', {
+        wsUrl: `ws://localhost:${port}`,
+        modules: Array.from(this.children.keys()),
+      });
     });
 
     app.get('/health', function (req, res) {
@@ -320,6 +323,14 @@ export class NstrumentaServer {
         console.log('client disconnected - clientsCount = ', wss.clients.size);
         subscriptions.delete(ws);
       });
+
+      // subscribe to module logs
+      this.children.forEach((actionId) =>
+        this.backplaneClient?.addSubscription(`${actionId}/stdout`, (message) => {
+          console.log(`[nst-server: backplane ${actionId}/stdout](send to ws/client): `, message);
+          ws.send(message);
+        })
+      );
     });
 
     server.listen(port, function () {
