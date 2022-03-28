@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.13](https://github.com/nstrumenta/nstrumenta/compare/v2.1.12...v2.1.13) (2022-03-28)
+
+
+### Features
+
+* **keepalive:** adds 30s health pulse to all verified clients ([6093a41](https://github.com/nstrumenta/nstrumenta/commit/6093a41c78f4fd751bd305d7ee3f662b04621112))
+
 ### [2.1.12](https://github.com/nstrumenta/nstrumenta/compare/v2.1.11...v2.1.12) (2022-03-24)
 
 
