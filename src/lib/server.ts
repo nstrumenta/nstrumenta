@@ -241,6 +241,14 @@ export class NstrumentaServer {
       this.listeners.get('status')?.forEach((callback) => callback(status));
     }, 3000);
 
+    setInterval(() => {
+      verifiedConnections.forEach((connection) => {
+        connection.send(
+          makeBusMessageFromJsonObject('_nstrumenta', { type: 'health', sendTimestamp: Date.now() })
+        );
+      });
+    }, 30000);
+
     wss.on('connection', async (ws, req) => {
       console.log(req.headers);
       const clientId: string = req.headers['sec-websocket-key']!;
