@@ -92,7 +92,7 @@ export const getFolderFromStorage = async (
   options: { apiKey: string; baseDir?: string }
 ) => {
   const { apiKey, baseDir = '' } = options;
-  const nstDir = await getNstDir();
+  const nstDir = await getNstDir(process.cwd());
   const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
   const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
   try {
@@ -240,11 +240,11 @@ export function getVersionFromPath(path: string) {
   return version;
 }
 
-export const getNstDir = async () => {
+export const getNstDir = async (cwd: string) => {
   // first look for .nst in cwd
   // agent run creates .nst in it's cwd for supporting
   // multiple independent agents on the same machine
-  const cwdNstDir = `${process.cwd()}/.nst`;
+  const cwdNstDir = `${cwd}/.nst`;
   try {
     const stat = await fs.stat(cwdNstDir);
     if (stat.isDirectory()) {

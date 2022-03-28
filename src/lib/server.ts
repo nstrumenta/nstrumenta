@@ -63,6 +63,7 @@ export class NstrumentaServer {
   listeners: Map<string, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
+  cwd = process.cwd();
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
@@ -95,10 +96,10 @@ export class NstrumentaServer {
 
     // server makes a local .nst folder at the cwd
     // this allows multiple servers and working directories on the same machine
-    const cwdNstDir = `${process.cwd()}/.nst`;
+    const cwdNstDir = `${this.cwd}/.nst`;
     await fs.mkdir(cwdNstDir, { recursive: true });
 
-    console.log(`nstrumenta working directory: ${await getNstDir()}`);
+    console.log(`nstrumenta working directory: ${cwdNstDir}`);
 
     if (this.backplaneClient) {
       try {
@@ -124,7 +125,7 @@ export class NstrumentaServer {
                   const {
                     data: { module: moduleName, args },
                   } = message;
-                  const nstDir = await getNstDir();
+                  const nstDir = await getNstDir(this.cwd);
                   const logPath = `${nstDir}/${moduleName}-${actionId}.txt`;
                   console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
@@ -222,7 +223,7 @@ export class NstrumentaServer {
     app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
     //serves public subfolder from execution path for serving sandboxes
-    const sandboxPath = `${await getNstDir()}/modules`;
+    const sandboxPath = `${await getNstDir(this.cwd)}/modules`;
     app.use('/modules', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
 
     app.get('/', function (req, res) {
