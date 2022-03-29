@@ -110,7 +110,7 @@ export class NstrumentaServer {
           headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
           data,
         });
-        const { backplaneUrl, agentId, actionsCollectionPath, agentPath } = response.data;
+        const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
             console.log('Connected to backplane');
@@ -125,14 +125,22 @@ export class NstrumentaServer {
                   const {
                     data: { module: moduleName, args },
                   } = message;
-                  const nstDir = await getNstDir(this.cwd);
-                  const logPath = `${nstDir}/${moduleName}-${actionId}.txt`;
+                  const logPath = `${this.cwd}/${moduleName}-${actionId}.txt`;
                   console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
                   backplaneStream._write = (chunk, enc, next) => {
                     this.backplaneClient?.send(`${actionId}/stdout`, chunk);
                     next();
+                  };
+                  // log to local wss for consumption by sandbox
+                  const localStream = new Writable();
+                  localStream._write = (chunk, enc, next) => {
+                    console.log('[stream]', chunk.toString());
+                    wss.clients.forEach((client) => {
+                      client.send(`${actionId}/stdout`, chunk);
+                      next();
+                    });
                   };
                   const process = await asyncSpawn(
                     'nstrumenta',
@@ -146,13 +154,14 @@ export class NstrumentaServer {
                     ],
                     undefined,
                     undefined,
-                    [stream, backplaneStream]
+                    [stream, backplaneStream, localStream]
                   );
                   this.children.set(String(process.pid), process);
                   process.on('disconnect', () => this.children.delete(String(process.pid)));
                   break;
                 case 'stopModule':
                   const { data } = message;
+                  break;
                 default:
                   console.log('message from backplane', message);
               }
@@ -165,7 +174,7 @@ export class NstrumentaServer {
             });
           });
 
-          this.backplaneClient.connect({
+          await this.backplaneClient.connect({
             apiKey,
             nodeWebSocket: WebSocket as any,
             wsUrl: backplaneUrl,
@@ -228,8 +237,8 @@ export class NstrumentaServer {
 
     app.get('/', (req, res) => {
       res.render('index', {
+        apiKey,
         wsUrl: `ws://localhost:${port}`,
-        modules: Array.from(this.children.keys()),
       });
     });
 
@@ -323,14 +332,6 @@ export class NstrumentaServer {
         console.log('client disconnected - clientsCount = ', wss.clients.size);
         subscriptions.delete(ws);
       });
-
-      // subscribe to module logs
-      this.children.forEach((actionId) =>
-        this.backplaneClient?.addSubscription(`${actionId}/stdout`, (message) => {
-          console.log(`[nst-server: backplane ${actionId}/stdout](send to ws/client): `, message);
-          ws.send(message);
-        })
-      );
     });
 
     server.listen(port, function () {
