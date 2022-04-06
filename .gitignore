@@ -71,8 +71,13 @@ typings/
 # build artifacts
 dist
 
+# ...but keep placeholder build artifacts
+!placeholder/dist
+
 # ide
 .idea
 
 # exclude locally downloaded modules in dev
 .nst
+
+*.LICENSE.txt
