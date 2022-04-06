@@ -4,6 +4,8 @@ import {
   makeBusMessageFromJsonObject,
 } from './busMessage';
 import { getToken } from './sessionToken';
+import axios from 'axios';
+import { endpoints } from '../shared';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -26,8 +28,10 @@ export enum ClientStatus {
 export interface Connection {
   status: ClientStatus;
 }
+
 export class NstrumentaClient {
   private ws: WebSocket | null = null;
+  private apiKey: string | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
   private reconnection = { hasVerified: false, attempts: 0 };
@@ -65,6 +69,7 @@ export class NstrumentaClient {
       return;
     }
 
+    this.apiKey = nstrumentaApiKey;
     this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener('open', async () => {
@@ -170,5 +175,37 @@ export class NstrumentaClient {
     if (listenerCallbacks) {
       listenerCallbacks.push(callback);
     }
+  }
+
+  public async uploadData(data: Blob, meta: Record<string, string>) {
+    const path = `data/${Date.now()}`;
+    const size = data.size;
+    let url;
+    const response = await axios.post(
+      endpoints.GET_UPLOAD_URL,
+      {
+        path,
+        size,
+        meta,
+      },
+      {
+        headers: {
+          contentType: 'application/json',
+          'x-api-key': this.apiKey,
+        },
+      }
+    );
+
+    url = response.data?.uploadUrl;
+
+    await axios.put(url, data, {
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      headers: {
+        contentType: 'application/octet-stream',
+        contentLength: `${size}`,
+        contentLengthRange: `bytes 0-${size - 1}/${size}`,
+      },
+    });
   }
 }

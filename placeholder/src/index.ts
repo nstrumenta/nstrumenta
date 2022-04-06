@@ -40,6 +40,14 @@ const init = async () => {
           break;
       }
     });
+
+    document.getElementById('send-data').addEventListener('click', async () => {
+      const $el = document.getElementById('data') as HTMLInputElement;
+      if (!$el) return;
+      const { value } = $el;
+      const data = new Blob([value]);
+      await client.uploadData(data, { some: 'metadata' });
+    });
   });
 
   // The nstrumenta server run on agent start will provide keys and urls via ejs

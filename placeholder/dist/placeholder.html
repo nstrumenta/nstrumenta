@@ -1,20 +1,16 @@
 <div class="mdl-layout mdl-js-layout">
     <div class="mdl-grid">
-        <div class="mdl-cell mdl-cell--8-col">
+        <div class="mdl-cell mdl-cell--12-col">
             <form id="send-on-channel">
-                <h4>Send on channel:</h4>
+                <h4>Store data:</h4>
                 <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="channel" />
-                    <label class="mdl-textfield__label" for="channel">channel: </label>
-                </div>
-                <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-                    <input class="mdl-textfield__input" type="text" id="message" />
-                    <label class="mdl-textfield__label" for="message">message: </label>
+                    <input class="mdl-textfield__input" type="text" id="data" />
+                    <label class="mdl-textfield__label" for="data">message: </label>
                 </div>
                 <button
+                        id="send-data"
                         class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored"
                         type="button"
-                        onclick="send()"
                 >
                     Send Json
                 </button>
