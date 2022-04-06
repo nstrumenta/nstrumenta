@@ -3,7 +3,7 @@ import { NstrumentaClient } from 'nstrumenta';
 const client = new NstrumentaClient();
 
 const init = async () => {
-  let $textarea = document.getElementById('outputTextArea');
+  let $textarea = document.getElementById('outputTextArea') || document;
   const $status = document.getElementById('host-status');
   if (document.readyState !== 'complete') {
     return;
@@ -12,7 +12,6 @@ const init = async () => {
   client.addListener('open', () => {
     console.log('yay subbed');
 
-
     client.addSubscription('_nstrumenta', (message) => {
       switch (message.type) {
         case 'children':
@@ -20,7 +19,8 @@ const init = async () => {
           if (!children || children.length < 1) {
             return;
           }
-          children.forEach((id: string) => client.addSubscription(`${id}/stdout`, (message) => {
+          children.forEach((id: string) =>
+            client.addSubscription(`${id}/stdout`, (message) => {
               console.log(`[${id}:stdout]`, message);
               const $li = document.createElement('li');
               $li.innerText = `[${id}] ${message}`;
@@ -31,9 +31,11 @@ const init = async () => {
           break;
         case 'status':
           const { status } = message;
-          $status.innerText = status;
+          $status ? ($status.innerText = status) : null;
+          break;
         case 'health':
           document.getElementById('health').innerText += '*';
+          break;
         default:
           break;
       }
@@ -46,11 +48,11 @@ const init = async () => {
 
   const $data = document.getElementById('agent-data');
   if ($data) {
-    apiKey = $data.dataset.apikey;
-    wsUrl = $data.dataset.wsurl;
+    apiKey = $data.dataset.apikey || '';
+    wsUrl = $data.dataset.wsurl || '';
   }
 
-  client.connect({ apiKey, wsUrl });
+  await client.connect({ apiKey, wsUrl });
 };
 
 document.addEventListener('readystatechange', init);
