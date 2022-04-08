@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "2.1.13",
+  "version": "2.1.13-loc",
   "description": "cli tool for nstrumenta",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -10,7 +10,7 @@
   },
   "files": [
     "dist/**",
-    "index.ejs",
+    "public/index.ejs",
     "public/**"
   ],
   "scripts": {
@@ -19,7 +19,7 @@
     "dev": "nodemon -- agent start",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:local": "NSTRUMENTA_LOCAL=true nstrumenta"
+    "nst:tag": "nodemon -- agent start --tag=morty"
   },
   "repository": {
     "type": "git",

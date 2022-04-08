@@ -137,14 +137,22 @@ export class NstrumentaServer {
                   const {
                     data: { module: moduleName, args },
                   } = message;
-                  const nstDir = await getNstDir(this.cwd);
-                  const logPath = `${nstDir}/${moduleName}-${actionId}.txt`;
-                  logger.log(`starting logging ${logPath}`);
+                  const logPath = `${this.cwd}/${moduleName}-${actionId}.txt`;
+                  console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
                   backplaneStream._write = (chunk, enc, next) => {
                     this.backplaneClient?.send(`${actionId}/stdout`, chunk);
                     next();
+                  };
+                  // log to local wss for consumption by sandbox
+                  const localStream = new Writable();
+                  localStream._write = (chunk, enc, next) => {
+                    console.log('[stream]', chunk.toString());
+                    wss.clients.forEach((client) => {
+                      client.send(`${actionId}/stdout`, chunk);
+                      next();
+                    });
                   };
                   const process = await asyncSpawn(
                     'nstrumenta',
@@ -158,13 +166,14 @@ export class NstrumentaServer {
                     ],
                     undefined,
                     undefined,
-                    [stream, backplaneStream]
+                    [stream, backplaneStream, localStream]
                   );
                   this.children.set(String(process.pid), process);
                   process.on('disconnect', () => this.children.delete(String(process.pid)));
                   break;
                 case 'stopModule':
                   const { data } = message;
+                  break;
                 default:
                   logger.log('message from backplane', message);
               }
@@ -177,7 +186,7 @@ export class NstrumentaServer {
             });
           });
 
-          this.backplaneClient.connect({
+          await this.backplaneClient.connect({
             apiKey,
             nodeWebSocket: WebSocket as any,
             wsUrl: backplaneUrl,
@@ -240,8 +249,11 @@ export class NstrumentaServer {
     const sandboxPath = `${await getNstDir(this.cwd)}/modules`;
     app.use('/modules', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
 
-    app.get('/', function (req, res) {
-      res.render('index', { src: src || 'placeholder.html' });
+    app.get('/', (req, res) => {
+      res.render('index', {
+        apiKey,
+        wsUrl: `ws://localhost:${port}`,
+      });
     });
 
     app.get('/health', function (req, res) {
