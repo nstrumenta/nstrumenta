@@ -28,6 +28,11 @@ export default {
     compress: true,
     port: 4000,
   },
+  performance: {
+    hints: false,
+    maxEntrypointSize: 1000000,
+    maxAssetSize: 1000000
+  },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': JSON.stringify({ NSTRUMENTA_LOCAL: false })

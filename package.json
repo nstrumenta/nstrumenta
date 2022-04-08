@@ -15,9 +15,11 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "tsc --project ./",
+    "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
+    "build:lib": "tsc --project ./",
+    "build": "npm run build:agent-admin-page ; npm run build:lib",
     "dev": "nodemon -- agent start",
-    "format": "prettier -w ./",
+    "format": "prettier -w ./",    
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
     "nst:tag": "nodemon -- agent start --tag=morty"
   },
