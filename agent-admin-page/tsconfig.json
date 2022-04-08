@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "../public",
+    "noImplicitAny": true,
+    "module": "es2022",
+    "target": "es5",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "sourceMap": true,
+    "moduleResolution": "node"
+  }
+}
