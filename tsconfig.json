@@ -11,5 +11,5 @@
     "baseUrl": "./src",
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "dist", "placeholder"]
+  "exclude": ["node_modules", "dist", "agent-admin-page"]
 }

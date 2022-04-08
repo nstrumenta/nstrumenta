@@ -1,15 +1,16 @@
 {
-  "name": "placeholder",
+  "name": "agent-admin-page",
   "version": "0.0.1",
   "type": "module",
-  "description": "default project for nst server to serve",
+  "description": "Agent admin page served on /",
   "scripts": {
-    "dev": "webpack-dev-server --mode development",
+    "dev": "nodemon",
     "build": "webpack --mode production"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "nstrumenta",
+  "license": "MIT",
   "devDependencies": {
+    "nodemon": "^2.0.15",
     "ts-loader": "^9.2.8",
     "typescript": "^4.6.3",
     "webpack": "^5.70.0",
@@ -17,6 +18,6 @@
     "webpack-dev-server": "^4.7.4"
   },
   "dependencies": {
-    "nstrumenta": "^2.1.12"
+    "nstrumenta": "^2.1.13"
   }
 }
