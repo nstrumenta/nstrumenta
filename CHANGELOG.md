@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.14](https://github.com/nstrumenta/nstrumenta/compare/v2.1.13...v2.1.14) (2022-04-08)
+
+
+### Features
+
+* **dockerfile:** adds dockerfile ([40a6203](https://github.com/nstrumenta/nstrumenta/commit/40a6203304bc5db9b6e6ee0d58843f9053f3643c))
+* replaces console.log with simple custom logger with stream; logs to stdout by default; server pipes log to log file and backplane, if connected ([#79](https://github.com/nstrumenta/nstrumenta/issues/79)) ([7697d33](https://github.com/nstrumenta/nstrumenta/commit/7697d33269f5a7afb8b435dd22e6b64c16352f65))
+
 ### [2.1.13](https://github.com/nstrumenta/nstrumenta/compare/v2.1.12...v2.1.13) (2022-03-28)
 
 
