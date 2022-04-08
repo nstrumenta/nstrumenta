@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "2.1.13",
+  "version": "2.1.14",
   "description": "cli tool for nstrumenta",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -19,7 +19,7 @@
     "build:lib": "tsc --project ./",
     "build": "npm run build:agent-admin-page ; npm run build:lib",
     "dev": "nodemon -- agent start",
-    "format": "prettier -w ./",    
+    "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
     "nst:tag": "nodemon -- agent start --tag=morty"
   },
