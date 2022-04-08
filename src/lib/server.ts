@@ -6,11 +6,13 @@ import fs from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
-import { asyncSpawn, getNstDir } from '../cli/utils';
+import { asyncSpawn, createLogger, getNstDir } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
 import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
+
+const logger = createLogger({ prefix: '[server]' });
 
 type ListenerCallback = (event?: any) => void;
 
@@ -64,11 +66,12 @@ export class NstrumentaServer {
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
+  logs?: Writable[];
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     this.listeners = new Map();
-    console.log('starting NstrumentaServer');
+    logger.log('starting NstrumentaServer');
     this.run = this.run.bind(this);
     if (!options.noBackplane) {
       this.backplaneClient = new NstrumentaClient();
@@ -99,7 +102,10 @@ export class NstrumentaServer {
     const cwdNstDir = `${this.cwd}/.nst`;
     await fs.mkdir(cwdNstDir, { recursive: true });
 
-    console.log(`nstrumenta working directory: ${cwdNstDir}`);
+    logger.log(`nstrumenta working directory: ${cwdNstDir}`);
+
+    const logFile = createWriteStream(`${cwdNstDir}/${Date.now()}-log.txt`);
+    this.logs = [logFile];
 
     if (this.backplaneClient) {
       try {
@@ -113,13 +119,19 @@ export class NstrumentaServer {
         const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
-            console.log('Connected to backplane');
+            logger.log('Connected to backplane');
+            const agentBackplaneStream = new Writable();
+            agentBackplaneStream._write = (chunk, enc, next) => {
+              this.backplaneClient?.send(`${agentId}/stdout`, chunk);
+              next();
+            };
+            this.logs?.push(agentBackplaneStream);
             this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
               const { task, actionId } = message;
               switch (task) {
                 case 'runModule':
                   if (!message.data || !message.data.module) {
-                    console.log('Aborting: runModule command needs to specify data.module');
+                    logger.log('Aborting: runModule command needs to specify data.module');
                     return;
                   }
                   const {
@@ -127,7 +139,7 @@ export class NstrumentaServer {
                   } = message;
                   const nstDir = await getNstDir(this.cwd);
                   const logPath = `${nstDir}/${moduleName}-${actionId}.txt`;
-                  console.log(`starting logging ${logPath}`);
+                  logger.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
                   backplaneStream._write = (chunk, enc, next) => {
@@ -154,7 +166,7 @@ export class NstrumentaServer {
                 case 'stopModule':
                   const { data } = message;
                 default:
-                  console.log('message from backplane', message);
+                  logger.log('message from backplane', message);
               }
             });
             this.backplaneClient?.send('_nstrumenta', {
@@ -172,9 +184,11 @@ export class NstrumentaServer {
           });
         }
       } catch (err) {
-        console.warn('failed to get backplaneUrl');
+        logger.warn('failed to get backplaneUrl');
       }
     }
+
+    this.logs.forEach((log) => logger.logStream.pipe(log));
 
     const app = express();
     app.set('views', __dirname + '/../..');
@@ -251,18 +265,18 @@ export class NstrumentaServer {
     }, 30000);
 
     wss.on('connection', async (ws, req) => {
-      console.log(req.headers);
+      logger.log(req.headers);
       const clientId: string = req.headers['sec-websocket-key']!;
 
-      console.log('a user connected - clientsCount = ' + wss.clients.size);
+      logger.log('a user connected - clientsCount = ' + wss.clients.size);
       ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
-          console.log('attempting to verify token');
+          logger.log('attempting to verify token');
           // first message from a connected websocket must be a token
           const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
           verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey })
             .then(() => {
-              console.log('verified', clientId, req.socket.remoteAddress);
+              logger.log('verified', clientId, req.socket.remoteAddress);
               verifiedConnections.set(clientId, ws);
               ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
               this.listeners
@@ -270,10 +284,7 @@ export class NstrumentaServer {
                 ?.forEach((callback) => callback([...verifiedConnections.keys()]));
             })
             .catch((err) => {
-              console.log(
-                'unable to verify client, invalid token, closing connection',
-                err.message
-              );
+              logger.log('unable to verify client, invalid token, closing connection', err.message);
               ws.send(
                 makeBusMessageFromJsonObject('_nstrumenta', {
                   error: 'unable to verify client, invalid token, closing connection',
@@ -283,20 +294,20 @@ export class NstrumentaServer {
             });
           return;
         }
-        console.log(busMessage);
+        logger.log('busmessage', busMessage.toString('utf8'));
 
         let deserializedMessage;
         try {
           deserializedMessage = deserializeWireMessage(busMessage);
         } catch (error) {
-          console.log(`Couldn't handle ${(error as Error).message}`);
+          logger.log(`Couldn't handle ${(error as Error).message}`);
           return;
         }
         const { channel, busMessageType, contents } = deserializedMessage;
 
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
-          console.log(`[nstrumenta] <subscribe> ${channel}`);
+          logger.log(`[nstrumenta] <subscribe> ${channel}`);
           if (!subscriptions.get(ws)) {
             subscriptions.set(ws, new Set([channel]));
           } else {
@@ -307,23 +318,23 @@ export class NstrumentaServer {
 
         subscriptions.forEach((subChannels, subWebSocket) => {
           if (subChannels.has(channel)) {
-            console.log(`sending to subscription ${channel}`);
+            logger.log(`sending to subscription ${channel}`);
             subWebSocket.send(busMessage);
           }
         });
 
         if (debug) {
-          console.log(channel, busMessageType, contents);
+          logger.log(channel, busMessageType, contents);
         }
       });
       ws.on('close', function () {
-        console.log('client disconnected - clientsCount = ', wss.clients.size);
+        logger.log('client disconnected - clientsCount = ', wss.clients.size);
         subscriptions.delete(ws);
       });
     });
 
     server.listen(port, function () {
-      console.log('listening on *:' + port);
+      logger.log('listening on *:' + port);
     });
   }
 }

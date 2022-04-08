@@ -3,7 +3,7 @@ import { spawn } from 'child_process';
 import { ModuleExtended, Module } from 'commands/module';
 import Conf from 'conf';
 import { createWriteStream } from 'fs';
-import { Writable } from 'stream';
+import { Duplex, Writable } from 'stream';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
 import nodePath from 'node:path';
@@ -15,6 +15,8 @@ import { promisify } from 'util';
 import { getCurrentContext } from '../lib/context';
 import { schema } from '../schema';
 import { endpoints } from '../shared';
+import util from 'util';
+import inspector from 'node:inspector';
 
 const pipeline = promisify(streamPipeline);
 
@@ -23,6 +25,50 @@ const prompt = Inquirer.createPromptModule();
 export interface Keys {
   [key: string]: string;
 }
+
+const _createLogStream = () => {
+  const duplex = new Duplex({ encoding: 'utf-8' });
+  duplex._read = () => undefined;
+  duplex._write = (chunk, encoding, next) => {
+    duplex.push(chunk, encoding);
+    next();
+  };
+  return duplex;
+};
+
+export const createLogger = ({ prefix, silent }: { prefix?: string; silent?: boolean }) => {
+  const logStream = _createLogStream();
+  logStream.on('end', () => {
+    const stream = _createLogStream();
+    logger.logStream = stream;
+  });
+
+  const log = (...args: unknown[]) => {
+    const chunk = `${util.format.apply(logger, [prefix || '', ...args])}\n`;
+    // send log to any active debug inspectors
+    // @ts-ignore
+    inspector.console.log(chunk);
+    logger.logStream.push(chunk, 'utf-8');
+  };
+
+  const logger: {
+    logStream: Duplex;
+    log: (...args: unknown[]) => void;
+    error: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+  } = {
+    logStream,
+    log,
+    error: log,
+    warn: log,
+  };
+
+  if (!silent) {
+    logStream.pipe(process.stdout);
+  }
+
+  return logger;
+};
 
 const config = new Conf(schema as any);
 
