@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.15](https://github.com/nstrumenta/nstrumenta/compare/v2.1.14...v2.1.15) (2022-04-09)
+
+
+### Features
+
+* **agent-admin:** displays agent stdout ([1373beb](https://github.com/nstrumenta/nstrumenta/commit/1373beb3af3ab7dfb7764908911fdeeee3b04161))
+
 ### [2.1.14](https://github.com/nstrumenta/nstrumenta/compare/v2.1.13...v2.1.14) (2022-04-08)
 
 
