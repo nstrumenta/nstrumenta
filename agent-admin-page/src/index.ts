@@ -3,12 +3,13 @@ import { NstrumentaClient } from 'nstrumenta';
 const client = new NstrumentaClient();
 
 const init = async () => {
-  const $textarea = document.getElementById('outputTextArea') as HTMLTextAreaElement;
   if (document.readyState !== 'complete') {
     return;
   }
 
+  const $textarea = document.getElementById('outputTextArea') as HTMLTextAreaElement;
   client.addListener('open', () => {
+    let agentLogSubscription = false;
     console.log('client open');
 
     client.addSubscription('_nstrumenta', (message) => {
@@ -17,8 +18,18 @@ const init = async () => {
           document.getElementById('health').innerText = new Date(Date.now()).toLocaleString();
           break;
         default:
-          $textarea.value += `${JSON.stringify(message)}\n`;
           break;
+      }
+    });
+    client.addSubscription('_status', (message) => {
+      const { agentId } = message;
+      document.getElementById('status').innerText = JSON.stringify(message);
+      if (agentId && !agentLogSubscription) {
+        agentLogSubscription = true;
+        client.addSubscription(`_${agentId}/stdout`, (buffer) => {
+          const message = new TextDecoder().decode(buffer);
+          $textarea.textContent += `${message}\n`;
+        });
       }
     });
   });
