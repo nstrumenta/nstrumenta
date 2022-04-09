@@ -2,11 +2,16 @@
     <div class="mdl-grid">
         <h4>nstrumenta agent admin</h4>
         <div class="mdl-cell mdl-cell--12-col">
+            <span>status</span>
+            <span id="status"></span>
+        </div>
+        <div class="mdl-cell mdl-cell--12-col">
             <span>health received:</span>
             <span id="health"></span>
         </div>
         <div class="mdl-cell mdl-cell--12-col" style="overflow: auto">
-            <ul class="mdl-list" id="outputTextArea" style="width: 100%; height: 500px"></ul>
+            <label for="outputTextArea">agent stdout</label>
+            <textarea class="mdl-list" id="outputTextArea" style="width: 100%; height: 500px"></textarea>
         </div>
     </div>
 </div>
