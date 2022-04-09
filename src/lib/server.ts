@@ -8,7 +8,11 @@ import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
-import { deserializeWireMessage, makeBusMessageFromJsonObject } from './busMessage';
+import {
+  deserializeWireMessage,
+  makeBusMessageFromBuffer,
+  makeBusMessageFromJsonObject,
+} from './busMessage';
 import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
 
@@ -16,12 +20,13 @@ const logger = createLogger({ prefix: '[server]' });
 
 type ListenerCallback = (event?: any) => void;
 
-export interface ServerStatus {
+export type ServerStatus = {
   clientsCount: number;
   subscribedChannels: { [key: string]: { count: number } };
   activeChannels: { [key: string]: { timestamp: number } };
   children: number;
-}
+  agentId?: string;
+};
 
 export interface CommandRunModuleData {
   module: string;
@@ -66,7 +71,7 @@ export class NstrumentaServer {
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
-  logs?: Writable[];
+  logStreams?: Writable[];
 
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
@@ -97,6 +102,13 @@ export class NstrumentaServer {
     const { apiKey, debug } = this.options;
     const port = this.options.port || DEFAULT_HOST_PORT;
 
+    const status: ServerStatus = {
+      clientsCount: 0,
+      subscribedChannels: {},
+      activeChannels: {},
+      children: this.children.size,
+    };
+
     // server makes a local .nst folder at the cwd
     // this allows multiple servers and working directories on the same machine
     const cwdNstDir = `${this.cwd}/.nst`;
@@ -105,7 +117,7 @@ export class NstrumentaServer {
     logger.log(`nstrumenta working directory: ${cwdNstDir}`);
 
     const logFile = createWriteStream(`${cwdNstDir}/${Date.now()}-log.txt`);
-    this.logs = [logFile];
+    this.logStreams = [logFile];
 
     if (this.backplaneClient) {
       try {
@@ -117,6 +129,7 @@ export class NstrumentaServer {
           data,
         });
         const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
+        status.agentId = agentId;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
             logger.log('Connected to backplane');
@@ -125,7 +138,7 @@ export class NstrumentaServer {
               this.backplaneClient?.send(`${agentId}/stdout`, chunk);
               next();
             };
-            this.logs?.push(agentBackplaneStream);
+            this.logStreams?.push(agentBackplaneStream);
             this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
               const { task, actionId } = message;
               switch (task) {
@@ -137,14 +150,15 @@ export class NstrumentaServer {
                   const {
                     data: { module: moduleName, args },
                   } = message;
+
                   const logPath = `${this.cwd}/${moduleName}-${actionId}.txt`;
-                  console.log(`starting logging ${logPath}`);
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
                   backplaneStream._write = (chunk, enc, next) => {
                     this.backplaneClient?.send(`${actionId}/stdout`, chunk);
                     next();
                   };
+
                   // log to local wss for consumption by sandbox
                   const localStream = new Writable();
                   localStream._write = (chunk, enc, next) => {
@@ -172,7 +186,6 @@ export class NstrumentaServer {
                   process.on('disconnect', () => this.children.delete(String(process.pid)));
                   break;
                 case 'stopModule':
-                  const { data } = message;
                   break;
                 default:
                   logger.log('message from backplane', message);
@@ -197,8 +210,6 @@ export class NstrumentaServer {
       }
     }
 
-    this.logs.forEach((log) => logger.logStream.pipe(log));
-
     const app = express();
     app.set('views', __dirname + '/../..');
     app.set('view engine', 'ejs');
@@ -206,15 +217,6 @@ export class NstrumentaServer {
     const server = require('http').Server(app);
 
     const wss = new WebSocketServer({ server: server });
-
-    let src: string | undefined = undefined;
-
-    let status: ServerStatus = {
-      clientsCount: wss.clients.size as number,
-      subscribedChannels: {},
-      activeChannels: {},
-      children: this.children.size,
-    };
 
     function updateStatus() {
       status.clientsCount = wss.clients.size;
@@ -266,6 +268,11 @@ export class NstrumentaServer {
     setInterval(() => {
       updateStatus();
       this.listeners.get('status')?.forEach((callback) => callback(status));
+      subscriptions.forEach((subChannels, subWebSocket) => {
+        if (subChannels.has('_status')) {
+          subWebSocket.send(makeBusMessageFromJsonObject('_status', status));
+        }
+      });
     }, 3000);
 
     setInterval(() => {
@@ -343,6 +350,21 @@ export class NstrumentaServer {
         logger.log('client disconnected - clientsCount = ', wss.clients.size);
         subscriptions.delete(ws);
       });
+    });
+
+    const agentStream = new Writable();
+    agentStream._write = (chunk, enc, next) => {
+      subscriptions.forEach((subChannels, subWebSocket) => {
+        const channel = `_${status.agentId}/stdout`;
+        if (status.agentId && subChannels.has(channel)) {
+          subWebSocket.send(makeBusMessageFromBuffer(channel, chunk));
+        }
+      });
+      next();
+    };
+    this.logStreams.push(agentStream);
+    this.logStreams.forEach((logStream) => {
+      logger.logStream.pipe(logStream);
     });
 
     server.listen(port, function () {
