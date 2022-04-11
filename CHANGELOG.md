@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.16](https://github.com/nstrumenta/nstrumenta/compare/v2.1.15...v2.1.16) (2022-04-11)
+
+
+### Features
+
+* **agent:** fixes run-module (removes localstream for now) ([#81](https://github.com/nstrumenta/nstrumenta/issues/81)) ([e219795](https://github.com/nstrumenta/nstrumenta/commit/e219795042c4ca395764ec9243743891bffc3c9a))
+
 ### [2.1.15](https://github.com/nstrumenta/nstrumenta/compare/v2.1.14...v2.1.15) (2022-04-09)
 
 
