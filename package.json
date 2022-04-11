@@ -18,7 +18,7 @@
     "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
     "build:lib": "tsc --project ./",
     "build": "npm run build:agent-admin-page ; npm run build:lib",
-    "dev": "nodemon -- agent start",
+    "dev": "nodemon -- agent start --tag=local",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch",
     "nst:tag": "nodemon -- agent start --tag=morty"
