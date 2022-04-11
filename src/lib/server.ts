@@ -151,7 +151,7 @@ export class NstrumentaServer {
                     data: { module: moduleName, args },
                   } = message;
 
-                  const logPath = `${this.cwd}/${moduleName}-${actionId}.txt`;
+                  const logPath = `${await getNstDir(this.cwd)}/${moduleName}-${actionId}.txt`;
                   const stream = createWriteStream(logPath);
                   const backplaneStream = new Writable();
                   backplaneStream._write = (chunk, enc, next) => {
@@ -159,15 +159,6 @@ export class NstrumentaServer {
                     next();
                   };
 
-                  // log to local wss for consumption by sandbox
-                  const localStream = new Writable();
-                  localStream._write = (chunk, enc, next) => {
-                    console.log('[stream]', chunk.toString());
-                    wss.clients.forEach((client) => {
-                      client.send(`${actionId}/stdout`, chunk);
-                      next();
-                    });
-                  };
                   const process = await asyncSpawn(
                     'nstrumenta',
                     [
@@ -180,7 +171,7 @@ export class NstrumentaServer {
                     ],
                     undefined,
                     undefined,
-                    [stream, backplaneStream, localStream]
+                    [stream, backplaneStream]
                   );
                   this.children.set(String(process.pid), process);
                   process.on('disconnect', () => this.children.delete(String(process.pid)));
