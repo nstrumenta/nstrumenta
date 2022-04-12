@@ -36,7 +36,12 @@ const _createLogStream = () => {
   return duplex;
 };
 
-export const createLogger = ({ prefix, silent }: { prefix?: string; silent?: boolean }) => {
+interface CreateLoggerOptions {
+  silent?: boolean;
+}
+
+export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
+  let prefix: string;
   const logStream = _createLogStream();
   logStream.on('end', () => {
     const stream = _createLogStream();
@@ -51,16 +56,22 @@ export const createLogger = ({ prefix, silent }: { prefix?: string; silent?: boo
     logger.logStream.push(chunk, 'utf-8');
   };
 
+  const setPrefix = (value: string) => {
+    prefix = value;
+  };
+
   const logger: {
     logStream: Duplex;
     log: (...args: unknown[]) => void;
     error: (...args: unknown[]) => void;
     warn: (...args: unknown[]) => void;
+    setPrefix: (value: string) => void;
   } = {
     logStream,
     log,
     error: log,
     warn: log,
+    setPrefix,
   };
 
   if (!silent) {

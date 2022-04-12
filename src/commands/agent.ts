@@ -4,7 +4,7 @@ import { createLogger, inquiryForSelectModule, resolveApiKey } from '../cli/util
 import { NstrumentaServer } from '../lib/server';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 
-const logger = createLogger({ prefix: '[agent]' });
+const logger = createLogger();
 
 export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
   const { port, tag } = options;
