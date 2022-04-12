@@ -16,7 +16,7 @@ import {
 import { NstrumentaClient } from './client';
 import { verifyToken } from './sessionToken';
 
-const logger = createLogger({ prefix: '[server]' });
+const logger = createLogger();
 
 type ListenerCallback = (event?: any) => void;
 
@@ -128,7 +128,13 @@ export class NstrumentaServer {
           headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
           data,
         });
-        const { backplaneUrl, agentId, actionsCollectionPath } = response.data;
+        const {
+          backplaneUrl,
+          agentId,
+          actionsCollectionPath,
+        }: { backplaneUrl: string; agentId: string; actionsCollectionPath: string } = response.data;
+
+        logger.setPrefix(`[agent ${this.options.tag || `${agentId.substring(0, 5)}...`}]`);
         status.agentId = agentId;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
