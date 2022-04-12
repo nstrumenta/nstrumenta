@@ -3,6 +3,8 @@ import Inquirer from 'inquirer';
 import { Keys } from '../cli/utils';
 import { getContextProperty, setContextProperty } from '../lib/context';
 import { schema } from '../schema';
+import axios from 'axios';
+import { endpoints } from '../shared';
 
 const cyan = (text: string) => {
   return text;
@@ -22,7 +24,6 @@ const config = new Conf(schema as any);
 
 const inquiryForAuthentication = async () => {
   const { projectId, apiKey } = await prompt([
-    { type: 'input', name: 'projectId', message: 'Project ID' },
     { type: 'password', name: 'apiKey', message: 'API Key', mask: '●' },
   ]);
   return { projectId, apiKey };
@@ -38,8 +39,19 @@ const inquiryForSelectProject = async (choices: string[]): Promise<string> => {
 export const AddKey = async () => {
   try {
     console.log('Store API key');
-    const { projectId, apiKey } = await inquiryForAuthentication();
+    const { apiKey } = await inquiryForAuthentication();
     const keys = config.get('keys', {}) as Keys;
+
+    let projectId: string | undefined;
+    const headers = {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    };
+    projectId = (await axios.get(endpoints.VERIFY_API_KEY, { headers })).data;
+    console.log({ projectId });
+    if (typeof projectId !== 'string') {
+      throw new Error('Invalid key');
+    }
     config.set({ keys: { ...(keys as object), [projectId]: apiKey } });
     setContextProperty({ projectId: projectId });
   } catch (error) {
