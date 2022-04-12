@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.17](https://github.com/nstrumenta/nstrumenta/compare/v2.1.16...v2.1.17) (2022-04-12)
+
+
+### Features
+
+* **agent:** adds tag=local for dev ([f5fd70c](https://github.com/nstrumenta/nstrumenta/commit/f5fd70c8ca7b6b745bfcb1f87e0a344b05429c1f))
+* **auth:** `nst auth add` requires only apiKey; projectId is inferred via api ([#82](https://github.com/nstrumenta/nstrumenta/issues/82)) ([da234e1](https://github.com/nstrumenta/nstrumenta/commit/da234e1cda71e76dfa2299075944bd5bccdbc99a))
+
 ### [2.1.16](https://github.com/nstrumenta/nstrumenta/compare/v2.1.15...v2.1.16) (2022-04-11)
 
 
