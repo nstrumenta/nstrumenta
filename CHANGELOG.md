@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.18](https://github.com/nstrumenta/nstrumenta/compare/v2.1.17...v2.1.18) (2022-04-12)
+
+
+### Features
+
+* **agent:** adds tag or agentId prefix to logger ([#83](https://github.com/nstrumenta/nstrumenta/issues/83)) ([406537f](https://github.com/nstrumenta/nstrumenta/commit/406537f06a24c32c6f7baee3480fd2588c871826))
+
 ### [2.1.17](https://github.com/nstrumenta/nstrumenta/compare/v2.1.16...v2.1.17) (2022-04-12)
 
 
