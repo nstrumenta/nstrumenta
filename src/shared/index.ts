@@ -20,5 +20,6 @@ export const endpoints = {
   LIST_MODULES: `${BASE_URL}/listModules`,
   GET_TOKEN: `${BASE_URL}/getToken`,
   VERIFY_TOKEN: `${BASE_URL}/verifyToken`,
+  VERIFY_API_KEY: `${BASE_URL}/verifyApiKey`,
   SET_STORAGE_OBJECT: `${BASE_URL}/setStorageObject`,
 };
