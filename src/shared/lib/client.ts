@@ -1,10 +1,12 @@
 import axios from 'axios';
-import { endpoints } from '../shared';
+import { WebSocket } from 'ws';
+import { endpoints } from '../index';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from './busMessage';
+import { Blob } from 'node:buffer';
 import { getToken } from './sessionToken';
 
 type ListenerCallback = (event?: any) => void;

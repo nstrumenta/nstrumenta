@@ -6,8 +6,8 @@ import fs from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
-import { asyncSpawn, createLogger, getNstDir } from '../cli/utils';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { asyncSpawn, createLogger, getNstDir } from '../../cli/utils';
+import { DEFAULT_HOST_PORT, endpoints } from '..';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,

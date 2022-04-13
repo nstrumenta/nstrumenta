@@ -11,9 +11,9 @@ import {
   getNstDir,
   inquiryForSelectModule,
   resolveApiKey,
-} from '../cli/utils';
-import { getCurrentContext } from '../lib/context';
-import { endpoints } from '../shared';
+} from '../utils';
+import { getCurrentContext } from '../../shared/lib/context';
+import { endpoints } from '../../shared';
 
 const blue = (text: string) => {
   return text;
