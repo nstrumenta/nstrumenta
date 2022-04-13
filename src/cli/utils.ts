@@ -172,7 +172,7 @@ export const getFolderFromStorage = async (
       };
       const downloadUrlData = { path: storagePath };
       const downloadUrlResponse = await axios.post(
-        endpoints.GET_DOWNLOAD_URL,
+        endpoints.GET_PROJECT_DOWNLOAD_URL,
         downloadUrlData,
         downloadUrlConfig
       );
@@ -266,7 +266,7 @@ export const getModuleFromStorage = async ({
         .sort(semver.compare)
         .reverse()
     );
-    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
+    path = `modules/${serverModules[name].find((module) => module.version === chosenVersion)?.path}`;
   }
 
   if (!path) {
