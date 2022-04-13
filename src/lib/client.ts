@@ -1,11 +1,11 @@
+import axios from 'axios';
+import { endpoints } from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from './busMessage';
 import { getToken } from './sessionToken';
-import axios from 'axios';
-import { endpoints } from '../shared';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -36,12 +36,14 @@ export class NstrumentaClient {
   private subscriptions: Map<string, SubscriptionCallback[]>;
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
+  private datalogs: Map<string, Array<string>>;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
   constructor() {
     this.listeners = new Map();
     this.subscriptions = new Map();
+    this.datalogs = new Map();
     this.messageBuffer = [];
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
@@ -177,8 +179,25 @@ export class NstrumentaClient {
     }
   }
 
-  public async uploadData(data: Blob, meta: Record<string, string>) {
-    const path = `data/${Date.now()}`;
+  public addStringToDataLog(logName: string, entry: string) {
+    const log = this.datalogs.get(logName);
+    if (!log) {
+      console.log(`starting new log: ${logName}`);
+      this.datalogs.set(logName, [entry]);
+    } else {
+      log.push(entry);
+    }
+  }
+
+  public finishDataLog(logName: string) {
+    const log = this.datalogs.get(logName);
+    if (log) {
+      this.uploadData(`data/${logName}`, new Blob(log), {});
+      this.datalogs.delete(logName);
+    }
+  }
+
+  public async uploadData(path: string, data: Blob, meta: Record<string, string>) {
     const size = data.size;
     let url;
     const response = await axios.post(
