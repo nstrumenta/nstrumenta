@@ -7,8 +7,8 @@ import {
   getCurrentContext,
   setContext,
   setContextProperty,
-} from '../lib/context';
-import { schema } from '../schema';
+} from '../../shared/lib/context';
+import { schema } from '../../shared/schema';
 
 const red = (text: string) => {
   return text;

@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
-import { createLogger, inquiryForSelectModule, resolveApiKey } from '../cli/utils';
-import { NstrumentaServer } from '../lib/server';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { createLogger, inquiryForSelectModule, resolveApiKey } from '../utils';
+import { NstrumentaServer } from '../../nodejs/server';
+import { DEFAULT_HOST_PORT, endpoints } from '../../shared';
 
 const logger = createLogger();
 

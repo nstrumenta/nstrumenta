@@ -4,8 +4,8 @@ import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from '../lib/busMessage';
-import { getCurrentContext } from '../lib/context';
+} from '../../shared/lib/busMessage';
+import { getCurrentContext } from '../../shared/lib/context';
 
 const red = (text: string) => {
   return text;

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { DEFAULT_HOST_PORT } from '../shared';
+import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
   List as ListAgents,
   RunModule,
   SetAction as SetAgentAction,
   Start,
-} from '../commands/agent';
-import { AddKey, ListProjects, SetProject } from '../commands/auth';
+} from './commands/agent';
+import { AddKey, ListProjects, SetProject } from './commands/auth';
 import {
   AddContext,
   ClearConfig,
@@ -16,12 +18,10 @@ import {
   ListContexts,
   SetContext,
   SetContextProperty,
-} from '../commands/contexts';
-import { ListMachines } from '../commands/machines';
-import { Publish, Run } from '../commands/module';
-import { Send, Subscribe } from '../commands/pubsub';
-import { initContexts } from '../lib/context';
-import { DEFAULT_HOST_PORT } from '../shared';
+} from './commands/contexts';
+import { ListMachines } from './commands/machines';
+import { Publish, Run } from './commands/module';
+import { Send, Subscribe } from './commands/pubsub';
 
 const version = require('../../package.json').version;
 
@@ -104,7 +104,7 @@ agentCommand
   .option('-t,--tag [tag]', 'tag in lieu of agentId')
   .description('run module on an active agent')
   .action(RunModule);
-  
+
 agentCommand.command('list').description('list running agents in project').action(ListAgents);
 agentCommand
   .command('set-action')

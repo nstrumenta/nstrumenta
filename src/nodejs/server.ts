@@ -12,9 +12,9 @@ import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from './busMessage';
+} from '../shared/lib/busMessage';
 import { NstrumentaClient } from './client';
-import { verifyToken } from './sessionToken';
+import { verifyToken } from '../shared/lib/sessionToken';
 
 const logger = createLogger();
 
