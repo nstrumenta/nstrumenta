@@ -22,8 +22,7 @@
     "build": "npm run build:agent-admin-page ; npm run build:cli ; npm run build:nodejs ; npm run build:browser ;",
     "dev": "nodemon -- agent start --tag=local",
     "format": "prettier -w ./",
-    "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:tag": "nodemon -- agent start --tag=morty"
+    "release": "npm run clean; npm run build ; standard-version --release-as patch"
   },
   "repository": {
     "type": "git",
