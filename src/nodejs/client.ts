@@ -1,7 +1,4 @@
-import axios from 'axios';
-import { Blob } from 'node:buffer';
 import { WebSocket } from 'ws';
-import { endpoints } from '../shared/index';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
