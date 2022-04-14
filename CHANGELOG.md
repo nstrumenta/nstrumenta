@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/nstrumenta/nstrumenta/compare/v2.1.18...v3.0.0) (2022-04-14)
+
+
+### Features
+
+* **agent-admin:** uses local version ([c374a19](https://github.com/nstrumenta/nstrumenta/commit/c374a19dcb63ec29d7238872f360563509bdd8be))
+* **agentAdminPanel:** removes ejs dependency ([#87](https://github.com/nstrumenta/nstrumenta/issues/87)) ([de0484e](https://github.com/nstrumenta/nstrumenta/commit/de0484ef575f719d2e861bd8012576901eee7d2f))
+* **nodejs:** splits nodejs and browser clients ([#84](https://github.com/nstrumenta/nstrumenta/issues/84)) ([653ba3e](https://github.com/nstrumenta/nstrumenta/commit/653ba3ed4bdd3e07333fd3a6b0877e8d8ac6cc31))
+
 ### [2.1.18](https://github.com/nstrumenta/nstrumenta/compare/v2.1.17...v2.1.18) (2022-04-12)
 
 
