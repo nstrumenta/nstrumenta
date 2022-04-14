@@ -11,10 +11,10 @@ import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject,
+  makeBusMessageFromJsonObject
 } from '../shared/lib/busMessage';
-import { NstrumentaClient } from './client';
 import { verifyToken } from '../shared/lib/sessionToken';
+import { NstrumentaClient } from './client';
 
 const logger = createLogger();
 
@@ -209,7 +209,6 @@ export class NstrumentaServer {
 
     const app = express();
     app.set('views', __dirname + '/../..');
-    app.set('view engine', 'ejs');
 
     const server = require('http').Server(app);
 
@@ -247,13 +246,6 @@ export class NstrumentaServer {
     //serves public subfolder from execution path for serving sandboxes
     const sandboxPath = `${await getNstDir(this.cwd)}/modules`;
     app.use('/modules', express.static(sandboxPath), serveIndex(sandboxPath, { icons: false }));
-
-    app.get('/', (req, res) => {
-      res.render('index', {
-        apiKey,
-        wsUrl: `ws://localhost:${port}`,
-      });
-    });
 
     app.get('/health', function (req, res) {
       res.status(200).send('OK');
