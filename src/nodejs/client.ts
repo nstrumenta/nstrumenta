@@ -1,11 +1,13 @@
+import axios from 'axios';
+import { Blob } from 'node:buffer';
+import { WebSocket } from 'ws';
+import { endpoints } from '../shared/index';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from './busMessage';
-import { getToken } from './sessionToken';
-import axios from 'axios';
-import { endpoints } from '../shared';
+} from '../shared/lib/busMessage';
+import { getToken } from '../shared/lib/sessionToken';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -36,12 +38,14 @@ export class NstrumentaClient {
   private subscriptions: Map<string, SubscriptionCallback[]>;
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
+  private datalogs: Map<string, Array<string>>;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
   constructor() {
     this.listeners = new Map();
     this.subscriptions = new Map();
+    this.datalogs = new Map();
     this.messageBuffer = [];
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
@@ -175,37 +179,5 @@ export class NstrumentaClient {
     if (listenerCallbacks) {
       listenerCallbacks.push(callback);
     }
-  }
-
-  public async uploadData(data: Blob, meta: Record<string, string>) {
-    const path = `data/${Date.now()}`;
-    const size = data.size;
-    let url;
-    const response = await axios.post(
-      endpoints.GET_UPLOAD_URL,
-      {
-        path,
-        size,
-        meta,
-      },
-      {
-        headers: {
-          contentType: 'application/json',
-          'x-api-key': this.apiKey,
-        },
-      }
-    );
-
-    url = response.data?.uploadUrl;
-
-    await axios.put(url, data, {
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      headers: {
-        contentType: 'application/octet-stream',
-        contentLength: `${size}`,
-        contentLengthRange: `bytes 0-${size - 1}/${size}`,
-      },
-    });
   }
 }

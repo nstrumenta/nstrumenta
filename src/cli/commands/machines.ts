@@ -1,7 +1,7 @@
 import axios from 'axios';
-import { resolveApiKey } from '../cli/utils';
-import { getContextProperty } from '../lib/context';
-import { endpoints } from '../shared';
+import { resolveApiKey } from '../utils';
+import { getContextProperty } from '../../shared/lib/context';
+import { endpoints } from '../../shared';
 
 export interface Machine {
   name: string;
@@ -17,7 +17,7 @@ export interface Machine {
 export const GetMachines = async () => {
   const projectId = getContextProperty('projectId');
   if (!projectId) {
-    return console.log("No project set - use 'auth set [[projectId]]' first");
+    throw new Error("No project set - use 'auth set [[projectId]]' first");
   }
 
   const apiKey = resolveApiKey();

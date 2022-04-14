@@ -1,5 +1,5 @@
-import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import axios from 'axios';
+import { endpoints } from '../index';
 
 export const getToken = async (apiKey: string): Promise<string> => {
   const headers = {

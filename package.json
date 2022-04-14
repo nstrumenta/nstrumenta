@@ -2,8 +2,8 @@
   "name": "nstrumenta",
   "version": "2.1.18",
   "description": "cli tool for nstrumenta",
-  "main": "dist/lib/index.js",
-  "types": "dist/lib/index.d.ts",
+  "main": "dist/nodejs/nodejs/index.js",
+  "types": "dist/nodejs/nodejs/index.d.ts",
   "bin": {
     "nstrumenta": "dist/cli/index.js",
     "nst": "dist/cli/index.js"
@@ -16,12 +16,13 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
-    "build:lib": "tsc --project ./",
-    "build": "npm run build:agent-admin-page ; npm run build:lib",
+    "build:cli": "tsc --project ./src/cli",
+    "build:nodejs": "tsc --project ./src/nodejs",
+    "build:browser": "tsc --project ./src/browser",
+    "build": "npm run build:agent-admin-page ; npm run build:cli ; npm run build:nodejs ; npm run build:browser ;",
     "dev": "nodemon -- agent start --tag=local",
     "format": "prettier -w ./",
-    "release": "npm run clean; npm run build ; standard-version --release-as patch",
-    "nst:tag": "nodemon -- agent start --tag=morty"
+    "release": "npm run clean; npm run build ; standard-version --release-as patch"
   },
   "repository": {
     "type": "git",
@@ -52,7 +53,7 @@
     "@google-cloud/storage": "^5.16.1",
     "@types/bytebuffer": "^5.0.42",
     "@types/tar": "^6.1.1",
-    "axios": "^0.21.4",
+    "axios": "^0.26.1",
     "bytebuffer": "^5.0.1",
     "commander": "^8.1.0",
     "conf": "^10.0.3",

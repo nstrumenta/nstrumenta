@@ -1,22 +1,20 @@
 import axios from 'axios';
 import { spawn } from 'child_process';
-import { ModuleExtended, Module } from 'commands/module';
 import Conf from 'conf';
 import { createWriteStream } from 'fs';
-import { Duplex, Writable } from 'stream';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
+import inspector from 'node:inspector';
 import nodePath from 'node:path';
 import path from 'path';
 import semver from 'semver';
-import { pipeline as streamPipeline } from 'stream';
+import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
-import { promisify } from 'util';
-import { getCurrentContext } from '../lib/context';
-import { schema } from '../schema';
+import util, { promisify } from 'util';
 import { endpoints } from '../shared';
-import util from 'util';
-import inspector from 'node:inspector';
+import { getCurrentContext } from '../shared/lib/context';
+import { schema } from '../shared/schema';
+import { Module, ModuleExtended } from './commands/module';
 
 const pipeline = promisify(streamPipeline);
 
@@ -172,7 +170,7 @@ export const getFolderFromStorage = async (
       };
       const downloadUrlData = { path: storagePath };
       const downloadUrlResponse = await axios.post(
-        endpoints.GET_DOWNLOAD_URL,
+        endpoints.GET_PROJECT_DOWNLOAD_URL,
         downloadUrlData,
         downloadUrlConfig
       );
@@ -266,7 +264,9 @@ export const getModuleFromStorage = async ({
         .sort(semver.compare)
         .reverse()
     );
-    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
+    path = `modules/${
+      serverModules[name].find((module) => module.version === chosenVersion)?.path
+    }`;
   }
 
   if (!path) {

@@ -1,5 +1,5 @@
 import Conf from 'conf';
-import { SetProject } from '../commands/auth';
+import { SetProject } from '../../cli/commands/auth';
 import { schema } from '../schema';
 
 const green = (text: string) => {
