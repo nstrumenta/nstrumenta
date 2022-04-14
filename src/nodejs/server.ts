@@ -6,15 +6,15 @@ import fs from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
-import { asyncSpawn, createLogger, getNstDir } from '../../cli/utils';
-import { DEFAULT_HOST_PORT, endpoints } from '..';
+import { asyncSpawn, createLogger, getNstDir } from '../cli/utils';
+import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from './busMessage';
+} from '../shared/lib/busMessage';
 import { NstrumentaClient } from './client';
-import { verifyToken } from './sessionToken';
+import { verifyToken } from '../shared/lib/sessionToken';
 
 const logger = createLogger();
 

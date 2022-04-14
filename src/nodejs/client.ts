@@ -1,13 +1,13 @@
 import axios from 'axios';
+import { Blob } from 'node:buffer';
 import { WebSocket } from 'ws';
-import { endpoints } from '../index';
+import { endpoints } from '../shared/index';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
-} from './busMessage';
-import { Blob } from 'node:buffer';
-import { getToken } from './sessionToken';
+} from '../shared/lib/busMessage';
+import { getToken } from '../shared/lib/sessionToken';
 
 type ListenerCallback = (event?: any) => void;
 type SubscriptionCallback = (message?: any) => void;
@@ -194,7 +194,10 @@ export class NstrumentaClient {
   public finishDataLog(logName: string) {
     const log = this.datalogs.get(logName);
     if (log) {
-      this.uploadData(`data/${logName}`, new Blob(log), {});
+      const blob = new Blob([log.join('\n')]);
+      console.log({ blob });
+
+      this.uploadData(`data/${logName}`, blob, {});
       this.datalogs.delete(logName);
     }
   }
@@ -212,18 +215,20 @@ export class NstrumentaClient {
       {
         headers: {
           contentType: 'application/json',
-          'x-api-key': this.apiKey,
+          'x-api-key': this.apiKey!,
         },
       }
     );
 
     url = response.data?.uploadUrl;
 
+    console.log({ data });
+
     await axios.put(url, data, {
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
       headers: {
-        contentType: 'application/octet-stream',
+        contentType: 'text/plain',
         contentLength: `${size}`,
         contentLengthRange: `bytes 0-${size - 1}/${size}`,
       },

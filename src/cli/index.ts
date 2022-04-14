@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
+import { DEFAULT_HOST_PORT } from '../shared';
+import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
   List as ListAgents,
@@ -20,8 +22,6 @@ import {
 import { ListMachines } from './commands/machines';
 import { Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import { initContexts } from '../shared/lib/context';
-import { DEFAULT_HOST_PORT } from '../shared';
 
 const version = require('../../package.json').version;
 
