@@ -19,7 +19,7 @@
     "build:cli": "tsc --project ./src/cli",
     "build:nodejs": "tsc --project ./src/nodejs",
     "build:browser": "tsc --project ./src/browser",
-    "build": "npm run build:agent-admin-page ; npm run build:cli ; npm run build:nodejs ; npm run build:browser ;",
+    "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
     "dev": "nodemon -- agent start --tag=local",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch"
