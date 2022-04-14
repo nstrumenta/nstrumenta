@@ -1,6 +1,6 @@
-import { NstrumentaClient } from 'nstrumenta';
+import { NstrumentaBrowserClient } from 'nstrumenta/dist/browser/client';
 
-const client = new NstrumentaClient();
+const client = new NstrumentaBrowserClient();
 
 const init = async () => {
   if (document.readyState !== 'complete') {
