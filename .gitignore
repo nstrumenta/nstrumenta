@@ -76,3 +76,5 @@ dist
 
 # exclude locally downloaded modules in dev
 .nst
+
+.vscode
