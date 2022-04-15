@@ -237,7 +237,7 @@ export const getModuleFromStorage = async ({
     if (!serverModules[name]) {
       serverModules[name] = [];
     }
-    serverModules[name].push({ path, version });
+    serverModules[name].push({ path: `modules/${path}`, version });
   });
 
   try {
@@ -264,9 +264,7 @@ export const getModuleFromStorage = async ({
         .sort(semver.compare)
         .reverse()
     );
-    path = `modules/${
-      serverModules[name].find((module) => module.version === chosenVersion)?.path
-    }`;
+    path = `${serverModules[name].find((module) => module.version === chosenVersion)?.path}`;
   }
 
   if (!path) {
