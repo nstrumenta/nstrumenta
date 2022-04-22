@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.2](https://github.com/nstrumenta/nstrumenta/compare/v3.0.0...v3.0.2) (2022-04-22)
+
+
+### Features
+
+* **client:** adds verify option to browser client connect (default true), to allow attempting to connect without a needing a token ([1c6c2c3](https://github.com/nstrumenta/nstrumenta/commit/1c6c2c3043ee5f9136ef4e15a8b3edc0ed47696e))
+* **client:** adds verify option to client connect (default true), to allow attempting to connect to ws server without token ([61b4ac8](https://github.com/nstrumenta/nstrumenta/commit/61b4ac8819c838aa60e76e9ab382974238cfea30))
+* **server:** adds allowUnverifiedConnection option to server connect (default false), to allow clients to connect without a token, therefore not needing internet connectivity ([46ec87a](https://github.com/nstrumenta/nstrumenta/commit/46ec87a1f9a6b9d4ddc4ec88aa8aff34d41c34e0))
+* **server:** if allowUnverifiedConnection is true, don't skip the first bus message; update messaging to alert that connection is unverified ([6d3839b](https://github.com/nstrumenta/nstrumenta/commit/6d3839b61dd8ede61bbdec6a56ab4f161d2a0c5f))
+
+
+### Bug Fixes
+
+* **agent-admin-page:** fixes deps ([b8f9458](https://github.com/nstrumenta/nstrumenta/commit/b8f9458d82e39d5c732997196604acb286fea94c))
+* **client:** if verify=false, send a dummy first message to initialize connection ([aec8739](https://github.com/nstrumenta/nstrumenta/commit/aec8739ab0cdc02e8b0e218c49d48a1961f5b8df))
+* **modules:** fixes modules prefix ([#88](https://github.com/nstrumenta/nstrumenta/issues/88)) ([3b6bf88](https://github.com/nstrumenta/nstrumenta/commit/3b6bf88fed36c9db79bd98c3f46d298fd16b669d))
+
 ### [3.0.1](https://github.com/nstrumenta/nstrumenta/compare/v3.0.0...v3.0.1) (2022-04-15)
 
 
