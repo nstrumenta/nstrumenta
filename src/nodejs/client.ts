@@ -72,18 +72,18 @@ export class NstrumentaClient {
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
+    let token = '';
     if (verify) {
-      let token: string;
       try {
         token = await getToken(nstrumentaApiKey);
       } catch (error) {
         console.error((error as Error).message);
         throw error;
       }
-      this.ws.addEventListener('open', () => {
-        this.ws?.send(token);
-      });
     }
+    this.ws.addEventListener('open', () => {
+      this.ws?.send(token);
+    });
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
