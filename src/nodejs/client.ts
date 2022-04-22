@@ -71,7 +71,7 @@ export class NstrumentaClient {
     }
 
     this.apiKey = nstrumentaApiKey;
-    this.ws = nodeWebSocket ? new nodeWebSocket(wsUrl) : new WebSocket(wsUrl);
+    this.ws = new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
