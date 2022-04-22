@@ -14,6 +14,7 @@ export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocket;
   wsUrl: string;
   apiKey?: string;
+  verify?: boolean;
 }
 
 export enum ClientStatus {
@@ -51,7 +52,7 @@ export class NstrumentaBrowserClient {
   }
 
   public async connect(connectOptions: ConnectOptions) {
-    const { nodeWebSocket, wsUrl, apiKey } = connectOptions;
+    const { nodeWebSocket, wsUrl, apiKey, verify = true } = connectOptions;
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
@@ -63,23 +64,27 @@ export class NstrumentaBrowserClient {
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
       );
     }
-    let token: string;
-    try {
-      token = await getToken(nstrumentaApiKey);
-    } catch (error) {
-      console.error((error as Error).message);
-      return;
-    }
 
     this.apiKey = nstrumentaApiKey;
     this.ws = new WebSocket(wsUrl);
     this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
-      this.ws?.send(token);
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
+    if (verify) {
+      let token: string;
+      try {
+        token = await getToken(nstrumentaApiKey);
+      } catch (error) {
+        console.error((error as Error).message);
+        throw error;
+      }
+      this.ws.addEventListener('open', () => {
+        this.ws?.send(token);
+      });
+    }
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
