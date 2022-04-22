@@ -283,14 +283,18 @@ export class NstrumentaServer {
       logger.log('a user connected - clientsCount = ' + wss.clients.size);
       ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
-          logger.log('attempting to verify token');
-          // first message from a connected websocket must be a token
           const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
           try {
             if (!this.allowUnverifiedConnection) {
+              logger.log('attempting to verify token');
+              // first message from a connected websocket must be a token
               await verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey });
             }
-            logger.log('verified', clientId, req.socket.remoteAddress);
+            logger.log(
+              this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
+              clientId,
+              req.socket.remoteAddress
+            );
             verifiedConnections.set(clientId, ws);
             ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
             this.listeners
@@ -309,7 +313,9 @@ export class NstrumentaServer {
             ws.close();
           }
 
-          return;
+          if (!this.allowUnverifiedConnection) {
+            return;
+          }
         }
         logger.log('busmessage', busMessage.toString('utf8'));
 
