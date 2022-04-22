@@ -11,7 +11,7 @@ import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject
+  makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
@@ -61,12 +61,14 @@ export interface NstrumentaServerOptions {
   debug?: boolean;
   noBackplane?: boolean;
   allowCrossProjectApiKey?: boolean;
+  allowUnverifiedConnection?: boolean;
 }
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
   allowCrossProjectApiKey: boolean;
+  allowUnverifiedConnection: boolean;
   listeners: Map<string, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
@@ -83,6 +85,8 @@ export class NstrumentaServer {
     }
     this.allowCrossProjectApiKey =
       options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
+    this.allowUnverifiedConnection =
+      options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
   }
 
   public addListener(
@@ -282,24 +286,29 @@ export class NstrumentaServer {
           logger.log('attempting to verify token');
           // first message from a connected websocket must be a token
           const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
-          verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey })
-            .then(() => {
-              logger.log('verified', clientId, req.socket.remoteAddress);
-              verifiedConnections.set(clientId, ws);
-              ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
-              this.listeners
-                .get('clients')
-                ?.forEach((callback) => callback([...verifiedConnections.keys()]));
-            })
-            .catch((err) => {
-              logger.log('unable to verify client, invalid token, closing connection', err.message);
-              ws.send(
-                makeBusMessageFromJsonObject('_nstrumenta', {
-                  error: 'unable to verify client, invalid token, closing connection',
-                })
-              );
-              ws.close();
-            });
+          try {
+            if (!this.allowUnverifiedConnection) {
+              await verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey });
+            }
+            logger.log('verified', clientId, req.socket.remoteAddress);
+            verifiedConnections.set(clientId, ws);
+            ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
+            this.listeners
+              .get('clients')
+              ?.forEach((callback) => callback([...verifiedConnections.keys()]));
+          } catch (error) {
+            logger.log(
+              'unable to verify client, invalid token, closing connection',
+              (error as Error).message
+            );
+            ws.send(
+              makeBusMessageFromJsonObject('_nstrumenta', {
+                error: 'unable to verify client, invalid token, closing connection',
+              })
+            );
+            ws.close();
+          }
+
           return;
         }
         logger.log('busmessage', busMessage.toString('utf8'));
