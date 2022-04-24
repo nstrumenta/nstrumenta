@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.4](https://github.com/nstrumenta/nstrumenta/compare/v3.0.3...v3.0.4) (2022-04-24)
+
+
+### Bug Fixes
+
+* **nodejs-client:** fixes verify ; adds shutdown to enable cleaner tests ([#93](https://github.com/nstrumenta/nstrumenta/issues/93)) ([63c9326](https://github.com/nstrumenta/nstrumenta/commit/63c93262287469b709731166d2b28e76c5f24adc))
+
 ### [3.0.3](https://github.com/nstrumenta/nstrumenta/compare/v3.0.2...v3.0.3) (2022-04-24)
 
 
