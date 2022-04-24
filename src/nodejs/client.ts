@@ -72,7 +72,7 @@ export class NstrumentaClient {
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
-    let token = '';
+    let token = 'unverified';
     if (verify) {
       try {
         token = await getToken(nstrumentaApiKey);
