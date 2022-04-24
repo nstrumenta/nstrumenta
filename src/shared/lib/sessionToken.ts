@@ -7,6 +7,8 @@ export const getToken = async (apiKey: string): Promise<string> => {
     'Content-Type': 'application/json',
   };
   try {
+    // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
+    await process.nextTick(() => {});
     const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
       headers,
     });
