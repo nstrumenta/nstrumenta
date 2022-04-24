@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.3](https://github.com/nstrumenta/nstrumenta/compare/v3.0.2...v3.0.3) (2022-04-24)
+
+
+### Bug Fixes
+
+* **nodejs-client:** fixes initial token message in nodejs client ([#92](https://github.com/nstrumenta/nstrumenta/issues/92)) ([f52c0e0](https://github.com/nstrumenta/nstrumenta/commit/f52c0e0083b0a613e66ee0f14eefbe1e16ab256f))
+
 ### [3.0.2](https://github.com/nstrumenta/nstrumenta/compare/v3.0.0...v3.0.2) (2022-04-22)
 
 
