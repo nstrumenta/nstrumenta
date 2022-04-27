@@ -49,6 +49,7 @@ export class NstrumentaClient {
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
   }
+
   public async shutdown() {
     this.listeners.clear();
     this.subscriptions.clear();
@@ -187,5 +188,15 @@ export class NstrumentaClient {
     if (listenerCallbacks) {
       listenerCallbacks.push(callback);
     }
+  }
+
+  public async startLog(channels: string[]) {
+    return this.send('_nstrumenta', { command: 'startLog', channels });
+  }
+
+  public async finishLog() {
+    console.log('finish log');
+    await this.send('_nstrumenta', { command: 'finishLog' });
+    process.exit(0);
   }
 }
