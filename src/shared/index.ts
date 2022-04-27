@@ -24,3 +24,5 @@ export const endpoints = {
   VERIFY_API_KEY: `${BASE_URL}/verifyApiKey`,
   SET_STORAGE_OBJECT: `${BASE_URL}/setStorageObject`,
 };
+
+export * from './lib';

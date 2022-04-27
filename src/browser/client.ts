@@ -1,5 +1,13 @@
 import axios from 'axios';
-import { endpoints } from '../shared/index';
+import {
+  ClientStatus,
+  Connection,
+  ConnectOptions,
+  endpoints,
+  ListenerCallback,
+  NstrumentaClientBase,
+  SubscriptionCallback,
+} from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
@@ -7,30 +15,7 @@ import {
 } from '../shared/lib/busMessage';
 import { getToken } from '../shared/lib/sessionToken';
 
-type ListenerCallback = (event?: any) => void;
-type SubscriptionCallback = (message?: any) => void;
-
-export interface ConnectOptions {
-  nodeWebSocket?: new (url: string) => WebSocket;
-  wsUrl: string;
-  apiKey?: string;
-  verify?: boolean;
-}
-
-export enum ClientStatus {
-  INIT = 0,
-  READY = 1,
-  CONNECTED = 2,
-  DISCONNECTED = 3,
-  CONNECTING = 4,
-  ERROR = 5,
-}
-
-export interface Connection {
-  status: ClientStatus;
-}
-
-export class NstrumentaBrowserClient {
+export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
@@ -51,8 +36,17 @@ export class NstrumentaBrowserClient {
     this.connect = this.connect.bind(this);
   }
 
+  async shutdown(): Promise<void> {
+    this.listeners.clear();
+    this.subscriptions.clear();
+    this.datalogs.clear();
+    this.messageBuffer = [];
+    this.ws?.close();
+    return;
+  }
+
   public async connect(connectOptions: ConnectOptions) {
-    const { nodeWebSocket, wsUrl, apiKey, verify = true } = connectOptions;
+    const { wsUrl, apiKey, verify = true } = connectOptions;
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
@@ -101,7 +95,7 @@ export class NstrumentaBrowserClient {
         this.reconnection.attempts += 1;
       }
     });
-    this.ws.addEventListener('error', (err) => {
+    this.ws.addEventListener('error', () => {
       console.log(`Error in websocket connection`);
       this.connection.status = ClientStatus.ERROR;
     });
@@ -115,7 +109,7 @@ export class NstrumentaBrowserClient {
         console.log(`Couldn't deserialize message ${JSON.stringify(error)}`);
         return;
       }
-      const { channel, busMessageType, contents } = deserializedMessage;
+      const { channel, contents } = deserializedMessage;
       if (channel == '_nstrumenta') {
         const { verified, error } = contents;
         if (error) {
@@ -156,7 +150,7 @@ export class NstrumentaBrowserClient {
   }
 
   private bufferedSend(message: ArrayBufferLike) {
-    //buffers messages sent before initial connection
+    // buffers messages sent before initial connection
     if (!(this.ws?.readyState === this.ws?.OPEN)) {
       console.log('adding to messageBuffer, length:', this.messageBuffer.length);
       this.messageBuffer.push(message);
@@ -232,6 +226,7 @@ export class NstrumentaBrowserClient {
       },
     });
   }
+
   public async startLog(name: string, channels: string[]) {
     // TODO error on slashes ?
     this.send('_nstrumenta', { command: 'startLog', name, channels });
