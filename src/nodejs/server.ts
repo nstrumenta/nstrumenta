@@ -75,7 +75,7 @@ export class NstrumentaServer {
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
   logStreams?: Writable[];
-  activeChannelLogs: Map<string, { path: string; stream: WritableStream }> = new Map();
+  dataLogs: Map<string, { path: string; channels: string[]; stream: WritableStream }> = new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -247,7 +247,6 @@ export class NstrumentaServer {
 
     // serves from npm path for admin page
     app.use(express.static(__dirname + '/../../public'));
-    app.use('/logs', express.static('logs'), serveIndex('logs', { icons: false }));
 
     //serves public subfolder from execution path for serving sandboxes
     const sandboxPath = `${await getNstDir(this.cwd)}/modules`;
@@ -333,19 +332,19 @@ export class NstrumentaServer {
         // commands from clients
 
         if (contents?.command == 'startLog') {
-          const { channels } = contents;
+          const { channels, name } = contents;
           logger.log(`[nstrumenta] <startLog> ${channels}`);
           try {
-            await this.startLog(channels);
+            await this.startLog(name, channels);
           } catch (error) {
             logger.log((error as Error).message);
           }
         }
 
         if (contents?.command == 'finishLog') {
-          const { channels } = contents;
+          const { name } = contents;
           logger.log(`[nstrumenta] <finishLog>`);
-          await this.finishLog();
+          await this.finishLog(name);
         }
 
         if (contents?.command == 'subscribe') {
@@ -368,7 +367,11 @@ export class NstrumentaServer {
           }
         });
 
-        this.activeChannelLogs.get(channel)?.stream.write(busMessage);
+        this.dataLogs.forEach((dataLog) => {
+          if (dataLog.channels.includes(channel)) {
+            dataLog.stream.write(busMessage);
+          }
+        });
 
         if (debug) {
           logger.log(channel, busMessageType, contents);
@@ -400,46 +403,40 @@ export class NstrumentaServer {
     });
   }
 
-  public async startLog(channels: string[]) {
-    if (this.activeChannelLogs.size > 0) {
-      throw new Error(`logs already running ${this.activeChannelLogs.keys().toString()}`);
-    }
-
+  public async startLog(name: string, channels: string[]) {
     logger.log('[server] <startLog>', { channels });
-    for (const channel of channels) {
-      const cwdNstDir = `${this.cwd}/.nst`;
-      const dir = `${cwdNstDir}/logs`;
-      await fs.mkdir(dir, { recursive: true });
-      const path = `${dir}/${channel}-${Date.now()}.txt`;
-      logger.log({ channel, cwdNstDir, path });
-      const stream = await createWriteStream(path);
-      this.activeChannelLogs.set(channel, { path, stream });
-    }
-    return this.activeChannelLogs;
+    const nstDir = await getNstDir(this.cwd);
+    const dir = `${nstDir}/data`;
+    await fs.mkdir(dir, { recursive: true });
+    const path = `${dir}/${name}`;
+    logger.log({ name, cwdNstDir: nstDir, path });
+    const stream = await createWriteStream(path);
+    this.dataLogs.set(name, { path, channels, stream });
+
+    return this.dataLogs;
   }
 
-  public async finishLog() {
-    logger.log(`<finishLog>: ${this.activeChannelLogs.keys()}`);
-    for (const [channel, { path, stream }] of this.activeChannelLogs) {
-      logger.log(`Ending stream: ${path}`);
-      stream.end();
-      this.activeChannelLogs.delete(channel);
+  public async finishLog(name: string) {
+    logger.log(`<finishLog>: ${name}`);
+    if (!this.dataLogs.has(name)) throw new Error('log name not found');
+    const { path, stream } = this.dataLogs.get(name)!;
+    logger.log(`Ending stream: ${path}`);
+    stream.end();
+    this.dataLogs.delete(name);
 
-      try {
-        const remoteFileLocation = await this.uploadLog(path);
-        logger.log(`uploaded ${remoteFileLocation}`);
-      } catch (error) {
-        logger.log(`Problem uploading log: ${path}`);
-      }
+    try {
+      const remoteFileLocation = await this.uploadLog(path);
+      logger.log(`uploaded ${remoteFileLocation}`);
+    } catch (error) {
+      logger.log(`Problem uploading log: ${path}`);
     }
   }
 
   public async uploadLog(path: string) {
     let url = '';
     let size = 0;
-    const cwdNstDir = `${this.cwd}/.nst`;
-    const { agentId } = this.status;
-    const remoteFileLocation = `agents/${agentId}/${path.replace(`${cwdNstDir}/`, '')}`;
+    const nstDir = await getNstDir(this.cwd);
+    const remoteFileLocation = `/${path.replace(`${nstDir}/`, '')}`;
 
     try {
       const apiKey = resolveApiKey();

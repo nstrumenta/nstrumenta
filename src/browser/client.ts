@@ -232,4 +232,13 @@ export class NstrumentaBrowserClient {
       },
     });
   }
+  public async startLog(name: string, channels: string[]) {
+    // TODO error on slashes ?
+    this.send('_nstrumenta', { command: 'startLog', name, channels });
+  }
+
+  public async finishLog(name: string) {
+    console.log('finish log');
+    this.send('_nstrumenta', { command: 'finishLog', name });
+  }
 }

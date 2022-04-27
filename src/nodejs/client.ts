@@ -190,13 +190,13 @@ export class NstrumentaClient {
     }
   }
 
-  public async startLog(channels: string[]) {
-    return this.send('_nstrumenta', { command: 'startLog', channels });
+  public async startLog(name: string, channels: string[]) {
+    // TODO error on slashes ?
+    this.send('_nstrumenta', { command: 'startLog', name, channels });
   }
 
-  public async finishLog() {
+  public async finishLog(name: string) {
     console.log('finish log');
-    await this.send('_nstrumenta', { command: 'finishLog' });
-    process.exit(0);
+    this.send('_nstrumenta', { command: 'finishLog', name });
   }
 }
