@@ -447,6 +447,9 @@ export class NstrumentaServer {
         {
           path: remoteFileLocation,
           size,
+          meta: {
+            createdAt: Date.now(),
+          },
         },
         {
           headers: {

@@ -196,7 +196,6 @@ export class NstrumentaClient {
   }
 
   public async finishLog(name: string) {
-    console.log('finish log');
     this.send('_nstrumenta', { command: 'finishLog', name });
   }
 }
