@@ -318,7 +318,6 @@ export class NstrumentaServer {
             return;
           }
         }
-        logger.log('[busmessage]', busMessage.toString('utf8'));
 
         let deserializedMessage;
         try {
