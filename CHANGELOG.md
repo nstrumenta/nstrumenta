@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.5](https://github.com/nstrumenta/nstrumenta/compare/v3.0.4...v3.0.5) (2022-04-28)
+
+
+### Features
+
+* **logs:** agent start/finish log, with file upload to storage on fi… ([#96](https://github.com/nstrumenta/nstrumenta/issues/96)) ([799dad6](https://github.com/nstrumenta/nstrumenta/commit/799dad6bce07e9611a44981291c78489be7eba69))
+
+
+### Bug Fixes
+
+* **server:** removes log on every bus message ([#98](https://github.com/nstrumenta/nstrumenta/issues/98)) ([3c4e498](https://github.com/nstrumenta/nstrumenta/commit/3c4e498df8ffabec634dd1b378357554984ba48c))
+
 ### [3.0.4](https://github.com/nstrumenta/nstrumenta/compare/v3.0.3...v3.0.4) (2022-04-24)
 
 
