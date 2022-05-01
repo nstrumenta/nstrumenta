@@ -66,13 +66,6 @@ export class NstrumentaBrowserClient {
     }
 
     this.apiKey = nstrumentaApiKey;
-    this.ws = new WebSocket(wsUrl);
-    this.ws.binaryType = 'arraybuffer';
-    this.ws.addEventListener('open', async () => {
-      console.log(`client websocket opened <${wsUrl}>`);
-      this.reconnection.attempts = 0;
-      this.connection.status = ClientStatus.CONNECTING;
-    });
     let token = 'unverified';
     if (verify) {
       try {
@@ -82,8 +75,13 @@ export class NstrumentaBrowserClient {
         throw error;
       }
     }
-    this.ws.addEventListener('open', () => {
-      this.ws?.send(token);
+    this.ws = new WebSocket(wsUrl);
+    this.ws.binaryType = 'arraybuffer';
+    this.ws.addEventListener('open', async () => {
+      console.log(`client websocket opened <${wsUrl}>`);
+      if (verify) this.ws?.send(token);
+      this.reconnection.attempts = 0;
+      this.connection.status = ClientStatus.CONNECTING;
     });
     this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
