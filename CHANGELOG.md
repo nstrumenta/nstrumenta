@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.6](https://github.com/nstrumenta/nstrumenta/compare/v3.0.5...v3.0.6) (2022-05-01)
+
+
+### Bug Fixes
+
+* **browser-client:** fixes verify ; creates ws after getToken ([#99](https://github.com/nstrumenta/nstrumenta/issues/99)) ([ad934e8](https://github.com/nstrumenta/nstrumenta/commit/ad934e8bfd89d5886095e64f3eaf906122a49f79))
+
 ### [3.0.5](https://github.com/nstrumenta/nstrumenta/compare/v3.0.4...v3.0.5) (2022-04-28)
 
 
