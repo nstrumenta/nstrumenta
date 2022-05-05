@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.7](https://github.com/nstrumenta/nstrumenta/compare/v3.0.6...v3.0.7) (2022-05-05)
+
+
+### Bug Fixes
+
+* **clients:** fixes firing "open" event on ws connection ([#100](https://github.com/nstrumenta/nstrumenta/issues/100)) ([2c8dad4](https://github.com/nstrumenta/nstrumenta/commit/2c8dad4715092a3914d9ca3e13b49813fc966c8b))
+
 ### [3.0.6](https://github.com/nstrumenta/nstrumenta/compare/v3.0.5...v3.0.6) (2022-05-01)
 
 
