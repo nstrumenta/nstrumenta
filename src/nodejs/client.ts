@@ -87,7 +87,7 @@ export class NstrumentaClient {
     this.ws.binaryType = 'arraybuffer';
     this.ws.addEventListener('open', async () => {
       console.log(`client websocket opened <${wsUrl}>`);
-      if (verify) this.ws?.send(token);
+      this.ws?.send(token);
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
