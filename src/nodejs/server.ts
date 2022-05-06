@@ -405,9 +405,8 @@ export class NstrumentaServer {
   public async startLog(name: string, channels: string[]) {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
-    const dir = `${nstDir}/data`;
-    await fs.mkdir(dir, { recursive: true });
-    const path = `${dir}/${name}`;
+    const path = `${nstDir}/data`;
+    await fs.mkdir(path, { recursive: true });
     logger.log({ name, cwdNstDir: nstDir, path });
     const stream = await createWriteStream(path);
     this.dataLogs.set(name, { path, channels, stream });
@@ -424,31 +423,28 @@ export class NstrumentaServer {
     this.dataLogs.delete(name);
 
     try {
-      const remoteFileLocation = await this.uploadLog(path);
+      const remoteFileLocation = await this.uploadLog({ path, name });
       logger.log(`uploaded ${remoteFileLocation}`);
     } catch (error) {
       logger.log(`Problem uploading log: ${path}`);
     }
   }
 
-  public async uploadLog(path: string) {
+  // @ts-ignore
+  public async uploadLog({ path, name }: { path: string; name: string }) {
     let url = '';
     let size = 0;
-    const nstDir = await getNstDir(this.cwd);
-    const remoteFileLocation = `/${path.replace(`${nstDir}/`, '')}`;
 
     try {
       const apiKey = resolveApiKey();
       size = (await fs.stat(path)).size;
 
+      //
       const response = await axios.post(
         endpoints.GET_UPLOAD_URL,
         {
-          path: remoteFileLocation,
+          name,
           size,
-          meta: {
-            createdAt: Date.now(),
-          },
         },
         {
           headers: {
@@ -481,6 +477,7 @@ export class NstrumentaServer {
         contentLengthRange: `bytes 0-${size - 1}/${size}`,
       },
     });
-    return remoteFileLocation;
+
+    return name;
   }
 }
