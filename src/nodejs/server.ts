@@ -405,8 +405,8 @@ export class NstrumentaServer {
   public async startLog(name: string, channels: string[]) {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
-    const path = `${nstDir}/data`;
-    await fs.mkdir(path, { recursive: true });
+    await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
+    const path = `${nstDir}/data/${name}-${Date.now()}`;
     logger.log({ name, cwdNstDir: nstDir, path });
     const stream = await createWriteStream(path);
     this.dataLogs.set(name, { path, channels, stream });
@@ -439,21 +439,19 @@ export class NstrumentaServer {
       const apiKey = resolveApiKey();
       size = (await fs.stat(path)).size;
 
-      //
-      const response = await axios.post(
-        endpoints.GET_UPLOAD_URL,
-        {
-          name,
-          size,
+      const data = {
+        name,
+        size,
+        meta: { name, size, path },
+      };
+      const response = await axios.post(endpoints.GET_UPLOAD_DATA_URL, data, {
+        headers: {
+          contentType: 'application/json',
+          'x-api-key': apiKey,
         },
-        {
-          headers: {
-            contentType: 'application/json',
-            'x-api-key': apiKey,
-          },
-        }
-      );
+      });
 
+      console.log('getUploadDataUrl req data:', response.request.data);
       url = response.data?.uploadUrl;
     } catch (e) {
       let message = `can't upload ${path}`;
