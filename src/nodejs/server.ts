@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
+import { randomUUID } from 'crypto';
 import express from 'express';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
@@ -9,6 +10,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import {
+  BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
@@ -75,7 +77,8 @@ export class NstrumentaServer {
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
   logStreams?: Writable[];
-  dataLogs: Map<string, { path: string; channels: string[]; stream: WritableStream }> = new Map();
+  dataLogs: Map<string, { localPath: string; channels: string[]; stream: WritableStream }> =
+    new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -368,7 +371,11 @@ export class NstrumentaServer {
 
         this.dataLogs.forEach((dataLog) => {
           if (dataLog.channels.includes(channel)) {
-            dataLog.stream.write(busMessage);
+            if (busMessageType === BusMessageType.Json) {
+              dataLog.stream.write(JSON.stringify({ channel, contents }) + '\n');
+            } else {
+              dataLog.stream.write(busMessage);
+            }
           }
         });
 
@@ -406,10 +413,10 @@ export class NstrumentaServer {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
     await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
-    const path = `${nstDir}/data/${name}-${Date.now()}`;
-    logger.log({ name, cwdNstDir: nstDir, path });
-    const stream = await createWriteStream(path);
-    this.dataLogs.set(name, { path, channels, stream });
+    const localPath = `${nstDir}/data/${randomUUID()}`;
+    logger.log({ name, cwdNstDir: nstDir, localPath });
+    const stream = await createWriteStream(localPath);
+    this.dataLogs.set(name, { localPath, channels, stream });
 
     return this.dataLogs;
   }
@@ -417,32 +424,31 @@ export class NstrumentaServer {
   public async finishLog(name: string) {
     logger.log(`<finishLog>: ${name}`);
     if (!this.dataLogs.has(name)) throw new Error('log name not found');
-    const { path, stream } = this.dataLogs.get(name)!;
-    logger.log(`Ending stream: ${path}`);
+    const { localPath, stream } = this.dataLogs.get(name)!;
+    logger.log(`Ending stream: ${localPath}`);
     stream.end();
     this.dataLogs.delete(name);
 
     try {
-      const remoteFileLocation = await this.uploadLog({ path, name });
+      const remoteFileLocation = await this.uploadLog({ localPath, name });
       logger.log(`uploaded ${remoteFileLocation}`);
     } catch (error) {
-      logger.log(`Problem uploading log: ${path}`);
+      logger.log(`Problem uploading log: ${name}, localPath: ${localPath}`);
     }
   }
 
   // @ts-ignore
-  public async uploadLog({ path, name }: { path: string; name: string }) {
+  public async uploadLog({ localPath, name }: { localPath: string; name: string }) {
     let url = '';
     let size = 0;
 
     try {
       const apiKey = resolveApiKey();
-      size = (await fs.stat(path)).size;
+      size = (await fs.stat(localPath)).size;
 
       const data = {
         name,
         size,
-        meta: { name, size, path },
       };
       const response = await axios.post(endpoints.GET_UPLOAD_DATA_URL, data, {
         headers: {
@@ -451,10 +457,10 @@ export class NstrumentaServer {
         },
       });
 
-      console.log('getUploadDataUrl req data:', response.request.data);
+      console.log('getUploadDataUrl response.data:', response.data);
       url = response.data?.uploadUrl;
     } catch (e) {
-      let message = `can't upload ${path}`;
+      let message = `can't upload ${localPath}`;
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
           logger.log(`Conflict: file exists`);
@@ -464,7 +470,7 @@ export class NstrumentaServer {
       throw new Error(message);
     }
 
-    const fileBuffer = await fs.readFile(path);
+    const fileBuffer = await fs.readFile(localPath);
 
     // start the request, return promise
     await axios.put(url, fileBuffer, {
