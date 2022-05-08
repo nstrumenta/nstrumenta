@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.8](https://github.com/nstrumenta/nstrumenta/compare/v3.0.7...v3.0.8) (2022-05-08)
+
+
+### Bug Fixes
+
+* **datalogs:** changes upload logs to getUploadDataUrl, with updated … ([#101](https://github.com/nstrumenta/nstrumenta/issues/101)) ([f525183](https://github.com/nstrumenta/nstrumenta/commit/f52518374aaca918dac5471979f018a6b3752a86)), closes [#102](https://github.com/nstrumenta/nstrumenta/issues/102)
+
 ### [3.0.7](https://github.com/nstrumenta/nstrumenta/compare/v3.0.6...v3.0.7) (2022-05-05)
 
 
