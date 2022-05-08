@@ -10,6 +10,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import {
+  BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
@@ -370,7 +371,11 @@ export class NstrumentaServer {
 
         this.dataLogs.forEach((dataLog) => {
           if (dataLog.channels.includes(channel)) {
-            dataLog.stream.write(busMessage);
+            if (busMessageType === BusMessageType.Json) {
+              dataLog.stream.write(JSON.stringify({ channel, contents }) + '\n');
+            } else {
+              dataLog.stream.write(busMessage);
+            }
           }
         });
 
@@ -452,7 +457,7 @@ export class NstrumentaServer {
         },
       });
 
-    console.log('getUploadDataUrl response.data:', response.data);
+      console.log('getUploadDataUrl response.data:', response.data);
       url = response.data?.uploadUrl;
     } catch (e) {
       let message = `can't upload ${localPath}`;
