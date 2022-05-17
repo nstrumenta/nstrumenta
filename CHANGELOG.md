@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.9](https://github.com/nstrumenta/nstrumenta/compare/v3.0.8...v3.0.9) (2022-05-17)
+
+
+### Features
+
+* **admin-utils:** adds (hidden) call to generic admin-utils api function ([#104](https://github.com/nstrumenta/nstrumenta/issues/104)) ([dcee053](https://github.com/nstrumenta/nstrumenta/commit/dcee053eae85b4b648cc6ca95a27e593cd9fac4a))
+
 ### [3.0.8](https://github.com/nstrumenta/nstrumenta/compare/v3.0.7...v3.0.8) (2022-05-08)
 
 
