@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { DEFAULT_HOST_PORT } from '../shared';
+import { DEFAULT_HOST_PORT, endpoints } from '../shared';
 import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
@@ -22,6 +22,8 @@ import {
 import { ListMachines } from './commands/machines';
 import { Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
+import axios from 'axios';
+import { resolveApiKey } from './utils';
 
 const version = require('../../package.json').version;
 
@@ -139,6 +141,35 @@ contextCommand
 if (process.env.NODE_ENV === 'development') {
   contextCommand.command('clear').description('** clear all local config!! **').action(ClearConfig);
 }
+
+const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
+adminUtilsCommand
+  .description(
+    "Reference already stored modules in db (newly published modules shouldn't need this)"
+  )
+  .argument('[name]', '')
+  .action(function Admin(name: string) {
+    if (!name) {
+      console.log('util name required');
+      return;
+    }
+    const apiKey = resolveApiKey();
+    console.log(`to call ${endpoints.ADMIN_UTILS}: apiKey: ${apiKey}: ${name}`);
+    axios
+      .post(
+        endpoints.ADMIN_UTILS,
+        { name },
+        {
+          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+        }
+      )
+      .then((result) => {
+        console.log(JSON.stringify(result.data));
+      })
+      .catch(() => {
+        console.log('something went wrong');
+      });
+  });
 
 program.parse(process.argv);
 

@@ -9,6 +9,7 @@ if (process.env.NSTRUMENTA_LOCAL) {
 }
 
 export const endpoints = {
+  ADMIN_UTILS: `${BASE_URL}/adminUtils`,
   GET_MACHINES: `${BASE_URL}/getMachines`,
   GET_UPLOAD_URL: `${BASE_URL}/getUploadUrl`,
   GET_UPLOAD_DATA_URL: `${BASE_URL}/getUploadDataUrl`,
