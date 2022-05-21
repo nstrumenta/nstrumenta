@@ -345,7 +345,7 @@ export const publishModule = async (module: ModuleExtended) => {
 export interface ModuleListOptions {
   verbose?: boolean;
 }
-export const List = async (_, options: ModuleListOptions) => {
+export const List = async (_: unknown, options: ModuleListOptions) => {
   const { verbose = false } = options;
   const apiKey = resolveApiKey();
 
