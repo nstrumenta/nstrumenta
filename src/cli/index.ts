@@ -20,7 +20,7 @@ import {
   SetContextProperty,
 } from './commands/contexts';
 import { ListMachines } from './commands/machines';
-import { Publish, Run } from './commands/module';
+import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
@@ -88,6 +88,12 @@ moduleCommand
   .option('--non-interactive', 'requires module name, uses latest version from server')
   .description('run module')
   .action(Run);
+
+moduleCommand
+  .command('list')
+  .option('-v, --verbose', 'verbose listing including versions, metadata')
+  .description('list modules published in current project')
+  .action(List);
 
 const agentCommand = program.command('agent');
 agentCommand
