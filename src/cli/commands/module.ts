@@ -341,3 +341,24 @@ export const publishModule = async (module: ModuleExtended) => {
   });
   return remoteFileLocation;
 };
+
+export interface ModuleListOptions {
+  verbose?: boolean;
+}
+export const List = async (_, options: ModuleListOptions) => {
+  const { verbose = false } = options;
+  const apiKey = resolveApiKey();
+
+  try {
+    let response = await axios(endpoints.v2.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    });
+
+    const modules = verbose ? response.data : response.data.map(({ id }: { id: string }) => id);
+
+    console.log(modules);
+  } catch (error) {
+    console.log(`Problem fetching data ${(error as Error).name}`);
+  }
+};
