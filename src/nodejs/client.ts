@@ -5,31 +5,16 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { getToken } from '../shared/lib/sessionToken';
+import {
+  ClientStatus,
+  Connection,
+  ConnectOptions,
+  ListenerCallback,
+  NstrumentaClientBase,
+  SubscriptionCallback,
+} from '../shared';
 
-type ListenerCallback = (event?: any) => void;
-type SubscriptionCallback = (message?: any) => void;
-
-export interface ConnectOptions {
-  nodeWebSocket?: new (url: string) => WebSocket;
-  wsUrl: string;
-  apiKey?: string;
-  verify?: boolean;
-}
-
-export enum ClientStatus {
-  INIT = 0,
-  READY = 1,
-  CONNECTED = 2,
-  DISCONNECTED = 3,
-  CONNECTING = 4,
-  ERROR = 5,
-}
-
-export interface Connection {
-  status: ClientStatus;
-}
-
-export class NstrumentaClient {
+export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey?: string;
   private listeners: Map<string, Array<ListenerCallback>>;
