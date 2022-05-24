@@ -29,3 +29,5 @@ export const endpoints = {
     LIST_MODULES: `${BASE_URL}/listModulesV2`,
   },
 };
+
+export * from './lib';
