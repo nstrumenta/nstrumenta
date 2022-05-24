@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {
+  BaseStorageService,
   ClientStatus,
   Connection,
   ConnectOptions,
@@ -64,6 +65,8 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     if (verify) {
       try {
         token = await getToken(nstrumentaApiKey);
+        // initiate the storage service for file upload/download
+        this.storage = new StorageService({ apiKey: this.apiKey });
       } catch (error) {
         console.error((error as Error).message);
         throw error;
@@ -233,5 +236,31 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   public async finishLog(name: string) {
     console.log('finish log');
     this.send('_nstrumenta', { command: 'finishLog', name });
+  }
+
+  storage?: StorageService;
+}
+
+class StorageService implements BaseStorageService {
+  private apiKey: string;
+
+  constructor(props: { apiKey: string }) {
+    this.apiKey = props.apiKey;
+  }
+  async download(type: string, path: string): Promise<unknown> {
+    console.log('placeholder');
+    return;
+  }
+  async list(type: string): Promise<string[]> {
+    let response = await axios(endpoints.v2.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+    });
+
+    return response.data.map(({ id }: { id: string }) => id);
+  }
+  async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
+    console.log('placeholder');
+    return;
   }
 }
