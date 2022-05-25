@@ -27,6 +27,7 @@ export const endpoints = {
   SET_STORAGE_OBJECT: `${BASE_URL}/setStorageObject`,
   v2: {
     LIST_MODULES: `${BASE_URL}/listModulesV2`,
+    LIST_STORAGE_OBJECTS: `${BASE_URL}/listStorageObjects`,
   },
 };
 

@@ -252,12 +252,13 @@ class StorageService implements BaseStorageService {
     return;
   }
   async list(type: string): Promise<string[]> {
-    let response = await axios(endpoints.v2.LIST_MODULES, {
+    let response = await axios(endpoints.v2.LIST_STORAGE_OBJECTS, {
       method: 'post',
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      data: { type },
     });
 
-    return response.data.map(({ id }: { id: string }) => id);
+    return response.data;
   }
   async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
     console.log('placeholder');
