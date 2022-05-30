@@ -198,9 +198,15 @@ class StorageService implements BaseStorageService {
   constructor(props: { apiKey: string }) {
     this.apiKey = props.apiKey;
   }
-  async download(type: string, id: string): Promise<unknown> {
-    console.log('placeholder');
-    return;
+  async download(path: string): Promise<unknown> {
+    const response = await axios(endpoints.GET_PROJECT_DOWNLOAD_URL, {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      data: { path },
+    });
+    console.log('REQ:', response.request);
+
+    return response;
   }
   async list(type: string): Promise<string[]> {
     let response = await axios(endpoints.v2.LIST_STORAGE_OBJECTS, {
