@@ -204,12 +204,11 @@ class StorageService implements BaseStorageService {
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
       data: { path },
     });
-    console.log('REQ:', response.request);
 
     return response;
   }
   async list(type: string): Promise<string[]> {
-    let response = await axios(endpoints.v2.LIST_STORAGE_OBJECTS, {
+    let response = await axios(endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
       data: { type },
