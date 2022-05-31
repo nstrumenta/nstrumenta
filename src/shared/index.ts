@@ -31,4 +31,9 @@ export const endpoints = {
   },
 };
 
+export enum ObjectTypes {
+  DATA = 'data',
+  MODULES = 'modules',
+}
+
 export * from './lib';
