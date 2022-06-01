@@ -25,9 +25,15 @@ export const endpoints = {
   VERIFY_TOKEN: `${BASE_URL}/verifyToken`,
   VERIFY_API_KEY: `${BASE_URL}/verifyApiKey`,
   SET_STORAGE_OBJECT: `${BASE_URL}/setStorageObject`,
+  LIST_STORAGE_OBJECTS: `${BASE_URL}/listStorageObjects`,
   v2: {
     LIST_MODULES: `${BASE_URL}/listModulesV2`,
   },
 };
+
+export enum ObjectTypes {
+  DATA = 'data',
+  MODULES = 'modules',
+}
 
 export * from './lib';
