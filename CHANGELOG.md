@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.10](https://github.com/nstrumenta/nstrumenta/compare/v3.0.9...v3.0.10) (2022-06-01)
+
+
+### Features
+
+* **cli:** adds module list command ([1fd291c](https://github.com/nstrumenta/nstrumenta/commit/1fd291c7f989abb2ea405a3d35d6bf5d9b96a9a8))
+* **client:** adds storage service to browser and node clients for re… ([#107](https://github.com/nstrumenta/nstrumenta/issues/107)) ([f66616d](https://github.com/nstrumenta/nstrumenta/commit/f66616db89a4d51191f4bd4e495d539eaf42ea83))
+
 ### [3.0.9](https://github.com/nstrumenta/nstrumenta/compare/v3.0.8...v3.0.9) (2022-05-17)
 
 
