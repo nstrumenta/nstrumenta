@@ -41,4 +41,15 @@ export interface NstrumentaClientBase {
   startLog(name: string, channels: string[]): Promise<void>;
 
   finishLog(name: string): Promise<void>;
+
+  storage?: BaseStorageService;
+}
+
+export interface BaseStorageService {
+  list(type: string): Promise<string[]>;
+
+  upload(type: string, path: string, file: Buffer | Blob): Promise<void>;
+
+  download<T>(type: string, path: string): Promise<T>;
+  download(type: string, path: string): Promise<unknown>;
 }

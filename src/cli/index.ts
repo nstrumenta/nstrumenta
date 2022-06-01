@@ -22,6 +22,7 @@ import {
 import { ListMachines } from './commands/machines';
 import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
+import { List as ListData } from './commands/data';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
 
@@ -147,6 +148,9 @@ contextCommand
 if (process.env.NODE_ENV === 'development') {
   contextCommand.command('clear').description('** clear all local config!! **').action(ClearConfig);
 }
+
+const dataCommand = program.command('data');
+dataCommand.command('list').description('List data files within project').action(ListData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand
