@@ -150,7 +150,11 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const dataCommand = program.command('data');
-dataCommand.command('list').description('List data files within project').action(ListData);
+dataCommand
+  .command('list')
+  .option('-v, --verbose', 'include metadata')
+  .description('List data files within project')
+  .action(ListData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand
