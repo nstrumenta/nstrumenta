@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.11](https://github.com/nstrumenta/nstrumenta/compare/v3.0.10...v3.0.11) (2022-06-02)
+
+
+### Features
+
+* **cli:** returns entire body of listStorageObjects response, including id, which is now the file path relative to the project, and metadata ([#110](https://github.com/nstrumenta/nstrumenta/issues/110)) ([4a1c5ae](https://github.com/nstrumenta/nstrumenta/commit/4a1c5aed7a9ce15809d4bfd0bd32dcb4279c30bf))
+
 ### [3.0.10](https://github.com/nstrumenta/nstrumenta/compare/v3.0.9...v3.0.10) (2022-06-01)
 
 
