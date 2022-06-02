@@ -22,7 +22,7 @@ export const List = async (_: unknown, options: DataListOptions) => {
     };
     let response = await axios(endpoints.LIST_STORAGE_OBJECTS, config);
 
-    const data = response.data.map(({ id }: { id: string }) => id);
+    const data = response.data;
 
     console.log(data);
   } catch (error) {
