@@ -210,6 +210,9 @@ export class NstrumentaServer {
             nodeWebSocket: WebSocket as any,
             wsUrl: backplaneUrl,
           });
+
+          const storageStream = getStorageUploadIntervalStream(agentId);
+          this.logStreams.push(storageStream);
         }
       } catch (err) {
         logger.warn('failed to get backplaneUrl');
@@ -485,3 +488,74 @@ export class NstrumentaServer {
     return name;
   }
 }
+
+const getStorageUploadIntervalStream = (agentId: string) => {
+  const stream = new Writable();
+  const buffer = { current: '' };
+  stream._write = (chunk, enc, next) => {
+    console.log('***', chunk);
+    buffer.current += chunk;
+    next();
+  };
+
+  const LOG_UPLOAD_INTERVAL = 15000;
+  const interval = setInterval(async () => {
+    if (buffer.current === '') return;
+
+    const string = buffer.current;
+    buffer.current = '';
+    const logName = Date.now().toString();
+    const path = `agents/${agentId}/logs/${logName}`;
+    const response = await uploadString(path, string);
+    console.log(`agent ${agentId} upload log [${logName}] response:`, response.status);
+  }, LOG_UPLOAD_INTERVAL);
+
+  stream.on('close', () => {
+    console.log('*** END of LOG STREAM STORAGE! ***');
+    clearInterval(interval);
+  });
+
+  return stream;
+};
+
+const uploadString = async (path: string, str: string) => {
+  let url = '';
+  const buffer = Buffer.from(str);
+  let size = buffer.length;
+
+  try {
+    const apiKey = resolveApiKey();
+
+    const data = {
+      path,
+      size,
+    };
+    const response = await axios.post(endpoints.GET_UPLOAD_URL, data, {
+      headers: {
+        contentType: 'application/json',
+        'x-api-key': apiKey,
+      },
+    });
+
+    url = response.data?.uploadUrl;
+  } catch (e) {
+    let message = `can't upload`;
+    if (axios.isAxiosError(e)) {
+      if (e.response?.status === 409) {
+        logger.log(`Conflict: file exists`);
+      }
+      message = `${message} [${(e as Error).message}]`;
+    }
+    throw new Error(message);
+  }
+
+  // start the request, return promise
+  return await axios.put(url, buffer, {
+    maxBodyLength: Infinity,
+    maxContentLength: Infinity,
+    headers: {
+      contentLength: `${size}`,
+      contentLengthRange: `bytes 0-${size - 1}/${size}`,
+    },
+  });
+};
