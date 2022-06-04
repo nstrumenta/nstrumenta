@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.12](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.12) (2022-06-04)
+
+
+### Bug Fixes
+
+* **server:** removes log on every message ([#113](https://github.com/nstrumenta/nstrumenta/issues/113)) ([8d42fd9](https://github.com/nstrumenta/nstrumenta/commit/8d42fd96b9437c5091f69936f669f59f8f8770c5))
+
 ### [3.0.11](https://github.com/nstrumenta/nstrumenta/compare/v3.0.10...v3.0.11) (2022-06-02)
 
 
