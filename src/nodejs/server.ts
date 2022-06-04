@@ -364,7 +364,6 @@ export class NstrumentaServer {
 
         subscriptions.forEach((subChannels, subWebSocket) => {
           if (subChannels.has(channel)) {
-            logger.log(`sending to subscription ${channel}`);
             subWebSocket.send(busMessage);
           }
         });
