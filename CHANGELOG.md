@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.13](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.13) (2022-06-06)
+
+
+### Features
+
+* **server:** adds agent log uploads to storage on interval ([#112](https://github.com/nstrumenta/nstrumenta/issues/112)) ([ccd90ea](https://github.com/nstrumenta/nstrumenta/commit/ccd90ea4637d34d2c87b5b42cda2d914bd3e6b8e))
+
+
+### Bug Fixes
+
+* **server:** removes log on every message ([#113](https://github.com/nstrumenta/nstrumenta/issues/113)) ([8d42fd9](https://github.com/nstrumenta/nstrumenta/commit/8d42fd96b9437c5091f69936f669f59f8f8770c5))
+
 ### [3.0.12](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.12) (2022-06-04)
 
 
