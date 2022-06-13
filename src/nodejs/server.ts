@@ -303,7 +303,7 @@ export class NstrumentaServer {
               req.socket.remoteAddress
             );
             verifiedConnections.set(clientId, ws);
-            ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true }));
+            ws.send(makeBusMessageFromJsonObject('_nstrumenta', { verified: true, clientId }));
             this.listeners
               .get('clients')
               ?.forEach((callback) => callback([...verifiedConnections.keys()]));
