@@ -15,6 +15,7 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { getToken } from '../shared/lib/sessionToken';
+import { WebSocket } from 'ws';
 
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -24,6 +25,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
+  public clientId: string | null = null;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
@@ -112,7 +114,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
       }
       const { channel, contents } = deserializedMessage;
       if (channel == '_nstrumenta') {
-        const { verified, error } = contents;
+        const { verified, error, clientId } = contents;
         if (error) {
           console.error(error);
         }
@@ -124,6 +126,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
             this.ws?.send(message);
           });
           this.messageBuffer = [];
+          this.clientId = clientId;
         }
       }
 
