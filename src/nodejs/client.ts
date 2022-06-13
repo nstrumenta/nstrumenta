@@ -25,6 +25,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
   private reconnection = { hasVerified: false, attempts: 0 };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
+  public clientId: string | null = null;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
@@ -113,7 +114,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
       }
       const { channel, busMessageType, contents } = deserializedMessage;
       if (channel == '_nstrumenta') {
-        const { verified, error } = contents;
+        const { verified, error, clientId } = contents;
         if (error) {
           console.error(error);
         }
@@ -125,6 +126,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
             this.ws?.send(message);
           });
           this.messageBuffer = [];
+          this.clientId = clientId;
         }
       }
 
