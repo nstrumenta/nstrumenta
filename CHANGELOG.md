@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.14](https://github.com/nstrumenta/nstrumenta/compare/v3.0.13...v3.0.14) (2022-06-13)
+
+
+### Features
+
+* **client/server:** sends client the assigned clientId on very token ([#115](https://github.com/nstrumenta/nstrumenta/issues/115)) ([02d1083](https://github.com/nstrumenta/nstrumenta/commit/02d1083b18f75bd068416abcb2a43930570a56e2))
+
 ### [3.0.13](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.13) (2022-06-06)
 
 
