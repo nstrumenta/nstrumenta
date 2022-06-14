@@ -22,7 +22,7 @@ import {
 import { ListMachines } from './commands/machines';
 import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import { List as ListData } from './commands/data';
+import { List as ListData, Upload as UploadData } from './commands/data';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
 
@@ -155,6 +155,11 @@ dataCommand
   .option('-v, --verbose', 'include metadata')
   .description('List data files within project')
   .action(ListData);
+dataCommand
+  .command('upload')
+  .argument('[filename]', 'filename to upload')
+  .description('Upload file to project data')
+  .action(UploadData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand
