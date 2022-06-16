@@ -16,6 +16,7 @@ import {
   SubscriptionCallback,
 } from '../shared';
 import axios from 'axios';
+import { resolveApiKey } from '../cli/utils';
 
 export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -54,9 +55,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
-    // intentionally not using cli resolveApiKey here since we
-    // support browser clients that don't import the Conf lib
-    this.apiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
+    this.apiKey = resolveApiKey();
     if (!this.apiKey) {
       throw new Error(
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
