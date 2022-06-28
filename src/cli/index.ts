@@ -22,7 +22,7 @@ import {
 import { ListMachines } from './commands/machines';
 import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import { List as ListData, Upload as UploadData, Get as GetData } from './commands/data';
+import { List as ListData, Upload as UploadData, Query as QueryData } from './commands/data';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
 
@@ -164,13 +164,13 @@ dataCommand
 dataCommand
   .command('get')
   .option('-t, --tag <tag...>')
-  .option('-f, --filename <filename>')
-  .option('-b, --before <before>', 'before timestamp; defaults to most recent')
-  .option('-a, --after <after>', 'after timestamp; defaults to most recent')
+  .option('-f, --file <file...>')
+  .option('-b, --before <before>', 'before timestamp')
+  .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
-  .argument('<filename...>', 'filename to upload')
+  // .argument('<filename...>', 'filenames to filter by')
   .description('Get data by name, tags, or date range')
-  .action(GetData);
+  .action(QueryData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand

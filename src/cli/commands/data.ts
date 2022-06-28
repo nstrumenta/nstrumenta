@@ -139,32 +139,36 @@ export const uploadFile = async ({
 
 export interface DataGetOptions {
   tag?: string[];
-  before?: number;
-  after?: number;
-  limit?: number;
+  before?: string;
+  after?: string;
+  limit?: string;
+  file?: string[];
 }
 
-export const Get = async (
-  filenames: string[],
-  { tag: tags, before, after, limit = 1 }: DataGetOptions
-) => {
+export const Query = async ({
+  file: filenames,
+  tag: tags,
+  before: b,
+  after: a,
+  limit: l = '1',
+}: DataGetOptions) => {
   const apiKey = resolveApiKey();
+  const before = b ? parseInt(b, 10) : undefined;
+  const after = a ? parseInt(a, 10) : undefined;
+  const limit = l ? parseInt(l, 10) : undefined;
 
-  const data = {};
+  const data = { tags, before, after, limit, filenames };
+
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey },
-    data: {
-      tags,
-      limit,
-      filenames,
-    },
+    data,
   };
 
   try {
-    const results = await axios(endpoints.QUERY_DATA, config);
+    const response = await axios(endpoints.QUERY_DATA, config);
 
-    console.log(results);
+    console.log(JSON.stringify(response.data, undefined, 2));
   } catch (error) {
     console.log('Something went wrong');
   }
