@@ -157,6 +157,7 @@ dataCommand
   .action(ListData);
 dataCommand
   .command('upload')
+  .option('-t, --tags <tags...>')
   .argument('<filename...>', 'filename to upload')
   .description('Upload file to project data')
   .action(UploadData);
