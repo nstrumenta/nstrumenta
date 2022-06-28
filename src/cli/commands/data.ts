@@ -136,3 +136,35 @@ export const uploadFile = async ({
 
   return { filename, remoteFilePath, dataId };
 };
+
+export interface DataGetOptions {
+  tag?: string[];
+  before?: number;
+  after?: number;
+  limit?: number;
+}
+export const Get = async (
+  filenames: string[],
+  { tag: tags, before, after, limit = 1 }: DataGetOptions
+) => {
+  const apiKey = resolveApiKey();
+
+  const data = {};
+  const config: AxiosRequestConfig = {
+    method: 'post',
+    headers: { 'x-api-key': apiKey },
+    data: {
+      tags,
+      limit,
+      filenames,
+    },
+  };
+
+  try {
+    const results = await axios(endpoints.QUERY_DATA, config);
+
+    console.log(results);
+  } catch (error) {
+    console.log('Something went wrong');
+  }
+};

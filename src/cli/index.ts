@@ -22,7 +22,7 @@ import {
 import { ListMachines } from './commands/machines';
 import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import { List as ListData, Upload as UploadData } from './commands/data';
+import { List as ListData, Upload as UploadData, Get as GetData } from './commands/data';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
 
@@ -161,6 +161,16 @@ dataCommand
   .argument('<filename...>', 'filename to upload')
   .description('Upload file to project data')
   .action(UploadData);
+dataCommand
+  .command('get')
+  .option('-t, --tag <tag...>')
+  .option('-f, --filename <filename>')
+  .option('-b, --before <before>', 'before timestamp; defaults to most recent')
+  .option('-a, --after <after>', 'after timestamp; defaults to most recent')
+  .option('-l, --limit <limit>', 'default to 1')
+  .argument('<filename...>', 'filename to upload')
+  .description('Get data by name, tags, or date range')
+  .action(GetData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand
