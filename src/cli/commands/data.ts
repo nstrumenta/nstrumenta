@@ -143,6 +143,7 @@ export interface DataGetOptions {
   after?: number;
   limit?: number;
 }
+
 export const Get = async (
   filenames: string[],
   { tag: tags, before, after, limit = 1 }: DataGetOptions
