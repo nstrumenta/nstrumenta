@@ -26,13 +26,13 @@ export const List = async (_: unknown, options: DataListOptions) => {
 
     const data = response.data;
 
-    console.log(data);
+    console.log(JSON.stringify(data, undefined, 2));
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
 };
 
-export const Upload = async (filenames: string[]) => {
+export const Upload = async (filenames: string[], { tags }: { tags?: string[] }) => {
   if (filenames.length === 0) {
     return console.log('Please specify at least one filename');
   }
@@ -51,14 +51,36 @@ export const Upload = async (filenames: string[]) => {
 
   let dataId: string | undefined;
   let results = [];
+
+  // First upload the files to a new dataId
   for (const filename of filenames) {
-    console.log('upload', { filename, dataId });
-    const response = await uploadFile({ filename, dataId });
-    results.push(response);
-    if (!dataId) {
-      dataId = response.dataId;
+    try {
+      console.log('upload', { filename, dataId, tags });
+      const response = await uploadFile({ filename, dataId, tags });
+      results.push(response);
+      if (!dataId) {
+        dataId = response.dataId;
+      }
+    } catch (error) {
+      return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
     }
   }
+
+  // Now that we have the dataId, update this bucket's metadata
+  try {
+    const apiKey = resolveApiKey();
+
+    const metadata = { tags, filenames };
+    await axios(endpoints.SET_DATA_METADATA, {
+      method: 'post',
+      data: { metadata, merge: true, dataId },
+      headers: { 'x-api-key': apiKey },
+    });
+  } catch (error) {
+    return console.log(`Problem setting metadata, transaction failed: ${(error as Error).message}`);
+  }
+
+  return console.log({ dataId });
 };
 
 interface UploadResponse {
@@ -70,9 +92,11 @@ interface UploadResponse {
 export const uploadFile = async ({
   filename,
   dataId,
+  tags,
 }: {
   filename: string;
   dataId?: string;
+  tags?: string[];
 }): Promise<UploadResponse> => {
   const apiKey = resolveApiKey();
   let fileBuffer;
@@ -86,7 +110,11 @@ export const uploadFile = async ({
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey },
-    data: { name: filename, size, dataId },
+    data: {
+      name: filename,
+      size,
+      dataId,
+    },
   };
   let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
 
