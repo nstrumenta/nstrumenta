@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.15](https://github.com/nstrumenta/nstrumenta/compare/v3.0.14...v3.0.15) (2022-06-29)
+
+
+### Features
+
+* **cli:** adds data > query ([#118](https://github.com/nstrumenta/nstrumenta/issues/118)) ([aea176d](https://github.com/nstrumenta/nstrumenta/commit/aea176dafe4b7bfa97c13c27f28b97af4050c976))
+* **cli:** adds tags option to data upload command ([a83325b](https://github.com/nstrumenta/nstrumenta/commit/a83325b7b996e1bfd0769f6f2ccf2829653d225b))
+* **client-split:** Uses resolveApiKey in node client ([#114](https://github.com/nstrumenta/nstrumenta/issues/114)) ([81f3dad](https://github.com/nstrumenta/nstrumenta/commit/81f3dad3cf99e69ba1cad30fbde283e26798451b))
+* **cli:** updates data upload to set metadata on dataId bucket to facilitate filtering ([443bf45](https://github.com/nstrumenta/nstrumenta/commit/443bf45cc6440a47a96d6e1f01d0192ab2710c4a))
+* **cli:** upload file to project data ([#116](https://github.com/nstrumenta/nstrumenta/issues/116)) ([f1176ef](https://github.com/nstrumenta/nstrumenta/commit/f1176ef6eda7986544f1570753b42f5cca53b71a))
+
 ### [3.0.14](https://github.com/nstrumenta/nstrumenta/compare/v3.0.13...v3.0.14) (2022-06-13)
 
 
