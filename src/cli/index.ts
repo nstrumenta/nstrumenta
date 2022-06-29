@@ -22,7 +22,12 @@ import {
 import { ListMachines } from './commands/machines';
 import { List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import { List as ListData, Upload as UploadData, Query as QueryData } from './commands/data';
+import {
+  List as ListData,
+  Upload as UploadData,
+  Query as QueryData,
+  Get as GetData,
+} from './commands/data';
 import axios from 'axios';
 import { resolveApiKey } from './utils';
 
@@ -162,7 +167,7 @@ dataCommand
   .description('Upload file to project data')
   .action(UploadData);
 dataCommand
-  .command('get')
+  .command('query')
   .option('-t, --tag <tag...>')
   .option('-f, --file <file...>')
   .option('-b, --before <before>', 'before timestamp')
@@ -171,6 +176,16 @@ dataCommand
   // .argument('<filename...>', 'filenames to filter by')
   .description('Get data by name, tags, or date range')
   .action(QueryData);
+dataCommand
+  .command('get')
+  .option('-t, --tag <tag...>')
+  .option('-f, --file <file...>')
+  .option('-b, --before <before>', 'before timestamp')
+  .option('-a, --after <after>', 'after timestamp')
+  .option('-l, --limit <limit>', 'default to 1')
+  // .argument('<filename...>', 'filenames to filter by')
+  .description('Get data by name, tags, or date range')
+  .action(GetData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
 adminUtilsCommand
