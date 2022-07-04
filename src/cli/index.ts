@@ -169,11 +169,11 @@ dataCommand
 dataCommand
   .command('query')
   .option('-t, --tag <tag...>')
-  .option('-f, --file <file...>')
+  .option('-f, --id <id...>')
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
-  // .argument('<filename...>', 'filenames to filter by')
+  .option('-n, --filenames <filenames...>', 'filenames to filter by')
   .description('Get data by name, tags, or date range')
   .action(QueryData);
 dataCommand
@@ -183,7 +183,7 @@ dataCommand
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
-  // .argument('<filename...>', 'filenames to filter by')
+  .option('-n, --filenames <filenames...>', 'filenames to filter by')
   .description('Get data by name, tags, or date range')
   .action(GetData);
 
