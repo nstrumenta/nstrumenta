@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.16](https://github.com/nstrumenta/nstrumenta/compare/v3.0.15...v3.0.16) (2022-07-04)
+
+
+### Features
+
+* **cli:** flattens data upload metadata to filenames only under dataId ([3dd3fec](https://github.com/nstrumenta/nstrumenta/commit/3dd3fecb931c2a507fec07d2ef968aba97bda428))
+
 ### [3.0.15](https://github.com/nstrumenta/nstrumenta/compare/v3.0.14...v3.0.15) (2022-06-29)
 
 
