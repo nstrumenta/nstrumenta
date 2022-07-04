@@ -75,7 +75,7 @@ export const Upload = async (filenames: string[], { tags }: { tags?: string[] })
   try {
     const apiKey = resolveApiKey();
 
-    const metadata = { tags, files: results };
+    const metadata = { tags, filenames };
     await axios(endpoints.SET_DATA_METADATA, {
       method: 'post',
       data: { metadata, merge: true, dataId },
@@ -147,13 +147,7 @@ export interface DataQueryOptions {
   before?: string;
   after?: string;
   limit?: string;
-  file?: string[];
-}
-
-export interface DataFile {
-  filename: string;
-  dataId: string;
-  remoteFilePath: string;
+  filenames?: string[];
 }
 
 export type DataQueryResponse = {
@@ -161,12 +155,12 @@ export type DataQueryResponse = {
   data: {
     filePath: string;
     tags: string[];
-    files: DataFile[];
+    filenames: string[];
   };
 }[];
 
 export const query = async ({
-  file: filenames,
+  filenames,
   tag: tags,
   before: b,
   after: a,
@@ -206,7 +200,7 @@ export const Get = async (options: DataQueryOptions) => {
   const downloads = data.map(async (value) => {
     const {
       id,
-      data: { files },
+      data: { filePath, filenames },
     } = value;
 
     // Create directory for this dataId
@@ -217,13 +211,14 @@ export const Get = async (options: DataQueryOptions) => {
       await mkdir(dataIdFolder, { recursive: true });
     }
 
-    const downloadPromises = files.map(async ({ remoteFilePath }) => {
+    const downloadPromises = filenames.map(async (filename) => {
+      const remoteFilePath = `${filePath}/${filename}`;
       const remotePathInProject = remoteFilePath.replace(/^projects\/[^/]+\//, '');
-      const filename = `${dataIdFolder}/${remoteFilePath.split('/').pop()}`;
+      const localFilePath = `${dataIdFolder}/${filename}`;
       try {
-        await stat(filename!);
-        console.log(`using existing version of ${filename}`);
-        return filename;
+        await stat(localFilePath!);
+        console.log(`local file already exists: ${localFilePath}`);
+        return localFilePath;
       } catch {
         const downloadUrlData = { path: remotePathInProject };
         const downloadUrlConfig = {
@@ -241,7 +236,7 @@ export const Get = async (options: DataQueryOptions) => {
         let writeStream;
         writeStream = createWriteStream(filename);
         await pipeline(download.data, writeStream);
-        return filename;
+        return localFilePath;
       }
     });
     return Promise.allSettled(downloadPromises);
