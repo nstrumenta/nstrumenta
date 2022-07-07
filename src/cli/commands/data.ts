@@ -193,13 +193,14 @@ export const Query = async (options: DataQueryOptions) => {
   console.log(JSON.stringify(data, undefined, 2));
 };
 
-export const Get = async (options: DataQueryOptions) => {
+export const Get = async (options: DataQueryOptions & { output?: string }) => {
+  const { output } = options;
   const data = await query(options);
   const downloads = data.map(async (value) => {
     const { id, filePath, filenames } = value;
 
     // Create directory for this dataId
-    const dataIdFolder = `./${id}`;
+    const dataIdFolder = `${output ? output : '.'}/${id}`;
     try {
       await access(dataIdFolder);
     } catch {
