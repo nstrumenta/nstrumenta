@@ -235,9 +235,9 @@ export const Get = async (options: DataQueryOptions & { output?: string }) => {
         return localFilePath;
       }
     });
-    return Promise.allSettled(downloadPromises);
+    return Promise.all(downloadPromises);
   });
 
-  const results = await Promise.allSettled(downloads);
+  const results = await Promise.all(downloads);
   console.log(JSON.stringify(results, undefined, 2));
 };
