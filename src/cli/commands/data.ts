@@ -230,7 +230,7 @@ export const Get = async (options: DataQueryOptions & { output?: string }) => {
         const download = await axios.get(downloadUrl, { responseType: 'stream' });
 
         let writeStream;
-        writeStream = createWriteStream(filename);
+        writeStream = createWriteStream(localFilePath);
         await pipeline(download.data, writeStream);
         return localFilePath;
       }
