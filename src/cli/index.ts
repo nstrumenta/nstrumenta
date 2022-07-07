@@ -184,7 +184,8 @@ dataCommand
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
   .option('-n, --filenames <filenames...>', 'filenames to filter by')
-  .description('Get data by name, tags, or date range')
+  .option('-o --output <output>', 'output directory')
+  .description('Download data by name, tags, or date range')
   .action(GetData);
 
 const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });

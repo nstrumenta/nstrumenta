@@ -81,6 +81,8 @@ export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
 
 const config = new Conf(schema as any);
 
+let notifiedApiKeyResolution = false;
+
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
   if (!apiKey) {
@@ -88,7 +90,10 @@ export const resolveApiKey = () => {
       apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
     } catch {}
   } else {
-    console.log('using NSTRUMENTA_API_KEY from environment variable');
+    if (!notifiedApiKeyResolution) {
+      console.log('using NSTRUMENTA_API_KEY from environment variable');
+      notifiedApiKeyResolution = true;
+    }
   }
 
   if (!apiKey)
