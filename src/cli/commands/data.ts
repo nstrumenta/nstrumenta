@@ -152,11 +152,9 @@ export interface DataQueryOptions {
 
 export type DataQueryResponse = {
   id: string;
-  data: {
-    filePath: string;
-    tags: string[];
-    filenames: string[];
-  };
+  filePath: string;
+  tags: string[];
+  filenames: string[];
 }[];
 
 export const query = async ({
@@ -198,10 +196,7 @@ export const Query = async (options: DataQueryOptions) => {
 export const Get = async (options: DataQueryOptions) => {
   const data = await query(options);
   const downloads = data.map(async (value) => {
-    const {
-      id,
-      data: { filePath, filenames },
-    } = value;
+    const { id, filePath, filenames } = value;
 
     // Create directory for this dataId
     const dataIdFolder = `./${id}`;
