@@ -152,11 +152,9 @@ export interface DataQueryOptions {
 
 export type DataQueryResponse = {
   id: string;
-  data: {
-    filePath: string;
-    tags: string[];
-    filenames: string[];
-  };
+  filePath: string;
+  tags: string[];
+  filenames: string[];
 }[];
 
 export const query = async ({
@@ -195,16 +193,14 @@ export const Query = async (options: DataQueryOptions) => {
   console.log(JSON.stringify(data, undefined, 2));
 };
 
-export const Get = async (options: DataQueryOptions) => {
+export const Get = async (options: DataQueryOptions & { output?: string }) => {
+  const { output } = options;
   const data = await query(options);
   const downloads = data.map(async (value) => {
-    const {
-      id,
-      data: { filePath, filenames },
-    } = value;
+    const { id, filePath, filenames } = value;
 
     // Create directory for this dataId
-    const dataIdFolder = `./${id}`;
+    const dataIdFolder = `${output ? output : '.'}/${id}`;
     try {
       await access(dataIdFolder);
     } catch {
@@ -234,14 +230,14 @@ export const Get = async (options: DataQueryOptions) => {
         const download = await axios.get(downloadUrl, { responseType: 'stream' });
 
         let writeStream;
-        writeStream = createWriteStream(filename);
+        writeStream = createWriteStream(localFilePath);
         await pipeline(download.data, writeStream);
         return localFilePath;
       }
     });
-    return Promise.allSettled(downloadPromises);
+    return Promise.all(downloadPromises);
   });
 
-  const results = await Promise.allSettled(downloads);
+  const results = await Promise.all(downloads);
   console.log(JSON.stringify(results, undefined, 2));
 };
