@@ -37,7 +37,10 @@ export const List = async (_: unknown, options: DataListOptions) => {
   }
 };
 
-export const Upload = async (filenames: string[], { tags }: { tags?: string[] }) => {
+export const Upload = async (
+  filenames: string[],
+  { tags, dataId }: { tags?: string[]; dataId?: string }
+) => {
   if (filenames.length === 0) {
     return console.log('Please specify at least one filename');
   }
@@ -54,7 +57,6 @@ export const Upload = async (filenames: string[], { tags }: { tags?: string[] })
     throw error;
   }
 
-  let dataId: string | undefined;
   let results = [];
 
   // First upload the files to a new dataId
