@@ -163,6 +163,7 @@ dataCommand
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')
+  .option('--dataId <dataId>')
   .argument('<filename...>', 'filename to upload')
   .description('Upload file to project data')
   .action(UploadData);
