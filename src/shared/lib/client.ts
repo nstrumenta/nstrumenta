@@ -1,4 +1,3 @@
-// import { URL } from 'node:url';
 import { WebSocket } from 'ws';
 
 export type ListenerCallback = (event?: any) => void;
@@ -56,17 +55,3 @@ export interface BaseStorageService {
 
   download(type: string, path: string): Promise<unknown>;
 }
-
-// export interface AddQueryParamsToUrlParams {
-//   url: string;
-//   params: Record<string, string>;
-// }
-//
-// export const addQueryParamsToUrl = ({ url: urlString, params }: AddQueryParamsToUrlParams) => {
-//   const url = new URL(urlString);
-//
-//   return Object.entries(params).reduce((acc, [key, value]) => {
-//     acc.searchParams.append(key, value);
-//     return acc;
-//   }, url);
-// };
