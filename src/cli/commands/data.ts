@@ -227,7 +227,7 @@ export const Get = async (options: DataQueryOptions & { output?: string }) => {
           downloadUrlData,
           downloadUrlConfig
         );
-        const downloadUrl = getDownloadUrl.data;
+        const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
 
         const download = await axios.get(downloadUrl, { responseType: 'stream' });
 
