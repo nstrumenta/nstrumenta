@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.18](https://github.com/nstrumenta/nstrumenta/compare/v3.0.17...v3.0.18) (2022-07-15)
+
+
+### Features
+
+* **cli:** adds dataId option to data>upload ([#123](https://github.com/nstrumenta/nstrumenta/issues/123)) ([6ee120b](https://github.com/nstrumenta/nstrumenta/commit/6ee120bfb90afe1b8bc6e6b02f61743649952e8a))
+
+
+### Bug Fixes
+
+* **client:browser:** removes unecessary call to node:url in unused me… ([#126](https://github.com/nstrumenta/nstrumenta/issues/126)) ([1725c67](https://github.com/nstrumenta/nstrumenta/commit/1725c671995ec4c4ecd2f316061683b94ce58dc0))
+* **cli:** get method now strips a leading 'projects/PROJECT_ID' from the download url on query ([#125](https://github.com/nstrumenta/nstrumenta/issues/125)) ([91763a5](https://github.com/nstrumenta/nstrumenta/commit/91763a5b5275fd39021340179779d91038b38b34))
+* **imports:** fixes client imports ([0e90d70](https://github.com/nstrumenta/nstrumenta/commit/0e90d709159787c4cf0cd0bdc7448983ec193dcf))
+
 ### [3.0.17](https://github.com/nstrumenta/nstrumenta/compare/v3.0.15...v3.0.17) (2022-07-07)
 
 
