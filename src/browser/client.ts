@@ -15,7 +15,6 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { getToken } from '../shared/lib/sessionToken';
-import { WebSocket } from 'ws';
 
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
