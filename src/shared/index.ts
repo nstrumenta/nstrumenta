@@ -20,6 +20,7 @@ export const endpoints = {
   CLEAN_AGENT_ACTIONS: `${BASE_URL}/cleanAgentActions`,
   GET_DOWNLOAD_URL: `${BASE_URL}/getDownloadUrl`,
   GET_PROJECT_DOWNLOAD_URL: `${BASE_URL}/getProjectDownloadUrl`,
+  GENERATE_DATA_ID: `${BASE_URL}/generateDataId`,
   LIST_MODULES: `${BASE_URL}/listModules`,
   GET_TOKEN: `${BASE_URL}/getToken`,
   VERIFY_TOKEN: `${BASE_URL}/verifyToken`,
