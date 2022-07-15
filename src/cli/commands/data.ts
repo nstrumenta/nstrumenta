@@ -57,6 +57,16 @@ export const Upload = async (
     throw error;
   }
 
+  const apiKey = resolveApiKey();
+  if (!dataId) {
+    const res = await axios(endpoints.GENERATE_DATA_ID, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey },
+    });
+    const { data } = res;
+    dataId = data.dataId;
+  }
+
   let results = [];
 
   // First upload the files to a new dataId
@@ -65,18 +75,12 @@ export const Upload = async (
       console.log('upload', { filename, dataId, tags });
       const response = await uploadFile({ filename, dataId, tags });
       results.push(response);
-      if (!dataId) {
-        dataId = response.dataId;
-      }
     } catch (error) {
       return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
     }
   }
 
-  // Now that we have the dataId, update this bucket's metadata
   try {
-    const apiKey = resolveApiKey();
-
     const metadata = { tags, filenames };
     await axios(endpoints.SET_DATA_METADATA, {
       method: 'post',
