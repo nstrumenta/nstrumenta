@@ -125,6 +125,7 @@ export const uploadFile = async ({
       name: filename,
       size,
       dataId,
+      metadata: { tags },
     },
   };
   let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
