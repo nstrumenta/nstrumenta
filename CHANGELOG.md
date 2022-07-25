@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.19](https://github.com/nstrumenta/nstrumenta/compare/v3.0.18...v3.0.19) (2022-07-25)
+
+
+### Features
+
+* **browser-client:** adds client apiKey localStorage ([#129](https://github.com/nstrumenta/nstrumenta/issues/129)) ([9a78eb0](https://github.com/nstrumenta/nstrumenta/commit/9a78eb0f6e79e5b9ffa3f89a6f4089eecc32af83))
+* **uploads:** add metadata to call to getUploadDataUrl  ([#128](https://github.com/nstrumenta/nstrumenta/issues/128)) ([6ad3e3a](https://github.com/nstrumenta/nstrumenta/commit/6ad3e3a4b8c0b49393165495c388673ba29fe1a7))
+
+
+### Bug Fixes
+
+* **deps:** npm audit fix ([ca523dd](https://github.com/nstrumenta/nstrumenta/commit/ca523dd584b43b0f48772975fd60e81aef29d2db))
+* **deps:** npm audit fix in agent-admin-page ([7f18a96](https://github.com/nstrumenta/nstrumenta/commit/7f18a96013a415321664a1bd18a6ade888a5e7a5))
+
 ### [3.0.18](https://github.com/nstrumenta/nstrumenta/compare/v3.0.17...v3.0.18) (2022-07-15)
 
 
