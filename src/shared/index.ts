@@ -1,10 +1,9 @@
 export const DEFAULT_HOST_PORT = '8088';
 
-const BASE_URL = process.env.NSTRUMENTA_LOCAL
-  ? 'http://localhost:8080'
-  : 'https://us-central1-macro-coil-194519.cloudfunctions.net';
+let BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
 
-if (process.env.NSTRUMENTA_LOCAL) {
+if (typeof process !== 'undefined' && process.env.NSTRUMENTA_LOCAL) {
+  BASE_URL = 'http://localhost:8080';
   console.warn('NSTRUMENTA_LOCAL env var is set. Using local API endpoints');
 }
 
