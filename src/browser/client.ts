@@ -47,14 +47,40 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     return;
   }
 
-  public async connect(connectOptions: ConnectOptions) {
-    const { wsUrl, apiKey, verify = true } = connectOptions;
+  public async connect(connectOptions?: ConnectOptions) {
+    const {
+      wsUrl: wsUrlOption = undefined,
+      apiKey: apiKeyOption = undefined,
+      verify = true,
+    } = connectOptions ? connectOptions : {};
+
+    const { search } = window.location;
+    const wsUrlParam = new URLSearchParams(search).get('wsUrl');
+    const wsUrl = wsUrlOption
+      ? wsUrlOption
+      : wsUrlParam
+      ? wsUrlParam
+      : window.location.origin.replace('http', 'ws');
+
+    const apiKeyParam = new URLSearchParams(search).get('apiKey');
+    const apiLocalStore = localStorage.getItem('apiKey');
+    const apiKey = apiKeyOption
+      ? apiKeyOption
+      : apiKeyParam
+      ? apiKeyParam
+      : apiLocalStore
+      ? apiLocalStore
+      : prompt('Enter your nstrumenta apiKey');
+    if (apiKey) {
+      localStorage.setItem('apiKey', apiKey);
+    }
+
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
     // intentionally not using cli resolveApiKey here since we
     // support browser clients that don't import the Conf lib
-    const nstrumentaApiKey = apiKey || process.env.NSTRUMENTA_API_KEY;
+    const nstrumentaApiKey = apiKey ? apiKey : process ? process.env.NSTRUMENTA_API_KEY : undefined;
     if (!nstrumentaApiKey) {
       throw new Error(
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
