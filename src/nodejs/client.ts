@@ -55,7 +55,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
-    this.apiKey = resolveApiKey();
+    this.apiKey = apiKey || resolveApiKey();
     if (!this.apiKey) {
       throw new Error(
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
