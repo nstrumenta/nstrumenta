@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import {
   BaseStorageService,
   ClientStatus,
@@ -228,32 +228,81 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   public async uploadData(path: string, data: Blob, meta: Record<string, string>) {
     const size = data.size;
     let url;
-    const response = await axios.post(
-      endpoints.GET_UPLOAD_URL,
-      {
-        path,
-        size,
-        meta,
+    const res = await axios(endpoints.GENERATE_DATA_ID, {
+      headers: { 'x-api-key': this.apiKey!, method: 'post' },
+    });
+    const dataId = res.data.dataId;
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: {
+        'x-api-key': this.apiKey!,
+        'content-length': size,
+        'Content-Length': size,
+        'content-type': data.type,
       },
-      {
-        headers: {
-          contentType: 'application/json',
-          'x-api-key': this.apiKey!,
-        },
-      }
-    );
+      data: {
+        path,
+        dataId,
+        size,
+      },
+    };
+
+    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+    // const response = await axios.post(
+    //   endpoints.GET_UPLOAD_URL,
+    //   {
+    //     path,
+    //     size,
+    //     meta,
+    //   },
+    //   {
+    //     maxBodyLength: Infinity,
+    //     maxContentLength: Infinity,
+    //     headers: {
+    //       contentType: 'application/json',
+    //       'x-api-key': this.apiKey!,
+    //     },
+    //   }
+    // );
 
     url = response.data?.uploadUrl;
+    const remoteFilePath = response.data?.remoteFilePath;
+    console.log({ remoteFilePath });
+    // await axios.put(url, fileBuffer, {
+    //   maxBodyLength: Infinity,
+    //   maxContentLength: Infinity,
+    //   headers: {
+    //     contentLength: `${size}`,
+    //     contentLengthRange: `bytes 0-${size - 1}/${size}`,
+    //   },
+    // });
 
-    await axios.put(url, data, {
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      headers: {
-        contentType: 'application/octet-stream',
-        contentLength: `${size}`,
-        contentLengthRange: `bytes 0-${size - 1}/${size}`,
-      },
-    });
+    const buffer = await data.arrayBuffer();
+    const bufferView = new Uint8Array(buffer);
+    const chunkSize = 1024 * 1024;
+    const chunks = Math.ceil(size / chunkSize);
+    for (let i = 0; i < chunks; i++) {
+      const start = i * chunkSize;
+      const end = Math.min(start + chunkSize, size);
+      const chunk = bufferView.slice(start, end);
+      await axios.put(url, chunk, {
+        maxBodyLength: Infinity,
+        maxContentLength: Infinity,
+        headers: {
+          contentLength: `${chunk.byteLength}`,
+          contentLengthRange: `bytes ${start}-${end - 1}/${size}`,
+        },
+      });
+    }
+    // await axios.put(url, buffer, {
+    //   maxBodyLength: Infinity,
+    //   maxContentLength: Infinity,
+    //   headers: {
+    //     contentType: 'application/octet-stream',
+    //     contentLength: `${size}`,
+    //     contentLengthRange: `bytes 0-${size - 1}/${size}`,
+    //   },
+    // });
   }
 
   public async startLog(name: string, channels: string[]) {
