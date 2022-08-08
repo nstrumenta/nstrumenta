@@ -13,7 +13,7 @@ import {
   resolveApiKey,
 } from '../utils';
 import { getCurrentContext } from '../../shared/lib/context';
-import { endpoints } from '../../shared';
+import { endpoints } from '..';
 
 const blue = (text: string) => {
   return text;

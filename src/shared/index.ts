@@ -1,36 +1,36 @@
 export const DEFAULT_HOST_PORT = '8088';
 
-let BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
+const BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
+const BASE_URL_LOCAL = 'http://localhost:8088';
 
-if (typeof process !== 'undefined' && process.env.NSTRUMENTA_LOCAL) {
-  BASE_URL = 'http://localhost:8080';
-  console.warn('NSTRUMENTA_LOCAL env var is set. Using local API endpoints');
-}
+export const getEndpoints = (env: 'local' | 'prod') => {
+  const baseUrl = env === 'local' ? BASE_URL_LOCAL : BASE_URL;
 
-export const endpoints = {
-  ADMIN_UTILS: `${BASE_URL}/adminUtils`,
-  GET_MACHINES: `${BASE_URL}/getMachines`,
-  GET_UPLOAD_URL: `${BASE_URL}/getUploadUrl`,
-  GET_UPLOAD_DATA_URL: `${BASE_URL}/getUploadDataUrl`,
-  REGISTER_AGENT: `${BASE_URL}/registerAgent`,
-  LIST_AGENTS: `${BASE_URL}/listAgents`,
-  SET_AGENT_ACTION: `${BASE_URL}/setAgentAction`,
-  GET_AGENT_ID_BY_TAG: `${BASE_URL}/getAgentIdByTag`,
-  CLEAN_AGENT_ACTIONS: `${BASE_URL}/cleanAgentActions`,
-  GET_DOWNLOAD_URL: `${BASE_URL}/getDownloadUrl`,
-  GET_PROJECT_DOWNLOAD_URL: `${BASE_URL}/getProjectDownloadUrl`,
-  GENERATE_DATA_ID: `${BASE_URL}/generateDataId`,
-  LIST_MODULES: `${BASE_URL}/listModules`,
-  GET_TOKEN: `${BASE_URL}/getToken`,
-  VERIFY_TOKEN: `${BASE_URL}/verifyToken`,
-  VERIFY_API_KEY: `${BASE_URL}/verifyApiKey`,
-  SET_STORAGE_OBJECT: `${BASE_URL}/setStorageObject`,
-  SET_DATA_METADATA: `${BASE_URL}/setDataMetadata`,
-  LIST_STORAGE_OBJECTS: `${BASE_URL}/listStorageObjects`,
-  QUERY_DATA: `${BASE_URL}/queryData`,
-  v2: {
-    LIST_MODULES: `${BASE_URL}/listModulesV2`,
-  },
+  return {
+    ADMIN_UTILS: `${baseUrl}/adminUtils`,
+    GET_MACHINES: `${baseUrl}/getMachines`,
+    GET_UPLOAD_URL: `${baseUrl}/getUploadUrl`,
+    GET_UPLOAD_DATA_URL: `${baseUrl}/getUploadDataUrl`,
+    REGISTER_AGENT: `${baseUrl}/registerAgent`,
+    LIST_AGENTS: `${baseUrl}/listAgents`,
+    SET_AGENT_ACTION: `${baseUrl}/setAgentAction`,
+    GET_AGENT_ID_BY_TAG: `${baseUrl}/getAgentIdByTag`,
+    CLEAN_AGENT_ACTIONS: `${baseUrl}/cleanAgentActions`,
+    GET_DOWNLOAD_URL: `${baseUrl}/getDownloadUrl`,
+    GET_PROJECT_DOWNLOAD_URL: `${baseUrl}/getProjectDownloadUrl`,
+    GENERATE_DATA_ID: `${baseUrl}/generateDataId`,
+    LIST_MODULES: `${baseUrl}/listModules`,
+    GET_TOKEN: `${baseUrl}/getToken`,
+    VERIFY_TOKEN: `${baseUrl}/verifyToken`,
+    VERIFY_API_KEY: `${baseUrl}/verifyApiKey`,
+    SET_STORAGE_OBJECT: `${baseUrl}/setStorageObject`,
+    SET_DATA_METADATA: `${baseUrl}/setDataMetadata`,
+    LIST_STORAGE_OBJECTS: `${baseUrl}/listStorageObjects`,
+    QUERY_DATA: `${baseUrl}/queryData`,
+    v2: {
+      LIST_MODULES: `${baseUrl}/listModulesV2`,
+    },
+  };
 };
 
 export enum ObjectTypes {

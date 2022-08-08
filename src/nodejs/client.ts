@@ -10,13 +10,13 @@ import {
   ClientStatus,
   Connection,
   ConnectOptions,
-  endpoints,
   ListenerCallback,
   NstrumentaClientBase,
   SubscriptionCallback,
 } from '../shared';
 import axios from 'axios';
 import { resolveApiKey } from '../cli/utils';
+import { endpoints } from '../cli';
 
 export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;

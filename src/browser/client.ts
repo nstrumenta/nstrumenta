@@ -78,10 +78,8 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
-    // intentionally not using cli resolveApiKey here since we
-    // support browser clients that don't import the Conf lib
-    const nstrumentaApiKey = apiKey ? apiKey : process ? process.env.NSTRUMENTA_API_KEY : undefined;
-    if (!nstrumentaApiKey) {
+
+    if (!apiKey) {
       throw new Error(
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
       );
@@ -324,6 +322,7 @@ class StorageService implements BaseStorageService {
   constructor(props: { apiKey: string }) {
     this.apiKey = props.apiKey;
   }
+
   async download(path: string): Promise<unknown> {
     const response = await axios(endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
@@ -334,6 +333,7 @@ class StorageService implements BaseStorageService {
 
     return response;
   }
+
   async list(type: string): Promise<string[]> {
     let response = await axios(endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
@@ -343,6 +343,7 @@ class StorageService implements BaseStorageService {
 
     return response.data;
   }
+
   async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
     console.log('placeholder');
     return;

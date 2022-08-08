@@ -8,7 +8,7 @@ import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { DEFAULT_HOST_PORT } from '../shared';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -18,6 +18,7 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import WritableStream = NodeJS.WritableStream;
+import { endpoints } from '../cli';
 
 const logger = createLogger();
 

@@ -1,11 +1,12 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { resolveApiKey } from '../utils';
-import { endpoints, ObjectTypes } from '../../shared';
+import { ObjectTypes } from '../../shared';
 import { readFile, stat, writeFile, mkdir, access } from 'fs/promises';
 import ErrnoException = NodeJS.ErrnoException;
 import { createWriteStream } from 'fs';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
+import { endpoints } from '..';
 
 const pipeline = promisify(streamPipeline);
 

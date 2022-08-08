@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { endpoints } from '../index';
+import { endpoints } from '../../cli';
 
 export const getToken = async (apiKey: string): Promise<string> => {
   const headers = {
