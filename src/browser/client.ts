@@ -4,10 +4,10 @@ import {
   ClientStatus,
   Connection,
   ConnectOptions,
-  endpoints,
   ListenerCallback,
   NstrumentaClientBase,
   SubscriptionCallback,
+  getEndpoints,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -15,6 +15,8 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { getToken } from '../shared/lib/sessionToken';
+
+const endpoints = getEndpoints('prod');
 
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -85,11 +87,11 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
       );
     }
 
-    this.apiKey = nstrumentaApiKey;
+    this.apiKey = apiKey;
     let token = 'unverified';
     if (verify) {
       try {
-        token = await getToken(nstrumentaApiKey);
+        token = await getToken(this.apiKey);
         // initiate the storage service for file upload/download
         this.storage = new StorageService({ apiKey: this.apiKey });
       } catch (error) {
@@ -97,15 +99,17 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
         throw error;
       }
     }
-    this.ws = new WebSocket(wsUrl);
-    this.ws.binaryType = 'arraybuffer';
-    this.ws.addEventListener('open', async () => {
-      console.log(`client websocket opened <${wsUrl}>`);
-      this.ws?.send(token);
+    const ws = new WebSocket(wsUrl);
+    ws.binaryType = 'arraybuffer';
+    ws.addEventListener('open', async (e) => {
+      this.ws?.close();
+      this.ws = e.target as WebSocket;
+      console.log(`client websocket opened <${wsUrl}> ${this.ws.readyState}`);
+      this.ws.send(token);
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
-    this.ws.addEventListener('close', (status) => {
+    ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
       console.log(
@@ -121,11 +125,11 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
         this.reconnection.attempts += 1;
       }
     });
-    this.ws.addEventListener('error', () => {
+    ws.addEventListener('error', () => {
       console.log(`Error in websocket connection`);
       this.connection.status = ClientStatus.ERROR;
     });
-    this.ws.addEventListener('message', (event) => {
+    ws.addEventListener('message', (event) => {
       const wireMessage = event.data as ArrayBuffer;
       //console.log('nstClient received message', wireMessage);
       let deserializedMessage;
@@ -234,73 +238,41 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
       method: 'post',
       headers: {
         'x-api-key': this.apiKey!,
-        'content-length': size,
-        'Content-Length': size,
-        'content-type': data.type,
+        'Content-Type': 'application/json',
       },
       data: {
-        path,
+        name: path,
         dataId,
         size,
+        metadata: meta,
       },
     };
 
     let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
-    // const response = await axios.post(
-    //   endpoints.GET_UPLOAD_URL,
-    //   {
-    //     path,
-    //     size,
-    //     meta,
-    //   },
-    //   {
-    //     maxBodyLength: Infinity,
-    //     maxContentLength: Infinity,
-    //     headers: {
-    //       contentType: 'application/json',
-    //       'x-api-key': this.apiKey!,
-    //     },
-    //   }
-    // );
 
     url = response.data?.uploadUrl;
-    const remoteFilePath = response.data?.remoteFilePath;
-    console.log({ remoteFilePath });
-    // await axios.put(url, fileBuffer, {
-    //   maxBodyLength: Infinity,
-    //   maxContentLength: Infinity,
-    //   headers: {
-    //     contentLength: `${size}`,
-    //     contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    //   },
-    // });
-
-    const buffer = await data.arrayBuffer();
-    const bufferView = new Uint8Array(buffer);
-    const chunkSize = 1024 * 1024;
-    const chunks = Math.ceil(size / chunkSize);
-    for (let i = 0; i < chunks; i++) {
-      const start = i * chunkSize;
-      const end = Math.min(start + chunkSize, size);
-      const chunk = bufferView.slice(start, end);
-      await axios.put(url, chunk, {
-        maxBodyLength: Infinity,
-        maxContentLength: Infinity,
-        headers: {
-          contentLength: `${chunk.byteLength}`,
-          contentLengthRange: `bytes ${start}-${end - 1}/${size}`,
-        },
-      });
+    if (!url) {
+      console.warn(`no upload url returned, can't upload ${path}`);
+      console.log(response.data);
+      return;
     }
-    // await axios.put(url, buffer, {
-    //   maxBodyLength: Infinity,
-    //   maxContentLength: Infinity,
-    //   headers: {
-    //     contentType: 'application/octet-stream',
-    //     contentLength: `${size}`,
-    //     contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    //   },
-    // });
+
+    const remoteFilePath = response.data?.remoteFilePath;
+    // const buffer = await data.arrayBuffer();
+    const uploadConfig: AxiosRequestConfig = {
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      headers: {
+        contentLength: `${size}`,
+        contentLengthRange: `bytes 0-${size - 1}/${size}`,
+        'content-type': 'application/octet-stream',
+      },
+      url,
+      method: 'PUT',
+      data,
+    };
+    console.log({ remoteFilePath, uploadConfig });
+    await axios(uploadConfig);
   }
 
   public async startLog(name: string, channels: string[]) {

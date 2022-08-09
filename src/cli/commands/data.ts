@@ -81,17 +81,6 @@ export const Upload = async (
     }
   }
 
-  try {
-    const metadata = { tags, filenames };
-    await axios(endpoints.SET_DATA_METADATA, {
-      method: 'post',
-      data: { metadata, merge: true, dataId },
-      headers: { 'x-api-key': apiKey },
-    });
-  } catch (error) {
-    return console.log(`Problem setting metadata, transaction failed: ${(error as Error).message}`);
-  }
-
   return console.log({ dataId });
 };
 
