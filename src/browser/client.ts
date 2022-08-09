@@ -15,7 +15,7 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 
-const endpoints = getEndpoints('prod');
+export const endpoints = getEndpoints('prod');
 
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -229,49 +229,32 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   public async uploadData(path: string, data: Blob, meta: Record<string, string>) {
     const size = data.size;
     let url;
-    const res = await axios(endpoints.GENERATE_DATA_ID, {
-      headers: { 'x-api-key': this.apiKey!, method: 'post' },
-    });
-    const dataId = res.data.dataId;
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      headers: {
-        'x-api-key': this.apiKey!,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        name: path,
-        dataId,
+    const response = await axios.post(
+      endpoints.GET_UPLOAD_URL,
+      {
+        path,
         size,
-        metadata: meta,
+        meta,
       },
-    };
-
-    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+      {
+        headers: {
+          contentType: 'application/json',
+          'x-api-key': this.apiKey!,
+        },
+      }
+    );
 
     url = response.data?.uploadUrl;
-    if (!url) {
-      console.warn(`no upload url returned, can't upload ${path}`);
-      console.log(response.data);
-      return;
-    }
 
-    const remoteFilePath = response.data?.remoteFilePath;
-    // const buffer = await data.arrayBuffer();
-    const uploadConfig: AxiosRequestConfig = {
+    await axios.put(url, data, {
       maxBodyLength: Infinity,
       maxContentLength: Infinity,
       headers: {
+        contentType: 'application/octet-stream',
         contentLength: `${size}`,
         contentLengthRange: `bytes 0-${size - 1}/${size}`,
-        'content-type': 'application/octet-stream',
       },
-      url,
-      method: 'PUT',
-      data,
-    };
-    console.log({ remoteFilePath, uploadConfig });
-    await axios(uploadConfig);
+    });
   }
 
   public async startLog(name: string, channels: string[]) {
@@ -315,9 +298,52 @@ class StorageService implements BaseStorageService {
     return response.data;
   }
 
-  async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
-    console.log('placeholder');
-    return;
+  public async upload(path: string, data: Blob, meta: Record<string, string>) {
+    const size = data.size;
+    let url;
+    const res = await axios(endpoints.GENERATE_DATA_ID, {
+      headers: { 'x-api-key': this.apiKey!, method: 'post' },
+    });
+    const dataId = res.data.dataId;
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: {
+        'x-api-key': this.apiKey!,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        name: path,
+        dataId,
+        size,
+        metadata: meta,
+      },
+    };
+
+    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+
+    url = response.data?.uploadUrl;
+    if (!url) {
+      console.warn(`no upload url returned, can't upload ${path}`);
+      console.log(response.data);
+      return;
+    }
+
+    const remoteFilePath = response.data?.remoteFilePath;
+    // const buffer = await data.arrayBuffer();
+    const uploadConfig: AxiosRequestConfig = {
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      headers: {
+        contentLength: `${size}`,
+        contentLengthRange: `bytes 0-${size - 1}/${size}`,
+        'content-type': 'application/octet-stream',
+      },
+      url,
+      method: 'PUT',
+      data,
+    };
+    console.log({ remoteFilePath, uploadConfig });
+    await axios(uploadConfig);
   }
 }
 
