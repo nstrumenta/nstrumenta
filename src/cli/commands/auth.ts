@@ -4,7 +4,7 @@ import { Keys } from '../utils';
 import { getContextProperty, setContextProperty } from '../../shared/lib/context';
 import { schema } from '../../shared/schema';
 import axios from 'axios';
-import { endpoints } from '../../shared';
+import { endpoints } from '..';
 
 const cyan = (text: string) => {
   return text;

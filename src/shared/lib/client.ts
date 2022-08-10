@@ -49,7 +49,7 @@ export interface NstrumentaClientBase {
 export interface BaseStorageService {
   list(type: string): Promise<string[]>;
 
-  upload(type: string, path: string, file: Buffer | Blob): Promise<void>;
+  upload(path: string, data: Blob, meta: Record<string, string>): Promise<void>;
 
   download<T>(type: string, path: string): Promise<T>;
 
