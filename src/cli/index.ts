@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
 import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
@@ -32,6 +32,10 @@ import axios from 'axios';
 import { resolveApiKey } from './utils';
 
 const version = require('../../package.json').version;
+
+export const endpoints = process.env.NSTRUMENTA_LOCAL
+  ? getEndpoints('local')
+  : getEndpoints('prod');
 
 initContexts();
 

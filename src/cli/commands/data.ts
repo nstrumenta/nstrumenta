@@ -1,11 +1,12 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { resolveApiKey } from '../utils';
-import { endpoints, ObjectTypes } from '../../shared';
+import { ObjectTypes } from '../../shared';
 import { readFile, stat, writeFile, mkdir, access } from 'fs/promises';
 import ErrnoException = NodeJS.ErrnoException;
 import { createWriteStream } from 'fs';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
+import { endpoints } from '..';
 
 const pipeline = promisify(streamPipeline);
 
@@ -78,17 +79,6 @@ export const Upload = async (
     } catch (error) {
       return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
     }
-  }
-
-  try {
-    const metadata = { tags, filenames };
-    await axios(endpoints.SET_DATA_METADATA, {
-      method: 'post',
-      data: { metadata, merge: true, dataId },
-      headers: { 'x-api-key': apiKey },
-    });
-  } catch (error) {
-    return console.log(`Problem setting metadata, transaction failed: ${(error as Error).message}`);
   }
 
   return console.log({ dataId });

@@ -4,19 +4,18 @@ import {
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
-import { getToken } from '../shared/lib/sessionToken';
 import {
   BaseStorageService,
   ClientStatus,
   Connection,
   ConnectOptions,
-  endpoints,
   ListenerCallback,
   NstrumentaClientBase,
   SubscriptionCallback,
 } from '../shared';
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import { resolveApiKey } from '../cli/utils';
+import { endpoints } from '../cli';
 
 export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -224,8 +223,69 @@ class StorageService implements BaseStorageService {
     return response.data;
   }
 
-  async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
-    console.log('placeholder');
-    return;
+  async upload(path: string, data: Blob, meta: Record<string, string>): Promise<void> {
+    const size = data.size;
+    let url;
+    const res = await axios(endpoints.GENERATE_DATA_ID, {
+      headers: { 'x-api-key': this.apiKey!, method: 'post' },
+    });
+    const dataId = res.data.dataId;
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: {
+        'x-api-key': this.apiKey!,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        name: path,
+        dataId,
+        size,
+        metadata: meta,
+      },
+    };
+
+    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+
+    url = response.data?.uploadUrl;
+    if (!url) {
+      console.warn(`no upload url returned, can't upload ${path}`);
+      console.log(response.data);
+      return;
+    }
+
+    const remoteFilePath = response.data?.remoteFilePath;
+    // const buffer = await data.arrayBuffer();
+    const uploadConfig: AxiosRequestConfig = {
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      headers: {
+        contentLength: `${size}`,
+        contentLengthRange: `bytes 0-${size - 1}/${size}`,
+        'content-type': 'application/octet-stream',
+      },
+      url,
+      method: 'PUT',
+      data,
+    };
+    console.log({ remoteFilePath, uploadConfig });
+    await axios(uploadConfig);
   }
 }
+
+export const getToken = async (apiKey: string): Promise<string> => {
+  const headers = {
+    'x-api-key': apiKey,
+    'Content-Type': 'application/json',
+  };
+  try {
+    // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
+    await process.nextTick(() => {});
+    const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
+      headers,
+    });
+    return data.token;
+  } catch (err) {
+    const message = `Problem getting token, check api key, err: ${(err as Error).message}`;
+    throw new Error(message);
+  }
+};

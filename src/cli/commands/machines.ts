@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { resolveApiKey } from '../utils';
 import { getContextProperty } from '../../shared/lib/context';
-import { endpoints } from '../../shared';
+import { endpoints } from '..';
 
 export interface Machine {
   name: string;

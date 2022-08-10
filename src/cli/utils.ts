@@ -11,7 +11,7 @@ import semver from 'semver';
 import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
 import util, { promisify } from 'util';
-import { endpoints } from '../shared';
+import { endpoints } from '.';
 import { getCurrentContext } from '../shared/lib/context';
 import { schema } from '../shared/schema';
 import { Module, ModuleExtended } from './commands/module';

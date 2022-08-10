@@ -1,20 +1,21 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import {
   BaseStorageService,
   ClientStatus,
   Connection,
   ConnectOptions,
-  endpoints,
   ListenerCallback,
   NstrumentaClientBase,
   SubscriptionCallback,
+  getEndpoints,
 } from '../shared';
 import {
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
-import { getToken } from '../shared/lib/sessionToken';
+
+export const endpoints = getEndpoints('prod');
 
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -78,20 +79,18 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     if (this.reconnection.attempts > 100) {
       throw new Error('Too many reconnection attempts, stopping');
     }
-    // intentionally not using cli resolveApiKey here since we
-    // support browser clients that don't import the Conf lib
-    const nstrumentaApiKey = apiKey ? apiKey : process ? process.env.NSTRUMENTA_API_KEY : undefined;
-    if (!nstrumentaApiKey) {
+
+    if (!apiKey) {
       throw new Error(
         'nstrumenta api key is missing, pass it as an argument to NstrumentaClient.connect({apiKey: "your key"}) for javascript clients in the browser, or set the NSTRUMENTA_API_KEY environment variable get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
       );
     }
 
-    this.apiKey = nstrumentaApiKey;
+    this.apiKey = apiKey;
     let token = 'unverified';
     if (verify) {
       try {
-        token = await getToken(nstrumentaApiKey);
+        token = await getToken(this.apiKey);
         // initiate the storage service for file upload/download
         this.storage = new StorageService({ apiKey: this.apiKey });
       } catch (error) {
@@ -275,6 +274,7 @@ class StorageService implements BaseStorageService {
   constructor(props: { apiKey: string }) {
     this.apiKey = props.apiKey;
   }
+
   async download(path: string): Promise<unknown> {
     const response = await axios(endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
@@ -285,6 +285,7 @@ class StorageService implements BaseStorageService {
 
     return response;
   }
+
   async list(type: string): Promise<string[]> {
     let response = await axios(endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
@@ -294,8 +295,69 @@ class StorageService implements BaseStorageService {
 
     return response.data;
   }
-  async upload(type: string, path: string, file: Buffer | Blob): Promise<void> {
-    console.log('placeholder');
-    return;
+
+  public async upload(path: string, data: Blob, meta: Record<string, string>) {
+    const size = data.size;
+    let url;
+    const res = await axios(endpoints.GENERATE_DATA_ID, {
+      headers: { 'x-api-key': this.apiKey!, method: 'post' },
+    });
+    const dataId = res.data.dataId;
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: {
+        'x-api-key': this.apiKey!,
+        'Content-Type': 'application/json',
+      },
+      data: {
+        name: path,
+        dataId,
+        size,
+        metadata: meta,
+      },
+    };
+
+    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+
+    url = response.data?.uploadUrl;
+    if (!url) {
+      console.warn(`no upload url returned, can't upload ${path}`);
+      console.log(response.data);
+      return;
+    }
+
+    const remoteFilePath = response.data?.remoteFilePath;
+    // const buffer = await data.arrayBuffer();
+    const uploadConfig: AxiosRequestConfig = {
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      headers: {
+        contentLength: `${size}`,
+        contentLengthRange: `bytes 0-${size - 1}/${size}`,
+        'content-type': 'application/octet-stream',
+      },
+      url,
+      method: 'PUT',
+      data,
+    };
+    console.log({ remoteFilePath, uploadConfig });
+    await axios(uploadConfig);
   }
 }
+
+const getToken = async (apiKey: string): Promise<string> => {
+  const headers = {
+    'x-api-key': apiKey,
+    'Content-Type': 'application/json',
+  };
+  try {
+    // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
+    const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
+      headers,
+    });
+    return data.token;
+  } catch (err) {
+    const message = `Problem getting token, check api key, err: ${(err as Error).message}`;
+    throw new Error(message);
+  }
+};
