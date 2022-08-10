@@ -98,17 +98,15 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
         throw error;
       }
     }
-    const ws = new WebSocket(wsUrl);
-    ws.binaryType = 'arraybuffer';
-    ws.addEventListener('open', async (e) => {
-      this.ws?.close();
-      this.ws = e.target as WebSocket;
-      console.log(`client websocket opened <${wsUrl}> ${this.ws.readyState}`);
-      this.ws.send(token);
+    this.ws = new WebSocket(wsUrl);
+    this.ws.binaryType = 'arraybuffer';
+    this.ws.addEventListener('open', async () => {
+      console.log(`client websocket opened <${wsUrl}>`);
+      this.ws?.send(token);
       this.reconnection.attempts = 0;
       this.connection.status = ClientStatus.CONNECTING;
     });
-    ws.addEventListener('close', (status) => {
+    this.ws.addEventListener('close', (status) => {
       this.connection.status = ClientStatus.DISCONNECTED;
       this.listeners.get('close')?.forEach((callback) => callback());
       console.log(
@@ -124,11 +122,11 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
         this.reconnection.attempts += 1;
       }
     });
-    ws.addEventListener('error', () => {
+    this.ws.addEventListener('error', () => {
       console.log(`Error in websocket connection`);
       this.connection.status = ClientStatus.ERROR;
     });
-    ws.addEventListener('message', (event) => {
+    this.ws.addEventListener('message', (event) => {
       const wireMessage = event.data as ArrayBuffer;
       //console.log('nstClient received message', wireMessage);
       let deserializedMessage;
