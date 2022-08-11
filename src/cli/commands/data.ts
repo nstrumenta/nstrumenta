@@ -107,12 +107,13 @@ export const uploadFile = async ({
 
   fileBuffer = await readFile(filename);
   size = fileBuffer.length;
+  const name = filename.split('/').pop();
 
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey },
     data: {
-      name: filename,
+      name,
       size,
       dataId,
       metadata: { tags },
