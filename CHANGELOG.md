@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.21](https://github.com/nstrumenta/nstrumenta/compare/v3.0.19...v3.0.21) (2022-08-11)
+
+
+### Features
+
+* **clients:** upload ([#132](https://github.com/nstrumenta/nstrumenta/issues/132)) ([ac475ac](https://github.com/nstrumenta/nstrumenta/commit/ac475acc1778768ed4fabf947e4d20810a7a8fcc))
+
+
+### Bug Fixes
+
+* **client:node:** Prioritize explicit apiKey if passed to connect method ([#130](https://github.com/nstrumenta/nstrumenta/issues/130)) ([0b643e0](https://github.com/nstrumenta/nstrumenta/commit/0b643e01890f3cef53807a56c1c7a759db824800))
+* **client:upload:** strip absolute path from filename ([#133](https://github.com/nstrumenta/nstrumenta/issues/133)) ([43da2d6](https://github.com/nstrumenta/nstrumenta/commit/43da2d6ea5ee9849fdd9d072d986356625305a67))
+
 ### [3.0.20](https://github.com/nstrumenta/nstrumenta/compare/v3.0.19...v3.0.20) (2022-07-28)
 
 
