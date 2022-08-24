@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.22](https://github.com/nstrumenta/nstrumenta/compare/v3.0.21...v3.0.22) (2022-08-24)
+
+
+### Bug Fixes
+
+* **nodejs:** fixes circular imports in nodejs client ([#134](https://github.com/nstrumenta/nstrumenta/issues/134)) ([eb01edc](https://github.com/nstrumenta/nstrumenta/commit/eb01edc564133809ccc094be4169bd69a1a239cf))
+
 ### [3.0.21](https://github.com/nstrumenta/nstrumenta/compare/v3.0.19...v3.0.21) (2022-08-11)
 
 
