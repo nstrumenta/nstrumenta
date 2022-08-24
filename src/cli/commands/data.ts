@@ -6,8 +6,9 @@ import ErrnoException = NodeJS.ErrnoException;
 import { createWriteStream } from 'fs';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { endpoints } from '..';
+import { getEndpoints } from '../../shared';
 
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const pipeline = promisify(streamPipeline);
 
 export interface ModuleMeta {

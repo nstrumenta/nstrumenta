@@ -1,10 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
-import { createLogger, inquiryForSelectModule, resolveApiKey } from '../utils';
 import { NstrumentaServer } from '../../nodejs/server';
-import { DEFAULT_HOST_PORT } from '../../shared';
-import { endpoints } from '../index';
-
+import { DEFAULT_HOST_PORT, getEndpoints } from '../../shared';
+import { createLogger, inquiryForSelectModule, resolveApiKey } from '../utils';
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const logger = createLogger();
 
 export const Start = async function (options: { port: string; tag?: string }): Promise<void> {

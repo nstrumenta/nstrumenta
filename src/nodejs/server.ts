@@ -8,7 +8,7 @@ import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
-import { DEFAULT_HOST_PORT } from '../shared';
+import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -18,7 +18,7 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import WritableStream = NodeJS.WritableStream;
-import { endpoints } from '../cli';
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const logger = createLogger();
 
