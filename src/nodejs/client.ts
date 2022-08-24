@@ -1,21 +1,23 @@
+import axios, { AxiosRequestConfig } from 'axios';
 import { WebSocket } from 'ws';
-import {
-  deserializeWireMessage,
-  makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject,
-} from '../shared/lib/busMessage';
+import { resolveApiKey } from '../cli/utils';
 import {
   BaseStorageService,
   ClientStatus,
   Connection,
   ConnectOptions,
+  getEndpoints,
   ListenerCallback,
   NstrumentaClientBase,
   SubscriptionCallback,
 } from '../shared';
-import axios, { AxiosRequestConfig } from 'axios';
-import { resolveApiKey } from '../cli/utils';
-import { endpoints } from '../cli';
+import {
+  deserializeWireMessage,
+  makeBusMessageFromBuffer,
+  makeBusMessageFromJsonObject,
+} from '../shared/lib/busMessage';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
@@ -244,7 +246,7 @@ class StorageService implements BaseStorageService {
       },
     };
 
-    let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
+    let response = await axios(getEndpoints('prod').GET_UPLOAD_DATA_URL, config);
 
     url = response.data?.uploadUrl;
     if (!url) {
@@ -280,7 +282,7 @@ export const getToken = async (apiKey: string): Promise<string> => {
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
     await process.nextTick(() => {});
-    const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
+    const { data } = await axios.get<{ token: string }>(getEndpoints('prod').GET_TOKEN, {
       headers,
     });
     return data.token;

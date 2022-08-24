@@ -4,6 +4,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import semver from 'semver';
 import tar from 'tar';
+import { getEndpoints } from '../../shared';
+import { getCurrentContext } from '../../shared/lib/context';
 import {
   asyncSpawn,
   getModuleFromStorage,
@@ -12,8 +14,8 @@ import {
   inquiryForSelectModule,
   resolveApiKey,
 } from '../utils';
-import { getCurrentContext } from '../../shared/lib/context';
-import { endpoints } from '..';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const blue = (text: string) => {
   return text;

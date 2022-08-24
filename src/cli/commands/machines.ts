@@ -1,7 +1,9 @@
 import axios from 'axios';
 import { resolveApiKey } from '../utils';
 import { getContextProperty } from '../../shared/lib/context';
-import { endpoints } from '..';
+import { getEndpoints } from '../../shared';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 export interface Machine {
   name: string;

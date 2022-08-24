@@ -4,8 +4,8 @@ import { Keys } from '../utils';
 import { getContextProperty, setContextProperty } from '../../shared/lib/context';
 import { schema } from '../../shared/schema';
 import axios from 'axios';
-import { endpoints } from '..';
-
+import { getEndpoints } from '../../shared';
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const cyan = (text: string) => {
   return text;
 };

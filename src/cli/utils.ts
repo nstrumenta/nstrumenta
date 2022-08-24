@@ -11,10 +11,13 @@ import semver from 'semver';
 import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
 import util, { promisify } from 'util';
-import { endpoints } from '.';
 import { getCurrentContext } from '../shared/lib/context';
 import { schema } from '../shared/schema';
 import { Module, ModuleExtended } from './commands/module';
+
+import { getEndpoints } from '../shared';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const pipeline = promisify(streamPipeline);
 
