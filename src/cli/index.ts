@@ -33,9 +33,7 @@ import { resolveApiKey } from './utils';
 
 const version = require('../../package.json').version;
 
-export const endpoints = process.env.NSTRUMENTA_LOCAL
-  ? getEndpoints('local')
-  : getEndpoints('prod');
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 initContexts();
 
