@@ -347,6 +347,7 @@ export const publishModule = async (module: ModuleExtended) => {
 export interface ModuleListOptions {
   verbose?: boolean;
 }
+
 export const List = async (_: unknown, options: ModuleListOptions) => {
   const { verbose = false } = options;
   const apiKey = resolveApiKey();
@@ -357,7 +358,12 @@ export const List = async (_: unknown, options: ModuleListOptions) => {
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
 
-    const modules = verbose ? response.data : response.data.map(({ id }: { id: string }) => id);
+    const modules = verbose
+      ? response.data
+      : response.data.map(({ id, metadata }: { id: string; metadata: Record<string, unknown> }) =>
+          // deprecate dataId in favor of id
+          metadata ? (metadata.id ? metadata.id : metadata.dataId ? metadata.dataId : id) : id
+        );
 
     console.log(modules);
   } catch (error) {
