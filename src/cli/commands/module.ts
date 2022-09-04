@@ -138,11 +138,10 @@ const adapters: Record<ModuleTypes, (module: ModuleExtended, args?: string[]) =>
         const cwd = `${module.folder}`;
         console.log(blue(`[cwd: ${cwd}] npm install...`));
         await asyncSpawn('npm', ['install'], { cwd });
-        console.log(blue(`start the module...`));
-
         // module will resolve NSTRUMENTA_API_KEY from env var
         const { entry = `npm run start -- ` } = module;
         const [command, ...entryArgs] = entry.split(' ');
+        console.log(`::: start the module...`, command, entryArgs, { entry });
         result = await asyncSpawn(command, [...entryArgs, ...args], {
           cwd,
           stdio: 'inherit',
