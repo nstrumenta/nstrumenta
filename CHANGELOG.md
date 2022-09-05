@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.23](https://github.com/nstrumenta/nstrumenta/compare/v3.0.22...v3.0.23) (2022-09-05)
+
+
+### Features
+
+* **client:node:** connect returns a promise once client is verified, not just 'open' event on the websocket ([#140](https://github.com/nstrumenta/nstrumenta/issues/140)) ([66fbcf3](https://github.com/nstrumenta/nstrumenta/commit/66fbcf3e679b352cc9b8c48abea3fddf7bdd4dc3))
+* **cli:** module:list uses metadata.dataId before id to list modules by, for consistency with some existing modules ([#139](https://github.com/nstrumenta/nstrumenta/issues/139)) ([29958c2](https://github.com/nstrumenta/nstrumenta/commit/29958c2e4eff36b066266577454749e5a72579c4))
+
 ### [3.0.22](https://github.com/nstrumenta/nstrumenta/compare/v3.0.21...v3.0.22) (2022-08-24)
 
 
