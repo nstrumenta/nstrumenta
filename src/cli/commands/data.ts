@@ -209,35 +209,32 @@ export const Get = async (options: DataQueryOptions & { output?: string }) => {
       await mkdir(dataIdFolder, { recursive: true });
     }
 
-    const downloadPromises = filenames.map(async (filename) => {
-      const remoteFilePath = `${filePath}/${filename}`;
-      const remotePathInProject = remoteFilePath.replace(/^projects\/[^/]+\//, '');
-      const localFilePath = `${dataIdFolder}/${filename}`;
-      try {
-        await stat(localFilePath!);
-        console.log(`local file already exists: ${localFilePath}`);
-        return localFilePath;
-      } catch {
-        const downloadUrlData = { path: remotePathInProject };
-        const downloadUrlConfig = {
-          headers: { 'x-api-key': resolveApiKey(), 'content-type': 'application/json' },
-        };
-        const getDownloadUrl = await axios.post(
-          endpoints.GET_PROJECT_DOWNLOAD_URL,
-          downloadUrlData,
-          downloadUrlConfig
-        );
-        const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
+    const filename = filePath.split('/').pop();
+    const remotePathInProject = filePath.replace(/^projects\/[^/]+\//, '');
+    const localFilePath = `${dataIdFolder}/${filename}`;
+    try {
+      await stat(localFilePath!);
+      console.log(`local file already exists: ${localFilePath}`);
+      return localFilePath;
+    } catch {
+      const downloadUrlData = { path: remotePathInProject };
+      const downloadUrlConfig = {
+        headers: { 'x-api-key': resolveApiKey(), 'content-type': 'application/json' },
+      };
+      const getDownloadUrl = await axios.post(
+        endpoints.GET_PROJECT_DOWNLOAD_URL,
+        downloadUrlData,
+        downloadUrlConfig
+      );
+      const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
 
-        const download = await axios.get(downloadUrl, { responseType: 'stream' });
+      const download = await axios.get(downloadUrl, { responseType: 'stream' });
 
-        let writeStream;
-        writeStream = createWriteStream(localFilePath);
-        await pipeline(download.data, writeStream);
-        return localFilePath;
-      }
-    });
-    return Promise.all(downloadPromises);
+      let writeStream;
+      writeStream = createWriteStream(localFilePath);
+      await pipeline(download.data, writeStream);
+      return localFilePath;
+    }
   });
 
   const results = await Promise.all(downloads);
