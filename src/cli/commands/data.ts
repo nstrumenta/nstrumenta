@@ -147,6 +147,7 @@ export interface DataQueryOptions {
   after?: string;
   limit?: string;
   filenames?: string[];
+  metadata?: string;
 }
 
 export type DataQueryResponse = {
@@ -162,13 +163,15 @@ export const query = async ({
   before: b,
   after: a,
   limit: l = '1',
+  metadata: metadataString,
 }: DataQueryOptions): Promise<DataQueryResponse> => {
   const apiKey = resolveApiKey();
   const before = b ? parseInt(b, 10) : undefined;
   const after = a ? parseInt(a, 10) : undefined;
   const limit = l ? parseInt(l, 10) : undefined;
+  const metadata = metadataString ? JSON.parse(metadataString) : {};
 
-  const data = { tags, before, after, limit, filenames };
+  const data = { tags, before, after, limit, filenames, metadata };
 
   const config: AxiosRequestConfig = {
     method: 'post',

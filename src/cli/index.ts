@@ -177,6 +177,7 @@ dataCommand
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
   .option('-n, --filenames <filenames...>', 'filenames to filter by')
+  .option('--metadata <metadata>', 'metadata to filter by, stringified json')
   .description('Get data by name, tags, or date range')
   .action(QueryData);
 dataCommand
