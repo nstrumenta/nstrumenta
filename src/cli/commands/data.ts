@@ -147,6 +147,7 @@ export interface DataQueryOptions {
   after?: string;
   limit?: string;
   filenames?: string[];
+  metadata?: string;
 }
 
 export type DataQueryResponse = {
@@ -162,13 +163,15 @@ export const query = async ({
   before: b,
   after: a,
   limit: l = '1',
+  metadata: metadataString,
 }: DataQueryOptions): Promise<DataQueryResponse> => {
   const apiKey = resolveApiKey();
   const before = b ? parseInt(b, 10) : undefined;
   const after = a ? parseInt(a, 10) : undefined;
   const limit = l ? parseInt(l, 10) : undefined;
+  const metadata = metadataString ? JSON.parse(metadataString) : {};
 
-  const data = { tags, before, after, limit, filenames };
+  const data = { tags, before, after, limit, filenames, metadata };
 
   const config: AxiosRequestConfig = {
     method: 'post',
@@ -206,35 +209,32 @@ export const Get = async (options: DataQueryOptions & { output?: string }) => {
       await mkdir(dataIdFolder, { recursive: true });
     }
 
-    const downloadPromises = filenames.map(async (filename) => {
-      const remoteFilePath = `${filePath}/${filename}`;
-      const remotePathInProject = remoteFilePath.replace(/^projects\/[^/]+\//, '');
-      const localFilePath = `${dataIdFolder}/${filename}`;
-      try {
-        await stat(localFilePath!);
-        console.log(`local file already exists: ${localFilePath}`);
-        return localFilePath;
-      } catch {
-        const downloadUrlData = { path: remotePathInProject };
-        const downloadUrlConfig = {
-          headers: { 'x-api-key': resolveApiKey(), 'content-type': 'application/json' },
-        };
-        const getDownloadUrl = await axios.post(
-          endpoints.GET_PROJECT_DOWNLOAD_URL,
-          downloadUrlData,
-          downloadUrlConfig
-        );
-        const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
+    const filename = filePath.split('/').pop();
+    const remotePathInProject = filePath.replace(/^projects\/[^/]+\//, '');
+    const localFilePath = `${dataIdFolder}/${filename}`;
+    try {
+      await stat(localFilePath!);
+      console.log(`local file already exists: ${localFilePath}`);
+      return localFilePath;
+    } catch {
+      const downloadUrlData = { path: remotePathInProject };
+      const downloadUrlConfig = {
+        headers: { 'x-api-key': resolveApiKey(), 'content-type': 'application/json' },
+      };
+      const getDownloadUrl = await axios.post(
+        endpoints.GET_PROJECT_DOWNLOAD_URL,
+        downloadUrlData,
+        downloadUrlConfig
+      );
+      const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
 
-        const download = await axios.get(downloadUrl, { responseType: 'stream' });
+      const download = await axios.get(downloadUrl, { responseType: 'stream' });
 
-        let writeStream;
-        writeStream = createWriteStream(localFilePath);
-        await pipeline(download.data, writeStream);
-        return localFilePath;
-      }
-    });
-    return Promise.all(downloadPromises);
+      let writeStream;
+      writeStream = createWriteStream(localFilePath);
+      await pipeline(download.data, writeStream);
+      return localFilePath;
+    }
   });
 
   const results = await Promise.all(downloads);
