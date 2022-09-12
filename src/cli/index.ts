@@ -166,7 +166,8 @@ dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')
   .option('--dataId <dataId>')
-  .argument('<filename...>', 'filename to upload')
+  .option('--overwrite', 'allow overwrite existing filename if dataId is specified')
+  .argument('<filename...>', 'filename(s) to upload')
   .description('Upload file to project data')
   .action(UploadData);
 dataCommand

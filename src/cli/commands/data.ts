@@ -41,10 +41,14 @@ export const List = async (_: unknown, options: DataListOptions) => {
 
 export const Upload = async (
   filenames: string[],
-  { tags, dataId }: { tags?: string[]; dataId?: string }
+  { tags, dataId, overwrite }: { tags?: string[]; dataId?: string, overwrite?: boolean }
 ) => {
   if (filenames.length === 0) {
     return console.log('Please specify at least one filename');
+  }
+
+  if (overwrite && !dataId) {
+    console.warn('nothing will be overwritten if no dataId provided');
   }
 
   try {
@@ -75,7 +79,7 @@ export const Upload = async (
   for (const filename of filenames) {
     try {
       console.log('upload', { filename, dataId, tags });
-      const response = await uploadFile({ filename, dataId, tags });
+      const response = await uploadFile({ filename, dataId, tags, overwrite });
       results.push(response);
     } catch (error) {
       return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
@@ -95,10 +99,12 @@ export const uploadFile = async ({
   filename,
   dataId,
   tags,
+  overwrite,
 }: {
   filename: string;
   dataId?: string;
   tags?: string[];
+  overwrite?: boolean;
 }): Promise<UploadResponse> => {
   const apiKey = resolveApiKey();
   let fileBuffer;
@@ -118,6 +124,7 @@ export const uploadFile = async ({
       size,
       dataId,
       metadata: { tags },
+      overwrite,
     },
   };
   let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
