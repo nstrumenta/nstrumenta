@@ -275,7 +275,7 @@ class StorageService implements BaseStorageService {
     this.apiKey = props.apiKey;
   }
 
-  async download(path: string): Promise<unknown> {
+  async download(path: string): Promise<Blob> {
     const response = await axios(endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
@@ -283,7 +283,12 @@ class StorageService implements BaseStorageService {
     });
     console.log('REQ:', response.request);
 
-    return response;
+    const { data: fetched } = await axios(response.data, {
+      method: 'GET',
+      responseType: 'blob',
+    });
+
+    return fetched;
   }
 
   async list(type: string): Promise<string[]> {
