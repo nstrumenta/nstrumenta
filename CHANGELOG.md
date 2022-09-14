@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.24](https://github.com/nstrumenta/nstrumenta/compare/v3.0.23...v3.0.24) (2022-09-14)
+
+
+### Features
+
+* **cli:** adds metadata to query and get data commands ([#142](https://github.com/nstrumenta/nstrumenta/issues/142)) ([d509585](https://github.com/nstrumenta/nstrumenta/commit/d509585f96b770c06b7c5f688d61680a8cc46bb1))
+* **cli:** adds overwrite option to data upload ([#143](https://github.com/nstrumenta/nstrumenta/issues/143)) ([cc2a4fe](https://github.com/nstrumenta/nstrumenta/commit/cc2a4fef4970e3a772d7f231baf3e788dc176059))
+* **client:browser:** enables browserclient.storage.download method ([#144](https://github.com/nstrumenta/nstrumenta/issues/144)) ([78d96f1](https://github.com/nstrumenta/nstrumenta/commit/78d96f17f7c5711e2fa28d9c823833ad3479d775))
+
 ### [3.0.23](https://github.com/nstrumenta/nstrumenta/compare/v3.0.22...v3.0.23) (2022-09-05)
 
 
