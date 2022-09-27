@@ -8,6 +8,7 @@ import {
   NstrumentaClientBase,
   SubscriptionCallback,
   getEndpoints,
+  StorageUploadParameters,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -301,13 +302,17 @@ class StorageService implements BaseStorageService {
     return response.data;
   }
 
-  public async upload(path: string, data: Blob, meta: Record<string, string>) {
+  public async upload({ filename, data, meta, dataId: explicitDataId }: StorageUploadParameters) {
     const size = data.size;
     let url;
-    const res = await axios(endpoints.GENERATE_DATA_ID, {
-      headers: { 'x-api-key': this.apiKey!, method: 'post' },
-    });
-    const dataId = res.data.dataId;
+    let dataId = explicitDataId;
+
+    if (!dataId) {
+      const res = await axios(endpoints.GENERATE_DATA_ID, {
+        headers: { 'x-api-key': this.apiKey!, method: 'post' },
+      });
+      dataId = res.data.dataId;
+    }
     const config: AxiosRequestConfig = {
       method: 'post',
       headers: {
@@ -315,7 +320,7 @@ class StorageService implements BaseStorageService {
         'Content-Type': 'application/json',
       },
       data: {
-        name: path,
+        name: filename,
         dataId,
         size,
         metadata: meta,
@@ -326,7 +331,7 @@ class StorageService implements BaseStorageService {
 
     url = response.data?.uploadUrl;
     if (!url) {
-      console.warn(`no upload url returned, can't upload ${path}`);
+      console.warn(`no upload url returned, can't upload ${filename}`);
       console.log(response.data);
       return;
     }
