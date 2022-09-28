@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.25](https://github.com/nstrumenta/nstrumenta/compare/v3.0.24...v3.0.25) (2022-09-28)
+
+
+### Features
+
+* **client:** updates browserclient.storage.upload method: uses parameters object ([#145](https://github.com/nstrumenta/nstrumenta/issues/145)) ([0fd7499](https://github.com/nstrumenta/nstrumenta/commit/0fd74995d6d93890c628c0f4f402e28909f445aa))
+
 ### [3.0.24](https://github.com/nstrumenta/nstrumenta/compare/v3.0.23...v3.0.24) (2022-09-14)
 
 
