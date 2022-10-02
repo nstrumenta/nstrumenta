@@ -17,6 +17,7 @@ import {
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
+import { start as startVideoServer } from './video/examples/server-demo/src/main';
 import WritableStream = NodeJS.WritableStream;
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -224,6 +225,8 @@ export class NstrumentaServer {
     app.set('views', __dirname + '/../..');
 
     const server = require('http').Server(app);
+
+    startVideoServer(app);
 
     const wss = new WebSocketServer({ server: server });
 

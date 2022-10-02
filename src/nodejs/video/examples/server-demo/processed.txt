@@ -1,0 +1,1197 @@
+Statistical profiling result from isolate-0x7f8088008000-8291-v8.log, (9266 ticks, 17 unaccounted, 0 excluded).
+
+ [Shared libraries]:
+   ticks  total  nonlib   name
+    124    1.3%          /usr/lib/system/libsystem_pthread.dylib
+    118    1.3%          /usr/lib/system/libsystem_malloc.dylib
+     83    0.9%          /usr/lib/system/libsystem_c.dylib
+     78    0.8%          /usr/lib/system/libsystem_platform.dylib
+     62    0.7%          /usr/lib/libc++.1.dylib
+     28    0.3%          /usr/lib/system/libsystem_kernel.dylib
+      7    0.1%          /usr/lib/libc++abi.dylib
+      3    0.0%          /usr/lib/system/libdyld.dylib
+      1    0.0%          /usr/lib/libobjc.A.dylib
+
+ [JavaScript]:
+   ticks  total  nonlib   name
+     42    0.5%    0.5%  LazyCompile: *scan /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10551:22
+     19    0.2%    0.2%  LazyCompile: *scanJsDocToken /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11242:32
+     11    0.1%    0.1%  LazyCompile: *iterateCommentRanges /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9772:34
+     11    0.1%    0.1%  LazyCompile: *<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34212:74
+     10    0.1%    0.1%  LazyCompile: *computeLineOfPosition /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9500:35
+      9    0.1%    0.1%  LazyCompile: *declareSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40266:31
+      8    0.1%    0.1%  Function: ^scan /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10551:22
+      6    0.1%    0.1%  LazyCompile: *pipelineEmitWithSourceMap /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104089:43
+      6    0.1%    0.1%  LazyCompile: *getSourceFileOfNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:13534:33
+      5    0.1%    0.1%  LazyCompile: *forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      5    0.1%    0.1%  LazyCompile: *emitSourcePos /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104148:31
+      5    0.1%    0.1%  LazyCompile: *createNodeArray /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29266:33
+      5    0.1%    0.1%  LazyCompile: *bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      5    0.1%    0.1%  Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      4    0.0%    0.0%  LazyCompile: *visitNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27848:23
+      4    0.0%    0.0%  LazyCompile: *scanString /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10186:28
+      4    0.0%    0.0%  LazyCompile: *resolve node:path:1091:10
+      4    0.0%    0.0%  LazyCompile: *parseMessage /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/message.ts:11:22
+      4    0.0%    0.0%  LazyCompile: *parseJSDocCommentWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34195:45
+      4    0.0%    0.0%  LazyCompile: *normalizeString node:path:66:25
+      4    0.0%    0.0%  LazyCompile: *getTypeOfSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51338:33
+      4    0.0%    0.0%  LazyCompile: *createToken /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21089:29
+      4    0.0%    0.0%  LazyCompile: *createBaseNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28521:38
+      4    0.0%    0.0%  LazyCompile: *combinePaths /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6057:26
+      4    0.0%    0.0%  LazyCompile: *bindParentToChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19784:35
+      4    0.0%    0.0%  LazyCompile: *bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      4    0.0%    0.0%  LazyCompile: *addMapping /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:80927:28
+      4    0.0%    0.0%  LazyCompile: *JSPack.m.Unpack /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/jspack/jspack.js:183:22
+      3    0.0%    0.0%  RegExp: (\d+)?([AxcbBhHsfdiIlLqQ])
+      3    0.0%    0.0%  LazyCompile: *token /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29070:23
+      3    0.0%    0.0%  LazyCompile: *resolveNameHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44875:35
+      3    0.0%    0.0%  LazyCompile: *pipelineEmitWithComments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103806:42
+      3    0.0%    0.0%  LazyCompile: *pipelineEmit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100413:30
+      3    0.0%    0.0%  LazyCompile: *parseIdentifierName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29340:37
+      3    0.0%    0.0%  LazyCompile: *parseDelimitedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29982:36
+      3    0.0%    0.0%  LazyCompile: *normalizePath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6115:27
+      3    0.0%    0.0%  LazyCompile: *getNodeLinks /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44600:30
+      3    0.0%    0.0%  LazyCompile: *getModifierFlagsWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17640:36
+      3    0.0%    0.0%  LazyCompile: *getFlowTypeOfReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63279:40
+      3    0.0%    0.0%  LazyCompile: *getDeclarationName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40182:36
+      3    0.0%    0.0%  LazyCompile: *getBit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/utils.ts:16:16
+      3    0.0%    0.0%  LazyCompile: *findAncestor /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11822:26
+      3    0.0%    0.0%  LazyCompile: *emitTokenWithComment /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101861:38
+      3    0.0%    0.0%  LazyCompile: *emitNodeList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:102974:30
+      3    0.0%    0.0%  LazyCompile: *emitExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100405:32
+      3    0.0%    0.0%  LazyCompile: *emit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100392:22
+      3    0.0%    0.0%  LazyCompile: *createIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29311:34
+      3    0.0%    0.0%  LazyCompile: *compareValues /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1855:27
+      3    0.0%    0.0%  LazyCompile: *checkSourceElementWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:76879:42
+      3    0.0%    0.0%  LazyCompile: *assert /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:2497:24
+      3    0.0%    0.0%  LazyCompile: *M /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/tweetnacl/nacl-fast.js:927:11
+      3    0.0%    0.0%  Function: ^structuredTypeRelatedToWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:59186:51
+      3    0.0%    0.0%  Function: ^pipelineEmitWithHint /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100468:38
+      3    0.0%    0.0%  Function: ^isSimpleTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58228:39
+      3    0.0%    0.0%  Function: ^isRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58621:33
+      2    0.0%    0.0%  RegExp: [^\u0130\u0131\u00DFa-z0-9\\/:\-_\. ]+
+      2    0.0%    0.0%  LazyCompile: *visitNodes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27851:24
+      2    0.0%    0.0%  LazyCompile: *speculationHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29115:35
+      2    0.0%    0.0%  LazyCompile: *skipWhitespaceOrAsterisk /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34332:50
+      2    0.0%    0.0%  LazyCompile: *setParentRecursive /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19764:32
+      2    0.0%    0.0%  LazyCompile: *parseParameterWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30399:38
+      2    0.0%    0.0%  LazyCompile: *parseLiteralLikeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30176:38
+      2    0.0%    0.0%  LazyCompile: *parseDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33157:34
+      2    0.0%    0.0%  LazyCompile: *isPropertyAccessExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26544:40
+      2    0.0%    0.0%  LazyCompile: *isInJSFile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15161:24
+      2    0.0%    0.0%  LazyCompile: *getTransformFlagsSubtreeExclusions /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:25114:48
+      2    0.0%    0.0%  LazyCompile: *getSymbolOfNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:46579:33
+      2    0.0%    0.0%  LazyCompile: *getSymbolLinks /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44594:32
+      2    0.0%    0.0%  LazyCompile: *getPropertyOfType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53661:35
+      2    0.0%    0.0%  LazyCompile: *getPipelinePhase /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100431:34
+      2    0.0%    0.0%  LazyCompile: *getObjectFlags /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18390:28
+      2    0.0%    0.0%  LazyCompile: *getAssignmentTargetKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15817:37
+      2    0.0%    0.0%  LazyCompile: *fileExtensionIs /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5756:29
+      2    0.0%    0.0%  LazyCompile: *emitIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101034:32
+      2    0.0%    0.0%  LazyCompile: *deSerialize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/rtp/rtp.ts:43:23
+      2    0.0%    0.0%  LazyCompile: *createBaseFunctionLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20900:51
+      2    0.0%    0.0%  LazyCompile: *createBaseBindingLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20928:50
+      2    0.0%    0.0%  LazyCompile: *cloneNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:24438:27
+      2    0.0%    0.0%  LazyCompile: *checkPropertyAccessExpressionOrQualifiedName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:67060:62
+      2    0.0%    0.0%  LazyCompile: *bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      2    0.0%    0.0%  LazyCompile: *base64VLQFormatEncode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:81300:35
+      2    0.0%    0.0%  LazyCompile: *addJSDocComment /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28806:33
+      2    0.0%    0.0%  Function: ^verb /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42:18
+      2    0.0%    0.0%  Function: ^markSymbolOfAliasDeclarationIfTypeOnly /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:46037:56
+      2    0.0%    0.0%  Function: ^isListTerminator /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29589:34
+      2    0.0%    0.0%  Function: ^instantiateTypeWithSingleGenericCallSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71654:63
+      2    0.0%    0.0%  Function: ^getUnmatchedProperty /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:61575:38
+      2    0.0%    0.0%  Function: ^getTypeOfSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51338:33
+      2    0.0%    0.0%  Function: ^getTypeOfParameter /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:69683:36
+      2    0.0%    0.0%  Function: ^getSeparatingLineTerminatorCount /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103287:50
+      2    0.0%    0.0%  Function: ^forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      2    0.0%    0.0%  Function: ^declareSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40266:31
+      2    0.0%    0.0%  Function: ^checkPropertyAccessExpressionOrQualifiedName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:67060:62
+      2    0.0%    0.0%  Function: ^checkIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64337:33
+      2    0.0%    0.0%  Function: ^bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      2    0.0%    0.0%  Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34212:74
+      1    0.0%    0.0%  RegExp: ^\s+|\s+$
+      1    0.0%    0.0%  RegExp: ^\s*(?:\/|\*)*\s*@(ts-expect-error|ts-ignore) {1}
+      1    0.0%    0.0%  RegExp: ^\s*(?:\/|\*)*\s*@(ts-expect-error|ts-ignore)
+      1    0.0%    0.0%  RegExp: ^((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])$
+      1    0.0%    0.0%  RegExp: ^((?:(?:[0-9a-fA-F]{1,4}):){7}(?:(?:[0-9a-fA-F]{1,4})|:)|(?:(?:[0-9a-fA-F]{1,4}):){6}(?:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|:(?:[0-9a-fA-F]{1,4})|:)|(?:(?:[0-9a-fA-F]{1,4}):){5}(?::((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(:(?:[0-9a-fA-F]{1,4})){1,2}|:)|(?:(?:[0-9a-fA-F]{1,4}):){4}(?:(:(?:[0-9a-fA-F]{1,4})){0,1}:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(:(?:[0-9a-fA-F]{1,4})){1,3}|:)|(?:(?:[0-9a-fA-F]{1,4}):){3}(?:(:(?:[0-9a-fA-F]{1,4})){0,2}:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(:(?:[0-9a-fA-F]{1,4})){1,4}|:)|(?:(?:[0-9a-fA-F]{1,4}):){2}(?:(:(?:[0-9a-fA-F]{1,4})){0,3}:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(:(?:[0-9a-fA-F]{1,4})){1,5}|:)|(?:(?:[0-9a-fA-F]{1,4}):){1}(?:(:(?:[0-9a-fA-F]{1,4})){0,4}:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(:(?:[0-9a-fA-F]{1,4})){1,6}|:)|(?::((?::(?:[0-9a-fA-F]{1,4})){0,5}:((?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])[.]){3}(?:[0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])|(?::(?:[0-9a-fA-F]{1,4})){1,7}|:)))(%[0-9a-zA-Z-.:]{1,})?$
+      1    0.0%    0.0%  LazyCompile: *write /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16992:23
+      1    0.0%    0.0%  LazyCompile: *tryGetThisTypeAt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64681:34
+      1    0.0%    0.0%  LazyCompile: *symbolIsValue /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:46715:31
+      1    0.0%    0.0%  LazyCompile: *substituteExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:95402:38
+      1    0.0%    0.0%  LazyCompile: *substituteExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:85677:38
+      1    0.0%    0.0%  LazyCompile: *substituteExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:84973:38
+      1    0.0%    0.0%  LazyCompile: *some /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:936:18
+      1    0.0%    0.0%  LazyCompile: *skipTrivia /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9614:24
+      1    0.0%    0.0%  LazyCompile: *setTextRangePosEnd /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19727:32
+      1    0.0%    0.0%  LazyCompile: *setContextFlag /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28939:32
+      1    0.0%    0.0%  LazyCompile: *sel25519 /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/tweetnacl/nacl-fast.js:867:18
+      1    0.0%    0.0%  LazyCompile: *resolveName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44871:29
+      1    0.0%    0.0%  LazyCompile: *realpathSync node:fs:2408:22
+      1    0.0%    0.0%  LazyCompile: *rangeEndIsOnSameLineAsRangeStart /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18136:46
+      1    0.0%    0.0%  LazyCompile: *pushTypeResolution /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:50215:36
+      1    0.0%    0.0%  LazyCompile: *popTypeResolution /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:50266:35
+      1    0.0%    0.0%  LazyCompile: *pipelineEmitWithHint /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100468:38
+      1    0.0%    0.0%  LazyCompile: *parseUpdateExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31888:39
+      1    0.0%    0.0%  LazyCompile: *parseTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31129:33
+      1    0.0%    0.0%  LazyCompile: *parseTypeReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30207:36
+      1    0.0%    0.0%  LazyCompile: *parseTypeOrTypePredicate /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31099:42
+      1    0.0%    0.0%  LazyCompile: *parseType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31124:27
+      1    0.0%    0.0%  LazyCompile: *parseTokenNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29234:32
+      1    0.0%    0.0%  LazyCompile: *parseTagComments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34435:42
+      1    0.0%    0.0%  LazyCompile: *parseOptional /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29207:31
+      1    0.0%    0.0%  LazyCompile: *parseExpected /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29182:31
+      1    0.0%    0.0%  LazyCompile: *parseDecorators /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33542:33
+      1    0.0%    0.0%  LazyCompile: *parseBracketedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30048:36
+      1    0.0%    0.0%  LazyCompile: *modifiersToFlags /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17714:30
+      1    0.0%    0.0%  LazyCompile: *lookAhead /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29148:27
+      1    0.0%    0.0%  LazyCompile: *listOnTimeout node:internal/timers:505:25
+      1    0.0%    0.0%  LazyCompile: *isTupleType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:60872:29
+      1    0.0%    0.0%  LazyCompile: *isStatementKindButNotDeclarationKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:13058:50
+      1    0.0%    0.0%  LazyCompile: *isStartOfType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30884:31
+      1    0.0%    0.0%  LazyCompile: *isRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58621:33
+      1    0.0%    0.0%  LazyCompile: *isObjectLiteralType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:62298:37
+      1    0.0%    0.0%  LazyCompile: *isNodeArray /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12448:25
+      1    0.0%    0.0%  LazyCompile: *isModifierKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12519:28
+      1    0.0%    0.0%  LazyCompile: *isLiteralPropertyName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29343:39
+      1    0.0%    0.0%  LazyCompile: *isListTerminator /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29589:34
+      1    0.0%    0.0%  LazyCompile: *isListElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29454:31
+      1    0.0%    0.0%  LazyCompile: *isLineBreak /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9555:25
+      1    0.0%    0.0%  LazyCompile: *isKeyword /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16151:23
+      1    0.0%    0.0%  LazyCompile: *isInParameterInitializerBeforeContainingFunction /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:65205:66
+      1    0.0%    0.0%  LazyCompile: *isIdentifierPart /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9914:30
+      1    0.0%    0.0%  LazyCompile: *isIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26327:26
+      1    0.0%    0.0%  LazyCompile: *isFunctionLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12579:39
+      1    0.0%    0.0%  LazyCompile: *isExpressionKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12888:30
+      1    0.0%    0.0%  LazyCompile: *isExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12884:26
+      1    0.0%    0.0%  LazyCompile: *isConflictMarkerTrivia /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9695:36
+      1    0.0%    0.0%  LazyCompile: *isBindingPattern /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:12696:30
+      1    0.0%    0.0%  LazyCompile: *isBindingElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26531:30
+      1    0.0%    0.0%  LazyCompile: *internIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29301:34
+      1    0.0%    0.0%  LazyCompile: *instantiateSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57077:35
+      1    0.0%    0.0%  LazyCompile: *inContext /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29021:27
+      1    0.0%    0.0%  LazyCompile: *identity /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1708:22
+      1    0.0%    0.0%  LazyCompile: *hasDynamicName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16251:28
+      1    0.0%    0.0%  LazyCompile: *getTypeListId /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54317:31
+      1    0.0%    0.0%  LazyCompile: *getStartPositionOfRange /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18157:37
+      1    0.0%    0.0%  LazyCompile: *getMappedType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56986:31
+      1    0.0%    0.0%  LazyCompile: *getEncodedRootLength /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5797:34
+      1    0.0%    0.0%  LazyCompile: *getCombinedNodeFlags /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11752:34
+      1    0.0%    0.0%  LazyCompile: *getApparentType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53431:33
+      1    0.0%    0.0%  LazyCompile: *gatherPossibleChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28376:40
+      1    0.0%    0.0%  LazyCompile: *forEachType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:62916:29
+      1    0.0%    0.0%  LazyCompile: *forEachLeadingCommentToEmit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104025:45
+      1    0.0%    0.0%  LazyCompile: *forEachChildRecursively /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28366:37
+      1    0.0%    0.0%  LazyCompile: *finishNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29271:28
+      1    0.0%    0.0%  LazyCompile: *emitPos /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104140:25
+      1    0.0%    0.0%  LazyCompile: *emitBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101603:38
+      1    0.0%    0.0%  LazyCompile: *decryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:12:15
+      1    0.0%    0.0%  LazyCompile: *createUnionOrIntersectionTypeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21705:51
+      1    0.0%    0.0%  LazyCompile: *createQualifiedName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21209:37
+      1    0.0%    0.0%  LazyCompile: *createPropertyAssignment /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:24100:42
+      1    0.0%    0.0%  LazyCompile: *createNodeArray /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20808:33
+      1    0.0%    0.0%  LazyCompile: *createBaseNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20831:32
+      1    0.0%    0.0%  LazyCompile: *createBaseInterfaceOrClassLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20916:59
+      1    0.0%    0.0%  LazyCompile: *createBaseGenericNamedDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20875:51
+      1    0.0%    0.0%  LazyCompile: *createBaseExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21953:38
+      1    0.0%    0.0%  LazyCompile: *convertPropertyValueToJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37400:44
+      1    0.0%    0.0%  LazyCompile: *computeLineStarts /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9420:31
+      1    0.0%    0.0%  LazyCompile: *codePointAt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11406:63
+      1    0.0%    0.0%  LazyCompile: *checkTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58339:36
+      1    0.0%    0.0%  LazyCompile: *checkIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64337:33
+      1    0.0%    0.0%  LazyCompile: *checkExpressionWithContextualType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71510:51
+      1    0.0%    0.0%  LazyCompile: *checkBinaryLikeExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71078:49
+      1    0.0%    0.0%  LazyCompile: *bindPropertyWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42430:36
+      1    0.0%    0.0%  LazyCompile: *bindEach /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40561:26
+      1    0.0%    0.0%  LazyCompile: *baseRange /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/lodash/lodash.js:3892:23
+      1    0.0%    0.0%  LazyCompile: *_loop_4 /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37336:36
+      1    0.0%    0.0%  LazyCompile: *Module._nodeModulePaths node:internal/modules/cjs/loader:629:37
+      1    0.0%    0.0%  LazyCompile: *FastBuffer node:internal/buffer:958:14
+      1    0.0%    0.0%  LazyCompile: *<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64250:58
+      1    0.0%    0.0%  LazyCompile: *<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:61538:47
+      1    0.0%    0.0%  Function: ^writePunctuation /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103137:34
+      1    0.0%    0.0%  Function: ^writeLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17017:30
+      1    0.0%    0.0%  Function: ^withJSDoc /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28802:27
+      1    0.0%    0.0%  Function: ^visitTypeScript /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:82658:33
+      1    0.0%    0.0%  Function: ^visitImportDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:94731:40
+      1    0.0%    0.0%  Function: ^validate /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@fidm/asn1/build/asn1.js:928:13
+      1    0.0%    0.0%  Function: ^updateOutput /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:790:22
+      1    0.0%    0.0%  Function: ^updateMethodDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21406:41
+      1    0.0%    0.0%  Function: ^substituteExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:84973:38
+      1    0.0%    0.0%  Function: ^speculationHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29115:35
+      1    0.0%    0.0%  Function: ^skipTrivia /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9614:24
+      1    0.0%    0.0%  Function: ^shift_isSmall /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/big-integer/BigInteger.js:1004:27
+      1    0.0%    0.0%  Function: ^serialize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/rtp/rtp.ts:161:14
+      1    0.0%    0.0%  Function: ^sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:97:12
+      1    0.0%    0.0%  Function: ^runRtcp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:48:18
+      1    0.0%    0.0%  Function: ^resolveNameHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44875:35
+      1    0.0%    0.0%  Function: ^resolveCall /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68385:29
+      1    0.0%    0.0%  Function: ^resolveAlias /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:45989:30
+      1    0.0%    0.0%  Function: ^reorderCandidates /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:67625:35
+      1    0.0%    0.0%  Function: ^readFileSync node:fs:450:22
+      1    0.0%    0.0%  Function: ^processImportedModules /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107132:40
+      1    0.0%    0.0%  Function: ^prepareSecretKey node:internal/crypto/keys:555:26
+      1    0.0%    0.0%  Function: ^popAsyncContext node:internal/async_hooks:543:25
+      1    0.0%    0.0%  Function: ^pipelineEmitWithComments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103806:42
+      1    0.0%    0.0%  Function: ^pathComponents /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5943:28
+      1    0.0%    0.0%  Function: ^parseTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31129:33
+      1    0.0%    0.0%  Function: ^parseTypePredicatePrefix /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31110:42
+      1    0.0%    0.0%  Function: ^parseTag /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34355:34
+      1    0.0%    0.0%  Function: ^parseNameOfParameter /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30376:38
+      1    0.0%    0.0%  Function: ^parseModifiers /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33574:32
+      1    0.0%    0.0%  Function: ^parseLiteralNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30155:34
+      1    0.0%    0.0%  Function: ^parseJSDocNameReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34143:45
+      1    0.0%    0.0%  Function: ^parseHex /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:186:21
+      1    0.0%    0.0%  Function: ^parseCallExpressionRest /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32363:41
+      1    0.0%    0.0%  Function: ^openSync node:fs:576:18
+      1    0.0%    0.0%  Function: ^onMessage node:dgram:933:19
+      1    0.0%    0.0%  Function: ^onBeforeVisitNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:82482:35
+      1    0.0%    0.0%  Function: ^nextTokenIsOnSameLineAndCanFollowModifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29394:59
+      1    0.0%    0.0%  Function: ^narrowTypeByBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63766:50
+      1    0.0%    0.0%  Function: ^mergeSymbolTable /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44513:34
+      1    0.0%    0.0%  Function: ^maybePipelineEmitExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101636:49
+      1    0.0%    0.0%  Function: ^lookup node:dns:97:16
+      1    0.0%    0.0%  Function: ^listOnTimeout node:internal/timers:505:25
+      1    0.0%    0.0%  Function: ^isUnambiguouslyStartOfFunctionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31071:52
+      1    0.0%    0.0%  Function: ^isTypeAny /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:50302:27
+      1    0.0%    0.0%  Function: ^isTupleType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:60872:29
+      1    0.0%    0.0%  Function: ^isPrototypeAccess /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17841:31
+      1    0.0%    0.0%  Function: ^isPropertyDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26389:35
+      1    0.0%    0.0%  Function: ^isParseTreeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11841:29
+      1    0.0%    0.0%  Function: ^isJSDocFunctionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26994:33
+      1    0.0%    0.0%  Function: ^isIP node:internal/net:39:14
+      1    0.0%    0.0%  Function: ^isFileType node:fs:205:20
+      1    0.0%    0.0%  Function: ^isDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32941:31
+      1    0.0%    0.0%  Function: ^isConstVariable /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64285:33
+      1    0.0%    0.0%  Function: ^isClassMemberStart /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33463:36
+      1    0.0%    0.0%  Function: ^isBlockScopedNameDeclaredBeforeUse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44642:52
+      1    0.0%    0.0%  Function: ^isBacktrackingSourcePosition /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:80919:46
+      1    0.0%    0.0%  Function: ^isAssignmentToReadonlyEntity /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:70455:46
+      1    0.0%    0.0%  Function: ^isAssignmentOperator /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17758:34
+      1    0.0%    0.0%  Function: ^isAnExternalModuleIndicatorNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34058:49
+      1    0.0%    0.0%  Function: ^instantiateTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57341:39
+      1    0.0%    0.0%  Function: ^instantiateSignatures /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56980:39
+      1    0.0%    0.0%  Function: ^instantiateIndexInfo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57416:38
+      1    0.0%    0.0%  Function: ^inferFromObjectTypes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:62137:42
+      1    0.0%    0.0%  Function: ^imod /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:3152:38
+      1    0.0%    0.0%  Function: ^hrtime node:internal/process/per_thread:67:18
+      1    0.0%    0.0%  Function: ^hasPrecedingJSDocComment /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9964:48
+      1    0.0%    0.0%  Function: ^getWidenedTypeForVariableLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:50982:58
+      1    0.0%    0.0%  Function: ^getUnionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:55261:30
+      1    0.0%    0.0%  Function: ^getTypeOfMappedSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:52931:39
+      1    0.0%    0.0%  Function: ^getTypeOfInstantiatedSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51299:45
+      1    0.0%    0.0%  Function: ^getTypeOfEnumMember /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51280:37
+      1    0.0%    0.0%  Function: ^getTypeForVariableLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:50501:51
+      1    0.0%    0.0%  Function: ^getSourceFilePathInNewDirWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:17242:45
+      1    0.0%    0.0%  Function: ^getSignaturesOfType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53697:37
+      1    0.0%    0.0%  Function: ^getResolutionDiagnostic /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107958:37
+      1    0.0%    0.0%  Function: ^getReferencedImportDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:77983:48
+      1    0.0%    0.0%  Function: ^getReferencedExportContainer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:77948:46
+      1    0.0%    0.0%  Function: ^getReducedApparentType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53445:40
+      1    0.0%    0.0%  Function: ^getPackageJsonInfo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39568:32
+      1    0.0%    0.0%  Function: ^getOperatorAssociativity /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16395:38
+      1    0.0%    0.0%  Function: ^getLineStarts /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:9483:27
+      1    0.0%    0.0%  Function: ^getIndexedAccessTypeOrUndefined /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56209:49
+      1    0.0%    0.0%  Function: ^getIndentSize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16960:27
+      1    0.0%    0.0%  Function: ^getFlowTypeOfReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63279:40
+      1    0.0%    0.0%  Function: ^getEffectiveInitializer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15227:37
+      1    0.0%    0.0%  Function: ^getDiagnostics /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:16814:32
+      1    0.0%    0.0%  Function: ^getDeclaredTypeOfEnum /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51893:39
+      1    0.0%    0.0%  Function: ^getCombinedNodeFlags /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:11752:34
+      1    0.0%    0.0%  Function: ^getBaseFileName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5893:29
+      1    0.0%    0.0%  Function: ^getAssignmentTargetKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15817:37
+      1    0.0%    0.0%  Function: ^getAssignmentDeclarationKindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15437:48
+      1    0.0%    0.0%  Function: ^generateNames /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103471:31
+      1    0.0%    0.0%  Function: ^findSourceFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106775:38
+      1    0.0%    0.0%  Function: ^fillMissingTypeArguments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53820:42
+      1    0.0%    0.0%  Function: ^emitNodeWithNotification /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99171:42
+      1    0.0%    0.0%  Function: ^emitNodeList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:102974:30
+      1    0.0%    0.0%  Function: ^emitModifiers /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:102841:31
+      1    0.0%    0.0%  Function: ^emitBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101603:38
+      1    0.0%    0.0%  Function: ^createTypeReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54354:37
+      1    0.0%    0.0%  Function: ^createSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:52377:33
+      1    0.0%    0.0%  Function: ^createInterfaceDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:23144:44
+      1    0.0%    0.0%  Function: ^createIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29311:34
+      1    0.0%    0.0%  Function: ^createExportSpecifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:23445:39
+      1    0.0%    0.0%  Function: ^createBaseVariableLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20934:51
+      1    0.0%    0.0%  Function: ^createBaseToken /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:21086:33
+      1    0.0%    0.0%  Function: ^createBaseNamedDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20849:44
+      1    0.0%    0.0%  Function: ^createBaseDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20834:39
+      1    0.0%    0.0%  Function: ^convertAutoToAny /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:74212:34
+      1    0.0%    0.0%  Function: ^checkTypeForDuplicateIndexSignatures /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:72357:54
+      1    0.0%    0.0%  Function: ^checkIndexedAccess /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:67529:36
+      1    0.0%    0.0%  Function: ^checkGrammarModifiers /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:78838:39
+      1    0.0%    0.0%  Function: ^checkForDisallowedESSymbolOperand /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71312:55
+      1    0.0%    0.0%  Function: ^checkArrayLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:65890:35
+      1    0.0%    0.0%  Function: ^canFollowModifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29439:35
+      1    0.0%    0.0%  Function: ^bindPropertyOrMethodOrAccessor /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:43001:48
+      1    0.0%    0.0%  Function: ^bindExpressionStatement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41158:41
+      1    0.0%    0.0%  Function: ^bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      1    0.0%    0.0%  Function: ^bindCallExpressionFlow /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41550:40
+      1    0.0%    0.0%  Function: ^binarySearchKey /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1376:29
+      1    0.0%    0.0%  Function: ^attachFileToDiagnostics /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18673:37
+      1    0.0%    0.0%  Function: ^asName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:24986:24
+      1    0.0%    0.0%  Function: ^adjustOffset node:buffer:1098:22
+      1    0.0%    0.0%  Function: ^accessKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18261:24
+      1    0.0%    0.0%  Function: ^_normSign /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:340:47
+      1    0.0%    0.0%  Function: ^_loop_4 /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37336:36
+      1    0.0%    0.0%  Function: ^SrtpSession.decrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/srtp.ts:10:24
+      1    0.0%    0.0%  Function: ^SourceFileObject /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:146533:34
+      1    0.0%    0.0%  Function: ^Socket.send node:dgram:581:33
+      1    0.0%    0.0%  Function: ^M /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/tweetnacl/nacl-fast.js:927:11
+      1    0.0%    0.0%  Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/helper.ts:16:20
+      1    0.0%    0.0%  Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1760:25
+
+ [C++]:
+   ticks  total  nonlib   name
+   3400   36.7%   38.8%  T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+   3365   36.3%   38.4%  T _host_get_clock_service
+    536    5.8%    6.1%  T node::contextify::ContextifyContext::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+    184    2.0%    2.1%  t node::fs::Read(v8::FunctionCallbackInfo<v8::Value> const&)
+    155    1.7%    1.8%  T __kernelrpc_mach_port_set_attributes
+    110    1.2%    1.3%  T node::native_module::NativeModuleEnv::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+     72    0.8%    0.8%  T _mach_make_memory_entry_64
+     42    0.5%    0.5%  t void node::Buffer::(anonymous namespace)::StringSlice<(node::encoding)1>(v8::FunctionCallbackInfo<v8::Value> const&)
+     35    0.4%    0.4%  t node::fs::Open(v8::FunctionCallbackInfo<v8::Value> const&)
+     34    0.4%    0.4%  t node::fs::InternalModuleReadJSON(v8::FunctionCallbackInfo<v8::Value> const&)
+     20    0.2%    0.2%  T _mach_port_allocate
+     19    0.2%    0.2%  t node::fs::InternalModuleStat(v8::FunctionCallbackInfo<v8::Value> const&)
+     19    0.2%    0.2%  T _mach_port_get_attributes
+     19    0.2%    0.2%  T __kernelrpc_mach_port_get_refs
+     17    0.2%    0.2%  t std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> > std::__1::__pad_and_output<char, std::__1::char_traits<char> >(std::__1::ostreambuf_iterator<char, std::__1::char_traits<char> >, char const*, char const*, char const*, std::__1::ios_base&, char)
+     14    0.2%    0.2%  t node::fs::Stat(v8::FunctionCallbackInfo<v8::Value> const&)
+     14    0.2%    0.2%  T node::fs::Close(v8::FunctionCallbackInfo<v8::Value> const&)
+     10    0.1%    0.1%  T __kernelrpc_vm_remap
+      8    0.1%    0.1%  t std::__1::basic_ostream<char, std::__1::char_traits<char> >& std::__1::__put_character_sequence<char, std::__1::char_traits<char> >(std::__1::basic_ostream<char, std::__1::char_traits<char> >&, char const*, unsigned long)
+      7    0.1%    0.1%  t node::fs::LStat(v8::FunctionCallbackInfo<v8::Value> const&)
+      7    0.1%    0.1%  T _guarded_open_np
+      6    0.1%    0.1%  T _mig_strncpy_zerofill
+      3    0.0%    0.0%  t void node::Buffer::(anonymous namespace)::StringWrite<(node::encoding)1>(v8::FunctionCallbackInfo<v8::Value> const&)
+      3    0.0%    0.0%  t node::Environment::allocate_managed_buffer(unsigned long)
+      3    0.0%    0.0%  t __pthread_mutex_global_init
+      3    0.0%    0.0%  T _task_info
+      3    0.0%    0.0%  T _proc_setpcontrol
+      2    0.0%    0.0%  t node::NonOwningExternalTwoByteResource::data() const
+      2    0.0%    0.0%  t node::EnvGetter(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  t node::Buffer::(anonymous namespace)::CreateFromString(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  t __system_version_compat_open_shim
+      2    0.0%    0.0%  T node::binding::GetInternalBinding(v8::FunctionCallbackInfo<v8::Value> const&)
+      2    0.0%    0.0%  T node::NodeArrayBufferAllocator::Allocate(unsigned long)
+      2    0.0%    0.0%  T node::InternalCallbackScope::InternalCallbackScope(node::Environment*, v8::Local<v8::Object>, node::async_context const&, int)
+      2    0.0%    0.0%  T node::Environment::CheckImmediate(uv_check_s*)
+      2    0.0%    0.0%  T node::AsyncWrap::EmitTraceEventAfter(node::AsyncWrap::ProviderType, double)
+      1    0.0%    0.0%  t void node::Buffer::(anonymous namespace)::StringWrite<(node::encoding)2>(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t void node::Buffer::(anonymous namespace)::StringSlice<(node::encoding)2>(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t non-virtual thunk to node::PerIsolatePlatformData::NonNestableDelayedTasksEnabled() const
+      1    0.0%    0.0%  t non-virtual thunk to node::PerIsolatePlatformData::IdleTasksEnabled()
+      1    0.0%    0.0%  t node::fs::ReadDir(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t node::cares_wrap::(anonymous namespace)::GetAddrInfo(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  t node::TraceEventScope::TraceEventScope(char const*, char const*, void*)
+      1    0.0%    0.0%  t node::EnvQuery(v8::Local<v8::Name>, v8::PropertyCallbackInfo<v8::Integer> const&)
+      1    0.0%    0.0%  t node::EnvEnumerator(v8::PropertyCallbackInfo<v8::Array> const&)
+      1    0.0%    0.0%  T node::contextify::ContextifyScript::New(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  T node::binding::DLOpen(v8::FunctionCallbackInfo<v8::Value> const&)
+      1    0.0%    0.0%  T node::NodeArrayBufferAllocator::Reallocate(void*, unsigned long, unsigned long)
+      1    0.0%    0.0%  T node::NodeArrayBufferAllocator::Free(void*, unsigned long)
+      1    0.0%    0.0%  T node::InternalMakeCallback(node::Environment*, v8::Local<v8::Object>, v8::Local<v8::Object>, v8::Local<v8::Function>, int, v8::Local<v8::Value>*, node::async_context)
+      1    0.0%    0.0%  T node::InternalCallbackScope::~InternalCallbackScope()
+      1    0.0%    0.0%  T node::InternalCallbackScope::InternalCallbackScope(node::AsyncWrap*, int)
+      1    0.0%    0.0%  T node::InternalCallbackScope::Close()
+      1    0.0%    0.0%  T node::Buffer::New(node::Environment*, v8::Local<v8::ArrayBuffer>, unsigned long, unsigned long)
+      1    0.0%    0.0%  T _pthread_workqueue_setup
+      1    0.0%    0.0%  T _pthread_mach_thread_np
+      1    0.0%    0.0%  T _mach_ports_register
+      1    0.0%    0.0%  T _mach_port_insert_right
+
+ [Summary]:
+   ticks  total  nonlib   name
+    597    6.4%    6.8%  JavaScript
+   8148   87.9%   93.0%  C++
+    716    7.7%    8.2%  GC
+    504    5.4%          Shared libraries
+     17    0.2%          Unaccounted
+
+ [C++ entry points]:
+   ticks    cpp   total   name
+   4381  100.0%   47.3%  T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    0.0%    0.0%  T _mach_ports_register
+
+ [Bottom up (heavy) profile]:
+  Note: percentage shows a share of a particular caller in the total
+  amount of its parent calls.
+  Callers occupying less than 1.0% are not shown.
+
+   ticks parent  name
+   3400   36.7%  T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+   1153   33.9%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+     89    7.7%      T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      9   10.1%        LazyCompile: *normalizePath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6115:27
+      5   55.6%          Function: ^toPath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6130:20
+      3   60.0%            Function: ^toPath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:105606:24
+      2   40.0%            Function: ^getOrCreateCacheForDirectory /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39019:46
+      1   11.1%          Function: ^readPackageJsonPathField /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38705:38
+      1  100.0%            Function: ^readPackageJsonTypesFields /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38722:40
+      1   11.1%          Function: ^loadModuleFromSpecificNodeModulesDirectory /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39714:56
+      1  100.0%            Function: ^loadModuleFromImmediateNodeModulesDirectory /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39692:57
+      1   11.1%          Function: ^initializeState /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28713:33
+      1  100.0%            Function: ^parseSourceFile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28617:33
+      1   11.1%          Function: ^getSourceMapDirectory /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99886:39
+      1  100.0%            Function: ^printSourceFileOrBundle /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99835:41
+      6    6.7%        LazyCompile: *JSPack.m.Unpack /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/jspack/jspack.js:183:22
+      5   83.3%          LazyCompile: *parseMessage /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/message.ts:11:22
+      5  100.0%            Function: ^datagramReceived /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/protocol.ts:40:21
+      1   16.7%          Function: ^parseMessage /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/message.ts:11:22
+      1  100.0%            Function: ^datagramReceived /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/protocol.ts:40:21
+      5    5.6%        Function: ^updateOutput /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:790:22
+      4   80.0%          Function: ^compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:637:21
+      4  100.0%            Function: ^m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+      1   20.0%          LazyCompile: ~compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:637:21
+      1  100.0%            LazyCompile: ~m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+      4    4.5%        LazyCompile: *toFileNameLowerCase /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1747:33
+      3   75.0%          Function: ^getCanonicalFileName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107129:38
+      3  100.0%            Function: ^toPath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6130:20
+      1   25.0%          Function: ^getSourceFileFromReferenceWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106681:50
+      1  100.0%            Function: ^processSourceFile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106727:35
+      4    4.5%        Function: ^ntpTime /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/utils.ts:37:17
+      3   75.0%          Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:109:18
+      3  100.0%            T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1   25.0%          Function: ^sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:97:12
+      1  100.0%            Function: ^RTCRtpTransceiver.sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpTransceiver.ts:21:24
+      3    3.4%        Function: ^toFileNameLowerCase /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1747:33
+      3  100.0%          Function: ^toPath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6130:20
+      1   33.3%            Function: ^set /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39053:25
+      1   33.3%            Function: ^getCommonPrefix /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39079:37
+      1   33.3%            Function: ^get /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39039:25
+      2    2.2%        LazyCompile: *bindEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40568:31
+      1   50.0%          Function: ^bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      1  100.0%            Function: ^bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      1   50.0%          Function: ^bindAccessExpressionFlow /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41542:42
+      1  100.0%            Function: ^bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      2    2.2%        Function: ^pathComponents /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5943:28
+      2  100.0%          Function: ^getPathComponents /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:5980:31
+      2  100.0%            Function: ^normalizePathAndParts /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6137:35
+      2    2.2%        Function: ^internIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29301:34
+      1   50.0%          LazyCompile: *parsePropertyOrMethodSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30573:48
+      1  100.0%            LazyCompile: *parseTypeMember /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30629:33
+      1   50.0%          Function: ^createIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29311:34
+      1  100.0%            Function: ^parseIdentifierName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29340:37
+      2    2.2%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:163:12
+      1   50.0%          LazyCompile: ~realPath /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39413:22
+      1  100.0%            LazyCompile: ~tryResolve /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39383:28
+      1   50.0%          Function: ^directoryProbablyExists /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18034:37
+      1  100.0%            Function: ^loadModuleFromImmediateNodeModulesDirectory /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39692:57
+      1    1.1%        LazyCompile: ~sleep /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/helper.ts:8:21
+      1  100.0%          LazyCompile: ~runRtcp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpReceiver.ts:53:18
+      1  100.0%            LazyCompile: ~RTCRtpReceiver.handleRtpByRid /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpReceiver.ts:36:31
+      1    1.1%        LazyCompile: ~shouldUseNative /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/object-assign/index.js:21:25
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/object-assign/index.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1    1.1%        LazyCompile: ~resolvePackageTargetString node:internal/modules/esm/resolve:474:36
+      1  100.0%          LazyCompile: ~resolvePackageTarget node:internal/modules/esm/resolve:528:30
+      1  100.0%            LazyCompile: ~packageExportsResolve node:internal/modules/esm/resolve:631:31
+      1    1.1%        LazyCompile: ~parse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bytes/index.js:137:15
+      1  100.0%          LazyCompile: ~urlencoded /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/body-parser/lib/types/urlencoded.js:43:21
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/examples/server-demo/dev.ts:1:1
+      1    1.1%        LazyCompile: ~getModuleBucket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:313:33
+      1  100.0%          LazyCompile: ~isFileInInternalBucket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:323:40
+      1  100.0%            LazyCompile: ~fixupResolvedModule /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:332:37
+      1    1.1%        LazyCompile: ~firstchar /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/body-parser/lib/types/json.js:175:20
+      1  100.0%          LazyCompile: ~parse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/body-parser/lib/types/json.js:71:18
+      1  100.0%            LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/body-parser/lib/read.js:77:34
+      1    1.1%        LazyCompile: ~exec /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/flight/server/flight4.ts:21:9
+      1  100.0%          LazyCompile: ~handleHandshakes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/server.ts:64:21
+      1  100.0%            LazyCompile: ~DtlsServer.udpOnMessage /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/server.ts:21:29
+      1    1.1%        LazyCompile: ~createToken /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/node_modules/semver/internal/re.js:11:21
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/node_modules/semver/internal/re.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1    1.1%        LazyCompile: ~comparePathsWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6186:32
+      1  100.0%          LazyCompile: ~comparePaths /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:6235:26
+      1  100.0%            Function: ^mergeSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44394:29
+      1    1.1%        LazyCompile: ~checkIsHttpToken node:_http_common:221:26
+      1  100.0%          LazyCompile: ~<anonymous> node:_http_outgoing:558:44
+      1  100.0%            LazyCompile: ~setHeader node:_http_outgoing:574:57
+      1    1.1%        LazyCompile: ~addSDPHeader /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/sdp.ts:496:22
+      1  100.0%          LazyCompile: ~createOffer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/peerConnection.ts:86:16
+      1  100.0%            LazyCompile: ~subscribe /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/core/src/actions/sfu.ts:4:25
+      1    1.1%        LazyCompile: *pipelineEmitWithHint /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100468:38
+      1  100.0%          LazyCompile: *pipelineEmitWithSourceMap /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104089:43
+      1  100.0%            LazyCompile: *pipelineEmitWithComments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103806:42
+      1    1.1%        LazyCompile: *parseTokenNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29234:32
+      1  100.0%          Function: ^parseKeywordAndNoDot /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30778:38
+      1  100.0%            LazyCompile: *speculationHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29115:35
+      1    1.1%        LazyCompile: *parseSemicolon /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29254:32
+      1  100.0%          Function: ^parseVariableStatement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33364:40
+      1  100.0%            Function: ^parseDeclarationWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33194:40
+      1    1.1%        LazyCompile: *internIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29301:34
+      1  100.0%          Function: ^createIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29311:34
+      1  100.0%            Function: ^parseIdentifierName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29340:37
+      1    1.1%        LazyCompile: *getBit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/utils.ts:16:16
+      1  100.0%          LazyCompile: *deSerialize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/rtp/rtp.ts:43:23
+      1  100.0%            Function: ^deSerialize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/rtp/rtp.ts:250:23
+      1    1.1%        LazyCompile: *createSymbolTable /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:13323:31
+      1  100.0%          LazyCompile: *bindFunctionOrConstructorType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41775:47
+      1  100.0%            LazyCompile: *bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      1    1.1%        LazyCompile: *createIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29311:34
+      1  100.0%          Function: ^parseBindingIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29334:40
+      1  100.0%            Function: ^parseIdentifierOrPattern /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33299:42
+      1    1.1%        LazyCompile: *<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34212:74
+      1  100.0%          LazyCompile: *parseJSDocCommentWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34195:45
+      1  100.0%            LazyCompile: *addJSDocComment /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28806:33
+      1    1.1%        Function: ~<anonymous> node:repl:1:1
+      1  100.0%          Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1  100.0%            LazyCompile: ~compileForPublicLoader node:internal/bootstrap/loaders:246:25
+      1    1.1%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/const.ts:1:1
+      1  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            Function: ^m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+      1    1.1%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ipaddr.js/lib/ipaddr.js:1:10
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ipaddr.js/lib/ipaddr.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1    1.1%        Function: ^uvException node:internal/errors:480:57
+      1  100.0%          Function: ^handleErrorFromBinding node:internal/fs/utils:340:32
+      1  100.0%            Function: ^statSync node:fs:1528:18
+      1    1.1%        Function: ^toString /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/sdp.ts:296:13
+      1  100.0%          Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/sdp.ts:272:38
+      1  100.0%            T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    1.1%        Function: ^set /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39053:25
+      1  100.0%          Function: ^resolveModuleName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:39109:31
+      1  100.0%            Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:353:36
+      1    1.1%        Function: ^scan /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10551:22
+      1  100.0%          LazyCompile: *parseTokenNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29234:32
+      1  100.0%            LazyCompile: *parseBinaryExpressionOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31647:47
+      1    1.1%        Function: ^readPackage node:internal/modules/cjs/loader:290:21
+      1  100.0%          Function: ^readPackageScope node:internal/modules/cjs/loader:321:26
+      1  100.0%            Function: ^trySelf node:internal/modules/cjs/loader:441:17
+      1    1.1%        Function: ^processTicksAndRejections node:internal/process/task_queues:68:35
+      1    1.1%        Function: ^parsePostfixTypeOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30939:42
+      1  100.0%          LazyCompile: ~parseTypeOperatorOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30990:43
+      1  100.0%            LazyCompile: *parseUnionOrIntersectionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31024:46
+      1    1.1%        Function: ^parseFunctionBlock /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32689:36
+      1  100.0%          Function: ^parseFunctionBlockOrSemicolon /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33244:47
+      1  100.0%            Function: ^parseMethodDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33417:40
+      1    1.1%        Function: ^line /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/generate-function/index.js:115:22
+      1  100.0%          LazyCompile: ~createFastStub /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:42:24
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:1:1
+      1    1.1%        Function: ^isTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58280:33
+      1  100.0%          Function: ^checkTypeRelatedToAndOptionallyElaborate /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57566:58
+      1  100.0%            Function: ^getSignatureApplicabilityError /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68043:48
+      1    1.1%        Function: ^initializeTypeChecker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:78631:39
+      1  100.0%          LazyCompile: ~createTypeChecker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:43592:31
+      1  100.0%            LazyCompile: ~getTypeChecker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106096:32
+      1    1.1%        Function: ^hasGlobalName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:78328:31
+      1  100.0%          Function: ^isFileLevelUniqueName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:13595:35
+      1  100.0%            Function: ^isFileLevelUniqueName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103613:39
+      1    1.1%        Function: ^getTypeAtFlowLoopLabel /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63625:44
+      1  100.0%          Function: ^getTypeAtFlowNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63310:39
+      1  100.0%            LazyCompile: *getTypeAtFlowCondition /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63526:44
+      1    1.1%        Function: ^getObjectTypeInstantiation /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57106:44
+      1  100.0%          Function: ^instantiateTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57341:39
+      1  100.0%            Function: ^instantiateType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57322:33
+      1    1.1%        Function: ^gatherPossibleChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28376:40
+      1  100.0%          Function: ^forEachChildRecursively /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28366:37
+      1  100.0%            Function: ^setParentRecursive /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19764:32
+      1    1.1%        Function: ^forEachChildRecursively /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28366:37
+      1  100.0%          Function: ^bindJSDoc /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19775:27
+      1  100.0%            Function: ^bindParentToChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:19784:35
+      1    1.1%        Function: ^findSourceFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106775:38
+      1  100.0%          Function: ^findSourceFile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106765:32
+      1  100.0%            Function: ^processImportedModules /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107132:40
+      1    1.1%        Function: ^extractPragmas /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:35624:28
+      1  100.0%          Function: ^processCommentPragmas /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:35509:35
+      1  100.0%            LazyCompile: ~parseSourceFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28771:39
+      1    1.1%        Function: ^compileFunction node:vm:308:25
+      1  100.0%          Function: ^wrapSafe node:internal/modules/cjs/loader:1017:18
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1    1.1%        Function: ^RTCRtpTransceiver.sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpTransceiver.ts:21:24
+      1  100.0%          Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/core/src/domains/sfu/subscriber.ts:106:55
+      1  100.0%            LazyCompile: *Event.execute /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/rx.mini/lib/core/index.js:7:33
+      1    1.1%        Function: ^NativeBigInt.valueOf.NativeBigInt.toJSNumber /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/big-integer/BigInteger.js:1351:83
+      1  100.0%          Function: ^BigInteger.shiftLeft /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/big-integer/BigInteger.js:1008:47
+      1  100.0%            LazyCompile: *decryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:12:15
+      1    1.1%        Function: ^Module._findPath node:internal/modules/cjs/loader:494:28
+      1  100.0%          Function: ^Module._resolveFilename node:internal/modules/cjs/loader:848:35
+      1  100.0%            Function: ^Module._load node:internal/modules/cjs/loader:757:24
+      1    1.1%        Function: ^Module node:internal/modules/cjs/loader:172:16
+      1  100.0%          Function: ^Module._load node:internal/modules/cjs/loader:757:24
+      1  100.0%            Function: ^Module.require node:internal/modules/cjs/loader:997:36
+      1    1.1%        Function: ^JSPack.m.CalcLength /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/jspack/jspack.js:259:26
+      1  100.0%          Function: ^JSPack.m.Pack /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/jspack/jspack.js:253:20
+      1  100.0%            Function: ^xorAddress /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/attributes.ts:47:20
+      1    1.1%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/sdp.ts:79:29
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ^parse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/sdp.ts:23:17
+      1    1.1%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:109:18
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ^sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/media/rtpSender.ts:97:12
+      1    1.1%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44515:37
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ^mergeSymbolTable /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44513:34
+      1    1.1%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/lib/util/versioning.js:23:45
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/lib/util/versioning.js:1:1
+     51    4.4%      Function: ^doSend node:dgram:682:16
+     51  100.0%        Function: ^defaultTriggerAsyncIdScope node:internal/async_hooks:445:36
+     51  100.0%          Function: ^afterDns node:dgram:667:20
+     50   98.0%            Function: ^processTicksAndRejections node:internal/process/task_queues:68:35
+      1    2.0%            LazyCompile: *processTicksAndRejections node:internal/process/task_queues:68:35
+     33    2.9%      Function: ^captureLargerStackTrace node:internal/errors:458:35
+     33  100.0%        Function: ^uvException node:internal/errors:480:57
+     33  100.0%          Function: ^handleErrorFromBinding node:internal/fs/utils:340:32
+     33  100.0%            Function: ^statSync node:fs:1528:18
+     24    2.1%      Function: ^mulTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:1660:39
+     24  100.0%        Function: ^mul /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:1873:35
+     24  100.0%          Function: ^mul /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:3215:36
+     24  100.0%            Function: ^redMul /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/bn.js/lib/bn.js:2880:41
+     22    1.9%      Function: ^createCipherBase node:internal/crypto/cipher:110:26
+     22  100.0%        Function: ^createCipherWithIV node:internal/crypto/cipher:130:28
+     18   81.8%          Function: ^Decipheriv node:internal/crypto/cipher:285:20
+     15   83.3%            Function: ^createDecipheriv node:crypto:145:26
+      3   16.7%            LazyCompile: *decryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:12:15
+      4   18.2%          Function: ^Cipheriv node:internal/crypto/cipher:239:18
+      4  100.0%            Function: ^createCipheriv node:crypto:137:24
+     15    1.3%      Function: ^update node:internal/crypto/cipher:168:42
+      9   60.0%        Function: ^decryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:12:15
+      9  100.0%          Function: ^SrtpSession.decrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/srtp.ts:10:24
+      9  100.0%            Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/transport/dtls.ts:104:55
+      4   26.7%        Function: ^encryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:27:15
+      4  100.0%          Function: ^encrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/srtp.ts:16:12
+      4  100.0%            Function: ^sendRtp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/transport/dtls.ts:122:12
+      1    6.7%        Function: ^encrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/cipher/suites/aead.ts:41:12
+      1  100.0%          Function: ^encryptPacket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/context/cipher.ts:15:18
+      1  100.0%            Function: ^send /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/socket.ts:43:9
+      1    6.7%        Function: ^decrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/cipher/suites/aead.ts:72:12
+      1  100.0%          Function: ^decryptPacket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/context/cipher.ts:29:18
+      1  100.0%            Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/record/receive.ts:20:33
+
+   3365   36.3%  T _host_get_clock_service
+
+    536    5.8%  T node::contextify::ContextifyContext::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+    536  100.0%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+    527   98.3%      Function: ^compileFunction node:vm:308:25
+    516   97.9%        Function: ^wrapSafe node:internal/modules/cjs/loader:1017:18
+    516  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+    243   47.1%            LazyCompile: ~Module._extensions..js node:internal/modules/cjs/loader:1110:37
+    162   31.4%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+     99   19.2%            Function: ^m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+     12    2.3%            LazyCompile: ~m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+     11    2.1%        LazyCompile: ~wrapSafe node:internal/modules/cjs/loader:1017:18
+     11  100.0%          LazyCompile: ~Module._compile node:internal/modules/cjs/loader:1055:37
+     11  100.0%            LazyCompile: ~Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      9    1.7%      LazyCompile: ~compileFunction node:vm:308:25
+      9  100.0%        LazyCompile: ~wrapSafe node:internal/modules/cjs/loader:1017:18
+      9  100.0%          LazyCompile: ~Module._compile node:internal/modules/cjs/loader:1055:37
+      9  100.0%            LazyCompile: ~Module._extensions..js node:internal/modules/cjs/loader:1110:37
+
+    184    2.0%  t node::fs::Read(v8::FunctionCallbackInfo<v8::Value> const&)
+    184  100.0%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+    184  100.0%      Function: ^readSync node:fs:684:18
+    184  100.0%        Function: ^tryReadSync node:fs:429:21
+    184  100.0%          Function: ^readFileSync node:fs:450:22
+    108   58.7%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+     70   38.0%            Function: ^readFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:7499:36
+      4    2.2%            LazyCompile: ~readFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:7499:36
+
+    155    1.7%  T __kernelrpc_mach_port_set_attributes
+    135   87.1%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      7    5.2%      T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1   14.3%        LazyCompile: ~pathtoRegexp /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/path-to-regexp/index.js:28:22
+      1  100.0%          LazyCompile: ~Layer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/router/layer.js:33:15
+      1  100.0%            LazyCompile: ~use /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/router/index.js:428:25
+      1   14.3%        LazyCompile: ~parse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@fidm/asn1/build/pem.js:39:17
+      1  100.0%          LazyCompile: ~fromPEMs /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@fidm/x509/build/x509.js:239:20
+      1  100.0%            LazyCompile: ~fromPEM /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@fidm/x509/build/x509.js:263:19
+      1   14.3%        LazyCompile: ~formatStringFromArgs /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18603:34
+      1  100.0%          LazyCompile: ~createCompilerDiagnostic /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18713:38
+      1  100.0%            LazyCompile: ~createCompilerDiagnosticOnlyIfJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37895:52
+      1   14.3%        LazyCompile: ~format /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/content-type/index.js:65:17
+      1  100.0%          LazyCompile: ~setCharset /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/utils.js:250:41
+      1  100.0%            LazyCompile: ~send /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/response.js:107:25
+      1   14.3%        LazyCompile: ~extractPragmas /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:35624:28
+      1  100.0%          LazyCompile: ~processCommentPragmas /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:35509:35
+      1  100.0%            LazyCompile: ~parseSourceFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28771:39
+      1   14.3%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/internal/buffer-list.js:1:1
+      1  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1   14.3%        Function: ^parseList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29671:27
+      1  100.0%          Function: ^parseObjectTypeMembers /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30664:40
+      1  100.0%            Function: ^parseInterfaceDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33719:43
+      2    1.5%      LazyCompile: ~prepareStackTrace node:internal/errors:90:27
+      2  100.0%        T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      2  100.0%          LazyCompile: ~structuredStack structured-stack:3:38
+      2  100.0%            LazyCompile: ~isInsideNodeModules node:internal/util:404:29
+      2    1.5%      Function: ^pipelineEmitWithHint /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100468:38
+      2  100.0%        Function: ^pipelineEmitWithSourceMap /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104089:43
+      2  100.0%          Function: ^pipelineEmitWithComments /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103806:42
+      2  100.0%            Function: ^pipelineEmit /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100413:30
+      2    1.5%      Function: ^line.toFunction /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/generate-function/index.js:155:29
+      1   50.0%        LazyCompile: ~createFastStubGeneric /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:75:31
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1   50.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/binary-stream.js:185:27
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/binary-stream.js:1:1
+
+    124    1.3%  /usr/lib/system/libsystem_pthread.dylib
+    109   87.9%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      5    4.6%      T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1   20.0%        LazyCompile: ~merge /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/merge-descriptors/index.js:34:15
+      1  100.0%          LazyCompile: ~createApplication /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/express.js:37:27
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/examples/server-demo/dev.ts:1:1
+      1   20.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/flight/server/flight2.ts:16:46
+      1  100.0%          LazyCompile: ~handleHandshakes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/server.ts:64:21
+      1  100.0%            LazyCompile: ~DtlsServer.udpOnMessage /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/server.ts:21:29
+      1   20.0%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/examples/server-demo/dev.ts:1:1
+      1  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            LazyCompile: ~m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+      1   20.0%        Function: ^getLiteralType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56755:32
+      1  100.0%          LazyCompile: *checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%            LazyCompile: *checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1   20.0%        Function: ^getIndexSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54203:32
+      1  100.0%          Function: ^getIndexDeclarationOfSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54206:45
+      1  100.0%            Function: ^checkIndexConstraints /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:75440:39
+      3    2.8%      LazyCompile: ~toRealPath node:internal/modules/cjs/loader:393:20
+      3  100.0%        LazyCompile: ~tryFile node:internal/modules/cjs/loader:384:17
+      3  100.0%          LazyCompile: ~finalizeEsmResolution node:internal/modules/cjs/loader:939:31
+      3  100.0%            LazyCompile: ~resolveExports node:internal/modules/cjs/loader:472:24
+      3    2.8%      Function: ~<anonymous> node:repl:1:1
+      3  100.0%        Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      3  100.0%          LazyCompile: ~compileForPublicLoader node:internal/bootstrap/loaders:246:25
+      3  100.0%            Function: ^loadNativeModule node:internal/modules/cjs/helpers:44:26
+      3    2.8%      Function: ^bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      2   66.7%        LazyCompile: *bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      1   50.0%          LazyCompile: *visitNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27848:23
+      1  100.0%            Function: ^forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      1   50.0%          Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40559:38
+      1  100.0%            LazyCompile: *bindEach /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40561:26
+      1   33.3%        Function: ^bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      1  100.0%          Function: ^bindExpressionStatement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41158:41
+      1  100.0%            Function: ^bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      2    1.8%      LazyCompile: ~resolveExports node:internal/modules/cjs/loader:472:24
+      2  100.0%        LazyCompile: ~Module._findPath node:internal/modules/cjs/loader:494:28
+      2  100.0%          LazyCompile: ~Module._resolveFilename node:internal/modules/cjs/loader:848:35
+      2  100.0%            LazyCompile: ~Module._load node:internal/modules/cjs/loader:757:24
+      2    1.8%      LazyCompile: ~Duplex node:internal/streams/duplex:52:16
+      2  100.0%        LazyCompile: ~Socket node:net:283:16
+      2  100.0%          LazyCompile: ~WriteStream node:tty:85:21
+      2  100.0%            LazyCompile: ~createWritableStdioStream node:internal/bootstrap/switches/is_main_thread:41:35
+      2    1.8%      Function: ^line.toFunction /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/generate-function/index.js:155:29
+      1   50.0%        LazyCompile: ~createFastStub /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:42:24
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1   50.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/transaction.js:126:64
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/transaction.js:1:1
+
+    118    1.3%  /usr/lib/system/libsystem_malloc.dylib
+     94   79.7%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      6    6.4%      T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1   16.7%        LazyCompile: ~ip.toString /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ip/lib/ip.js:63:23
+      1  100.0%          LazyCompile: ~unpackAddress /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/attributes.ts:29:23
+      1  100.0%            LazyCompile: ~unpackXorAddress /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/attributes.ts:61:26
+      1   16.7%        Function: ^readPackage node:internal/modules/cjs/loader:290:21
+      1  100.0%          Function: ^readPackageScope node:internal/modules/cjs/loader:321:26
+      1  100.0%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1   16.7%        Function: ^parseParameterWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30399:38
+      1  100.0%          Function: ^parseParameter /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30396:32
+      1  100.0%            LazyCompile: *parseDelimitedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29982:36
+      1   16.7%        Function: ^getObjectTypeInstantiation /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57106:44
+      1  100.0%          Function: ^instantiateTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57341:39
+      1  100.0%            LazyCompile: *getTypeOfSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51338:33
+      1   16.7%        Function: ^bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      1  100.0%          LazyCompile: *bindEach /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40561:26
+      1  100.0%            LazyCompile: *visitNodes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27851:24
+      1   16.7%        Function: ^FastBuffer node:internal/buffer:958:14
+      1  100.0%          Function: ^createUnsafeBuffer node:internal/buffer:1059:28
+      1  100.0%            Function: ^createPool node:buffer:150:20
+      5    5.3%      Function: ^captureLargerStackTrace node:internal/errors:458:35
+      5  100.0%        Function: ^uvException node:internal/errors:480:57
+      5  100.0%          Function: ^handleErrorFromBinding node:internal/fs/utils:340:32
+      5  100.0%            Function: ^statSync node:fs:1528:18
+      3    3.2%      LazyCompile: *bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      3  100.0%        LazyCompile: *bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      2   66.7%          LazyCompile: *visitNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27848:23
+      2  100.0%            Function: ^forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      1   33.3%          LazyCompile: *forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      1  100.0%            LazyCompile: *bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      2    2.1%      LazyCompile: *declareSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40266:31
+      1   50.0%        LazyCompile: *declareModuleMember /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40385:37
+      1  100.0%          Function: ^bindBlockScopedDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41841:44
+      1  100.0%            Function: ^bindFunctionDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42973:41
+      1   50.0%        Function: ^declareModuleMember /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40385:37
+      1  100.0%          Function: ^declareSourceFileMember /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41713:41
+      1  100.0%            Function: ^declareSymbolAndAddToSymbolTable /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41654:50
+      2    2.1%      LazyCompile: *FastBuffer node:internal/buffer:958:14
+      2  100.0%        Function: ^alloc node:buffer:359:30
+      2  100.0%          Function: ^growBufferSize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/helper.ts:42:24
+      1   50.0%            Function: ^encryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:27:15
+      1   50.0%            Function: ^decryptRTP /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/srtp/context/srtp.ts:12:15
+      2    2.1%      Function: ^line.toFunction /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/generate-function/index.js:155:29
+      1   50.0%        LazyCompile: ~createFastStubGeneric /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:75:31
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/types/numbers.js:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1   50.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/binary-stream.js:134:39
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/binary-data/src/node_modules/lib/binary-stream.js:1:1
+      2    2.1%      Function: ^getTypeFromClassOrInterfaceReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54412:54
+      2  100.0%        Function: ^getTypeReferenceType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54503:38
+      2  100.0%          Function: ^getTypeFromTypeReference /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54648:42
+      2  100.0%            Function: ^getTypeFromTypeNodeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56859:43
+      1    1.1%      LazyCompile: ~visitEnumDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:84249:38
+      1  100.0%        Function: ^visitTypeScript /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:82658:33
+      1  100.0%          Function: ^visitorWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:82527:31
+      1  100.0%            Function: ^sourceElementVisitorWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:82546:44
+      1    1.1%      LazyCompile: ~verifyCompilerOptions /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107261:39
+      1  100.0%        LazyCompile: ~createProgram /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:105245:27
+      1  100.0%          LazyCompile: ~synchronizeHostData /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:147064:37
+      1  100.0%            LazyCompile: ~getProgram /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:147228:28
+      1    1.1%      LazyCompile: ~transformSourceFile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:94171:37
+      1  100.0%        LazyCompile: ~transformSourceFileOrBundle /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:81487:45
+      1  100.0%          LazyCompile: ~transformation /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99092:39
+      1  100.0%            LazyCompile: ~transformRoot /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99121:31
+      1    1.1%      LazyCompile: ~synchronizeHostData /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:147064:37
+      1  100.0%        LazyCompile: ~getProgram /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:147228:28
+      1  100.0%          LazyCompile: ~getOutput /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:464:25
+      1  100.0%            LazyCompile: ~compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:637:21
+      1    1.1%      LazyCompile: ~scan /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10551:22
+      1  100.0%        LazyCompile: *parseOptional /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29207:31
+      1  100.0%          Function: ^parseUnionOrIntersectionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31024:46
+      1  100.0%            Function: ^parseUnionTypeOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31042:40
+      1    1.1%      LazyCompile: ~resolveExportByName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:45624:37
+      1  100.0%        LazyCompile: ~getTargetOfImportClause /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:45664:41
+      1  100.0%          LazyCompile: ~getTargetOfAliasDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:45943:45
+      1  100.0%            Function: ^resolveAlias /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:45989:30
+      1    1.1%      LazyCompile: ~parseTemplateTag /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34928:42
+      1  100.0%        Function: ^parseTag /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34355:34
+      1  100.0%          LazyCompile: *<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34212:74
+      1  100.0%            LazyCompile: *parseJSDocCommentWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34195:45
+      1    1.1%      LazyCompile: ~parseObjectLiteralExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32592:46
+      1  100.0%        LazyCompile: ~parseJsonText /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28648:31
+      1  100.0%          LazyCompile: ~parseJsonText /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28449:27
+      1  100.0%            LazyCompile: ~parseConfigFileTextToJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37180:39
+      1    1.1%      LazyCompile: ~parseArgumentOrArrayLiteralElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32525:52
+      1  100.0%        Function: ^doOutsideOfContext /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28959:36
+      1  100.0%          Function: ^parseArgumentExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32530:41
+      1  100.0%            Function: ^parseListElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29689:34
+      1    1.1%      LazyCompile: ~module.exports.validate_package_json /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/lib/util/napi.js:43:49
+      1  100.0%        LazyCompile: ~validate_config /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/lib/util/versioning.js:181:25
+      1  100.0%          LazyCompile: ~exports.find /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/node-pre-gyp/lib/pre-binding.js:16:25
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/@discordjs/opus/lib/index.js:1:1
+      1    1.1%      LazyCompile: ~lazyrouter /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/application.js:137:37
+      1  100.0%        LazyCompile: ~use /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/application.js:187:23
+      1  100.0%          Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/examples/server-demo/dev.ts:1:1
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1    1.1%      LazyCompile: ~isRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58621:33
+      1  100.0%        LazyCompile: ~checkTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58339:36
+      1  100.0%          LazyCompile: ~isTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58280:33
+      1  100.0%            LazyCompile: ~checkTypeRelatedToAndOptionallyElaborate /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:57566:58
+      1    1.1%      LazyCompile: ~getIterationTypesOfIteratorFast /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:75047:49
+      1  100.0%        Function: ^getIterationTypesOfIterator /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:75016:45
+      1  100.0%          Function: ^getIterationTypesOfIterableSlow /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:74989:49
+      1  100.0%            Function: ^getIterationTypesOfIterableWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:74881:51
+      1    1.1%      LazyCompile: ~getDeclaredTypeOfSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51944:41
+      1  100.0%        LazyCompile: ~getTypeOfGlobalSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54697:39
+      1  100.0%          LazyCompile: ~getGlobalType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:54734:31
+      1  100.0%            Function: ^initializeTypeChecker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:78631:39
+      1    1.1%      LazyCompile: ~getCompilerOptionValue /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18912:36
+      1  100.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:121360:67
+      1  100.0%          T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%            LazyCompile: ~getKeyForCompilationSettings /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:121359:42
+      1    1.1%      LazyCompile: ~getBaseConstructorTypeOfClass /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51534:47
+      1  100.0%        LazyCompile: ~resolveBaseTypesOfClass /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51637:41
+      1  100.0%          Function: ^getBaseTypes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:51603:30
+      1  100.0%            Function: ^resolveObjectTypeMembers /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:52322:42
+      1    1.1%      LazyCompile: ~getAliasSymbolForTypeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56548:43
+      1  100.0%        LazyCompile: ~getTypeFromIntersectionTypeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:55623:49
+      1  100.0%          LazyCompile: ~getTypeFromTypeNodeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56859:43
+      1  100.0%            Function: ^getTypeFromTypeNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:56856:37
+      1    1.1%      LazyCompile: ~get type /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/sctp/src/chunk.ts:166:13
+      1  100.0%        LazyCompile: ~get bytes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/sctp/src/chunk.ts:169:14
+      1  100.0%          LazyCompile: ~serializePacket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/sctp/src/chunk.ts:419:25
+      1  100.0%            LazyCompile: ~sendChunk /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/sctp/src/sctp.ts:811:14
+      1    1.1%      LazyCompile: ~forEachCode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/http-errors/index.js:243:38
+      1  100.0%        T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%          LazyCompile: ~populateConstructorExports /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/http-errors/index.js:242:37
+      1  100.0%            Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/http-errors/index.js:1:1
+      1    1.1%      LazyCompile: ~decrypt /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/cipher/suites/aead.ts:72:12
+      1  100.0%        LazyCompile: ~decryptPacket /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/context/cipher.ts:29:18
+      1  100.0%          LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/flight/server/flight6.ts:27:42
+      1  100.0%            T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    1.1%      LazyCompile: ~deSerialize /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/rtp/src/rtcp/rtcp.ts:21:23
+      1  100.0%        LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/webrtc/src/transport/dtls.ts:104:55
+      1  100.0%          Function: ^Event.execute /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/rx.mini/lib/core/index.js:7:33
+      1  100.0%            Function: ^dataReceived /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/ice.ts:483:17
+      1    1.1%      LazyCompile: ~createTimer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:3487:29
+      1  100.0%        LazyCompile: ~emitFiles /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:99640:23
+      1  100.0%          LazyCompile: ~emitWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106109:28
+      1  100.0%            LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106102:60
+      1    1.1%      LazyCompile: ~createDebug /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/node_modules/debug/src/debug.js:63:21
+      1  100.0%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/express/lib/router/route.js:1:1
+      1  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1    1.1%      LazyCompile: ~createContext node:vm:215:23
+      1  100.0%        LazyCompile: ~runInNewContext node:vm:292:25
+      1  100.0%          LazyCompile: ~isInsideNodeModules node:internal/util:404:29
+      1  100.0%            LazyCompile: ~showFlaggedDeprecation node:buffer:172:32
+      1    1.1%      LazyCompile: ~convertOptionsFromJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38173:36
+      1  100.0%        LazyCompile: ~convertCompilerOptionsFromJsonWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38153:50
+      1  100.0%          LazyCompile: ~parseOwnConfigOfJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37981:34
+      1  100.0%            LazyCompile: ~parseConfig /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37935:25
+      1    1.1%      LazyCompile: ~convertArrayLiteralExpressionToJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37393:53
+      1  100.0%        LazyCompile: ~convertPropertyValueToJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37400:44
+      1  100.0%          LazyCompile: ~_loop_4 /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37336:36
+      1  100.0%            LazyCompile: ~convertObjectLiteralExpressionToJson /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:37334:54
+      1    1.1%      LazyCompile: ~compileFunction node:vm:308:25
+      1  100.0%        LazyCompile: ~wrapSafe node:internal/modules/cjs/loader:1017:18
+      1  100.0%          LazyCompile: ~Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            LazyCompile: ~Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1    1.1%      LazyCompile: ~collectDynamicImportOrRequireCalls /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106637:56
+      1  100.0%        Function: ^collectExternalModuleReferences /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106560:49
+      1  100.0%          Function: ^processImportedModules /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:107132:40
+      1  100.0%            Function: ^findSourceFileWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:106775:38
+      1    1.1%      LazyCompile: ~checkTypeLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:72631:34
+      1  100.0%        Function: ^checkSourceElementWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:76879:42
+      1  100.0%          Function: ^checkSourceElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:76870:36
+      1  100.0%            Function: ^checkVariableLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:74216:46
+      1    1.1%      LazyCompile: ~checkBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:70980:39
+      1  100.0%        Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%          Function: ^checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1  100.0%            Function: ^checkExpressionCached /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71533:39
+      1    1.1%      LazyCompile: ~allocate node:buffer:397:18
+      1  100.0%        LazyCompile: ~allocUnsafe node:buffer:372:42
+      1  100.0%          LazyCompile: ~tryCreateBuffer node:fs:414:25
+      1  100.0%            LazyCompile: ~readFileSync node:fs:450:22
+      1    1.1%      LazyCompile: ~accessKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18261:24
+      1  100.0%        Function: ^isWriteOnlyAccess /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:18244:31
+      1  100.0%          Function: ^getResolvedSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:62449:35
+      1  100.0%            LazyCompile: ~checkIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64337:33
+      1    1.1%      LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/ice.ts:63:62
+      1  100.0%        T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    1.1%      LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/flight/server/flight2.ts:18:36
+      1  100.0%        T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1  100.0%          LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/flight/server/flight2.ts:16:46
+      1  100.0%            LazyCompile: ~handleHandshakes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/server.ts:64:21
+      1    1.1%      LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38884:60
+      1  100.0%        LazyCompile: ~firstDefined /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:407:26
+      1  100.0%          LazyCompile: ~primaryLookup /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38878:31
+      1  100.0%            LazyCompile: ~resolveTypeReferenceDirective /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:38828:43
+      1    1.1%      LazyCompile: *speculationHelper /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29115:35
+      1  100.0%        Function: ^tryParse /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29156:26
+      1  100.0%          Function: ^parseNestedTypeLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34599:48
+      1  100.0%            Function: ^parseParameterOrPropertyTag /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:34579:53
+      1    1.1%      LazyCompile: *scan /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:10551:22
+      1  100.0%        LazyCompile: *parseExpected /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29182:31
+      1  100.0%          Function: ^parseParameters /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30468:33
+      1  100.0%            LazyCompile: *parsePropertyOrMethodSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30573:48
+      1    1.1%      LazyCompile: *parseIntersectionTypeOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31039:47
+      1  100.0%        LazyCompile: *parseTypeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31129:33
+      1  100.0%          LazyCompile: *parseParameterWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30399:38
+      1  100.0%            Function: ^parseParameter /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30396:32
+      1    1.1%      LazyCompile: *isReachableFlowNodeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63171:43
+      1  100.0%        Function: ^<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63206:63
+      1  100.0%          Function: ^some /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:936:18
+      1  100.0%            LazyCompile: *isReachableFlowNodeWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:63171:43
+      1    1.1%      LazyCompile: *isIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26327:26
+      1  100.0%        Function: ^checkPropertyAccessExpressionOrQualifiedName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:67060:62
+      1  100.0%          Function: ^checkPropertyAccessExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:66986:47
+      1  100.0%            Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1    1.1%      LazyCompile: *getNodeId /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:43570:23
+      1  100.0%        Function: ^generateNameCached /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103597:36
+      1  100.0%          Function: ^generateName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103584:30
+      1  100.0%            Function: ^generateNameIfNeeded /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103571:38
+      1    1.1%      LazyCompile: *createBaseVariableLikeDeclaration /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20934:51
+      1  100.0%        LazyCompile: *parseParameterWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30399:38
+      1  100.0%          Function: ^parseParameterInOuterAwaitContext /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30393:51
+      1  100.0%            LazyCompile: *parseDelimitedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29982:36
+      1    1.1%      LazyCompile: *checkTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:58339:36
+      1  100.0%        LazyCompile: *getSignatureApplicabilityError /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68043:48
+      1  100.0%          Function: ^chooseOverload /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68580:36
+      1  100.0%            Function: ^resolveCall /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68385:29
+      1    1.1%      LazyCompile: *checkIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64337:33
+      1  100.0%        Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%          LazyCompile: *checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1  100.0%            LazyCompile: *getSignatureApplicabilityError /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68043:48
+      1    1.1%      LazyCompile: *checkBinaryLikeExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71078:49
+      1  100.0%        Function: ^checkBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:70980:39
+      1  100.0%          Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%            LazyCompile: *checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1    1.1%      Function: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    1.1%      Function: ~<anonymous> node:internal/dns/utils:1:1
+      1  100.0%        Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1  100.0%          Function: ^nativeModuleRequire node:internal/bootstrap/loaders:332:29
+      1  100.0%            Function: ~<anonymous> node:dns:1:1
+      1    1.1%      Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/dtls/src/cipher/prf.ts:1:1
+      1  100.0%        Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%          Function: ^m._compile /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:706:31
+      1  100.0%            Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1    1.1%      Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:20307:11
+      1  100.0%        Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:1:1
+      1  100.0%          Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%            LazyCompile: ~Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1    1.1%      Function: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/signal-exit/index.js:1:1
+      1  100.0%        Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+      1  100.0%          Function: ^Module._extensions..js node:internal/modules/cjs/loader:1110:37
+      1  100.0%            Function: ^require.extensions.<computed> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/ts-node/dist/index.js:699:40
+      1    1.1%      Function: ^signatureRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:60165:40
+      1  100.0%        Function: ^signaturesRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:60060:41
+      1  100.0%          Function: ^structuredTypeRelatedToWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:59186:51
+      1  100.0%            Function: ^structuredTypeRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:59180:45
+      1    1.1%      Function: ^resolveCall /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68385:29
+      1  100.0%        Function: ^resolveCallExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:68767:39
+      1  100.0%          Function: ^resolveSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:69236:34
+      1  100.0%            Function: ^getResolvedSignature /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:69259:38
+      1    1.1%      Function: ^recordMergedSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44368:36
+      1  100.0%        LazyCompile: ~mergeSymbol /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44394:29
+      1  100.0%          LazyCompile: ~<anonymous> /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:44515:37
+      1  100.0%            T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    1.1%      Function: ^realpathSync node:fs:2408:22
+      1  100.0%        Function: ^toRealPath node:internal/modules/cjs/loader:393:20
+      1  100.0%          Function: ^Module._findPath node:internal/modules/cjs/loader:494:28
+      1  100.0%            Function: ^Module._resolveFilename node:internal/modules/cjs/loader:848:35
+      1    1.1%      Function: ^readPackage node:internal/modules/cjs/loader:290:21
+      1  100.0%        Function: ^readPackageScope node:internal/modules/cjs/loader:321:26
+      1  100.0%          Function: ^trySelf node:internal/modules/cjs/loader:441:17
+      1  100.0%            Function: ^Module._resolveFilename node:internal/modules/cjs/loader:848:35
+      1    1.1%      Function: ^parsePropertyNameWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29348:41
+      1  100.0%        Function: ^parsePropertyName /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29362:35
+      1  100.0%          Function: ^parseObjectLiteralElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:32541:43
+      1  100.0%            LazyCompile: *parseDelimitedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29982:36
+      1    1.1%      Function: ^parsePostfixTypeOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30939:42
+      1  100.0%        Function: ^parseTypeOperatorOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:30990:43
+      1  100.0%          LazyCompile: *parseUnionOrIntersectionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31024:46
+      1  100.0%            Function: ^parseIntersectionTypeOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31039:47
+      1    1.1%      Function: ^parseParenthesizedArrowFunctionExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31547:59
+      1  100.0%        LazyCompile: *parseAssignmentExpressionOrHigher /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31242:51
+      1  100.0%          Function: ^parseInitializer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:31239:34
+      1  100.0%            Function: ^doOutsideOfContext /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:28959:36
+      1    1.1%      Function: ^parseDelimitedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:29982:36
+      1  100.0%        Function: ^parseVariableDeclarationList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33324:46
+      1  100.0%          Function: ^parseVariableStatement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33364:40
+      1  100.0%            Function: ^parseStatement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:33083:32
+      1    1.1%      Function: ^isNumericLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:26289:30
+      1  100.0%        Function: ^getLiteralText /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:13880:28
+      1  100.0%          Function: ^getLiteralTextOfNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103426:38
+      1  100.0%            Function: ^emitLiteral /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100982:29
+      1    1.1%      Function: ^increaseIndent /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103167:32
+      1  100.0%        Function: ^emitNodeList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:102974:30
+      1  100.0%          LazyCompile: *emitList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:102946:26
+      1  100.0%            Function: ^emitBlockStatements /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101733:37
+      1    1.1%      Function: ^getUnionTypeFromSortedList /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:55331:44
+      1  100.0%        Function: ^getUnionType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:55261:30
+      1  100.0%          Function: ^mapType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:62933:25
+      1  100.0%            Function: ^getApparentTypeOfContextualType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:65529:49
+      1    1.1%      Function: ^getReducedApparentType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53445:40
+      1  100.0%        Function: ^getPropertyOfType /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:53661:35
+      1  100.0%          Function: ^propertiesRelatedTo /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:59906:41
+      1  100.0%            Function: ^structuredTypeRelatedToWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:59186:51
+      1    1.1%      Function: ^getLinesBetweenNodes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:103382:38
+      1  100.0%        Function: ^emitBinaryExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:101603:38
+      1  100.0%          Function: ^pipelineEmitWithHint /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:100468:38
+      1  100.0%            LazyCompile: *pipelineEmitWithSourceMap /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:104089:43
+      1    1.1%      Function: ^getAssignmentTargetKind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15817:37
+      1  100.0%        Function: ^isAssignmentTarget /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:15862:32
+      1  100.0%          LazyCompile: ~bindObjectLiteralExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:41789:45
+      1  100.0%            Function: ^bindWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42200:28
+      1    1.1%      Function: ^from node:buffer:295:28
+      1  100.0%        LazyCompile: ~get bytes /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/message.ts:67:14
+      1  100.0%          LazyCompile: ~sendStun /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/protocol.ts:61:13
+      1  100.0%            LazyCompile: ~Transaction.retry /Users/tbryant/Projects/nstrumenta/examples/node-sfu/packages/werift/ice/src/stun/transaction.ts:39:22
+      1    1.1%      Function: ^checkSourceElementWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:76879:42
+      1  100.0%        Function: ^checkSourceElement /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:76870:36
+      1  100.0%          LazyCompile: *forEach /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:379:21
+      1  100.0%            Function: ^checkBlock /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:74024:28
+      1    1.1%      Function: ^checkIdentifier /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:64337:33
+      1  100.0%        Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%          LazyCompile: *checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1  100.0%            Function: ^checkNonNullExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:66942:40
+      1    1.1%      Function: ^checkExpressionWorker /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71907:39
+      1  100.0%        Function: ^checkExpression /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71865:33
+      1  100.0%          LazyCompile: ~checkExpressionCached /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71533:39
+      1  100.0%            LazyCompile: ~checkDeclarationInitializer /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:71556:45
+      1    1.1%      Function: ^bindChildren /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:40571:30
+      1  100.0%        Function: ^bind /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:42110:22
+      1  100.0%          LazyCompile: *visitNode /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27848:23
+      1  100.0%            LazyCompile: *forEachChild /Users/tbryant/Projects/nstrumenta/examples/node-sfu/node_modules/typescript/lib/typescript.js:27885:26
+      1    1.1%      Function: ^Module._findPath node:internal/modules/cjs/loader:494:28
+      1  100.0%        Function: ^Module._resolveFilename node:internal/modules/cjs/loader:848:35
+      1  100.0%          Function: ^Module._load node:internal/modules/cjs/loader:757:24
+      1  100.0%            Function: ^Module.require node:internal/modules/cjs/loader:997:36
+      1    1.1%      Function: ^<anonymous> node:internal/validators:235:42
+      1  100.0%        Function: ^compileFunction node:vm:308:25
+      1  100.0%          Function: ^wrapSafe node:internal/modules/cjs/loader:1017:18
+      1  100.0%            Function: ^Module._compile node:internal/modules/cjs/loader:1055:37
+
+    110    1.2%  T node::native_module::NativeModuleEnv::CompileFunction(v8::FunctionCallbackInfo<v8::Value> const&)
+    110  100.0%    T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+     88   80.0%      Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+     68   77.3%        Function: ^nativeModuleRequire node:internal/bootstrap/loaders:332:29
+     23   33.8%          Function: ~<anonymous> node:repl:1:1
+     23  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      8   11.8%          Function: ~<anonymous> node:http:1:1
+      8  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      5    7.4%          Function: ~<anonymous> node:crypto:1:1
+      5  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      4    5.9%          Function: ~<anonymous> node:tty:1:1
+      4  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      4    5.9%          Function: ~<anonymous> node:child_process:1:1
+      4  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      3    4.4%          Function: ~<anonymous> node:_http_client:1:1
+      3  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    2.9%          LazyCompile: ~lazyRequire node:internal/crypto/util:67:21
+      2  100.0%            LazyCompile: ~get node:crypto:287:8
+      2    2.9%          LazyCompile: ~lazyLoadStreams node:fs:2841:25
+      2  100.0%            LazyCompile: ~get ReadStream node:fs:2984:17
+      2    2.9%          Function: ~<anonymous> node:internal/crypto/hkdf:1:1
+      2  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    2.9%          Function: ~<anonymous> node:internal/cluster/primary:1:1
+      2  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    2.9%          Function: ~<anonymous> node:assert:1:1
+      2  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    2.9%          Function: ~<anonymous> node:_http_common:1:1
+      2  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          LazyCompile: ~listenInCluster node:net:1372:25
+      1  100.0%            LazyCompile: ~Server.listen node:net:1414:35
+      1    1.5%          LazyCompile: ~get node:dns:334:8
+      1  100.0%            T node::PerProcessOptions::CheckOptions(std::__1::vector<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> >, std::__1::allocator<std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > > >*)
+      1    1.5%          Function: ~<anonymous> node:worker_threads:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:net:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:module:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:internal/readline/callbacks:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:internal/crypto/pbkdf2:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:internal/crypto/cipher:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    1.5%          Function: ~<anonymous> node:cluster:1:1
+      1  100.0%            Function: ^compileForInternalLoader node:internal/bootstrap/loaders:299:27
+     14   15.9%        Function: ^compileForPublicLoader node:internal/bootstrap/loaders:246:25
+     14  100.0%          Function: ^loadNativeModule node:internal/modules/cjs/helpers:44:26
+     14  100.0%            Function: ^Module._load node:internal/modules/cjs/loader:757:24
+      6    6.8%        LazyCompile: ~compileForPublicLoader node:internal/bootstrap/loaders:246:25
+      6  100.0%          Function: ^loadNativeModule node:internal/modules/cjs/helpers:44:26
+      6  100.0%            Function: ^Module._load node:internal/modules/cjs/loader:757:24
+     22   20.0%      LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+     22  100.0%        LazyCompile: ~nativeModuleRequire node:internal/bootstrap/loaders:332:29
+      6   27.3%          Function: ~<anonymous> node:internal/modules/esm/loader:1:1
+      6  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      4   18.2%          LazyCompile: ~initializeCJSLoader node:internal/bootstrap/pre_execution:421:29
+      4  100.0%            LazyCompile: ~prepareMainThreadExecution node:internal/bootstrap/pre_execution:22:36
+      2    9.1%          Function: ~<anonymous> node:internal/process/esm_loader:1:1
+      2  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    9.1%          Function: ~<anonymous> node:internal/modules/esm/get_source:1:1
+      2  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      2    9.1%          Function: ~<anonymous> node:internal/main/run_main_module:1:1
+      1    4.5%          LazyCompile: ~setupInspectorHooks node:internal/bootstrap/pre_execution:232:29
+      1  100.0%            LazyCompile: ~prepareMainThreadExecution node:internal/bootstrap/pre_execution:22:36
+      1    4.5%          LazyCompile: ~initializeSourceMapsHandlers node:internal/bootstrap/pre_execution:460:38
+      1  100.0%            LazyCompile: ~prepareMainThreadExecution node:internal/bootstrap/pre_execution:22:36
+      1    4.5%          Function: ~<anonymous> node:internal/source_map/source_map_cache:1:1
+      1  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    4.5%          Function: ~<anonymous> node:internal/modules/esm/translators:1:1
+      1  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    4.5%          Function: ~<anonymous> node:internal/modules/esm/load:1:1
+      1  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+      1    4.5%          Function: ~<anonymous> node:internal/fs/promises:1:1
+      1  100.0%            LazyCompile: ~compileForInternalLoader node:internal/bootstrap/loaders:299:27
+

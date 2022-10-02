@@ -1,15 +1,19 @@
 {
   "compilerOptions": {
-    "target": "ES6",
+    "target": "ES2020",
     "module": "CommonJS",
     "moduleResolution": "Node",
     "lib": [
-      "ESNext"
+      "ESNext",
+      "ES2020"
     ],
     "declaration": true,
     "outDir": "../../dist/nodejs",
     "strict": true,
     "esModuleInterop": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "strictNullChecks": false,
+    "useUnknownInCatchVariables": false,
+    "noImplicitAny": false
   }
 }

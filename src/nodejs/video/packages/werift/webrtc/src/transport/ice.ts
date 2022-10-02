@@ -1,16 +1,16 @@
-import Event from "rx.mini";
-import { Candidate, Connection, IceOptions } from "../../../ice/src";
-import { candidateFromSdp, candidateToSdp } from "../sdp";
+import Event from 'rx.mini';
+import { Candidate, Connection, IceOptions } from '../../../ice/src';
+import { candidateFromSdp, candidateToSdp } from '../sdp';
 
 export type IceState =
-  | "new"
-  | "gathering"
-  | "stateChange"
-  | "completed"
-  | "closed"
-  | "checking"
-  | "failed"
-  | "disconnected";
+  | 'new'
+  | 'gathering'
+  | 'stateChange'
+  | 'completed'
+  | 'closed'
+  | 'checking'
+  | 'failed'
+  | 'disconnected';
 
 export class RTCIceGatherer {
   readonly subject = new Event<[IceState]>();
@@ -18,7 +18,7 @@ export class RTCIceGatherer {
 
   readonly connection = new Connection(false, this.options);
 
-  private _state: IceState = "new";
+  private _state: IceState = 'new';
 
   constructor(private options: Partial<IceOptions> = {}) {}
 
@@ -27,12 +27,12 @@ export class RTCIceGatherer {
   }
 
   async gather() {
-    if (this._state === "new") {
-      this.setState("gathering");
+    if (this._state === 'new') {
+      this.setState('gathering');
       await this.connection.gatherCandidates((candidate) =>
         this.onIceCandidate(candidateFromIce(candidate))
       );
-      this.setState("completed");
+      this.setState('completed');
     }
   }
 
@@ -145,7 +145,7 @@ export class RTCIceParameters {
 export class RTCIceTransport {
   iceState = new Event<[IceState]>();
   private waitStart?: Event<[]>;
-  private _state: IceState = "new";
+  private _state: IceState = 'new';
   connection = this.gather.connection;
   roleSet = false;
 
@@ -160,8 +160,8 @@ export class RTCIceTransport {
   }
 
   get role() {
-    if (this.connection.iceControlling) return "controlling";
-    else return "controlled";
+    if (this.connection.iceControlling) return 'controlling';
+    else return 'controlled';
   }
 
   get state() {
@@ -171,12 +171,12 @@ export class RTCIceTransport {
   private setState(state: IceState) {
     if (state !== this.state) {
       this._state = state;
-      this.iceState.execute("stateChange");
+      this.iceState.execute('stateChange');
 
-      if (state === "closed") {
-        this.iceGather.subject.execute("closed");
+      if (state === 'closed') {
+        this.iceGather.subject.execute('closed');
         this.iceGather.subject.complete();
-        this.iceState.execute("closed");
+        this.iceState.execute('closed');
         this.iceState.complete();
       }
     }
@@ -193,29 +193,29 @@ export class RTCIceTransport {
   };
 
   async start(remoteParameters: RTCIceParameters) {
-    if (this.state === "closed") throw new Error("RTCIceTransport is closed");
+    if (this.state === 'closed') throw new Error('RTCIceTransport is closed');
 
     if (this.waitStart) await this.waitStart.asPromise();
     this.waitStart = new Event();
 
-    this.setState("checking");
+    this.setState('checking');
     this.connection.remoteUsername = remoteParameters.usernameFragment;
     this.connection.remotePassword = remoteParameters.password;
 
     try {
       await this.connection.connect();
-      this.setState("completed");
+      this.setState('completed');
     } catch (error) {
-      this.setState("failed");
-      throw new Error(error);
+      this.setState('failed');
+      throw new Error(error as string);
     }
 
     this.waitStart.complete();
   }
 
   async stop() {
-    if (this.state !== "closed") {
-      this.setState("closed");
+    if (this.state !== 'closed') {
+      this.setState('closed');
       await this.connection.close();
     }
   }
