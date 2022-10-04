@@ -226,7 +226,18 @@ export class NstrumentaServer {
 
     const server = require('http').Server(app);
 
+    // werift begin
+    // json body parser and allow CORS
+    app.use(express.json());
+    app.use((_, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      next();
+    });
+    
     startVideoServer(app);
+    // werift end
 
     const wss = new WebSocketServer({ server: server });
 
