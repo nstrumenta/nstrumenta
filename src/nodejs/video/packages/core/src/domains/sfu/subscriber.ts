@@ -1,22 +1,16 @@
-import debug from "debug";
-import {
-  ReceiverEstimatedMaxBitrate,
-  RtcpPayloadSpecificFeedback,
-} from "../../../../werift/rtp/src";
-import {
-  RTCPeerConnection,
-  RTCRtpTransceiver,
-} from "../../../../werift/webrtc/src";
-import { Media } from "../media/media";
+import debug from 'debug';
+import { ReceiverEstimatedMaxBitrate, RtcpPayloadSpecificFeedback } from 'werift';
+import { RTCPeerConnection, RTCRtpTransceiver } from 'werift';
+import { Media } from '../media/media';
 
-const log = debug("werift:sfu:subscriber");
+const log = debug('werift:sfu:subscriber');
 
-export type SubscriberType = "high" | "low" | "single" | "auto";
+export type SubscriberType = 'high' | 'low' | 'single' | 'auto';
 
 export class Subscriber {
   private stopRTP: () => void = () => {};
 
-  state: SubscriberType = "single";
+  state: SubscriberType = 'single';
 
   constructor(
     readonly peer: RTCPeerConnection,
@@ -25,23 +19,23 @@ export class Subscriber {
   ) {}
 
   listenSingle() {
-    this.state = "single";
+    this.state = 'single';
     this.subscribeAV(this.state);
   }
 
   listenHigh() {
-    this.state = "high";
+    this.state = 'high';
     this.subscribeAV(this.state);
   }
 
   listenLow() {
-    this.state = "low";
+    this.state = 'low';
     this.subscribeAV(this.state);
   }
 
   listenAuto() {
-    this.state = "auto";
-    this.subscribeAV("high");
+    this.state = 'auto';
+    this.subscribeAV('high');
     this.watchREMB();
   }
 
@@ -57,18 +51,18 @@ export class Subscriber {
           const remb = psfb.feedback as ReceiverEstimatedMaxBitrate;
 
           if (remb.bitrate / 1000n <= 200n) {
-            if (this.state !== "low" && this.count >= this.threshold) {
-              console.log("low");
-              this.state = "low";
+            if (this.state !== 'low' && this.count >= this.threshold) {
+              console.log('low');
+              this.state = 'low';
               this.stopRTP();
               this.subscribeAV(this.state);
               this.count = 0;
             }
             this.count++;
           } else {
-            if (this.state !== "high" && this.count <= -this.threshold) {
-              console.log("high");
-              this.state = "high";
+            if (this.state !== 'high' && this.count <= -this.threshold) {
+              console.log('high');
+              this.state = 'high';
               this.stopRTP();
               this.subscribeAV(this.state);
               this.count = 0;
@@ -88,9 +82,9 @@ export class Subscriber {
 
     this.state = state;
 
-    if (state === "auto") {
+    if (state === 'auto') {
       this.watchREMB();
-      this.state = "high";
+      this.state = 'high';
     }
 
     this.subscribeAV(this.state);
@@ -113,20 +107,19 @@ export class Subscriber {
     const sender = this.sender;
     if (!sender) throw new Error();
 
-    log("on subscribe", sender.uuid, state);
+    log('on subscribe', sender.uuid, state);
 
     const track =
-      state === "single"
+      state === 'single'
         ? this.media.tracks[0].track
-        : this.media.tracks.find(({ track }) => track.rid!.includes(state))!
-            .track;
+        : this.media.tracks.find(({ track }) => track.rid!.includes(state))!.track;
 
-    const [rtp] = await track.onRtp.asPromise();
-    sender.replaceRtp(rtp.header);
-    log("replace track", sender.uuid, rtp.header.ssrc);
+    const [rtp] = await track.onReceiveRtp.asPromise();
+    sender.sender.replaceRTP(rtp.header);
+    log('replace track', sender.uuid, rtp.header.ssrc);
 
-    const { unSubscribe } = track.onRtp.subscribe((rtp) => {
-      sender.sendRtp(rtp);
+    const { unSubscribe } = track.onReceiveRtp.subscribe((rtp) => {
+      sender.sender.sendRtp(rtp);
     });
     this.stopRTP = unSubscribe;
   }

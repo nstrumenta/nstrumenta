@@ -1,9 +1,6 @@
-import {
-  RTCPeerConnection,
-  RTCRtpTransceiver,
-} from "../../../../werift/webrtc/src";
-import { Media } from "../media/media";
-import { Subscriber, SubscriberType } from "./subscriber";
+import { RTCPeerConnection, RTCRtpTransceiver } from 'werift';
+import { Media } from '../media/media';
+import { Subscriber, SubscriberType } from './subscriber';
 
 export class SFU {
   subscribers: {
@@ -19,8 +16,8 @@ export class SFU {
     const peers = await Promise.all(
       Object.values(this.subscribers).map(async ({ peer, sender }) => {
         if (sender) {
-          peer.removeTrack(sender);
-          await peer.setLocalDescription(peer.createOffer());
+          peer.removeTrack(sender.sender);
+          await peer.setLocalDescription(await peer.createOffer());
         }
         return peer;
       })
@@ -35,32 +32,25 @@ export class SFU {
     sender?: RTCRtpTransceiver,
     type?: SubscriberType
   ) {
-    const subscriber = (this.subscribers[subscriberId] = new Subscriber(
-      peer,
-      this.media,
-      sender
-    ));
+    const subscriber = (this.subscribers[subscriberId] = new Subscriber(peer, this.media, sender));
     switch (type) {
-      case "single":
+      case 'single':
         subscriber.listenSingle();
         break;
-      case "high":
+      case 'high':
         subscriber.listenHigh();
         break;
-      case "low":
+      case 'low':
         subscriber.listenLow();
         break;
-      case "auto":
+      case 'auto':
         subscriber.listenAuto();
         break;
     }
   }
 
   subscribeData(subscriberId: string, peer: RTCPeerConnection) {
-    const subscriber = (this.subscribers[subscriberId] = new Subscriber(
-      peer,
-      this.media
-    ));
+    const subscriber = (this.subscribers[subscriberId] = new Subscriber(peer, this.media));
     return subscriber.listenDataChannel();
   }
 

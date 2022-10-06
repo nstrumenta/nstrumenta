@@ -1,7 +1,7 @@
 import {
-  RTCIceCandidateJSON,
+  RTCIceCandidate,
   RTCSessionDescription,
-} from "../../../werift/webrtc/src";
+} from "werift";
 import { Room } from "../domains/room";
 
 export class Endpoint {
@@ -15,7 +15,7 @@ export class Endpoint {
     return this.room.connection.handleAnswer(peerId, answer);
   }
 
-  async handleCandidate(peerId: string, candidate: RTCIceCandidateJSON) {
+  async handleCandidate(peerId: string, candidate: RTCIceCandidate) {
     return this.room.connection.handleCandidate(peerId, candidate);
   }
 }

@@ -1,13 +1,11 @@
-import { OpusEncoder } from "@discordjs/opus";
-import { v4 } from "uuid";
-import { RTCRtpTransceiver } from "../../../../werift/webrtc/src";
-import { random16, uint16Add } from "../../../../werift/webrtc/src/utils";
-import { RtpHeader, RtpPacket } from "../../../../werift/rtp/src";
-import { Media } from "../media/media";
-import { Input, Mixer } from "./mixer";
+import { OpusEncoder } from '@discordjs/opus';
+import { v4 } from 'uuid';
+import { random16, RTCRtpTransceiver, RtpHeader, RtpPacket, uint16Add } from 'werift';
+import { Media } from '../media/media';
+import { Input, Mixer } from './mixer';
 
 export class MCU {
-  readonly id = "mcu_" + v4();
+  readonly id = 'mcu_' + v4();
 
   private readonly encoder = new OpusEncoder(48000, 2);
   private readonly mixer = new Mixer({ bit: 16 });
@@ -24,7 +22,7 @@ export class MCU {
 
   inputMedia(media: Media) {
     const input = this.mixer.input();
-    const { unSubscribe } = media.tracks[0].track.onRtp.subscribe((packet) => {
+    const { unSubscribe } = media.tracks[0].track.onReceiveRtp.subscribe((packet) => {
       const disposer = Object.values(this.disposer)[0];
       if (!disposer) return;
       if (disposer.id === media.mediaId) {
@@ -64,7 +62,7 @@ export class MCU {
         padding: false,
       });
       const rtp = new RtpPacket(header, encoded);
-      this.sender.sendRtp(rtp);
+      this.sender.sender.sendRtp(rtp);
     };
   }
 

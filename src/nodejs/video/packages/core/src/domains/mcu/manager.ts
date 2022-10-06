@@ -1,6 +1,6 @@
-import { RTCRtpTransceiver } from "../../../../werift/webrtc/src";
-import { Media } from "../media/media";
-import { MCU } from "./mcu";
+import { RTCRtpTransceiver } from 'werift';
+import { Media } from '../media/media';
+import { MCU } from './mcu';
 
 export class MCUManager {
   mcu: { [mcuId: string]: MCU } = {};

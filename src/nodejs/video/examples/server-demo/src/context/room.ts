@@ -1,9 +1,9 @@
 import { v4 } from "uuid";
 import { Room } from "../../../../packages/core/src";
 import {
-  RTCIceCandidateJSON,
+  RTCIceCandidate,
   RTCSessionDescription,
-} from "../../../../packages/werift/webrtc/src";
+} from "werift";
 
 const workerPath = process.argv[3];
 const workerLoaderPath =
@@ -45,7 +45,7 @@ export class RoomManager {
   async candidate(
     name: string,
     peerId: string,
-    candidate: RTCIceCandidateJSON
+    candidate: RTCIceCandidate
   ) {
     const room = this.rooms[name];
     return room.connection.handleCandidate(peerId, candidate);

@@ -1,32 +1,28 @@
-import { Kind } from "../../../werift/webrtc/src";
-import { MediaInfo } from "../domains/media/media";
-import { Room } from "../domains/room";
-import { SubscriberType } from "../domains/sfu/subscriber";
-import { MediaIdPair, RequestSubscribe } from "../typings/rpc";
+import { Kind } from 'werift';
+import { MediaInfo } from '../domains/media/media';
+import { Room } from '../domains/room';
+import { SubscriberType } from '../domains/sfu/subscriber';
+import { MediaIdPair, RequestSubscribe } from '../typings/rpc';
 
-export async function subscribe(
-  requests: RequestSubscribe[],
-  subscriberId: string,
-  room: Room
-) {
+export async function subscribe(requests: RequestSubscribe[], subscriberId: string, room: Room) {
   const peer = room.peers[subscriberId];
 
   const pairs = requests.map(({ info, type }) => {
     const { mediaId, kind } = info;
 
     const sfu = room.getSFU(info);
-    if (kind === "application") {
+    if (kind === 'application') {
       const label = sfu.subscribeData(subscriberId, peer);
       return { mediaId, label };
     } else {
-      const transceiver = peer.addTransceiver(kind as Kind, "sendonly");
+      const transceiver = peer.addTransceiver(kind as Kind, { direction: 'sendonly' });
       sfu.subscribeAV(subscriberId, peer, transceiver, type);
       return { mediaId, uuid: transceiver.uuid };
     }
   });
 
-  if (requests.find((req) => req.info.kind !== "application")) {
-    await peer.setLocalDescription(peer.createOffer());
+  if (requests.find((req) => req.info.kind !== 'application')) {
+    await peer.setLocalDescription(await peer.createOffer());
   }
 
   const mediaIdPairs = pairs
@@ -46,15 +42,12 @@ export async function subscribe(
   return { peer, mediaIdPairs };
 }
 
-export const unsubscribe = (room: Room) => async (
-  info: MediaInfo,
-  subscriberId: string
-) => {
+export const unsubscribe = (room: Room) => async (info: MediaInfo, subscriberId: string) => {
   const peer = room.peers[subscriberId];
   const sender = room.getSFU(info).unsubscribe(subscriberId);
   if (sender) {
-    peer.removeTrack(sender);
-    await peer.setLocalDescription(peer.createOffer());
+    peer.removeTrack(sender.sender);
+    await peer.setLocalDescription(await peer.createOffer());
   }
   return peer;
 };

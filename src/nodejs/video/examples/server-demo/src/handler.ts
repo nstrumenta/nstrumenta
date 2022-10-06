@@ -1,7 +1,7 @@
 import {
-  RTCIceCandidateJSON,
+  RTCIceCandidate,
   RTCSessionDescription,
-} from "../../../packages/werift/webrtc/src";
+} from "werift";
 import { Context } from "./context/context";
 
 export const handleCreate = async ({ roomManager }: Context) => {
@@ -25,7 +25,7 @@ export const handleCandidate = async (
   { roomManager }: Context,
   name: string,
   peerId: string,
-  candidate: RTCIceCandidateJSON
+  candidate: RTCIceCandidate
 ) => {
   return roomManager.candidate(name, peerId, candidate);
 };

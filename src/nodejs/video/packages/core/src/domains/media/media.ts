@@ -3,8 +3,8 @@ import {
   Kind,
   RTCDataChannel,
   RTCRtpTransceiver,
-  RtpTrack,
-} from "../../../../werift/webrtc/src";
+  MediaStreamTrack,
+} from "werift";
 import { Track } from "./track";
 import { Event } from "rx.mini";
 
@@ -32,7 +32,7 @@ export class Media {
     return this;
   }
 
-  addTrack(rtpTrack: RtpTrack) {
+  addTrack(rtpTrack: MediaStreamTrack) {
     if (this.kind !== rtpTrack.kind) throw new Error();
 
     const track = new Track(rtpTrack, this.transceiver!);

@@ -1,10 +1,10 @@
-import { RTCRtpTransceiver, RtpTrack } from "../../../../werift/webrtc/src";
+import { RTCRtpTransceiver, MediaStreamTrack } from "werift";
 
 export class Track {
   rtcpId: any;
 
-  constructor(public track: RtpTrack, public receiver: RTCRtpTransceiver) {
-    track.onRtp.once((rtp) => {
+  constructor(public track: MediaStreamTrack, public receiver: RTCRtpTransceiver) {
+    track.onReceiveRtp.once((rtp) => {
       this.startPLI(rtp.header.ssrc);
     });
   }

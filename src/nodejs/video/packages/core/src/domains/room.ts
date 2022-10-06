@@ -1,21 +1,15 @@
-import debug from "debug";
-import { v4 } from "uuid";
-import {
-  Kind,
-  RTCRtpTransceiver,
-  useAbsSendTime,
-  useSdesMid,
-  useSdesRTPStreamID,
-} from "../../../werift/webrtc/src";
-import { Connection } from "../responders/connection";
-import { sleep } from "../utils/helper";
-import { MCUManager } from "./mcu/manager";
-import { Media, MediaInfo } from "./media/media";
-import { PeerConnection } from "./peer";
-import { SFUManager } from "./sfu/manager";
-import { SFU } from "./sfu/sfu";
+import debug from 'debug';
+import { v4 } from 'uuid';
+import { Kind, RTCRtpTransceiver, useAbsSendTime, useSdesMid, useSdesRTPStreamId } from 'werift';
+import { Connection } from '../responders/connection';
+import { sleep } from '../utils/helper';
+import { MCUManager } from './mcu/manager';
+import { Media, MediaInfo } from './media/media';
+import { PeerConnection } from './peer';
+import { SFUManager } from './sfu/manager';
+import { SFU } from './sfu/sfu';
 
-const log = debug("werift:sfu:room");
+const log = debug('werift:sfu:room');
 
 export class Room {
   readonly connection = new Connection(this);
@@ -25,27 +19,24 @@ export class Room {
   medias: { [mediaId: string]: Media } = {};
 
   async join() {
-    const peerId = "p_" + v4();
+    const peerId = 'p_' + v4();
     const peer = new PeerConnection({
-      stunServer: ["stun.l.google.com", 19302],
       headerExtensions: {
-        video: [useSdesMid(1), useAbsSendTime(2), useSdesRTPStreamID(3)],
-        audio: [useSdesMid(1), useAbsSendTime(2)],
+        video: [useSdesMid(), useAbsSendTime(), useSdesRTPStreamId()],
+        audio: [useSdesMid(), useAbsSendTime()],
       },
     });
     this.peers[peerId] = peer;
 
-    const channel = peer.createDataChannel("__sfu");
+    const channel = peer.createDataChannel('__sfu');
     this.connection.listen(channel, peer, peerId);
 
-    await peer.setLocalDescription(peer.createOffer());
+    await peer.setLocalDescription(await peer.createOffer());
     return [peerId, peer.localDescription];
   }
 
   getUserMedias(peerId: string) {
-    const medias = Object.values(this.medias).filter(
-      (media) => media.publisherId === peerId
-    );
+    const medias = Object.values(this.medias).filter((media) => media.publisherId === peerId);
     return medias;
   }
 
@@ -66,28 +57,28 @@ export class Room {
   }
 
   createMedia(publisherId: string, { simulcast, kind }: CreateMediaRequest) {
-    log("publish", publisherId, { simulcast, kind });
+    log('publish', publisherId, { simulcast, kind });
     const peer = this.peers[publisherId];
 
     const media = new Media(kind, publisherId);
     this.medias[media.mediaId] = media;
 
-    if (kind === "application") {
+    if (kind === 'application') {
       const label = `__messaging:${media.mediaId}`;
       const datachannel =
-        peer.sctpTransport!.channelByLabel(label) ||
-        peer.createDataChannel(label);
+        peer.sctpTransport!.channelByLabel(label) || peer.createDataChannel(label);
       media.initData(datachannel);
     } else {
       const simulcastId = peer.simulcastIndex++;
       const transceiver = simulcast
-        ? peer.addTransceiver("video", "recvonly", {
+        ? peer.addTransceiver('video', {
+            direction: 'recvonly',
             simulcast: [
-              { rid: simulcastId + "high", direction: "recv" },
-              { rid: simulcastId + "low", direction: "recv" },
+              { rid: simulcastId + 'high', direction: 'recv' },
+              { rid: simulcastId + 'low', direction: 'recv' },
             ],
           })
-        : peer.addTransceiver(kind, "recvonly");
+        : peer.addTransceiver(kind, { direction: 'recvonly' });
       media.initAV(transceiver, simulcast);
     }
 
@@ -95,12 +86,10 @@ export class Room {
   }
 
   async publish(media: Media) {
-    if (media.kind !== "application" && media.transceiver) {
+    if (media.kind !== 'application' && media.transceiver) {
       if (media.simulcast) {
         await media.transceiver.onTrack.asPromise();
-        media.transceiver.receiver.tracks.forEach((track) =>
-          media.addTrack(track)
-        );
+        media.transceiver.receiver.tracks.forEach((track) => media.addTrack(track));
       } else {
         const [track] = await media.transceiver.onTrack.asPromise();
         media.addTrack(track);
@@ -122,9 +111,9 @@ export class Room {
 
     const peer = this.peers[info.publisherId];
     if (media.tracks.length > 0) {
-      peer.removeTrack(media.tracks[0].receiver);
+      // remove sender
     }
-    await peer.setLocalDescription(peer.createOffer());
+    await peer.setLocalDescription(await peer.createOffer());
 
     return peer;
   }
@@ -136,8 +125,7 @@ export class Room {
   }
 
   getSFU(info: MediaInfo): SFU {
-    if (this.sfuManager.getSFU(info.mediaId))
-      return this.sfuManager.getSFU(info.mediaId);
+    if (this.sfuManager.getSFU(info.mediaId)) return this.sfuManager.getSFU(info.mediaId);
 
     const media = this.medias[info.mediaId];
     if (!media) {
