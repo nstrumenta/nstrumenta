@@ -4,4 +4,5 @@ export {
   deserializeWireMessage,
   makeBusMessageFromJsonObject,
 } from './busMessage';
+export * from './rpc';
 export * from './client';

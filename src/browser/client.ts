@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
+import { WebSocket } from 'ws';
 import {
   BaseStorageService,
   ClientStatus,
@@ -9,6 +10,7 @@ import {
   SubscriptionCallback,
   getEndpoints,
   StorageUploadParameters,
+  RPCService,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -29,6 +31,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   public clientId: string | null = null;
 
   public connection: Connection = { status: ClientStatus.INIT };
+  public rpc: RPCService | undefined;
 
   constructor() {
     this.listeners = new Map();
@@ -145,6 +148,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
         }
         if (verified) {
           this.connection.status = ClientStatus.CONNECTED;
+          this.rpc = new RPCService(this.ws!);
           this.reconnection.hasVerified = true;
           this.listeners.get('open')?.forEach((callback) => callback());
           this.messageBuffer.forEach((message) => {

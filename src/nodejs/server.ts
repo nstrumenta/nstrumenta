@@ -337,21 +337,28 @@ export class NstrumentaServer {
 
         // commands from clients
 
-        if (contents?.command == 'startLog') {
-          const { channels, name } = contents;
-          logger.log(`[nstrumenta] <startLog> ${channels}`);
-          try {
-            await this.startLog(name, channels);
-          } catch (error) {
-            logger.log((error as Error).message);
+        // TODO: replace with rpc router
+        if (channel === '_rpc') {
+          if (contents?.method == 'startLog') {
+            const { channels, name } = contents.params;
+            logger.log(`[_rpc] <startLog> ${channels}`);
+            try {
+              const paths = await this.startLog(name, channels);
+              ws.send(
+                makeBusMessageFromJsonObject('_rpc_response', { id: contents.id, result: paths })
+              );
+            } catch (error) {
+              logger.log((error as Error).message);
+            }
+          }
+
+          if (contents?.method == 'finishLog') {
+            const { name } = contents;
+            logger.log(`[nstrumenta] <finishLog>`);
+            await this.finishLog(name);
           }
         }
-
-        if (contents?.command == 'finishLog') {
-          const { name } = contents;
-          logger.log(`[nstrumenta] <finishLog>`);
-          await this.finishLog(name);
-        }
+        // /TODO: replace with rpc router
 
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
@@ -421,7 +428,7 @@ export class NstrumentaServer {
     const stream = await createWriteStream(localPath);
     this.dataLogs.set(name, { localPath, channels, stream });
 
-    return this.dataLogs;
+    return [...this.dataLogs];
   }
 
   public async finishLog(name: string) {

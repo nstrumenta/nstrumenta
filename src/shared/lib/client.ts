@@ -39,7 +39,7 @@ export interface NstrumentaClientBase {
 
   addListener(eventType: 'open' | 'close', callback: ListenerCallback): void;
 
-  startLog(name: string, channels: string[]): Promise<void>;
+  startLog(name: string, channels: string[]): Promise<unknown>;
 
   finishLog(name: string): Promise<void>;
 
@@ -61,4 +61,18 @@ export interface BaseStorageService {
   download<T>(type: string, path: string): Promise<T>;
 
   download(type: string, path: string): Promise<unknown>;
+}
+
+export enum RPCMethods {
+  START_LOG = 'startLog',
+}
+
+export interface StartLogParams {
+  name: string;
+  channels: string[];
+}
+
+export interface BaseRPCService {
+  call(method: RPCMethods, params: Record<string, unknown>): Promise<unknown>;
+  call(method: RPCMethods.START_LOG, params: StartLogParams): Promise<string[]>;
 }

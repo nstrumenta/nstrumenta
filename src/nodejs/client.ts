@@ -9,6 +9,7 @@ import {
   getEndpoints,
   ListenerCallback,
   NstrumentaClientBase,
+  RPCService,
   StorageUploadParameters,
   SubscriptionCallback,
 } from '../shared';
@@ -31,6 +32,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
   public clientId: string | null = null;
 
   public connection: Connection = { status: ClientStatus.INIT };
+  public rpc: RPCService | undefined;
 
   constructor() {
     this.listeners = new Map();
@@ -124,6 +126,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
           }
           if (verified) {
             this.connection.status = ClientStatus.CONNECTED;
+            this.rpc = new RPCService(this.ws!);
             this.reconnection.hasVerified = true;
             this.listeners.get('open')?.forEach((callback) => callback());
             this.messageBuffer.forEach((message) => {
@@ -188,7 +191,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
 
   public async startLog(name: string, channels: string[]) {
     // TODO error on slashes ?
-    this.send('_nstrumenta', { command: 'startLog', name, channels });
+    return this.rpc?.call<unknown>('startLog', { name, channels });
   }
 
   public async finishLog(name: string) {

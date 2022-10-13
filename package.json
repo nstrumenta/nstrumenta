@@ -21,6 +21,7 @@
     "build:browser": "tsc --project ./src/browser",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
     "dev": "nodemon -- agent start --tag=local",
+    "generate-types": "ts-node ./src/shared/rpc-schema/generateRPCTypes.ts",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch"
   },
@@ -38,6 +39,8 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
+    "@open-rpc/schema-utils-js": "^1.16.1",
+    "@open-rpc/typings": "^1.0.0",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^16.7.13",
     "@types/semver": "^7.3.9",
@@ -51,6 +54,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
+    "@json-schema-tools/reference-resolver": "^1.2.5",
     "@types/bytebuffer": "^5.0.42",
     "@types/tar": "^6.1.1",
     "axios": "^0.26.1",
