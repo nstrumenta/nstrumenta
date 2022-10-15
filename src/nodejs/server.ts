@@ -22,8 +22,7 @@ import { NstrumentaClient } from './client';
 import WritableStream = NodeJS.WritableStream;
 import e = require('express');
 import { FileHandleWritable } from './fileHandleWriteable';
-import { config } from 'process';
-import { TextEncoder } from 'util';
+
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const logger = createLogger();
@@ -52,6 +51,10 @@ export type AgentActionStatus = 'pending' | 'complete';
 
 export interface LogConfig {
   header: Mcap0Types.Header;
+  channels: Array<{
+    schema: { title: string; type: 'object'; properties: Record<string, unknown> };
+    channel: Omit<Mcap0Types.Channel, 'id' | 'schemaId' | 'metadata'>;
+  }>;
 }
 
 export type BackplaneCommand =
@@ -89,6 +92,7 @@ export type DataLog =
       type: 'mcap';
       localPath: string;
       channels: string[];
+      channelIds: Map<string, number>;
       mcapWriter: McapWriter;
     };
 
@@ -408,14 +412,17 @@ export class NstrumentaServer {
                 }
                 break;
               case 'mcap': {
-                // TODO use correct channelIds
-                const channelId = 0;
+                const channelId = dataLog.channelIds.get(channel);
+                if (channelId === undefined)
+                  throw new Error(
+                    `attempting to log unregistered mcap channel ${channel} - be sure to add channel to LogConfig`
+                  );
                 await dataLog.mcapWriter.addMessage({
                   channelId,
                   sequence: 0,
                   publishTime: BigInt(0),
                   logTime: BigInt(Date.now()) * BigInt(1_000_000),
-                  data: new TextEncoder().encode(JSON.stringify(contents)),
+                  data: Buffer.from(JSON.stringify(contents)),
                 });
               }
             }
@@ -470,30 +477,25 @@ export class NstrumentaServer {
       });
       await mcapWriter.start(config.header);
 
-      const schema = {
-        title: 'HelloWorld',
-        type: 'object',
-        properties: {
-          value: {
-            type: 'string',
-          },
-        },
-      };
+      const channelIds = new Map();
+      await Promise.all(
+        config.channels.map(async (c) => {
+          const schemaId = await mcapWriter.registerSchema({
+            name: c.schema.title,
+            encoding: 'jsonschema',
+            data: Buffer.from(JSON.stringify(c.schema)),
+          });
 
-      const schemaId = await mcapWriter.registerSchema({
-        name: schema.title,
-        encoding: 'jsonschema',
-        data: Buffer.from(JSON.stringify(schema)),
-      });
+          const channelId = await mcapWriter.registerChannel({
+            schemaId,
+            metadata: new Map(),
+            ...c.channel,
+          });
+          return channelIds.set(c.channel.topic, channelId);
+        })
+      );
 
-      const channelId = await mcapWriter.registerChannel({
-        schemaId,
-        topic: 'some_topic',
-        messageEncoding: 'json',
-        metadata: new Map(),
-      });
-
-      this.dataLogs.set(name, { type, localPath, channels, mcapWriter });
+      this.dataLogs.set(name, { type, localPath, channels, channelIds, mcapWriter });
     } else {
       const type = 'stream';
       const stream = await createWriteStream(localPath);
