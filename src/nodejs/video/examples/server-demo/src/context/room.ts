@@ -1,19 +1,16 @@
-import { v4 } from "uuid";
-import { Room } from "../../../../packages/core/src";
-import {
-  RTCIceCandidate,
-  RTCSessionDescription,
-} from "werift";
+import { v4 } from 'uuid';
+import { Room } from '../../../../packages/core/src';
+import { RTCIceCandidate, RTCSessionDescription } from 'werift';
 
-const workerPath = process.argv[3];
-const workerLoaderPath =
-  process.argv[2] === "prod" ? workerPath : process.argv[2];
+// const workerPath = process.argv[3];
+// const workerLoaderPath =
+//   process.argv[2] === "prod" ? workerPath : process.argv[2];
 
 export class RoomManager {
   rooms: { [name: string]: Room } = {};
 
   create(name = v4()) {
-    console.log(process.cwd(), process.env.PWD);
+    // console.log(process.cwd(), process.env.PWD);
 
     // const room = wrap(
     //   Room,
@@ -42,11 +39,7 @@ export class RoomManager {
     return room.connection.handleAnswer(peerId, answer);
   }
 
-  async candidate(
-    name: string,
-    peerId: string,
-    candidate: RTCIceCandidate
-  ) {
+  async candidate(name: string, peerId: string, candidate: RTCIceCandidate) {
     const room = this.rooms[name];
     return room.connection.handleCandidate(peerId, candidate);
   }
