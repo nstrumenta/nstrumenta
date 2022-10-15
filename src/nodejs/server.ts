@@ -23,6 +23,7 @@ import WritableStream = NodeJS.WritableStream;
 import e = require('express');
 import { FileHandleWritable } from './fileHandleWriteable';
 import { config } from 'process';
+import { TextEncoder } from 'util';
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const logger = createLogger();
@@ -414,7 +415,7 @@ export class NstrumentaServer {
                   sequence: 0,
                   publishTime: BigInt(0),
                   logTime: BigInt(Date.now()) * BigInt(1_000_000),
-                  data: contents as unknown as Uint8Array,
+                  data: new TextEncoder().encode(JSON.stringify(contents)),
                 });
               }
             }
