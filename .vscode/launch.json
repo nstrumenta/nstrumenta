@@ -9,10 +9,6 @@
         "run-script",
         "dev"
       ],
-      "env": {
-        "NSTRUMENTA_WS_URL": "ws://localhost:8088",
-        "NSTRUMENTA_API_KEY": "0ce4e1bb-7f82-439e-b915-88fecbc643be"
-      },
       "runtimeExecutable": "npm",
       "skipFiles": [
         "<node_internals>/**"
