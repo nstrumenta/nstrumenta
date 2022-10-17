@@ -1,27 +1,26 @@
+import { Mcap0Types, Mcap0Writer as McapWriter } from '@mcap/core';
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
-import { createWriteStream, WriteStream } from 'fs';
+import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
-import { Mcap0Writer as McapWriter, IWritable, Mcap0Types } from '@mcap/core';
 
 import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject,
+  makeBusMessageFromJsonObject
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
-import WritableStream = NodeJS.WritableStream;
-import e = require('express');
 import { FileHandleWritable } from './fileHandleWriteable';
+import WritableStream = NodeJS.WritableStream;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -417,11 +416,20 @@ export class NstrumentaServer {
                   throw new Error(
                     `attempting to log unregistered mcap channel ${channel} - be sure to add channel to LogConfig`
                   );
+
+                const logTime =
+                  contents.timestamp !== undefined
+                    ? contents.timestamp.sec !== undefined
+                      ? BigInt(contents.timestamp.sec) * BigInt(1_000_000_000) +
+                        BigInt(contents.timestamp.nsec)
+                      : BigInt(contents.timestamp) * BigInt(1_000_000)
+                    : BigInt(Date.now()) * BigInt(1_000_000);
+
                 await dataLog.mcapWriter.addMessage({
                   channelId,
                   sequence: 0,
-                  publishTime: BigInt(0),
-                  logTime: BigInt(Date.now()) * BigInt(1_000_000),
+                  publishTime: logTime,
+                  logTime: logTime,
                   data: Buffer.from(JSON.stringify(contents)),
                 });
               }
