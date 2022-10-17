@@ -262,7 +262,10 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
 
   public async startLog(name: string, channels: string[]) {
     // TODO error on slashes ?
-    this.send('_nstrumenta', { command: 'startLog', name, channels });
+    if (this.rpc) {
+      return this.rpc.call<unknown>('startLog', { name, channels });
+    }
+    return Promise.reject('rpc module is not initialized — is there an open connection?');
   }
 
   public async finishLog(name: string) {
