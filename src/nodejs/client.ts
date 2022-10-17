@@ -17,6 +17,7 @@ import {
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
+import { LogConfig } from './server';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -186,9 +187,9 @@ export class NstrumentaClient implements NstrumentaClientBase {
     }
   }
 
-  public async startLog(name: string, channels: string[]) {
+  public async startLog(name: string, channels: string[], config?: LogConfig) {
     // TODO error on slashes ?
-    this.send('_nstrumenta', { command: 'startLog', name, channels });
+    this.send('_nstrumenta', { command: 'startLog', name, channels, config });
   }
 
   public async finishLog(name: string) {

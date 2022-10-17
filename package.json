@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.0.25",
+  "version": "3.0.26-mcap",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -51,6 +51,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
+    "@mcap/core": "^0.2.2",
     "@types/bytebuffer": "^5.0.42",
     "@types/tar": "^6.1.1",
     "axios": "^0.26.1",
