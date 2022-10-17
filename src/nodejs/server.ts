@@ -1,3 +1,4 @@
+import { Mcap0Types, Mcap0Writer as McapWriter } from '@mcap/core';
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
@@ -9,15 +10,18 @@ import { Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
+
 import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject,
+  makeBusMessageFromJsonObject
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
+import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
+
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const logger = createLogger();
@@ -44,6 +48,14 @@ export interface CommandStopModuleData {
 
 export type AgentActionStatus = 'pending' | 'complete';
 
+export interface LogConfig {
+  header: Mcap0Types.Header;
+  channels: Array<{
+    schema: { title: string; type: 'object'; properties: Record<string, unknown> };
+    channel: Omit<Mcap0Types.Channel, 'id' | 'schemaId' | 'metadata'>;
+  }>;
+}
+
 export type BackplaneCommand =
   | {
       task: 'runModule';
@@ -68,6 +80,21 @@ export interface NstrumentaServerOptions {
   allowUnverifiedConnection?: boolean;
 }
 
+export type DataLog =
+  | {
+      type: 'stream';
+      localPath: string;
+      channels: string[];
+      stream: WritableStream;
+    }
+  | {
+      type: 'mcap';
+      localPath: string;
+      channels: string[];
+      channelIds: Map<string, number>;
+      mcapWriter: McapWriter;
+    };
+
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
@@ -78,8 +105,7 @@ export class NstrumentaServer {
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
   logStreams?: Writable[];
-  dataLogs: Map<string, { localPath: string; channels: string[]; stream: WritableStream }> =
-    new Map();
+  dataLogs: Map<string, DataLog> = new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -338,10 +364,10 @@ export class NstrumentaServer {
         // commands from clients
 
         if (contents?.command == 'startLog') {
-          const { channels, name } = contents;
-          logger.log(`[nstrumenta] <startLog> ${channels}`);
+          const { channels, name, config } = contents;
+          logger.log(`[nstrumenta] <startLog> ${channels} ${JSON.stringify(config)}`);
           try {
-            await this.startLog(name, channels);
+            await this.startLog(name, channels, config);
           } catch (error) {
             logger.log((error as Error).message);
           }
@@ -372,12 +398,41 @@ export class NstrumentaServer {
           }
         });
 
-        this.dataLogs.forEach((dataLog) => {
+        this.dataLogs.forEach(async (dataLog) => {
           if (dataLog.channels.includes(channel)) {
-            if (busMessageType === BusMessageType.Json) {
-              dataLog.stream.write(JSON.stringify({ channel, contents }) + '\n');
-            } else {
-              dataLog.stream.write(busMessage);
+            switch (dataLog.type) {
+              case 'stream':
+                {
+                  if (busMessageType === BusMessageType.Json) {
+                    dataLog.stream.write(JSON.stringify({ channel, contents }) + '\n');
+                  } else {
+                    dataLog.stream.write(busMessage);
+                  }
+                }
+                break;
+              case 'mcap': {
+                const channelId = dataLog.channelIds.get(channel);
+                if (channelId === undefined)
+                  throw new Error(
+                    `attempting to log unregistered mcap channel ${channel} - be sure to add channel to LogConfig`
+                  );
+
+                const logTime =
+                  contents.timestamp !== undefined
+                    ? contents.timestamp.sec !== undefined
+                      ? BigInt(contents.timestamp.sec) * BigInt(1_000_000_000) +
+                        BigInt(contents.timestamp.nsec)
+                      : BigInt(contents.timestamp) * BigInt(1_000_000)
+                    : BigInt(Date.now()) * BigInt(1_000_000);
+
+                await dataLog.mcapWriter.addMessage({
+                  channelId,
+                  sequence: 0,
+                  publishTime: logTime,
+                  logTime: logTime,
+                  data: Buffer.from(JSON.stringify(contents)),
+                });
+              }
             }
           }
         });
@@ -412,24 +467,66 @@ export class NstrumentaServer {
     });
   }
 
-  public async startLog(name: string, channels: string[]) {
+  public async startLog(name: string, channels: string[], config?: LogConfig) {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
     await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
     logger.log({ name, cwdNstDir: nstDir, localPath });
-    const stream = await createWriteStream(localPath);
-    this.dataLogs.set(name, { localPath, channels, stream });
+    if (config) {
+      const type = 'mcap';
+      const fileHandle = await fs.open(localPath, 'w');
+      const fileHandleWritable = new FileHandleWritable(fileHandle);
+      const mcapWriter = new McapWriter({
+        writable: fileHandleWritable,
+        useStatistics: true,
+        useChunks: true,
+        useChunkIndex: true,
+      });
+      await mcapWriter.start(config.header);
+
+      const channelIds = new Map();
+      await Promise.all(
+        config.channels.map(async (c) => {
+          const schemaId = await mcapWriter.registerSchema({
+            name: c.schema.title,
+            encoding: 'jsonschema',
+            data: Buffer.from(JSON.stringify(c.schema)),
+          });
+
+          const channelId = await mcapWriter.registerChannel({
+            schemaId,
+            metadata: new Map(),
+            ...c.channel,
+          });
+          return channelIds.set(c.channel.topic, channelId);
+        })
+      );
+
+      this.dataLogs.set(name, { type, localPath, channels, channelIds, mcapWriter });
+    } else {
+      const type = 'stream';
+      const stream = await createWriteStream(localPath);
+      this.dataLogs.set(name, { type, localPath, channels, stream });
+    }
 
     return this.dataLogs;
   }
 
   public async finishLog(name: string) {
     logger.log(`<finishLog>: ${name}`);
-    if (!this.dataLogs.has(name)) throw new Error('log name not found');
-    const { localPath, stream } = this.dataLogs.get(name)!;
-    logger.log(`Ending stream: ${localPath}`);
-    stream.end();
+    const dataLog = this.dataLogs.get(name);
+    if (!dataLog) throw new Error('log name not found');
+    const { localPath } = dataLog;
+    logger.log(`Finishing log: ${dataLog?.localPath}`);
+    switch (dataLog?.type) {
+      case 'stream':
+        dataLog.stream.end();
+        break;
+      case 'mcap':
+        dataLog.mcapWriter.end();
+    }
+
     this.dataLogs.delete(name);
 
     try {
