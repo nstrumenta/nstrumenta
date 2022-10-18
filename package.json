@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.0.25",
+  "version": "3.0.26",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -21,7 +21,6 @@
     "build:browser": "tsc --project ./src/browser",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
     "dev": "nodemon -- agent start --tag=local",
-    "generate-types": "ts-node ./src/shared/rpc-schema/generateRPCTypes.ts",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch"
   },
@@ -55,6 +54,7 @@
   "dependencies": {
     "@google-cloud/storage": "^5.16.1",
     "@json-schema-tools/reference-resolver": "^1.2.5",
+    "@mcap/core": "^0.2.2",
     "@types/bytebuffer": "^5.0.42",
     "@types/tar": "^6.1.1",
     "axios": "^0.26.1",

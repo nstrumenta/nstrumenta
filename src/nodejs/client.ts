@@ -18,6 +18,7 @@ import {
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
+import { LogConfig } from './server';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -189,10 +190,10 @@ export class NstrumentaClient implements NstrumentaClientBase {
     }
   }
 
-  public async startLog(name: string, channels: string[]) {
+  public async startLog(name: string, channels: string[], config?: LogConfig) {
     // TODO error on slashes ?
     if (this.rpc) {
-      return this.rpc.call<unknown>('startLog', { name, channels });
+      return this.rpc.call<unknown>('startLog', { name, channels, config });
     }
     return Promise.reject('rpc module is not initialized — is there an open connection?');
   }
