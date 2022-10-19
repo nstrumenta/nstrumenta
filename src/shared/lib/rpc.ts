@@ -29,8 +29,11 @@ export class RPCService implements BaseRPCService {
           }
         }
       };
+      this.ws.addEventListener('message', (event) =>
+        console.log('message received', deserializeWireMessage(event.data as ArrayBuffer))
+      );
       this.ws.addEventListener('message', listener);
-      this.ws.send(makeBusMessageFromJsonObject('_rpc', message));
+      this.ws.send(makeBusMessageFromJsonObject('_rpc_command', message));
     });
   }
 }

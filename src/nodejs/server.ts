@@ -28,6 +28,11 @@ const logger = createLogger();
 
 type ListenerCallback = (event?: any) => void;
 
+// this is... not ideal https://github.com/GoogleChromeLabs/jsbi/issues/30
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 export type ServerStatus = {
   clientsCount: number;
   subscribedChannels: { [key: string]: { count: number } };
@@ -364,7 +369,7 @@ export class NstrumentaServer {
         // commands from clients
 
         // TODO: replace with rpc router
-        if (channel === '_rpc') {
+        if (channel === '_rpc_command') {
           if (contents?.method == 'startLog') {
             const { channels, name, config } = contents.params;
             logger.log(`[_rpc] <startLog> ${channels}`);
@@ -375,6 +380,12 @@ export class NstrumentaServer {
               );
             } catch (error) {
               logger.log((error as Error).message);
+              ws.send(
+                makeBusMessageFromJsonObject('_rpc_response', {
+                  id: contents.id,
+                  error: (error as Error).message,
+                })
+              );
             }
           }
 
@@ -404,7 +415,7 @@ export class NstrumentaServer {
           }
         });
 
-        this.dataLogs.forEach(async (dataLog) => {
+        const logPromises = [...this.dataLogs.values()].map(async (dataLog) => {
           if (dataLog.channels.includes(channel)) {
             switch (dataLog.type) {
               case 'stream':
@@ -441,6 +452,11 @@ export class NstrumentaServer {
               }
             }
           }
+        });
+
+        // don't crash the server / agent
+        await Promise.all(logPromises).catch((error) => {
+          logger.log('<log error>', (error as Error).message);
         });
 
         if (debug) {
