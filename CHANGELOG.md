@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.27](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.27) (2022-10-28)
+
+
+### Features
+
+* **client:nodejs:** adds query method ([#152](https://github.com/nstrumenta/nstrumenta/issues/152)) ([63b410f](https://github.com/nstrumenta/nstrumenta/commit/63b410f68ffe8e7fd51e549269670d16c4a23a40))
+* **client:** adds browser client query method ([#153](https://github.com/nstrumenta/nstrumenta/issues/153)) ([7c82778](https://github.com/nstrumenta/nstrumenta/commit/7c827781b491794992c6f34415c0faecea16a571))
+
 ### [3.0.26](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.26) (2022-10-17)
 
 ### [3.0.25](https://github.com/nstrumenta/nstrumenta/compare/v3.0.24...v3.0.25) (2022-09-28)
