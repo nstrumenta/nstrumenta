@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws';
+import { DataQueryOptions, DataQueryResponse } from '../index';
 
 export type ListenerCallback = (event?: any) => void;
 export type SubscriptionCallback = (message?: any) => void;
@@ -61,4 +62,6 @@ export interface BaseStorageService {
   download<T>(type: string, path: string): Promise<T>;
 
   download(type: string, path: string): Promise<unknown>;
+
+  query(options: DataQueryOptions): Promise<DataQueryResponse>;
 }
