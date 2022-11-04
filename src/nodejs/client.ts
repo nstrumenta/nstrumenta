@@ -6,6 +6,8 @@ import {
   ClientStatus,
   Connection,
   ConnectOptions,
+  DataQueryOptions,
+  DataQueryResponse,
   getEndpoints,
   ListenerCallback,
   NstrumentaClientBase,
@@ -224,6 +226,40 @@ class StorageService implements BaseStorageService {
     const download = await axios(downloadUrl, { method: 'get' });
 
     return download.data;
+  }
+
+  async query({
+    filenames,
+    tag: tags,
+    before,
+    after,
+    limit = 1,
+    metadata: metadataOriginal,
+  }: DataQueryOptions): Promise<DataQueryResponse> {
+    const metadata =
+      typeof metadataOriginal === 'string'
+        ? JSON.parse(metadataOriginal)
+        : typeof metadataOriginal === 'object'
+        ? metadataOriginal
+        : {};
+
+    const data = { tags, before, after, limit, filenames, metadata };
+
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey },
+      data,
+    };
+
+    try {
+      const response = await axios(endpoints.QUERY_DATA, config);
+
+      return response.data;
+    } catch (error) {
+      console.log(`Something went wrong: ${(error as Error).message}`);
+
+      return [];
+    }
   }
 
   async list(type: string): Promise<string[]> {

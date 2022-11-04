@@ -11,6 +11,8 @@ import {
   getEndpoints,
   StorageUploadParameters,
   RPCService,
+  DataQueryOptions,
+  DataQueryResponse,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -297,6 +299,40 @@ class StorageService implements BaseStorageService {
     });
 
     return fetched;
+  }
+
+  async query({
+    filenames,
+    tag: tags,
+    before,
+    after,
+    limit = 1,
+    metadata: metadataOriginal,
+  }: DataQueryOptions): Promise<DataQueryResponse> {
+    const metadata =
+      typeof metadataOriginal === 'string'
+        ? JSON.parse(metadataOriginal)
+        : typeof metadataOriginal === 'object'
+        ? metadataOriginal
+        : {};
+
+    const data = { tags, before, after, limit, filenames, metadata };
+
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey },
+      data,
+    };
+
+    try {
+      const response = await axios(endpoints.QUERY_DATA, config);
+
+      return response.data;
+    } catch (error) {
+      console.log(`Something went wrong: ${(error as Error).message}`);
+
+      return [];
+    }
   }
 
   async list(type: string): Promise<string[]> {
