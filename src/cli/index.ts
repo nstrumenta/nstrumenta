@@ -173,7 +173,7 @@ dataCommand
 dataCommand
   .command('query')
   .option('-t, --tag <tag...>')
-  .option('-f, --id <id...>')
+  .option('--id <id>')
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
@@ -184,7 +184,7 @@ dataCommand
 dataCommand
   .command('get')
   .option('-t, --tag <tag...>')
-  .option('-f, --file <file...>')
+  .option('--id <id>')
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
