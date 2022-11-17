@@ -42,6 +42,7 @@ export * from './lib';
 
 export interface DataQueryOptionsCLI {
   tag?: string[];
+  id?: string;
   before?: string;
   after?: string;
   limit?: string;

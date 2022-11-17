@@ -155,6 +155,7 @@ export const uploadFile = async ({
 
 export const query = async ({
   filenames,
+  id,
   tag: tags,
   before: b,
   after: a,
@@ -167,7 +168,7 @@ export const query = async ({
   const limit = l ? parseInt(l, 10) : undefined;
   const metadata = metadataString ? JSON.parse(metadataString) : {};
 
-  const data = { tags, before, after, limit, filenames, metadata };
+  const data = { id, tags, before, after, limit, filenames, metadata };
 
   const config: AxiosRequestConfig = {
     method: 'post',
