@@ -6,12 +6,15 @@ import {
   makeBusMessageFromJsonObject,
 } from '../../shared/lib/busMessage';
 import { getCurrentContext } from '../../shared/lib/context';
+import { resolveApiKey } from '../utils';
+import { getToken } from '../../nodejs';
 
 const red = (text: string) => {
   return text;
 };
 
 export const Send = async (url: string, { channel }: { channel: string }) => {
+  const apiKey = resolveApiKey();
   const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
   url = url ? url : contextWsHost;
   channel = channel ? channel : contextChannel;
@@ -26,13 +29,26 @@ export const Send = async (url: string, { channel }: { channel: string }) => {
     return;
   }
 
+  let token = 'unverified';
+  try {
+    token = await getToken(apiKey);
+  } catch (error) {
+    console.error((error as Error).message);
+    throw error;
+  }
+
   const ws = new WebSocket(url);
 
   ws.addEventListener('open', () => {
     console.log('connected to ', url, channel);
 
-    process.stdin.on('data', (buffer) => {
-      ws.send(makeBusMessageFromBuffer(channel, buffer));
+    // first message is always the token
+    ws.send(token);
+
+    process.nextTick(function () {
+      process.stdin.on('data', (buffer) => {
+        ws.send(makeBusMessageFromBuffer(channel, buffer));
+      });
     });
   });
 };
