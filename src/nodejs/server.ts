@@ -15,7 +15,7 @@ import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
-  makeBusMessageFromJsonObject
+  makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
@@ -40,6 +40,7 @@ export interface CommandRunModuleData {
   module: string;
   actionId: string;
   args?: string[];
+  version?: string;
 }
 
 export interface CommandStopModuleData {
@@ -190,7 +191,7 @@ export class NstrumentaServer {
                     return;
                   }
                   const {
-                    data: { module: moduleName, args },
+                    data: { module: moduleName, args, version },
                   } = message;
 
                   const logPath = `${await getNstDir(this.cwd)}/${moduleName}-${actionId}.txt`;
@@ -207,6 +208,7 @@ export class NstrumentaServer {
                       'module',
                       'run',
                       `--name=${moduleName}`,
+                      version ? `--version=${version}` : '',
                       '--non-interactive',
                       '--',
                       ...(args ? args : []),

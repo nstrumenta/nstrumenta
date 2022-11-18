@@ -26,11 +26,13 @@ export const Run = async function (
     name,
     local,
     path,
+    version,
     nonInteractive,
   }: {
     name?: string;
     local?: boolean;
     path?: string;
+    version?: string;
     nonInteractive?: boolean;
   },
   { args }: Command
@@ -54,7 +56,7 @@ export const Run = async function (
         break;
       }
     default:
-      module = await getModuleFromStorage({ name, path, nonInteractive });
+      module = await getModuleFromStorage({ name, path, nonInteractive, version });
   }
 
   if (module === undefined) {

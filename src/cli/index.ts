@@ -94,6 +94,7 @@ moduleCommand
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
   .option('--non-interactive', 'requires module name, uses latest version from server')
+  .option('--module-version [version]', 'version of the module to run')
   .description('run module')
   .action(Run);
 
