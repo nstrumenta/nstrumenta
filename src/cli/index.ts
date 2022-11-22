@@ -49,7 +49,11 @@ machineCommand
   .action(ListMachines);
 
 const authCommand = program.command('auth');
-authCommand.command('add').description('Add API Key for project').action(AddKey);
+authCommand
+  .command('add')
+  .description('Add API Key for project')
+  .argument('[key]', 'API Key')
+  .action(AddKey);
 
 authCommand
   .command('list')
