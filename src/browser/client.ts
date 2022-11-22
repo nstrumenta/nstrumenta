@@ -20,12 +20,18 @@ import {
 
 export const endpoints = getEndpoints('prod');
 
+type Reconnection = {
+  hasVerified: boolean;
+  attempts: number;
+  timeout: ReturnType<typeof setTimeout> | null;
+}
+
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
-  private reconnection = { hasVerified: false, attempts: 0 };
+  private reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
   public clientId: string | null = null;
@@ -47,6 +53,10 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     this.subscriptions.clear();
     this.datalogs.clear();
     this.messageBuffer = [];
+    if (this.reconnection.timeout) {
+      clearTimeout(this.reconnection.timeout);
+      this.reconnection.timeout = null;
+    }
     this.ws?.close();
     return;
   }
@@ -118,7 +128,8 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
       this.subscriptions.clear();
       // reconnect on close
       if (this.reconnection.hasVerified) {
-        setTimeout(() => {
+        this.reconnection.timeout = setTimeout(() => {
+          this.reconnection.timeout = null;
           console.log(`attempting to reconnect, attempts: ${this.reconnection.attempts}`);
           this.connect(connectOptions);
         }, this.rollOff(this.reconnection.attempts));
