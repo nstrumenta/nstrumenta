@@ -1,0 +1,25 @@
+<div class="mdl-layout mdl-js-layout mdl-typography">
+    <div class="mdl-grid">
+        <h4>nstrumenta agent admin</h4>
+        <div class="mdl-cell mdl-cell--12-col">
+            <span>status</span>
+            <span id="status"></span>
+        </div>
+        <div class="mdl-cell mdl-cell--12-col">
+            <span>health received:</span>
+            <span id="health"></span>
+        </div>
+        <div class="mdl-cell mdl-cell--12-col" style="overflow: auto">
+            <label for="outputTextArea">agent stdout</label>
+            <textarea class="mdl-list" id="outputTextArea" style="width: 100%; height: 500px"></textarea>
+        </div>
+    </div>
+</div>
+
+<!-- material design lite start -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" />
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+<!-- material design lite end -->
+
+<script src="bundle.js"></script>

@@ -1,20 +1,23 @@
 import axios from 'axios';
 import { spawn } from 'child_process';
-import { ModuleExtended, Module } from 'commands/module';
 import Conf from 'conf';
 import { createWriteStream } from 'fs';
-import { Writable } from 'stream';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
+import inspector from 'node:inspector';
 import nodePath from 'node:path';
 import path from 'path';
 import semver from 'semver';
-import { pipeline as streamPipeline } from 'stream';
+import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
-import { promisify } from 'util';
-import { getCurrentContext } from '../lib/context';
-import { schema } from '../schema';
-import { endpoints } from '../shared';
+import util, { promisify } from 'util';
+import { getCurrentContext } from '../shared/lib/context';
+import { schema } from '../shared/schema';
+import { Module, ModuleExtended } from './commands/module';
+
+import { getEndpoints } from '../shared';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const pipeline = promisify(streamPipeline);
 
@@ -24,7 +27,64 @@ export interface Keys {
   [key: string]: string;
 }
 
+const _createLogStream = () => {
+  const duplex = new Duplex({ encoding: 'utf-8' });
+  duplex._read = () => undefined;
+  duplex._write = (chunk, encoding, next) => {
+    duplex.push(chunk, encoding);
+    next();
+  };
+  return duplex;
+};
+
+interface CreateLoggerOptions {
+  silent?: boolean;
+}
+
+export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
+  let prefix: string;
+  const logStream = _createLogStream();
+  logStream.on('end', () => {
+    const stream = _createLogStream();
+    logger.logStream = stream;
+  });
+
+  const log = (...args: unknown[]) => {
+    const chunk = `${util.format.apply(logger, [prefix || '', ...args])}\n`;
+    // send log to any active debug inspectors
+    // @ts-ignore
+    inspector.console.log(chunk);
+    logger.logStream.push(chunk, 'utf-8');
+  };
+
+  const setPrefix = (value: string) => {
+    prefix = value;
+  };
+
+  const logger: {
+    logStream: Duplex;
+    log: (...args: unknown[]) => void;
+    error: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    setPrefix: (value: string) => void;
+  } = {
+    logStream,
+    log,
+    error: log,
+    warn: log,
+    setPrefix,
+  };
+
+  if (!silent) {
+    logStream.pipe(process.stdout);
+  }
+
+  return logger;
+};
+
 const config = new Conf(schema as any);
+
+let notifiedApiKeyResolution = false;
 
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
@@ -33,7 +93,10 @@ export const resolveApiKey = () => {
       apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
     } catch {}
   } else {
-    console.log('using NSTRUMENTA_API_KEY from environment variable');
+    if (!notifiedApiKeyResolution) {
+      console.log('using NSTRUMENTA_API_KEY from environment variable');
+      notifiedApiKeyResolution = true;
+    }
   }
 
   if (!apiKey)
@@ -92,7 +155,7 @@ export const getFolderFromStorage = async (
   options: { apiKey: string; baseDir?: string }
 ) => {
   const { apiKey, baseDir = '' } = options;
-  const nstDir = await getNstDir();
+  const nstDir = await getNstDir(process.cwd());
   const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
   const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
   try {
@@ -115,7 +178,7 @@ export const getFolderFromStorage = async (
       };
       const downloadUrlData = { path: storagePath };
       const downloadUrlResponse = await axios.post(
-        endpoints.GET_DOWNLOAD_URL,
+        endpoints.GET_PROJECT_DOWNLOAD_URL,
         downloadUrlData,
         downloadUrlConfig
       );
@@ -182,7 +245,7 @@ export const getModuleFromStorage = async ({
     if (!serverModules[name]) {
       serverModules[name] = [];
     }
-    serverModules[name].push({ path, version });
+    serverModules[name].push({ path: `modules/${path}`, version });
   });
 
   try {
@@ -209,7 +272,7 @@ export const getModuleFromStorage = async ({
         .sort(semver.compare)
         .reverse()
     );
-    path = serverModules[name].find((module) => module.version === chosenVersion)?.path;
+    path = `${serverModules[name].find((module) => module.version === chosenVersion)?.path}`;
   }
 
   if (!path) {
@@ -240,11 +303,11 @@ export function getVersionFromPath(path: string) {
   return version;
 }
 
-export const getNstDir = async () => {
+export const getNstDir = async (cwd: string) => {
   // first look for .nst in cwd
   // agent run creates .nst in it's cwd for supporting
   // multiple independent agents on the same machine
-  const cwdNstDir = `${process.cwd()}/.nst`;
+  const cwdNstDir = `${cwd}/.nst`;
   try {
     const stat = await fs.stat(cwdNstDir);
     if (stat.isDirectory()) {

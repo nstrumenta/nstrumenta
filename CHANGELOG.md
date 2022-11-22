@@ -2,6 +2,301 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.28](https://github.com/nstrumenta/nstrumenta/compare/v3.0.27...v3.0.28) (2022-11-22)
+
+
+### Features
+
+* **auth:** adds key argument to auth add ([#156](https://github.com/nstrumenta/nstrumenta/issues/156)) ([ccb80b8](https://github.com/nstrumenta/nstrumenta/commit/ccb80b89b69eba51f1ffbd26c956e0c8c37e52b2))
+* **cli:** allow id in data query ([#154](https://github.com/nstrumenta/nstrumenta/issues/154)) ([ce65ad3](https://github.com/nstrumenta/nstrumenta/commit/ce65ad32da449cc85dc2aea80db7ec24e81ece08))
+
+### [3.0.27](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.27) (2022-10-28)
+
+
+### Features
+
+* **client:nodejs:** adds query method ([#152](https://github.com/nstrumenta/nstrumenta/issues/152)) ([63b410f](https://github.com/nstrumenta/nstrumenta/commit/63b410f68ffe8e7fd51e549269670d16c4a23a40))
+* **client:** adds browser client query method ([#153](https://github.com/nstrumenta/nstrumenta/issues/153)) ([7c82778](https://github.com/nstrumenta/nstrumenta/commit/7c827781b491794992c6f34415c0faecea16a571))
+
+### [3.0.26](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.26) (2022-10-17)
+
+### [3.0.25](https://github.com/nstrumenta/nstrumenta/compare/v3.0.24...v3.0.25) (2022-09-28)
+
+
+### Features
+
+* **client:** updates browserclient.storage.upload method: uses parameters object ([#145](https://github.com/nstrumenta/nstrumenta/issues/145)) ([0fd7499](https://github.com/nstrumenta/nstrumenta/commit/0fd74995d6d93890c628c0f4f402e28909f445aa))
+
+### [3.0.24](https://github.com/nstrumenta/nstrumenta/compare/v3.0.23...v3.0.24) (2022-09-14)
+
+
+### Features
+
+* **cli:** adds metadata to query and get data commands ([#142](https://github.com/nstrumenta/nstrumenta/issues/142)) ([d509585](https://github.com/nstrumenta/nstrumenta/commit/d509585f96b770c06b7c5f688d61680a8cc46bb1))
+* **cli:** adds overwrite option to data upload ([#143](https://github.com/nstrumenta/nstrumenta/issues/143)) ([cc2a4fe](https://github.com/nstrumenta/nstrumenta/commit/cc2a4fef4970e3a772d7f231baf3e788dc176059))
+* **client:browser:** enables browserclient.storage.download method ([#144](https://github.com/nstrumenta/nstrumenta/issues/144)) ([78d96f1](https://github.com/nstrumenta/nstrumenta/commit/78d96f17f7c5711e2fa28d9c823833ad3479d775))
+
+### [3.0.23](https://github.com/nstrumenta/nstrumenta/compare/v3.0.22...v3.0.23) (2022-09-05)
+
+
+### Features
+
+* **client:node:** connect returns a promise once client is verified, not just 'open' event on the websocket ([#140](https://github.com/nstrumenta/nstrumenta/issues/140)) ([66fbcf3](https://github.com/nstrumenta/nstrumenta/commit/66fbcf3e679b352cc9b8c48abea3fddf7bdd4dc3))
+* **cli:** module:list uses metadata.dataId before id to list modules by, for consistency with some existing modules ([#139](https://github.com/nstrumenta/nstrumenta/issues/139)) ([29958c2](https://github.com/nstrumenta/nstrumenta/commit/29958c2e4eff36b066266577454749e5a72579c4))
+
+### [3.0.22](https://github.com/nstrumenta/nstrumenta/compare/v3.0.21...v3.0.22) (2022-08-24)
+
+
+### Bug Fixes
+
+* **nodejs:** fixes circular imports in nodejs client ([#134](https://github.com/nstrumenta/nstrumenta/issues/134)) ([eb01edc](https://github.com/nstrumenta/nstrumenta/commit/eb01edc564133809ccc094be4169bd69a1a239cf))
+
+### [3.0.21](https://github.com/nstrumenta/nstrumenta/compare/v3.0.19...v3.0.21) (2022-08-11)
+
+
+### Features
+
+* **clients:** upload ([#132](https://github.com/nstrumenta/nstrumenta/issues/132)) ([ac475ac](https://github.com/nstrumenta/nstrumenta/commit/ac475acc1778768ed4fabf947e4d20810a7a8fcc))
+
+
+### Bug Fixes
+
+* **client:node:** Prioritize explicit apiKey if passed to connect method ([#130](https://github.com/nstrumenta/nstrumenta/issues/130)) ([0b643e0](https://github.com/nstrumenta/nstrumenta/commit/0b643e01890f3cef53807a56c1c7a759db824800))
+* **client:upload:** strip absolute path from filename ([#133](https://github.com/nstrumenta/nstrumenta/issues/133)) ([43da2d6](https://github.com/nstrumenta/nstrumenta/commit/43da2d6ea5ee9849fdd9d072d986356625305a67))
+
+### [3.0.20](https://github.com/nstrumenta/nstrumenta/compare/v3.0.19...v3.0.20) (2022-07-28)
+
+
+### Bug Fixes
+
+* **client:node:** Prioritize explicit apiKey if passed to connect method ([#130](https://github.com/nstrumenta/nstrumenta/issues/130)) ([0b643e0](https://github.com/nstrumenta/nstrumenta/commit/0b643e01890f3cef53807a56c1c7a759db824800))
+
+### [3.0.19](https://github.com/nstrumenta/nstrumenta/compare/v3.0.18...v3.0.19) (2022-07-25)
+
+
+### Features
+
+* **browser-client:** adds client apiKey localStorage ([#129](https://github.com/nstrumenta/nstrumenta/issues/129)) ([9a78eb0](https://github.com/nstrumenta/nstrumenta/commit/9a78eb0f6e79e5b9ffa3f89a6f4089eecc32af83))
+* **uploads:** add metadata to call to getUploadDataUrl  ([#128](https://github.com/nstrumenta/nstrumenta/issues/128)) ([6ad3e3a](https://github.com/nstrumenta/nstrumenta/commit/6ad3e3a4b8c0b49393165495c388673ba29fe1a7))
+
+
+### Bug Fixes
+
+* **deps:** npm audit fix ([ca523dd](https://github.com/nstrumenta/nstrumenta/commit/ca523dd584b43b0f48772975fd60e81aef29d2db))
+* **deps:** npm audit fix in agent-admin-page ([7f18a96](https://github.com/nstrumenta/nstrumenta/commit/7f18a96013a415321664a1bd18a6ade888a5e7a5))
+
+### [3.0.18](https://github.com/nstrumenta/nstrumenta/compare/v3.0.17...v3.0.18) (2022-07-15)
+
+
+### Features
+
+* **cli:** adds dataId option to data>upload ([#123](https://github.com/nstrumenta/nstrumenta/issues/123)) ([6ee120b](https://github.com/nstrumenta/nstrumenta/commit/6ee120bfb90afe1b8bc6e6b02f61743649952e8a))
+
+
+### Bug Fixes
+
+* **client:browser:** removes unecessary call to node:url in unused me… ([#126](https://github.com/nstrumenta/nstrumenta/issues/126)) ([1725c67](https://github.com/nstrumenta/nstrumenta/commit/1725c671995ec4c4ecd2f316061683b94ce58dc0))
+* **cli:** get method now strips a leading 'projects/PROJECT_ID' from the download url on query ([#125](https://github.com/nstrumenta/nstrumenta/issues/125)) ([91763a5](https://github.com/nstrumenta/nstrumenta/commit/91763a5b5275fd39021340179779d91038b38b34))
+* **imports:** fixes client imports ([0e90d70](https://github.com/nstrumenta/nstrumenta/commit/0e90d709159787c4cf0cd0bdc7448983ec193dcf))
+
+### [3.0.17](https://github.com/nstrumenta/nstrumenta/compare/v3.0.15...v3.0.17) (2022-07-07)
+
+
+### Features
+
+* **cli:** flattens data upload metadata to filenames only under dataId ([#119](https://github.com/nstrumenta/nstrumenta/issues/119)) ([fe29f7f](https://github.com/nstrumenta/nstrumenta/commit/fe29f7f4cf9aa2f63574da2dccb252562fb06f84))
+* **cli:** uses new flatter structure for data in data > get  ([#120](https://github.com/nstrumenta/nstrumenta/issues/120)) ([39a434f](https://github.com/nstrumenta/nstrumenta/commit/39a434fbffcd3eca62e9a563d46497206586a0ec))
+
+### [3.0.16](https://github.com/nstrumenta/nstrumenta/compare/v3.0.15...v3.0.16) (2022-07-04)
+
+
+### Features
+
+* **cli:** flattens data upload metadata to filenames only under dataId ([#119](https://github.com/nstrumenta/nstrumenta/issues/119)) ([fe29f7f](https://github.com/nstrumenta/nstrumenta/commit/fe29f7f4cf9aa2f63574da2dccb252562fb06f84))
+
+### [3.0.15](https://github.com/nstrumenta/nstrumenta/compare/v3.0.14...v3.0.15) (2022-06-29)
+
+
+### Features
+
+* **cli:** adds data > query ([#118](https://github.com/nstrumenta/nstrumenta/issues/118)) ([aea176d](https://github.com/nstrumenta/nstrumenta/commit/aea176dafe4b7bfa97c13c27f28b97af4050c976))
+* **cli:** adds tags option to data upload command ([a83325b](https://github.com/nstrumenta/nstrumenta/commit/a83325b7b996e1bfd0769f6f2ccf2829653d225b))
+* **client-split:** Uses resolveApiKey in node client ([#114](https://github.com/nstrumenta/nstrumenta/issues/114)) ([81f3dad](https://github.com/nstrumenta/nstrumenta/commit/81f3dad3cf99e69ba1cad30fbde283e26798451b))
+* **cli:** updates data upload to set metadata on dataId bucket to facilitate filtering ([443bf45](https://github.com/nstrumenta/nstrumenta/commit/443bf45cc6440a47a96d6e1f01d0192ab2710c4a))
+* **cli:** upload file to project data ([#116](https://github.com/nstrumenta/nstrumenta/issues/116)) ([f1176ef](https://github.com/nstrumenta/nstrumenta/commit/f1176ef6eda7986544f1570753b42f5cca53b71a))
+
+### [3.0.14](https://github.com/nstrumenta/nstrumenta/compare/v3.0.13...v3.0.14) (2022-06-13)
+
+
+### Features
+
+* **client/server:** sends client the assigned clientId on very token ([#115](https://github.com/nstrumenta/nstrumenta/issues/115)) ([02d1083](https://github.com/nstrumenta/nstrumenta/commit/02d1083b18f75bd068416abcb2a43930570a56e2))
+
+### [3.0.13](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.13) (2022-06-06)
+
+
+### Features
+
+* **server:** adds agent log uploads to storage on interval ([#112](https://github.com/nstrumenta/nstrumenta/issues/112)) ([ccd90ea](https://github.com/nstrumenta/nstrumenta/commit/ccd90ea4637d34d2c87b5b42cda2d914bd3e6b8e))
+
+
+### Bug Fixes
+
+* **server:** removes log on every message ([#113](https://github.com/nstrumenta/nstrumenta/issues/113)) ([8d42fd9](https://github.com/nstrumenta/nstrumenta/commit/8d42fd96b9437c5091f69936f669f59f8f8770c5))
+
+### [3.0.12](https://github.com/nstrumenta/nstrumenta/compare/v3.0.11...v3.0.12) (2022-06-04)
+
+
+### Bug Fixes
+
+* **server:** removes log on every message ([#113](https://github.com/nstrumenta/nstrumenta/issues/113)) ([8d42fd9](https://github.com/nstrumenta/nstrumenta/commit/8d42fd96b9437c5091f69936f669f59f8f8770c5))
+
+### [3.0.11](https://github.com/nstrumenta/nstrumenta/compare/v3.0.10...v3.0.11) (2022-06-02)
+
+
+### Features
+
+* **cli:** returns entire body of listStorageObjects response, including id, which is now the file path relative to the project, and metadata ([#110](https://github.com/nstrumenta/nstrumenta/issues/110)) ([4a1c5ae](https://github.com/nstrumenta/nstrumenta/commit/4a1c5aed7a9ce15809d4bfd0bd32dcb4279c30bf))
+
+### [3.0.10](https://github.com/nstrumenta/nstrumenta/compare/v3.0.9...v3.0.10) (2022-06-01)
+
+
+### Features
+
+* **cli:** adds module list command ([1fd291c](https://github.com/nstrumenta/nstrumenta/commit/1fd291c7f989abb2ea405a3d35d6bf5d9b96a9a8))
+* **client:** adds storage service to browser and node clients for re… ([#107](https://github.com/nstrumenta/nstrumenta/issues/107)) ([f66616d](https://github.com/nstrumenta/nstrumenta/commit/f66616db89a4d51191f4bd4e495d539eaf42ea83))
+
+### [3.0.9](https://github.com/nstrumenta/nstrumenta/compare/v3.0.8...v3.0.9) (2022-05-17)
+
+
+### Features
+
+* **admin-utils:** adds (hidden) call to generic admin-utils api function ([#104](https://github.com/nstrumenta/nstrumenta/issues/104)) ([dcee053](https://github.com/nstrumenta/nstrumenta/commit/dcee053eae85b4b648cc6ca95a27e593cd9fac4a))
+
+### [3.0.8](https://github.com/nstrumenta/nstrumenta/compare/v3.0.7...v3.0.8) (2022-05-08)
+
+
+### Bug Fixes
+
+* **datalogs:** changes upload logs to getUploadDataUrl, with updated … ([#101](https://github.com/nstrumenta/nstrumenta/issues/101)) ([f525183](https://github.com/nstrumenta/nstrumenta/commit/f52518374aaca918dac5471979f018a6b3752a86)), closes [#102](https://github.com/nstrumenta/nstrumenta/issues/102)
+
+### [3.0.7](https://github.com/nstrumenta/nstrumenta/compare/v3.0.6...v3.0.7) (2022-05-05)
+
+
+### Bug Fixes
+
+* **clients:** fixes firing "open" event on ws connection ([#100](https://github.com/nstrumenta/nstrumenta/issues/100)) ([2c8dad4](https://github.com/nstrumenta/nstrumenta/commit/2c8dad4715092a3914d9ca3e13b49813fc966c8b))
+
+### [3.0.6](https://github.com/nstrumenta/nstrumenta/compare/v3.0.5...v3.0.6) (2022-05-01)
+
+
+### Bug Fixes
+
+* **browser-client:** fixes verify ; creates ws after getToken ([#99](https://github.com/nstrumenta/nstrumenta/issues/99)) ([ad934e8](https://github.com/nstrumenta/nstrumenta/commit/ad934e8bfd89d5886095e64f3eaf906122a49f79))
+
+### [3.0.5](https://github.com/nstrumenta/nstrumenta/compare/v3.0.4...v3.0.5) (2022-04-28)
+
+
+### Features
+
+* **logs:** agent start/finish log, with file upload to storage on fi… ([#96](https://github.com/nstrumenta/nstrumenta/issues/96)) ([799dad6](https://github.com/nstrumenta/nstrumenta/commit/799dad6bce07e9611a44981291c78489be7eba69))
+
+
+### Bug Fixes
+
+* **server:** removes log on every bus message ([#98](https://github.com/nstrumenta/nstrumenta/issues/98)) ([3c4e498](https://github.com/nstrumenta/nstrumenta/commit/3c4e498df8ffabec634dd1b378357554984ba48c))
+
+### [3.0.4](https://github.com/nstrumenta/nstrumenta/compare/v3.0.3...v3.0.4) (2022-04-24)
+
+
+### Bug Fixes
+
+* **nodejs-client:** fixes verify ; adds shutdown to enable cleaner tests ([#93](https://github.com/nstrumenta/nstrumenta/issues/93)) ([63c9326](https://github.com/nstrumenta/nstrumenta/commit/63c93262287469b709731166d2b28e76c5f24adc))
+
+### [3.0.3](https://github.com/nstrumenta/nstrumenta/compare/v3.0.2...v3.0.3) (2022-04-24)
+
+
+### Bug Fixes
+
+* **nodejs-client:** fixes initial token message in nodejs client ([#92](https://github.com/nstrumenta/nstrumenta/issues/92)) ([f52c0e0](https://github.com/nstrumenta/nstrumenta/commit/f52c0e0083b0a613e66ee0f14eefbe1e16ab256f))
+
+### [3.0.2](https://github.com/nstrumenta/nstrumenta/compare/v3.0.0...v3.0.2) (2022-04-22)
+
+
+### Features
+
+* **client:** adds verify option to browser client connect (default true), to allow attempting to connect without a needing a token ([1c6c2c3](https://github.com/nstrumenta/nstrumenta/commit/1c6c2c3043ee5f9136ef4e15a8b3edc0ed47696e))
+* **client:** adds verify option to client connect (default true), to allow attempting to connect to ws server without token ([61b4ac8](https://github.com/nstrumenta/nstrumenta/commit/61b4ac8819c838aa60e76e9ab382974238cfea30))
+* **server:** adds allowUnverifiedConnection option to server connect (default false), to allow clients to connect without a token, therefore not needing internet connectivity ([46ec87a](https://github.com/nstrumenta/nstrumenta/commit/46ec87a1f9a6b9d4ddc4ec88aa8aff34d41c34e0))
+* **server:** if allowUnverifiedConnection is true, don't skip the first bus message; update messaging to alert that connection is unverified ([6d3839b](https://github.com/nstrumenta/nstrumenta/commit/6d3839b61dd8ede61bbdec6a56ab4f161d2a0c5f))
+
+
+### Bug Fixes
+
+* **agent-admin-page:** fixes deps ([b8f9458](https://github.com/nstrumenta/nstrumenta/commit/b8f9458d82e39d5c732997196604acb286fea94c))
+* **client:** if verify=false, send a dummy first message to initialize connection ([aec8739](https://github.com/nstrumenta/nstrumenta/commit/aec8739ab0cdc02e8b0e218c49d48a1961f5b8df))
+* **modules:** fixes modules prefix ([#88](https://github.com/nstrumenta/nstrumenta/issues/88)) ([3b6bf88](https://github.com/nstrumenta/nstrumenta/commit/3b6bf88fed36c9db79bd98c3f46d298fd16b669d))
+
+### [3.0.1](https://github.com/nstrumenta/nstrumenta/compare/v3.0.0...v3.0.1) (2022-04-15)
+
+
+### Bug Fixes
+
+* **modules:** fixes modules prefix ([#88](https://github.com/nstrumenta/nstrumenta/issues/88)) ([3b6bf88](https://github.com/nstrumenta/nstrumenta/commit/3b6bf88fed36c9db79bd98c3f46d298fd16b669d))
+
+## [3.0.0](https://github.com/nstrumenta/nstrumenta/compare/v2.1.18...v3.0.0) (2022-04-14)
+
+
+### Features
+
+* **agent-admin:** uses local version ([c374a19](https://github.com/nstrumenta/nstrumenta/commit/c374a19dcb63ec29d7238872f360563509bdd8be))
+* **agentAdminPanel:** removes ejs dependency ([#87](https://github.com/nstrumenta/nstrumenta/issues/87)) ([de0484e](https://github.com/nstrumenta/nstrumenta/commit/de0484ef575f719d2e861bd8012576901eee7d2f))
+* **nodejs:** splits nodejs and browser clients ([#84](https://github.com/nstrumenta/nstrumenta/issues/84)) ([653ba3e](https://github.com/nstrumenta/nstrumenta/commit/653ba3ed4bdd3e07333fd3a6b0877e8d8ac6cc31))
+
+### [2.1.18](https://github.com/nstrumenta/nstrumenta/compare/v2.1.17...v2.1.18) (2022-04-12)
+
+
+### Features
+
+* **agent:** adds tag or agentId prefix to logger ([#83](https://github.com/nstrumenta/nstrumenta/issues/83)) ([406537f](https://github.com/nstrumenta/nstrumenta/commit/406537f06a24c32c6f7baee3480fd2588c871826))
+
+### [2.1.17](https://github.com/nstrumenta/nstrumenta/compare/v2.1.16...v2.1.17) (2022-04-12)
+
+
+### Features
+
+* **agent:** adds tag=local for dev ([f5fd70c](https://github.com/nstrumenta/nstrumenta/commit/f5fd70c8ca7b6b745bfcb1f87e0a344b05429c1f))
+* **auth:** `nst auth add` requires only apiKey; projectId is inferred via api ([#82](https://github.com/nstrumenta/nstrumenta/issues/82)) ([da234e1](https://github.com/nstrumenta/nstrumenta/commit/da234e1cda71e76dfa2299075944bd5bccdbc99a))
+
+### [2.1.16](https://github.com/nstrumenta/nstrumenta/compare/v2.1.15...v2.1.16) (2022-04-11)
+
+
+### Features
+
+* **agent:** fixes run-module (removes localstream for now) ([#81](https://github.com/nstrumenta/nstrumenta/issues/81)) ([e219795](https://github.com/nstrumenta/nstrumenta/commit/e219795042c4ca395764ec9243743891bffc3c9a))
+
+### [2.1.15](https://github.com/nstrumenta/nstrumenta/compare/v2.1.14...v2.1.15) (2022-04-09)
+
+
+### Features
+
+* **agent-admin:** displays agent stdout ([1373beb](https://github.com/nstrumenta/nstrumenta/commit/1373beb3af3ab7dfb7764908911fdeeee3b04161))
+
+### [2.1.14](https://github.com/nstrumenta/nstrumenta/compare/v2.1.13...v2.1.14) (2022-04-08)
+
+
+### Features
+
+* **dockerfile:** adds dockerfile ([40a6203](https://github.com/nstrumenta/nstrumenta/commit/40a6203304bc5db9b6e6ee0d58843f9053f3643c))
+* replaces console.log with simple custom logger with stream; logs to stdout by default; server pipes log to log file and backplane, if connected ([#79](https://github.com/nstrumenta/nstrumenta/issues/79)) ([7697d33](https://github.com/nstrumenta/nstrumenta/commit/7697d33269f5a7afb8b435dd22e6b64c16352f65))
+
+### [2.1.13](https://github.com/nstrumenta/nstrumenta/compare/v2.1.12...v2.1.13) (2022-03-28)
+
+
+### Features
+
+* **keepalive:** adds 30s health pulse to all verified clients ([6093a41](https://github.com/nstrumenta/nstrumenta/commit/6093a41c78f4fd751bd305d7ee3f662b04621112))
+
 ### [2.1.12](https://github.com/nstrumenta/nstrumenta/compare/v2.1.11...v2.1.12) (2022-03-24)
 
 

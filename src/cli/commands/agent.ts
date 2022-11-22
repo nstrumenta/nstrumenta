@@ -1,8 +1,10 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
-import { inquiryForSelectModule, resolveApiKey } from '../cli/utils';
-import { NstrumentaServer } from '../lib/server';
-import { DEFAULT_HOST_PORT, endpoints } from '../shared';
+import { NstrumentaServer } from '../../nodejs/server';
+import { DEFAULT_HOST_PORT, getEndpoints } from '../../shared';
+import { createLogger, inquiryForSelectModule, resolveApiKey } from '../utils';
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const logger = createLogger();
 
 export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
   const { port, tag } = options;
@@ -30,9 +32,9 @@ export const List = async () => {
       },
     });
 
-    console.log(response.data);
+    logger.log(response.data);
   } catch (err) {
-    console.error('Error:', (err as Error).message);
+    logger.error('Error:', (err as Error).message);
   }
 };
 
@@ -91,7 +93,7 @@ const getAgentIdByTag = async (apiKey: string, tag: string): Promise<string | un
 
     agentId = response.data;
   } catch (error) {
-    console.error((error as Error).message);
+    logger.error((error as Error).message);
   }
 
   return agentId;
@@ -108,7 +110,7 @@ export const SetAction = async (
   const agentId = agentIdArg ? agentIdArg : tag ? await getAgentIdByTag(apiKey, tag) : null;
 
   if (!agentId) {
-    console.error(`Agent id required`);
+    logger.error(`Agent id required`);
     return;
   }
 
@@ -124,9 +126,9 @@ export const SetAction = async (
     });
 
     const actionId = response.data;
-    console.log(`created action: ${actionId} on agent ${agentId}`, action);
+    logger.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
-    console.error('Error:', (err as AxiosError).response?.data);
+    logger.error('Error:', (err as AxiosError).response?.data);
   }
 };
 
@@ -144,6 +146,6 @@ export const CleanActions = async (agentId: string) => {
       data: { agentId },
     });
   } catch (err) {
-    console.error('Error:', (err as Error).message);
+    logger.error('Error:', (err as Error).message);
   }
 };

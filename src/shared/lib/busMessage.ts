@@ -14,6 +14,10 @@ export type DeserializedMessage = {
   contents: any;
 };
 
+//TODO type contents above
+// ? contents: undefined | Record<string, unknown> | Buffer;
+
+
 // BusMessage
 // Int32 busMessageType
 // IString channel (UInt32 prefixed UTF-8 string)

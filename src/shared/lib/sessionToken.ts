@@ -1,21 +1,7 @@
-import axios, { AxiosError } from 'axios';
-import { endpoints } from '../shared';
+import axios from 'axios';
+import { getEndpoints } from '../index';
 
-export const getToken = async (apiKey: string): Promise<string> => {
-  const headers = {
-    'x-api-key': apiKey,
-    'Content-Type': 'application/json',
-  };
-  try {
-    const { data } = await axios.get<{ token: string }>(endpoints.GET_TOKEN, {
-      headers,
-    });
-    return data.token;
-  } catch (err) {
-    const message = 'Problem getting token, check api key';
-    throw new Error(message);
-  }
-};
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 export const verifyToken = async ({
   token,

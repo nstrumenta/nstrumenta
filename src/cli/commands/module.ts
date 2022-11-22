@@ -4,6 +4,8 @@ import fs from 'fs/promises';
 import path from 'path';
 import semver from 'semver';
 import tar from 'tar';
+import { getEndpoints } from '../../shared';
+import { getCurrentContext } from '../../shared/lib/context';
 import {
   asyncSpawn,
   getModuleFromStorage,
@@ -11,9 +13,9 @@ import {
   getNstDir,
   inquiryForSelectModule,
   resolveApiKey,
-} from '../cli/utils';
-import { getCurrentContext } from '../lib/context';
-import { endpoints } from '../shared';
+} from '../utils';
+
+const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 const blue = (text: string) => {
   return text;
@@ -136,11 +138,10 @@ const adapters: Record<ModuleTypes, (module: ModuleExtended, args?: string[]) =>
         const cwd = `${module.folder}`;
         console.log(blue(`[cwd: ${cwd}] npm install...`));
         await asyncSpawn('npm', ['install'], { cwd });
-        console.log(blue(`start the module...`));
-
         // module will resolve NSTRUMENTA_API_KEY from env var
         const { entry = `npm run start -- ` } = module;
         const [command, ...entryArgs] = entry.split(' ');
+        console.log(`::: start the module...`, command, entryArgs, { entry });
         result = await asyncSpawn(command, [...entryArgs, ...args], {
           cwd,
           stdio: 'inherit',
@@ -258,7 +259,7 @@ export const publishModule = async (module: ModuleExtended) => {
   }
 
   const fileName = `${name}-${version}.tar.gz`;
-  const downloadLocation = `${await getNstDir()}/${fileName}`;
+  const downloadLocation = `${await getNstDir(process.cwd())}/${fileName}`;
   const remoteFileLocation = `modules/${name}/versions/${fileName}`;
   let url = '';
   let size = 0;
@@ -340,4 +341,31 @@ export const publishModule = async (module: ModuleExtended) => {
     },
   });
   return remoteFileLocation;
+};
+
+export interface ModuleListOptions {
+  verbose?: boolean;
+}
+
+export const List = async (_: unknown, options: ModuleListOptions) => {
+  const { verbose = false } = options;
+  const apiKey = resolveApiKey();
+
+  try {
+    let response = await axios(endpoints.v2.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    });
+
+    const modules = verbose
+      ? response.data
+      : response.data.map(({ id, metadata }: { id: string; metadata: Record<string, unknown> }) =>
+          // deprecate dataId in favor of id
+          metadata ? (metadata.id ? metadata.id : metadata.dataId ? metadata.dataId : id) : id
+        );
+
+    console.log(modules);
+  } catch (error) {
+    console.log(`Problem fetching data ${(error as Error).name}`);
+  }
 };
