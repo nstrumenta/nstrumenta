@@ -250,3 +250,16 @@ nst.addListener('open', () => {
 ```console
 $ node index.js
 ```
+
+### to dev on nst-server
+you can link the module by
+```shell
+nstrumenta$ npm link
+...
+app$ npm link nstrumenta
+```
+
+and then for hot rebuilding
+```
+npx nodemon --exec "npm run build" --watch ./src
+```

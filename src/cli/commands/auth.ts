@@ -36,10 +36,10 @@ const inquiryForSelectProject = async (choices: string[]): Promise<string> => {
   return projectId;
 };
 
-export const AddKey = async () => {
+export const AddKey = async (key?: string) => {
   try {
     console.log('Store API key');
-    const { apiKey } = await inquiryForAuthentication();
+    const apiKey = key ? key : (await inquiryForAuthentication()).apiKey;
     const keys = config.get('keys', {}) as Keys;
 
     let projectId: string | undefined;
