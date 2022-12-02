@@ -26,18 +26,20 @@ export const Run = async function (
     name,
     local,
     path,
-    version,
+    moduleVersion: version,
     nonInteractive,
   }: {
     name?: string;
     local?: boolean;
     path?: string;
-    version?: string;
+    moduleVersion?: string;
     nonInteractive?: boolean;
   },
   { args }: Command
 ): Promise<void> {
   let module: ModuleExtended;
+
+  console.log('Running module', name, 'version', version);
 
   if (nonInteractive) {
     if (!name) {

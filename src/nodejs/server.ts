@@ -6,7 +6,7 @@ import express from 'express';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import serveIndex from 'serve-index';
-import { Writable } from 'stream';
+import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
@@ -23,6 +23,14 @@ import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+
+const createPrefixTransform = (prefix: string) =>
+  new Transform({
+    transform(chunk, encoding, callback) {
+      const str = `${prefix} ${chunk}`;
+      callback(null, str);
+    },
+  });
 
 const logger = createLogger();
 
@@ -171,7 +179,9 @@ export class NstrumentaServer {
           actionsCollectionPath,
         }: { backplaneUrl: string; agentId: string; actionsCollectionPath: string } = response.data;
 
-        logger.setPrefix(`[agent ${this.options.tag || `${agentId.substring(0, 5)}...`}]`);
+        logger.setPrefix(
+          `(${new Date()})[agent ${this.options.tag || `${agentId.substring(0, 5)}...`}]`
+        );
         this.status.agentId = agentId;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
@@ -202,23 +212,28 @@ export class NstrumentaServer {
                     next();
                   };
 
-                  const process = await asyncSpawn(
+                  console.log('running module', moduleName, version);
+                  const childProcess = await asyncSpawn(
                     'nstrumenta',
                     [
                       'module',
                       'run',
                       `--name=${moduleName}`,
-                      version ? `--version=${version}` : '',
+                      version ? `--module-version=${version}` : '',
                       '--non-interactive',
                       '--',
                       ...(args ? args : []),
                     ],
-                    undefined,
+                    { stdio: 'pipe' },
                     undefined,
                     [stream, backplaneStream]
                   );
-                  this.children.set(String(process.pid), process);
-                  process.on('disconnect', () => this.children.delete(String(process.pid)));
+                  this.children.set(String(childProcess.pid), childProcess);
+                  childProcess.on('disconnect', () =>
+                    this.children.delete(String(childProcess.pid))
+                  );
+                  const transform = createPrefixTransform(`${moduleName}/${actionId}`);
+                  childProcess.stdout = childProcess.stdout?.pipe(transform) as Readable;
                   break;
                 case 'stopModule':
                   break;
@@ -592,7 +607,6 @@ const getStorageUploadIntervalStream = (agentId: string) => {
   const stream = new Writable();
   const buffer = { current: '' };
   stream._write = (chunk, enc, next) => {
-    console.log('***', chunk);
     buffer.current += chunk;
     next();
   };
