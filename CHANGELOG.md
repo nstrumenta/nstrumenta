@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.28](https://github.com/nstrumenta/nstrumenta/compare/v3.0.27...v3.0.28) (2022-11-22)
+
+
+### Features
+
+* **auth:** adds key argument to auth add ([#156](https://github.com/nstrumenta/nstrumenta/issues/156)) ([ccb80b8](https://github.com/nstrumenta/nstrumenta/commit/ccb80b89b69eba51f1ffbd26c956e0c8c37e52b2))
+* **cli:** allow id in data query ([#154](https://github.com/nstrumenta/nstrumenta/issues/154)) ([ce65ad3](https://github.com/nstrumenta/nstrumenta/commit/ce65ad32da449cc85dc2aea80db7ec24e81ece08))
+
 ### [3.0.27](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.27) (2022-10-28)
 
 
