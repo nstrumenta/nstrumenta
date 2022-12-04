@@ -224,10 +224,12 @@ export const getModuleFromStorage = async ({
   name: moduleName,
   path,
   nonInteractive,
+  version: versionString,
 }: {
   name?: string;
   path?: string;
   nonInteractive?: boolean;
+  version?: string;
 }): Promise<ModuleExtended> => {
   let serverModules: Record<string, { path: string; version: string }[]> = {};
   let name = moduleName;
@@ -251,11 +253,13 @@ export const getModuleFromStorage = async ({
   try {
     if (nonInteractive && name) {
       console.log(name, serverModules[name]);
-      const version = serverModules[name]
-        .map(({ version }) => version)
-        .sort(semver.compare)
-        .reverse()
-        .shift();
+      const version = versionString
+        ? versionString
+        : serverModules[name]
+            .map(({ version }) => version)
+            .sort(semver.compare)
+            .reverse()
+            .shift();
       path = serverModules[name].find((module) => module.version === version)?.path;
     }
   } catch (error) {
