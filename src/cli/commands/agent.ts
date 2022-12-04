@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 import { DEFAULT_HOST_PORT, getEndpoints } from '../../shared';
-import { createLogger, inquiryForSelectModule, resolveApiKey } from '../utils';
+import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const logger = createLogger();
 
@@ -42,7 +42,7 @@ export const RunModule = async (
   {
     agentId,
     tag,
-    module: moduleName,
+    module,
   }: {
     tag?: string;
     module: string;
@@ -51,27 +51,35 @@ export const RunModule = async (
   { args }: Command
 ) => {
   const apiKey = resolveApiKey();
-  let module = moduleName;
+  let version;
   let serverModules = new Set<string>();
 
   if (!module) {
-    let response = await axios(endpoints.LIST_MODULES, {
+    let response = await axios(endpoints.v2.LIST_MODULES, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
 
-    response.data.forEach((path: string) => {
-      const name = path.split('/')[0];
+    response.data.forEach(({ id: path }: { id: string }) => {
+      console.log({ path });
+      const name = path.split('#')[0];
       serverModules.add(name);
     });
 
     module = await inquiryForSelectModule(Array.from(serverModules));
+
+    const moduleVersions = response.data
+      .filter(({ id: path }: { id: string }) => path.startsWith(module))
+      .map(({ id: path }: { id: string }) => getVersionFromPath(path));
+    console.log(moduleVersions);
+
+    version = await inquiryForSelectModule(moduleVersions);
   }
 
   const action = JSON.stringify({
     task: 'runModule',
     status: 'pending',
-    data: { module, tag, args },
+    data: { module, tag, args, version },
   });
 
   SetAction(agentId, { action, tag });
