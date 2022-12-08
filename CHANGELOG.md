@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.30](https://github.com/nstrumenta/nstrumenta/compare/v3.0.29...v3.0.30) (2022-12-08)
+
+
+### Features
+
+* **client:** clears reconnect timeout on shutdown ([9ddfebc](https://github.com/nstrumenta/nstrumenta/commit/9ddfebc756acf88a78b2c302216485f7c92e43d1))
+
 ### [3.0.29](https://github.com/nstrumenta/nstrumenta/compare/v3.0.28...v3.0.29) (2022-12-04)
 
 
