@@ -27,7 +27,7 @@ type Reconnection = {
   hasVerified: boolean;
   attempts: number;
   timeout: ReturnType<typeof setTimeout> | null;
-}
+};
 
 export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
