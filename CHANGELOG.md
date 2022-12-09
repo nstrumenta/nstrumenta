@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.30](https://github.com/nstrumenta/nstrumenta/compare/v3.0.29...v3.0.30) (2022-12-08)
+
+
+### Features
+
+* **client:** clears reconnect timeout on shutdown ([60c6daf](https://github.com/nstrumenta/nstrumenta/commit/60c6daf52c0b0677edbd5ec1f36dcf5e761a6739))
+
+### [3.0.29](https://github.com/nstrumenta/nstrumenta/compare/v3.0.28...v3.0.29) (2022-12-04)
+
+
+### Features
+
+* run module by version ([#155](https://github.com/nstrumenta/nstrumenta/issues/155)) ([2546a0e](https://github.com/nstrumenta/nstrumenta/commit/2546a0ed55f27f9d685c8383da74874b4e28005d))
+
+### [3.0.28](https://github.com/nstrumenta/nstrumenta/compare/v3.0.27...v3.0.28) (2022-11-22)
+
+
+### Features
+
+* **auth:** adds key argument to auth add ([#156](https://github.com/nstrumenta/nstrumenta/issues/156)) ([ccb80b8](https://github.com/nstrumenta/nstrumenta/commit/ccb80b89b69eba51f1ffbd26c956e0c8c37e52b2))
+* **cli:** allow id in data query ([#154](https://github.com/nstrumenta/nstrumenta/issues/154)) ([ce65ad3](https://github.com/nstrumenta/nstrumenta/commit/ce65ad32da449cc85dc2aea80db7ec24e81ece08))
+
+### [3.0.27](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.27) (2022-10-28)
+
+
+### Features
+
+* **client:nodejs:** adds query method ([#152](https://github.com/nstrumenta/nstrumenta/issues/152)) ([63b410f](https://github.com/nstrumenta/nstrumenta/commit/63b410f68ffe8e7fd51e549269670d16c4a23a40))
+* **client:** adds browser client query method ([#153](https://github.com/nstrumenta/nstrumenta/issues/153)) ([7c82778](https://github.com/nstrumenta/nstrumenta/commit/7c827781b491794992c6f34415c0faecea16a571))
+
+### [3.0.26](https://github.com/nstrumenta/nstrumenta/compare/v3.0.25...v3.0.26) (2022-10-17)
+
+### [3.0.25](https://github.com/nstrumenta/nstrumenta/compare/v3.0.24...v3.0.25) (2022-09-28)
+
+
+### Features
+
+* **client:** updates browserclient.storage.upload method: uses parameters object ([#145](https://github.com/nstrumenta/nstrumenta/issues/145)) ([0fd7499](https://github.com/nstrumenta/nstrumenta/commit/0fd74995d6d93890c628c0f4f402e28909f445aa))
+
 ### [3.0.24](https://github.com/nstrumenta/nstrumenta/compare/v3.0.23...v3.0.24) (2022-09-14)
 
 

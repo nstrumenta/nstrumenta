@@ -8,6 +8,9 @@ import {
   NstrumentaClientBase,
   SubscriptionCallback,
   getEndpoints,
+  StorageUploadParameters,
+  DataQueryOptions,
+  DataQueryResponse,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -17,12 +20,18 @@ import {
 
 export const endpoints = getEndpoints('prod');
 
+type Reconnection = {
+  hasVerified: boolean;
+  attempts: number;
+  timeout: ReturnType<typeof setTimeout> | null;
+};
+
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
   private subscriptions: Map<string, SubscriptionCallback[]>;
-  private reconnection = { hasVerified: false, attempts: 0 };
+  private reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
   public clientId: string | null = null;
@@ -44,6 +53,10 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     this.subscriptions.clear();
     this.datalogs.clear();
     this.messageBuffer = [];
+    if (this.reconnection.timeout) {
+      clearTimeout(this.reconnection.timeout);
+      this.reconnection.timeout = null;
+    }
     this.ws?.close();
     return;
   }
@@ -115,7 +128,8 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
       this.subscriptions.clear();
       // reconnect on close
       if (this.reconnection.hasVerified) {
-        setTimeout(() => {
+        this.reconnection.timeout = setTimeout(() => {
+          this.reconnection.timeout = null;
           console.log(`attempting to reconnect, attempts: ${this.reconnection.attempts}`);
           this.connect(connectOptions);
         }, this.rollOff(this.reconnection.attempts));
@@ -291,6 +305,40 @@ class StorageService implements BaseStorageService {
     return fetched;
   }
 
+  async query({
+    filenames,
+    tag: tags,
+    before,
+    after,
+    limit = 1,
+    metadata: metadataOriginal,
+  }: DataQueryOptions): Promise<DataQueryResponse> {
+    const metadata =
+      typeof metadataOriginal === 'string'
+        ? JSON.parse(metadataOriginal)
+        : typeof metadataOriginal === 'object'
+        ? metadataOriginal
+        : {};
+
+    const data = { tags, before, after, limit, filenames, metadata };
+
+    const config: AxiosRequestConfig = {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey },
+      data,
+    };
+
+    try {
+      const response = await axios(endpoints.QUERY_DATA, config);
+
+      return response.data;
+    } catch (error) {
+      console.log(`Something went wrong: ${(error as Error).message}`);
+
+      return [];
+    }
+  }
+
   async list(type: string): Promise<string[]> {
     let response = await axios(endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
@@ -301,13 +349,17 @@ class StorageService implements BaseStorageService {
     return response.data;
   }
 
-  public async upload(path: string, data: Blob, meta: Record<string, string>) {
+  public async upload({ filename, data, meta, dataId: explicitDataId }: StorageUploadParameters) {
     const size = data.size;
     let url;
-    const res = await axios(endpoints.GENERATE_DATA_ID, {
-      headers: { 'x-api-key': this.apiKey!, method: 'post' },
-    });
-    const dataId = res.data.dataId;
+    let dataId = explicitDataId;
+
+    if (!dataId) {
+      const res = await axios(endpoints.GENERATE_DATA_ID, {
+        headers: { 'x-api-key': this.apiKey!, method: 'post' },
+      });
+      dataId = res.data.dataId;
+    }
     const config: AxiosRequestConfig = {
       method: 'post',
       headers: {
@@ -315,7 +367,7 @@ class StorageService implements BaseStorageService {
         'Content-Type': 'application/json',
       },
       data: {
-        name: path,
+        name: filename,
         dataId,
         size,
         metadata: meta,
@@ -326,7 +378,7 @@ class StorageService implements BaseStorageService {
 
     url = response.data?.uploadUrl;
     if (!url) {
-      console.warn(`no upload url returned, can't upload ${path}`);
+      console.warn(`no upload url returned, can't upload ${filename}`);
       console.log(response.data);
       return;
     }

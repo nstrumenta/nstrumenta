@@ -39,3 +39,34 @@ export enum ObjectTypes {
 }
 
 export * from './lib';
+
+export interface DataQueryOptionsCLI {
+  tag?: string[];
+  id?: string;
+  before?: string;
+  after?: string;
+  limit?: string;
+  filenames?: string[];
+  metadata?: string;
+}
+
+export interface DataQueryOptionsClient {
+  tag?: string[];
+  before?: number;
+  after?: number;
+  limit?: number;
+  filenames?: string[];
+  metadata?: string | Record<string, unknown>;
+}
+
+export type DataQueryOptions = DataQueryOptionsCLI | DataQueryOptionsClient;
+
+export type DataQueryResponse = {
+  id: string;
+  name: string;
+  dataId: string;
+  filePath: string;
+  tags: string[];
+  size: number;
+  lastModified: number;
+}[];

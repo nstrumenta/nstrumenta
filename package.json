@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.0.24",
+  "version": "3.0.30",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -60,6 +60,7 @@
     "@types/aes-js": "^3.1.1",
     "@types/big-integer": "^0.0.31",
     "@types/buffer-crc32": "^0.2.0",
+    "@mcap/core": "^0.2.2",
     "@types/bytebuffer": "^5.0.42",
     "@types/debug": "^4.1.7",
     "@types/elliptic": "^6.4.14",

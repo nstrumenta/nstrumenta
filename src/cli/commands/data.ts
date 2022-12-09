@@ -1,12 +1,17 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { resolveApiKey } from '../utils';
-import { ObjectTypes } from '../../shared';
-import { readFile, stat, writeFile, mkdir, access } from 'fs/promises';
-import ErrnoException = NodeJS.ErrnoException;
+import {
+  DataQueryOptions,
+  DataQueryOptionsCLI,
+  DataQueryResponse,
+  getEndpoints,
+  ObjectTypes,
+} from '../../shared';
+import { access, mkdir, readFile, stat } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { getEndpoints } from '../../shared';
+import ErrnoException = NodeJS.ErrnoException;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const pipeline = promisify(streamPipeline);
@@ -41,7 +46,7 @@ export const List = async (_: unknown, options: DataListOptions) => {
 
 export const Upload = async (
   filenames: string[],
-  { tags, dataId, overwrite }: { tags?: string[]; dataId?: string, overwrite?: boolean }
+  { tags, dataId, overwrite }: { tags?: string[]; dataId?: string; overwrite?: boolean }
 ) => {
   if (filenames.length === 0) {
     return console.log('Please specify at least one filename');
@@ -148,37 +153,22 @@ export const uploadFile = async ({
   return { filename, remoteFilePath, dataId };
 };
 
-export interface DataQueryOptions {
-  tag?: string[];
-  before?: string;
-  after?: string;
-  limit?: string;
-  filenames?: string[];
-  metadata?: string;
-}
-
-export type DataQueryResponse = {
-  id: string;
-  filePath: string;
-  tags: string[];
-  filenames: string[];
-}[];
-
 export const query = async ({
   filenames,
+  id,
   tag: tags,
   before: b,
   after: a,
   limit: l = '1',
   metadata: metadataString,
-}: DataQueryOptions): Promise<DataQueryResponse> => {
+}: DataQueryOptionsCLI): Promise<DataQueryResponse> => {
   const apiKey = resolveApiKey();
   const before = b ? parseInt(b, 10) : undefined;
   const after = a ? parseInt(a, 10) : undefined;
   const limit = l ? parseInt(l, 10) : undefined;
   const metadata = metadataString ? JSON.parse(metadataString) : {};
 
-  const data = { tags, before, after, limit, filenames, metadata };
+  const data = { id, tags, before, after, limit, filenames, metadata };
 
   const config: AxiosRequestConfig = {
     method: 'post',
@@ -197,16 +187,16 @@ export const query = async ({
   }
 };
 
-export const Query = async (options: DataQueryOptions) => {
+export const Query = async (options: DataQueryOptionsCLI) => {
   const data = await query(options);
   console.log(JSON.stringify(data, undefined, 2));
 };
 
-export const Get = async (options: DataQueryOptions & { output?: string }) => {
+export const Get = async (options: DataQueryOptionsCLI & { output?: string }) => {
   const { output } = options;
   const data = await query(options);
   const downloads = data.map(async (value) => {
-    const { id, filePath, filenames } = value;
+    const { id, filePath } = value;
 
     // Create directory for this dataId
     const dataIdFolder = `${output ? output : '.'}/${id}`;

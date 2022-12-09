@@ -26,16 +26,20 @@ export const Run = async function (
     name,
     local,
     path,
+    moduleVersion: version,
     nonInteractive,
   }: {
     name?: string;
     local?: boolean;
     path?: string;
+    moduleVersion?: string;
     nonInteractive?: boolean;
   },
   { args }: Command
 ): Promise<void> {
   let module: ModuleExtended;
+
+  console.log('Running module', name, 'version', version);
 
   if (nonInteractive) {
     if (!name) {
@@ -54,7 +58,7 @@ export const Run = async function (
         break;
       }
     default:
-      module = await getModuleFromStorage({ name, path, nonInteractive });
+      module = await getModuleFromStorage({ name, path, nonInteractive, version });
   }
 
   if (module === undefined) {

@@ -1,25 +1,19 @@
 {
   "configurations": [
     {
-      "name": "Attach",
-      "port": 9229,
-      "request": "attach",
-      "program": "${workspaceFolder}/dist/cli/index.js",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node",
-      "autoAttachFilter": "smart",
-      "sourceMaps": true,
-      "runtimeExecutable": "/Users/kayvon/.nvm/versions/node/v16.14.0/bin/node"
-    },
-    {
       "name": "Launch via NPM",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",
-      "runtimeArgs": ["run-script", "dev"],
+      "runtimeArgs": [
+        "run-script",
+        "dev"
+      ],
       "runtimeExecutable": "npm",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "pwa-node"
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
     }
   ]
 }

@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws';
+import { DataQueryOptions, DataQueryResponse } from '../index';
 
 export type ListenerCallback = (event?: any) => void;
 export type SubscriptionCallback = (message?: any) => void;
@@ -46,12 +47,21 @@ export interface NstrumentaClientBase {
   storage?: BaseStorageService;
 }
 
+export interface StorageUploadParameters {
+  filename: string;
+  data: Blob;
+  meta: Record<string, string>;
+  dataId?: string;
+}
+
 export interface BaseStorageService {
   list(type: string): Promise<string[]>;
 
-  upload(path: string, data: Blob, meta: Record<string, string>): Promise<void>;
+  upload({ filename, data, meta, dataId }: StorageUploadParameters): Promise<void>;
 
   download<T>(type: string, path: string): Promise<T>;
 
   download(type: string, path: string): Promise<unknown>;
+
+  query(options: DataQueryOptions): Promise<DataQueryResponse>;
 }

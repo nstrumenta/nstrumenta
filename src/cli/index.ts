@@ -49,7 +49,11 @@ machineCommand
   .action(ListMachines);
 
 const authCommand = program.command('auth');
-authCommand.command('add').description('Add API Key for project').action(AddKey);
+authCommand
+  .command('add')
+  .description('Add API Key for project')
+  .argument('[key]', 'API Key')
+  .action(AddKey);
 
 authCommand
   .command('list')
@@ -94,6 +98,7 @@ moduleCommand
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
   .option('--non-interactive', 'requires module name, uses latest version from server')
+  .option('--module-version [version]', 'version of the module to run')
   .description('run module')
   .action(Run);
 
@@ -173,7 +178,7 @@ dataCommand
 dataCommand
   .command('query')
   .option('-t, --tag <tag...>')
-  .option('-f, --id <id...>')
+  .option('--id <id>')
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
@@ -184,7 +189,7 @@ dataCommand
 dataCommand
   .command('get')
   .option('-t, --tag <tag...>')
-  .option('-f, --file <file...>')
+  .option('--id <id>')
   .option('-b, --before <before>', 'before timestamp')
   .option('-a, --after <after>', 'after timestamp')
   .option('-l, --limit <limit>', 'default to 1')
