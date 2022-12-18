@@ -112,8 +112,7 @@ const agentCommand = program.command('agent');
 agentCommand
   .command('start')
   .option('-p,--port <port>', 'websocket port', DEFAULT_HOST_PORT)
-  .option('-d, --debug <debug>', 'output extra debugging', false)
-  .option('--project <project>', 'nstrumenta project Id')
+  .option('-d, --debug <debug>', 'output extra debugging', 'false')
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
   .action(Start);
