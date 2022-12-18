@@ -6,14 +6,19 @@ import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 const logger = createLogger();
 
-export const Start = async function (options: { port: string; tag?: string }): Promise<void> {
-  const { port, tag } = options;
+export const Start = async function (options: {
+  port: string;
+  tag?: string;
+  debug?: string;
+}): Promise<void> {
+  const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
 
   const server = new NstrumentaServer({
     apiKey,
     port: port || DEFAULT_HOST_PORT,
     tag: tag ? tag : process.env.HOST_INSTANCE_ID,
+    debug: debug === 'true',
   });
 
   await server.run();
