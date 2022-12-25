@@ -26,6 +26,8 @@ type Reconnection = {
   timeout: ReturnType<typeof setTimeout> | null;
 };
 
+export { ClientSDK, Kind, MediaInfo, MCU, SubscriberType } from './video/src';
+
 export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;

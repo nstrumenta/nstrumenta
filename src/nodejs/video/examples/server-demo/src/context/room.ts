@@ -1,5 +1,5 @@
 import { v4 } from 'uuid';
-import { Room } from '../../../../packages/core/src';
+import { Room } from '../../../../../../shared/video/packages/core/src';
 import { RTCIceCandidate, RTCSessionDescription } from 'werift';
 
 // const workerPath = process.argv[3];

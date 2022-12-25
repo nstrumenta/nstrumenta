@@ -128,12 +128,12 @@ export class Connection {
       .filter((p) => p.cname !== publisher.cname)
       .forEach((peer) =>
         this.sendRPC<HandleUnPublish>(
-          { type: 'handleUnPublish', payload: [info, peer.localDescription] },
+          { type: 'handleUnPublish', payload: [info, peer.localDescription!] },
           peer
         )
       );
     this.sendRPC<HandleUnPublishDone>(
-      { type: 'handleUnPublishDone', payload: [publisher.localDescription] },
+      { type: 'handleUnPublishDone', payload: [publisher.localDescription!] },
       publisher
     );
   };
@@ -175,7 +175,7 @@ export class Connection {
     this.sendRPC<HandleUnSubscribe>(
       {
         type: 'handleUnsubscribe',
-        payload: [peer.localDescription],
+        payload: [peer.localDescription!],
       },
       peer
     );
@@ -186,7 +186,7 @@ export class Connection {
     this.sendRPC<HandleListenMixedAudio>(
       {
         type: 'handleListenMixedAudio',
-        payload: [meta, peer.localDescription],
+        payload: [meta, peer.localDescription!],
       },
       peer
     );
