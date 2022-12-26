@@ -10,9 +10,6 @@
         "dev"
       ],
       "runtimeExecutable": "npm",
-      "env": {
-        "NSTRUMENTA_API_KEY": "0ce4e1bb-7f82-439e-b915-88fecbc643be"
-      },
       "skipFiles": [
         "<node_internals>/**"
       ],
