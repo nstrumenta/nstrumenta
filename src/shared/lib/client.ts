@@ -1,5 +1,12 @@
 import { WebSocket } from 'ws';
-import { DataQueryOptions, DataQueryResponse } from '../index';
+import {
+  DataQueryOptions,
+  DataQueryResponse,
+  RPC,
+  Subscribe,
+  makeBusMessageFromJsonObject,
+} from '../index';
+import { v4 as randomUUID } from 'uuid';
 
 export type ListenerCallback = (event?: any) => void;
 export type SubscriptionCallback = (message?: any) => void;
@@ -27,6 +34,7 @@ export interface Connection {
 
 export interface NstrumentaClientBase {
   connection: Connection;
+  subscriptions: Map<string, Map<string, SubscriptionCallback>>;
 
   shutdown(): Promise<void>;
 
@@ -65,3 +73,30 @@ export interface BaseStorageService {
 
   query(options: DataQueryOptions): Promise<DataQueryResponse>;
 }
+
+export const callRPC = <T extends RPC>(
+  send: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => void,
+  subscriptions: Map<string, Map<string, SubscriptionCallback>>,
+  type: T['type'],
+  requestPayload: T['request']
+) => {
+  console.log('callRPC', type, requestPayload);
+  const rpcId = randomUUID();
+  const rpcChannelBase = `__rpc/${type}/${rpcId}`;
+  const requestChannel = `${rpcChannelBase}/request`;
+  const responseChannel = `${rpcChannelBase}/response`;
+  return new Promise<T['response']>(async (r) => {
+    // first subscribe to the responseChannel
+    const channelSubscriptions = subscriptions.get(responseChannel) || new Map();
+    channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
+      // await this.callRPC<Unsubscribe>({subscriptionId});
+      channelSubscriptions?.delete(rpcId);
+      r(response);
+    });
+    // is channelSubscriptions modified in place?
+    subscriptions.set(responseChannel, channelSubscriptions);
+
+    // then send on requestChannel
+    send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
+  });
+};

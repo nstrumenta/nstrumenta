@@ -3,6 +3,7 @@ import { WebSocket } from 'ws';
 import { resolveApiKey } from '../cli/utils';
 import {
   BaseStorageService,
+  callRPC,
   ClientStatus,
   Connection,
   ConnectOptions,
@@ -12,6 +13,7 @@ import {
   ListenerCallback,
   NstrumentaClientBase,
   StorageUploadParameters,
+  Subscribe,
   SubscriptionCallback,
 } from '../shared';
 import {
@@ -33,7 +35,7 @@ export class NstrumentaClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey?: string;
   private listeners: Map<string, Array<ListenerCallback>>;
-  private subscriptions: Map<string, SubscriptionCallback[]>;
+  public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   private reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
@@ -181,14 +183,23 @@ export class NstrumentaClient implements NstrumentaClientBase {
     }
   }
 
-  public addSubscription(channel: string, callback: SubscriptionCallback) {
-    console.log(`Nstrumenta client subscribe <${channel}>`);
-    const channelSubscriptions = this.subscriptions.get(channel) || [];
-    channelSubscriptions.push(callback);
+  public addSubscription = async (channel: string, callback: SubscriptionCallback) => {
+    const { subscriptionId } = await callRPC<Subscribe>(
+      this.ws!.send.bind(this.ws),
+      this.subscriptions,
+      'subscribe',
+      { channel }
+    );
+    console.log(`Nstrumenta client subscribe <${channel}> subscriptionId:${subscriptionId}`);
+    const channelSubscriptions = this.subscriptions.get(channel) || new Map();
+    channelSubscriptions.set(subscriptionId, callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.bufferedSend(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
-  }
+    return () => {
+      // await this.callRPC<Unsubscribe>({subscriptionId});
+      this.subscriptions.get(channel)?.delete(subscriptionId);
+    };
+  };
 
   public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {

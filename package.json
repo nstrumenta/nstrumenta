@@ -42,6 +42,7 @@
     "@types/node": "^16.7.13",
     "@types/semver": "^7.3.9",
     "@types/serve-index": "^1.9.1",
+    "@types/uuid": "^9.0.0",
     "@types/ws": "^8.2.0",
     "nodemon": "^2.0.12",
     "prettier": "^2.4.1",
@@ -64,6 +65,7 @@
     "semver": "^7.3.5",
     "serve-index": "^1.9.1",
     "tar": "^6.1.11",
+    "uuid": "^9.0.0",
     "ws": "^8.2.2"
   }
 }

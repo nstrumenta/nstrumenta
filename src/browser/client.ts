@@ -2,15 +2,19 @@ import axios, { AxiosRequestConfig } from 'axios';
 import {
   BaseStorageService,
   ClientStatus,
-  Connection,
   ConnectOptions,
-  ListenerCallback,
-  NstrumentaClientBase,
-  SubscriptionCallback,
-  getEndpoints,
-  StorageUploadParameters,
+  Connection,
   DataQueryOptions,
   DataQueryResponse,
+  ListenerCallback,
+  NstrumentaClientBase,
+  Ping,
+  RPC,
+  StorageUploadParameters,
+  Subscribe,
+  SubscriptionCallback,
+  callRPC,
+  getEndpoints,
 } from '../shared';
 import {
   deserializeWireMessage,
@@ -30,7 +34,7 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private listeners: Map<string, Array<ListenerCallback>>;
-  private subscriptions: Map<string, SubscriptionCallback[]>;
+  public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   private reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   private messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
@@ -201,14 +205,23 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     }
   }
 
-  public addSubscription(channel: string, callback: SubscriptionCallback) {
-    console.log(`Nstrumenta client subscribe <${channel}>`);
-    const channelSubscriptions = this.subscriptions.get(channel) || [];
-    channelSubscriptions.push(callback);
+  public addSubscription = async (channel: string, callback: SubscriptionCallback) => {
+    const { subscriptionId } = await callRPC<Subscribe>(
+      this.ws!.send.bind(this.ws),
+      this.subscriptions,
+      'subscribe',
+      { channel }
+    );
+    console.log(`Nstrumenta client subscribe <${channel}> subscriptionId:${subscriptionId}`);
+    const channelSubscriptions = this.subscriptions.get(channel) || new Map();
+    channelSubscriptions.set(subscriptionId, callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.bufferedSend(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
-  }
+    return () => {
+      // await this.callRPC<Unsubscribe>({subscriptionId});
+      this.subscriptions.get(channel)?.delete(subscriptionId);
+    };
+  };
 
   public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
@@ -269,8 +282,14 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
     });
   }
 
+  public async ping() {
+    console.log('browser ping');
+    return callRPC<Ping>(this.ws!.send.bind(this.ws), this.subscriptions, 'ping', {
+      sendTimestamp: Date.now(),
+    });
+  }
+
   public async startLog(name: string, channels: string[]) {
-    // TODO error on slashes ?
     this.send('_nstrumenta', { command: 'startLog', name, channels });
   }
 
@@ -281,7 +300,6 @@ export class NstrumentaBrowserClient implements NstrumentaClientBase {
 
   storage?: StorageService;
 }
-
 class StorageService implements BaseStorageService {
   private apiKey: string;
 
