@@ -70,3 +70,5 @@ export type DataQueryResponse = {
   size: number;
   lastModified: number;
 }[];
+
+export * from './rpc';

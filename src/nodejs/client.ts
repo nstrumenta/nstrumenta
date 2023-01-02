@@ -6,18 +6,9 @@ import {
   Connection,
   NstrumentaClientBase,
   StorageService,
-  getEndpoints,
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
-
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
-
-type Reconnection = {
-  hasVerified: boolean;
-  attempts: number;
-  timeout: ReturnType<typeof setTimeout> | null;
-};
 
 export class NstrumentaClient extends NstrumentaClientBase {
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {
