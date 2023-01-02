@@ -90,7 +90,7 @@ export abstract class NstrumentaClientBase {
     this.connect = this.connect.bind(this);
   }
 
-  async shutdown(): Promise<void> {
+  async shutdown() {
     this.listeners.clear();
     this.subscriptions.clear();
     this.datalogs.clear();
@@ -99,6 +99,7 @@ export abstract class NstrumentaClientBase {
       clearTimeout(this.reconnection.timeout);
       this.reconnection.timeout = null;
     }
+    this.ws?.removeAllListeners();
     this.ws?.close();
     return;
   }
