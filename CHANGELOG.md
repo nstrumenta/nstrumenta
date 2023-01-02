@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.32](https://github.com/nstrumenta/nstrumenta/compare/v3.0.31...v3.0.32) (2023-01-02)
+
+
+### Features
+
+* **rpc:** adds ping and subscribe RPC calls ([#159](https://github.com/nstrumenta/nstrumenta/issues/159)) ([540713b](https://github.com/nstrumenta/nstrumenta/commit/540713be0413000741751e3095abc918043c3fa6))
+
 ### [3.0.31](https://github.com/nstrumenta/nstrumenta/compare/v3.0.30...v3.0.31) (2023-01-02)
 
 
