@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.31](https://github.com/nstrumenta/nstrumenta/compare/v3.0.30...v3.0.31) (2023-01-02)
+
+
+### Features
+
+* **clients:** implements shared code in shared/lib ([#160](https://github.com/nstrumenta/nstrumenta/issues/160)) ([17ea3d5](https://github.com/nstrumenta/nstrumenta/commit/17ea3d59e71675e22b9f0e40914d38f02c5cfa85))
+* **debug:** plumbs debug option to agent start ([#158](https://github.com/nstrumenta/nstrumenta/issues/158)) ([41e5488](https://github.com/nstrumenta/nstrumenta/commit/41e5488ad32a712e894cc39447f9292680804100))
+
 ### [3.0.30](https://github.com/nstrumenta/nstrumenta/compare/v3.0.29...v3.0.30) (2022-12-08)
 
 

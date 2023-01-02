@@ -1,4 +1,4 @@
-import { Mcap0Types, Mcap0Writer as McapWriter } from '@mcap/core';
+import { Mcap0Writer as McapWriter } from '@mcap/core';
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
@@ -9,7 +9,7 @@ import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
-import { DEFAULT_HOST_PORT, Ping, RPC, Subscribe, getEndpoints } from '../shared';
+import { DEFAULT_HOST_PORT, LogConfig, Ping, RPC, Subscribe, getEndpoints } from '../shared';
 
 import {
   BusMessageType,
@@ -56,14 +56,6 @@ export interface CommandStopModuleData {
 }
 
 export type AgentActionStatus = 'pending' | 'complete';
-
-export interface LogConfig {
-  header: Mcap0Types.Header;
-  channels: Array<{
-    schema: { title: string; type: 'object'; properties: Record<string, unknown> };
-    channel: Omit<Mcap0Types.Channel, 'id' | 'schemaId' | 'metadata'>;
-  }>;
-}
 
 export type BackplaneCommand =
   | {
@@ -430,7 +422,7 @@ export class NstrumentaServer {
           logger.log(`[nstrumenta] <finishLog>`);
           await this.finishLog(name);
         }
-        
+
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
           logger.log(`[nstrumenta] <subscribe> ${channel}`);
