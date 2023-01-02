@@ -204,7 +204,6 @@ export abstract class NstrumentaClientBase {
     });
   }
   public async ping() {
-    console.log('browser ping');
     return callRPC<Ping>(this.ws!.send.bind(this.ws), this.subscriptions, 'ping', {
       sendTimestamp: Date.now(),
     });
