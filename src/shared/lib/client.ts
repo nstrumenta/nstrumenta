@@ -1,9 +1,14 @@
 import { Mcap0Types } from '@mcap/core';
 import axios, { AxiosRequestConfig } from 'axios';
+import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
   DataQueryOptions,
   DataQueryResponse,
+  Ping,
+  RPC,
+  Subscribe,
+  Unsubscribe,
   getEndpoints,
   makeBusMessageFromJsonObject,
 } from '../index';
@@ -56,6 +61,7 @@ export const getToken = async (apiKey: string): Promise<string> => {
   };
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
+    await process.nextTick(() => {});
     const { data } = await axios.get<{ token: string }>(getEndpoints('prod').GET_TOKEN, {
       headers,
     });
@@ -70,7 +76,7 @@ export abstract class NstrumentaClientBase {
   public ws: WebSocketLike | null = null;
   public apiKey: string | null = null;
   public listeners: Map<string, Array<ListenerCallback>>;
-  public subscriptions: Map<string, SubscriptionCallback[]>;
+  public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   public messageBuffer: Array<ArrayBufferLike>;
   private datalogs: Map<string, Array<string>>;
@@ -131,14 +137,18 @@ export abstract class NstrumentaClientBase {
     }
   }
 
-  public addSubscription(channel: string, callback: SubscriptionCallback) {
-    console.log(`Nstrumenta client subscribe <${channel}>`);
-    const channelSubscriptions = this.subscriptions.get(channel) || [];
-    channelSubscriptions.push(callback);
+  public addSubscription = async (channel: string, callback: SubscriptionCallback) => {
+    const { subscriptionId } = await this.callRPC<Subscribe>('subscribe', { channel });
+    console.log(`Nstrumenta client subscribe <${channel}> subscriptionId:${subscriptionId}`);
+    const channelSubscriptions = this.subscriptions.get(channel) || new Map();
+    channelSubscriptions.set(subscriptionId, callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    this.bufferedSend(makeBusMessageFromJsonObject('_command', { command: 'subscribe', channel }));
-  }
+    return async () => {
+      await this.callRPC<Unsubscribe>('unsubscribe', { channel, subscriptionId });
+      this.subscriptions.get(channel)?.delete(subscriptionId);
+    };
+  };
 
   public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
@@ -190,6 +200,11 @@ export abstract class NstrumentaClientBase {
       },
     });
   }
+  public async ping() {
+    return this.callRPC<Ping>('ping', {
+      sendTimestamp: Date.now(),
+    });
+  }
 
   public async startLog(name: string, channels: string[], config?: LogConfig) {
     this.send('_nstrumenta', { command: 'startLog', name, channels, config });
@@ -198,6 +213,26 @@ export abstract class NstrumentaClientBase {
   public async finishLog(name: string) {
     console.log('finish log');
     this.send('_nstrumenta', { command: 'finishLog', name });
+  }
+
+  async callRPC<T extends RPC>(type: T['type'], requestPayload: T['request']) {
+    console.log('callRPC', type, requestPayload);
+    const rpcId = randomUUID();
+    const rpcChannelBase = `__rpc/${type}/${rpcId}`;
+    const requestChannel = `${rpcChannelBase}/request`;
+    const responseChannel = `${rpcChannelBase}/response`;
+    return new Promise<T['response']>(async (r) => {
+      // first subscribe to the responseChannel
+      const channelSubscriptions = this.subscriptions.get(responseChannel) || new Map();
+      channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
+        channelSubscriptions?.delete(rpcId);
+        r(response);
+      });
+      this.subscriptions.set(responseChannel, channelSubscriptions);
+
+      // then send on requestChannel
+      this.ws?.send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
+    });
   }
 
   storage?: StorageService;
