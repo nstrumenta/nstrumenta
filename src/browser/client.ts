@@ -9,12 +9,11 @@ import {
   ListenerCallback,
   NstrumentaClientBase,
   Ping,
-  RPC,
   StorageUploadParameters,
   Subscribe,
   SubscriptionCallback,
   callRPC,
-  getEndpoints,
+  getEndpoints
 } from '../shared';
 import {
   deserializeWireMessage,

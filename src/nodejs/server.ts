@@ -430,6 +430,7 @@ export class NstrumentaServer {
           logger.log(`[nstrumenta] <finishLog>`);
           await this.finishLog(name);
         }
+        
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
           logger.log(`[nstrumenta] <subscribe> ${channel}`);

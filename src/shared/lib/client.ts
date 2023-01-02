@@ -1,3 +1,4 @@
+import { v4 as randomUUID } from 'uuid';
 import { WebSocket } from 'ws';
 import {
   DataQueryOptions,
@@ -6,7 +7,6 @@ import {
   Subscribe,
   makeBusMessageFromJsonObject,
 } from '../index';
-import { v4 as randomUUID } from 'uuid';
 
 export type ListenerCallback = (event?: any) => void;
 export type SubscriptionCallback = (message?: any) => void;
@@ -89,11 +89,9 @@ export const callRPC = <T extends RPC>(
     // first subscribe to the responseChannel
     const channelSubscriptions = subscriptions.get(responseChannel) || new Map();
     channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
-      // await this.callRPC<Unsubscribe>({subscriptionId});
       channelSubscriptions?.delete(rpcId);
       r(response);
     });
-    // is channelSubscriptions modified in place?
     subscriptions.set(responseChannel, channelSubscriptions);
 
     // then send on requestChannel
