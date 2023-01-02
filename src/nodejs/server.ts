@@ -427,7 +427,9 @@ export class NstrumentaServer {
           const { channel } = contents;
           logger.log(`[nstrumenta] <subscribe> ${channel}`);
           const subscriptionId = randomUUID();
-
+          if (!subscriptions.get(ws)) {
+            subscriptions.set(ws, new Map());
+          }
           const channelSubscriptions = subscriptions.get(ws)!;
           if (!channelSubscriptions.get(channel)) {
             channelSubscriptions.set(channel, new Set());
