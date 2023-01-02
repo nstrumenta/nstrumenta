@@ -16,6 +16,11 @@ export interface Subscribe extends RPC {
   response: { subscriptionId: string };
 }
 
+export interface Unsubscribe extends RPC {
+  type: 'unsubscribe';
+  request: { channel: string; subscriptionId: string };
+}
+
 export interface StartLog extends RPC {
   type: 'startLog';
   request: { name: string; channels: string[] };

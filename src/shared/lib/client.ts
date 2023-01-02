@@ -8,6 +8,7 @@ import {
   Ping,
   RPC,
   Subscribe,
+  Unsubscribe,
   getEndpoints,
   makeBusMessageFromJsonObject,
 } from '../index';
@@ -60,6 +61,7 @@ export const getToken = async (apiKey: string): Promise<string> => {
   };
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
+    await process.nextTick(() => {});
     const { data } = await axios.get<{ token: string }>(getEndpoints('prod').GET_TOKEN, {
       headers,
     });
@@ -136,19 +138,14 @@ export abstract class NstrumentaClientBase {
   }
 
   public addSubscription = async (channel: string, callback: SubscriptionCallback) => {
-    const { subscriptionId } = await callRPC<Subscribe>(
-      this.ws!.send.bind(this.ws),
-      this.subscriptions,
-      'subscribe',
-      { channel }
-    );
+    const { subscriptionId } = await this.callRPC<Subscribe>('subscribe', { channel });
     console.log(`Nstrumenta client subscribe <${channel}> subscriptionId:${subscriptionId}`);
     const channelSubscriptions = this.subscriptions.get(channel) || new Map();
     channelSubscriptions.set(subscriptionId, callback);
     this.subscriptions.set(channel, channelSubscriptions);
 
-    return () => {
-      // await this.callRPC<Unsubscribe>({subscriptionId});
+    return async () => {
+      await this.callRPC<Unsubscribe>('unsubscribe', { channel, subscriptionId });
       this.subscriptions.get(channel)?.delete(subscriptionId);
     };
   };
@@ -204,7 +201,7 @@ export abstract class NstrumentaClientBase {
     });
   }
   public async ping() {
-    return callRPC<Ping>(this.ws!.send.bind(this.ws), this.subscriptions, 'ping', {
+    return this.callRPC<Ping>('ping', {
       sendTimestamp: Date.now(),
     });
   }
@@ -216,6 +213,26 @@ export abstract class NstrumentaClientBase {
   public async finishLog(name: string) {
     console.log('finish log');
     this.send('_nstrumenta', { command: 'finishLog', name });
+  }
+
+  async callRPC<T extends RPC>(type: T['type'], requestPayload: T['request']) {
+    console.log('callRPC', type, requestPayload);
+    const rpcId = randomUUID();
+    const rpcChannelBase = `__rpc/${type}/${rpcId}`;
+    const requestChannel = `${rpcChannelBase}/request`;
+    const responseChannel = `${rpcChannelBase}/response`;
+    return new Promise<T['response']>(async (r) => {
+      // first subscribe to the responseChannel
+      const channelSubscriptions = this.subscriptions.get(responseChannel) || new Map();
+      channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
+        channelSubscriptions?.delete(rpcId);
+        r(response);
+      });
+      this.subscriptions.set(responseChannel, channelSubscriptions);
+
+      // then send on requestChannel
+      this.ws?.send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
+    });
   }
 
   storage?: StorageService;
@@ -349,28 +366,3 @@ export class StorageService {
     await axios(uploadConfig);
   }
 }
-
-export const callRPC = <T extends RPC>(
-  send: (data: string | ArrayBufferLike | Blob | ArrayBufferView) => void,
-  subscriptions: Map<string, Map<string, SubscriptionCallback>>,
-  type: T['type'],
-  requestPayload: T['request']
-) => {
-  console.log('callRPC', type, requestPayload);
-  const rpcId = randomUUID();
-  const rpcChannelBase = `__rpc/${type}/${rpcId}`;
-  const requestChannel = `${rpcChannelBase}/request`;
-  const responseChannel = `${rpcChannelBase}/response`;
-  return new Promise<T['response']>(async (r) => {
-    // first subscribe to the responseChannel
-    const channelSubscriptions = subscriptions.get(responseChannel) || new Map();
-    channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
-      channelSubscriptions?.delete(rpcId);
-      r(response);
-    });
-    subscriptions.set(responseChannel, channelSubscriptions);
-
-    // then send on requestChannel
-    send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
-  });
-};

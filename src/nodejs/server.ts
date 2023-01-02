@@ -9,7 +9,15 @@ import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
-import { DEFAULT_HOST_PORT, LogConfig, Ping, RPC, Subscribe, getEndpoints } from '../shared';
+import {
+  DEFAULT_HOST_PORT,
+  LogConfig,
+  Ping,
+  RPC,
+  Subscribe,
+  Unsubscribe,
+  getEndpoints,
+} from '../shared';
 
 import {
   BusMessageType,
@@ -390,6 +398,21 @@ export class NstrumentaServer {
                 channelSubscriptions.get(channel)!.add(subscriptionId);
 
                 this.respondRPC<Subscribe>(ws, responseChannel, { subscriptionId });
+              }
+              break;
+            case 'unsubscribe':
+              {
+                const { channel, subscriptionId } = contents as Unsubscribe['request'];
+                logger.log(`[nstrumenta] <unsubscribe> ${channel} ${subscriptionId}`);
+                subscriptions.get(ws)?.get(channel)?.delete(subscriptionId);
+                if (
+                  subscriptions.get(ws)?.get(channel)?.size &&
+                  subscriptions.get(ws)!.get(channel)!.size <= 1
+                ) {
+                  //remove subscription channel if all subscriptionIds are cleared
+                  subscriptions.get(ws)!.delete(channel);
+                }
+                this.respondRPC<Unsubscribe>(ws, responseChannel, undefined);
               }
               break;
             case 'ping':
