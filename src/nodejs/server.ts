@@ -40,7 +40,6 @@ const createPrefixTransform = (prefix: string) =>
     },
   });
 
-const version = require('../../package.json').version;
 const logger = createLogger();
 
 type ListenerCallback = (event?: any) => void;
@@ -121,7 +120,7 @@ export class NstrumentaServer {
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     this.listeners = new Map();
-    logger.log(`starting NstrumentaServer ${version}`);
+    logger.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
     if (!options.noBackplane) {
       this.backplaneClient = new NstrumentaClient();
