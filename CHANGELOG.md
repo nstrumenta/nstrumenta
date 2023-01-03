@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.33](https://github.com/nstrumenta/nstrumenta/compare/v3.0.32...v3.0.33) (2023-01-03)
+
+
+### Bug Fixes
+
+* **browser-client:** guards against process not defined ([#161](https://github.com/nstrumenta/nstrumenta/issues/161)) ([ad07b06](https://github.com/nstrumenta/nstrumenta/commit/ad07b06d6caf5a6ecf085d1f8a1ef66073ef64f6))
+
 ### [3.0.32](https://github.com/nstrumenta/nstrumenta/compare/v3.0.31...v3.0.32) (2023-01-02)
 
 
