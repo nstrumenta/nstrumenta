@@ -40,6 +40,7 @@ const createPrefixTransform = (prefix: string) =>
     },
   });
 
+const version = require('../../package.json').version;
 const logger = createLogger();
 
 type ListenerCallback = (event?: any) => void;
@@ -120,7 +121,7 @@ export class NstrumentaServer {
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     this.listeners = new Map();
-    logger.log('starting NstrumentaServer');
+    logger.log(`starting NstrumentaServer ${version}`);
     this.run = this.run.bind(this);
     if (!options.noBackplane) {
       this.backplaneClient = new NstrumentaClient();
@@ -185,7 +186,7 @@ export class NstrumentaServer {
         this.status.agentId = agentId;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
-            logger.log('Connected to backplane');
+            logger.log(`Connected to backplane ${backplaneUrl}`);
             const agentBackplaneStream = new Writable();
             agentBackplaneStream._write = (chunk, enc, next) => {
               this.backplaneClient?.send(`${agentId}/stdout`, chunk);
@@ -193,6 +194,9 @@ export class NstrumentaServer {
             };
             this.logStreams?.push(agentBackplaneStream);
             this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
+              if (debug) {
+                logger.log(message);
+              }
               const { task, actionId } = message;
               switch (task) {
                 case 'runModule':
