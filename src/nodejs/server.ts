@@ -1,4 +1,4 @@
-import { Mcap0Types, Mcap0Writer as McapWriter } from '@mcap/core';
+import { Mcap0Writer as McapWriter } from '@mcap/core';
 import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
@@ -9,7 +9,15 @@ import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
-import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
+import {
+  DEFAULT_HOST_PORT,
+  LogConfig,
+  Ping,
+  RPC,
+  Subscribe,
+  Unsubscribe,
+  getEndpoints,
+} from '../shared';
 
 import {
   BusMessageType,
@@ -57,14 +65,6 @@ export interface CommandStopModuleData {
 }
 
 export type AgentActionStatus = 'pending' | 'complete';
-
-export interface LogConfig {
-  header: Mcap0Types.Header;
-  channels: Array<{
-    schema: { title: string; type: 'object'; properties: Record<string, unknown> };
-    channel: Omit<Mcap0Types.Channel, 'id' | 'schemaId' | 'metadata'>;
-  }>;
-}
 
 export type BackplaneCommand =
   | {
@@ -121,7 +121,7 @@ export class NstrumentaServer {
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     this.listeners = new Map();
-    logger.log('starting NstrumentaServer');
+    logger.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
     if (!options.noBackplane) {
       this.backplaneClient = new NstrumentaClient();
@@ -186,7 +186,7 @@ export class NstrumentaServer {
         this.status.agentId = agentId;
         if (backplaneUrl) {
           this.backplaneClient.addListener('open', () => {
-            logger.log('Connected to backplane');
+            logger.log(`Connected to backplane ${backplaneUrl}`);
             const agentBackplaneStream = new Writable();
             agentBackplaneStream._write = (chunk, enc, next) => {
               this.backplaneClient?.send(`${agentId}/stdout`, chunk);
@@ -194,6 +194,9 @@ export class NstrumentaServer {
             };
             this.logStreams?.push(agentBackplaneStream);
             this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
+              if (debug) {
+                logger.log(message);
+              }
               const { task, actionId } = message;
               switch (task) {
                 case 'runModule':
@@ -288,7 +291,7 @@ export class NstrumentaServer {
       this.status.clientsCount = wss.clients.size;
       this.status.subscribedChannels = {};
       subscriptions.forEach((channels) => {
-        channels.forEach((channel) => {
+        channels.forEach((ids, channel) => {
           if (!this.status.subscribedChannels[channel]) {
             this.status.subscribedChannels[channel] = { count: 1 };
           } else {
@@ -321,7 +324,7 @@ export class NstrumentaServer {
     });
 
     const verifiedConnections: Map<string, WebSocket> = new Map();
-    const subscriptions: Map<WebSocket, Set<string>> = new Map();
+    const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
     setInterval(() => {
       updateStatus();
@@ -392,7 +395,57 @@ export class NstrumentaServer {
         }
         const { channel, busMessageType, contents } = deserializedMessage;
 
+        // RPCs from clients
+        if (channel.startsWith('__rpc')) {
+          const [base, type, id] = channel.split('/');
+          const responseChannel = `${base}/${type}/${id}/response`;
+          switch (type) {
+            case 'subscribe':
+              {
+                const { channel } = contents as Subscribe['request'];
+                const subscriptionId = randomUUID();
+                logger.log(`[nstrumenta] <subscribe> ${channel}`);
+                if (!subscriptions.get(ws)) {
+                  subscriptions.set(ws, new Map());
+                }
+                const channelSubscriptions = subscriptions.get(ws)!;
+                if (!channelSubscriptions.get(channel)) {
+                  channelSubscriptions.set(channel, new Set());
+                }
+                channelSubscriptions.get(channel)!.add(subscriptionId);
+
+                this.respondRPC<Subscribe>(ws, responseChannel, { subscriptionId });
+              }
+              break;
+            case 'unsubscribe':
+              {
+                const { channel, subscriptionId } = contents as Unsubscribe['request'];
+                logger.log(`[nstrumenta] <unsubscribe> ${channel} ${subscriptionId}`);
+                subscriptions.get(ws)?.get(channel)?.delete(subscriptionId);
+                if (
+                  subscriptions.get(ws)?.get(channel)?.size &&
+                  subscriptions.get(ws)!.get(channel)!.size <= 1
+                ) {
+                  //remove subscription channel if all subscriptionIds are cleared
+                  subscriptions.get(ws)!.delete(channel);
+                }
+                this.respondRPC<Unsubscribe>(ws, responseChannel, undefined);
+              }
+              break;
+            case 'ping':
+              {
+                const { sendTimestamp } = contents as Ping['request'];
+                this.respondRPC<Ping>(ws, responseChannel, {
+                  sendTimestamp,
+                  serverTimestamp: Date.now(),
+                });
+              }
+              break;
+          }
+        }
+
         // commands from clients
+        // TODO replace with RPCs
 
         if (contents?.command == 'startLog') {
           const { channels, name, config } = contents;
@@ -413,11 +466,16 @@ export class NstrumentaServer {
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
           logger.log(`[nstrumenta] <subscribe> ${channel}`);
+          const subscriptionId = randomUUID();
           if (!subscriptions.get(ws)) {
-            subscriptions.set(ws, new Set([channel]));
-          } else {
-            subscriptions.get(ws)!.add(channel);
+            subscriptions.set(ws, new Map());
           }
+          const channelSubscriptions = subscriptions.get(ws)!;
+          if (!channelSubscriptions.get(channel)) {
+            channelSubscriptions.set(channel, new Set());
+          }
+          channelSubscriptions.get(channel)!.add(subscriptionId);
+
           this.listeners.get('subscriptions')?.forEach((callback) => callback(subscriptions));
         }
 
@@ -496,6 +554,10 @@ export class NstrumentaServer {
     server.listen(port, function () {
       logger.log('listening on *:' + port);
     });
+  }
+
+  private async respondRPC<T extends RPC>(ws: WebSocket, channel: string, response: T['response']) {
+    await ws.send(makeBusMessageFromJsonObject(channel, response as Record<string, unknown>));
   }
 
   public async startLog(name: string, channels: string[], config?: LogConfig) {

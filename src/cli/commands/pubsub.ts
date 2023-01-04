@@ -1,4 +1,5 @@
 import { WebSocket } from 'ws';
+import { getToken } from '../../shared';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -7,7 +8,6 @@ import {
 } from '../../shared/lib/busMessage';
 import { getCurrentContext } from '../../shared/lib/context';
 import { resolveApiKey } from '../utils';
-import { getToken } from '../../nodejs';
 
 const red = (text: string) => {
   return text;
