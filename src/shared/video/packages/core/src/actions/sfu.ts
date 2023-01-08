@@ -17,7 +17,7 @@ export async function subscribe(requests: RequestSubscribe[], subscriberId: stri
     } else {
       const transceiver = peer.addTransceiver(kind as Kind, { direction: 'sendonly' });
       sfu.subscribeAV(subscriberId, peer, transceiver, type);
-      return { mediaId, uuid: transceiver.uuid };
+      return { mediaId, uuid: transceiver.id };
     }
   });
 
@@ -28,7 +28,7 @@ export async function subscribe(requests: RequestSubscribe[], subscriberId: stri
   const mediaIdPairs = pairs
     .map(({ mediaId, uuid, label }) => {
       if (uuid) {
-        const transceiver = peer.transceivers.find((t) => t.uuid === uuid);
+        const transceiver = peer.getTransceivers().find((t) => t.id === uuid);
         if (!transceiver) throw new Error();
         return { mediaId, mid: transceiver.mid };
       }
