@@ -11,6 +11,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
   DEFAULT_HOST_PORT,
+  JoinWebRTC,
   LogConfig,
   Ping,
   RPC,
@@ -30,6 +31,7 @@ import { NstrumentaClient } from './client';
 import { start as startVideoServer } from './video/examples/server-demo/src/main';
 import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
+import { handleJoin } from './video/examples/server-demo/src/handler';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -272,7 +274,7 @@ export class NstrumentaServer {
 
     const server = require('http').Server(app);
 
-    // werift begin
+    // webrtc begin
     // json body parser and allow CORS
     app.use(express.json());
     app.use((_, res, next) => {
@@ -281,9 +283,9 @@ export class NstrumentaServer {
       res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
       next();
     });
-    
-    startVideoServer(app);
-    // werift end
+
+    const weriftCtx = startVideoServer(app);
+    // webrtc end
 
     const wss = new WebSocketServer({ server: server });
 
@@ -439,6 +441,13 @@ export class NstrumentaServer {
                   sendTimestamp,
                   serverTimestamp: Date.now(),
                 });
+              }
+              break;
+            case 'joinWebRTC':
+              const { room } = contents as JoinWebRTC['request'];
+              {
+                const [peerId, offer] = await handleJoin(weriftCtx, room);
+                this.respondRPC<JoinWebRTC>(ws, responseChannel, { peerId, offer });
               }
               break;
           }

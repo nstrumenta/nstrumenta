@@ -37,4 +37,6 @@ export function start(app: Express) {
     await handleCandidate(ctx, roomName, peerId, candidate);
     return res.send({});
   });
+
+  return ctx;
 }

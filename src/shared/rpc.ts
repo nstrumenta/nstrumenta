@@ -25,3 +25,9 @@ export interface StartLog extends RPC {
   type: 'startLog';
   request: { name: string; channels: string[] };
 }
+
+export interface JoinWebRTC extends RPC {
+  type: 'joinWebRTC';
+  request: { room: string };
+  response: { peerId: string | any; offer: string | any };
+}
