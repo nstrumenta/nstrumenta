@@ -71,6 +71,9 @@ typings/
 # build artifacts
 dist
 
+# profiler artifacts
+profile
+
 # ide
 .idea
 
