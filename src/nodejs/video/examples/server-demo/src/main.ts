@@ -20,7 +20,7 @@ export function start(app: Express) {
 
     console.log("join");
 
-    const [peerId, offer] = await handleJoin(ctx, roomName);
+    const {peerId, offer} = await handleJoin(ctx, roomName);
     return res.send({ peerId, offer });
   });
 

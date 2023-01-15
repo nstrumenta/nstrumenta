@@ -32,7 +32,7 @@ export class Room {
     this.connection.listen(channel, peer, peerId);
 
     await peer.setLocalDescription(await peer.createOffer());
-    return [peerId, peer.localDescription];
+    return { peerId, offer: peer.localDescription };
   }
 
   getUserMedias(peerId: string) {
