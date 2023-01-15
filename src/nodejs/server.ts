@@ -30,7 +30,6 @@ import {
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
-import { start as startVideoServer } from './video/examples/server-demo/src/main';
 import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
 import {
@@ -38,6 +37,7 @@ import {
   handleCandidate,
   handleJoin,
 } from './video/examples/server-demo/src/handler';
+import { createContext } from './video/examples/server-demo/src/context/context';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -281,16 +281,7 @@ export class NstrumentaServer {
     const server = require('http').Server(app);
 
     // webrtc begin
-    // json body parser and allow CORS
-    app.use(express.json());
-    app.use((_, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-      next();
-    });
-
-    const weriftCtx = startVideoServer(app);
+    const weriftCtx = createContext();
     // webrtc end
 
     const wss = new WebSocketServer({ server: server });
