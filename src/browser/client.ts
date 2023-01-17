@@ -97,9 +97,9 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
           this.reconnection.attempts += 1;
         }
       });
-      this.ws.addEventListener('error', () => {
-        console.log(`Error in websocket connection`);
+      this.ws.addEventListener('error', (event) => {
         this.connection.status = ClientStatus.ERROR;
+        reject(`Error in websocket connection: ${event.message}`);
       });
       this.ws.addEventListener('message', (event) => {
         const wireMessage = event.data as ArrayBuffer;
