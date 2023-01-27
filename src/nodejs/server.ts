@@ -10,7 +10,10 @@ import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
+  AnswerWebRTC,
+  CandidateWebRTC,
   DEFAULT_HOST_PORT,
+  JoinWebRTC,
   LogConfig,
   Ping,
   RPC,
@@ -29,6 +32,12 @@ import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
+import {
+  handleAnswer,
+  handleCandidate,
+  handleJoin,
+} from './video/examples/server-demo/src/handler';
+import { createContext } from './video/examples/server-demo/src/context/context';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -271,6 +280,10 @@ export class NstrumentaServer {
 
     const server = require('http').Server(app);
 
+    // webrtc begin
+    const weriftCtx = createContext();
+    // webrtc end
+
     const wss = new WebSocketServer({ server: server });
 
     const updateStatus = () => {
@@ -425,6 +438,33 @@ export class NstrumentaServer {
                   sendTimestamp,
                   serverTimestamp: Date.now(),
                 });
+              }
+              break;
+            case 'joinWebRTC':
+              {
+                const { room } = contents as JoinWebRTC['request'];
+                {
+                  const { peerId, offer } = await handleJoin(weriftCtx, room);
+                  this.respondRPC<JoinWebRTC>(ws, responseChannel, { peerId, offer });
+                }
+              }
+              break;
+            case 'answerWebRTC':
+              {
+                const { peerId, room, answer } = contents as AnswerWebRTC['request'];
+                {
+                  await handleAnswer(weriftCtx, room, peerId, answer);
+                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                }
+              }
+              break;
+            case 'candidateWebRTC':
+              {
+                const { peerId, room, candidate } = contents as CandidateWebRTC['request'];
+                {
+                  await handleCandidate(weriftCtx, room, peerId, candidate);
+                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                }
               }
               break;
           }
