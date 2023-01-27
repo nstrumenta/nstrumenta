@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.36](https://github.com/nstrumenta/nstrumenta/compare/v3.0.35...v3.0.36) (2023-01-27)
+
+
+### Features
+
+* **webRTC:** removes mixer and associated native deps ([#163](https://github.com/nstrumenta/nstrumenta/issues/163)) ([08a1a61](https://github.com/nstrumenta/nstrumenta/commit/08a1a61dc2f3565df2cbdf9b13cb75929c2b95b2))
+
 ### [3.0.35](https://github.com/nstrumenta/nstrumenta/compare/v3.0.34...v3.0.35) (2023-01-27)
 
 
