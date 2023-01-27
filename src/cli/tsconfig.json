@@ -4,16 +4,13 @@
     "module": "CommonJS",
     "moduleResolution": "Node",
     "lib": [
-      "ESNext", "ES2020"
+      "ESNext"
     ],
     "declaration": true,
     "outDir": "../../dist",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "resolveJsonModule": true,
-    "strictNullChecks": false,
-    "useUnknownInCatchVariables": false,
-    "noImplicitAny": false
+    "resolveJsonModule": true
   },
 }

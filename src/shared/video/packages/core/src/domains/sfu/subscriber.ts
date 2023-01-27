@@ -47,7 +47,7 @@ export class Subscriber {
         if (psfb.feedback.count === ReceiverEstimatedMaxBitrate.count) {
           const remb = psfb.feedback as ReceiverEstimatedMaxBitrate;
 
-          if (remb.bitrate / 1000n <= 200n) {
+          if (remb.bitrate / BigInt(1000) <= BigInt(200)) {
             if (this.state !== 'low' && this.count >= this.threshold) {
               console.log('low');
               this.state = 'low';
