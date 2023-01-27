@@ -1,5 +1,4 @@
 import { RTCDataChannel, RTCIceCandidate, RTCPeerConnection, RTCSessionDescription } from 'werift';
-import { addMixedAudioTrack, listenMixedAudio, removeMixedAudioTrack } from '../actions/mcu';
 import { leave, unPublish } from '../actions/room';
 import { changeQuality, subscribe, unsubscribe } from '../actions/sfu';
 import { Room } from '../domains/room';
@@ -179,25 +178,6 @@ export class Connection {
       },
       peer
     );
-  };
-
-  listenMixedAudio = async (...args: ListenMixedAudio['payload']) => {
-    const { peer, meta } = await listenMixedAudio(this.room)(...args);
-    this.sendRPC<HandleListenMixedAudio>(
-      {
-        type: 'handleListenMixedAudio',
-        payload: [meta, peer.localDescription!],
-      },
-      peer
-    );
-  };
-
-  addMixedAudioTrack = (...args: AddMixedAudioTrack['payload']) => {
-    addMixedAudioTrack(this.room)(...args);
-  };
-
-  removeMixedAudioTrack = (...args: RemoveMixedAudioTrack['payload']) => {
-    removeMixedAudioTrack(this.room)(...args);
   };
 
   join = (peerId: string) => {
