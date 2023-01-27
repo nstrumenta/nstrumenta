@@ -1,4 +1,3 @@
-import debug from 'debug';
 import { v4 } from 'uuid';
 import { Kind, RTCRtpTransceiver, useAbsSendTime, useSdesMid, useSdesRTPStreamId } from 'werift';
 import { Connection } from '../responders/connection';
@@ -8,8 +7,6 @@ import { Media, MediaInfo } from './media/media';
 import { PeerConnection } from './peer';
 import { SFUManager } from './sfu/manager';
 import { SFU } from './sfu/sfu';
-
-const log = debug('werift:sfu:room');
 
 export class Room {
   readonly connection = new Connection(this);
@@ -57,7 +54,7 @@ export class Room {
   }
 
   createMedia(publisherId: string, { simulcast, kind }: CreateMediaRequest) {
-    log('publish', publisherId, { simulcast, kind });
+    console.log('publish', publisherId, { simulcast, kind });
     const peer = this.peers[publisherId];
 
     const media = new Media(kind, publisherId);

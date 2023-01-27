@@ -1,10 +1,8 @@
-import Logger from "debug";
 import { MediaInfo } from "../domains/media/media";
 import { Room } from "../domains/room";
-const log = Logger("actions/room");
 
 export const leave = (room: Room) => async (peerId: string) => {
-  log("leave", peerId);
+  console.log("leave", peerId);
   room.sfuManager.leave(peerId);
   const infos = room.getUserMedias(peerId).map((media) => media.info);
 

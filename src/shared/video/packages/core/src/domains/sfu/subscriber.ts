@@ -1,9 +1,6 @@
-import debug from 'debug';
 import { ReceiverEstimatedMaxBitrate, RtcpPayloadSpecificFeedback } from 'werift';
 import { RTCPeerConnection, RTCRtpTransceiver } from 'werift';
 import { Media } from '../media/media';
-
-const log = debug('werift:sfu:subscriber');
 
 export type SubscriberType = 'high' | 'low' | 'single' | 'auto';
 
@@ -107,7 +104,7 @@ export class Subscriber {
     const sender = this.sender;
     if (!sender) throw new Error();
 
-    log('on subscribe', sender.id, state);
+    console.log('on subscribe', sender.id, state);
 
     const track =
       state === 'single'
@@ -116,7 +113,7 @@ export class Subscriber {
 
     const [rtp] = await track.onReceiveRtp.asPromise();
     sender.sender.replaceRTP(rtp.header);
-    log('replace track', sender.id, rtp.header.ssrc);
+    console.log('replace track', sender.id, rtp.header.ssrc);
 
     const { unSubscribe } = track.onReceiveRtp.subscribe((rtp) => {
       sender.sender.sendRtp(rtp);
