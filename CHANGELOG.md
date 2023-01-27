@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.35](https://github.com/nstrumenta/nstrumenta/compare/v3.0.34...v3.0.35) (2023-01-27)
+
+
+### Features
+
+* **WebRTC:** adds webrtc support to server and browser client  ([#146](https://github.com/nstrumenta/nstrumenta/issues/146)) ([d154614](https://github.com/nstrumenta/nstrumenta/commit/d154614799be4be84b3f22d6b1b24b3bd2e5a10f))
+
 ### [3.0.34](https://github.com/nstrumenta/nstrumenta/compare/v3.0.33...v3.0.34) (2023-01-03)
 
 
