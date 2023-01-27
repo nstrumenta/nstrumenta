@@ -2,7 +2,6 @@ import { v4 } from 'uuid';
 import { Kind, RTCRtpTransceiver, useAbsSendTime, useSdesMid, useSdesRTPStreamId } from 'werift';
 import { Connection } from '../responders/connection';
 import { sleep } from '../utils/helper';
-import { MCUManager } from './mcu/manager';
 import { Media, MediaInfo } from './media/media';
 import { PeerConnection } from './peer';
 import { SFUManager } from './sfu/manager';
@@ -11,7 +10,6 @@ import { SFU } from './sfu/sfu';
 export class Room {
   readonly connection = new Connection(this);
   readonly sfuManager = new SFUManager();
-  readonly mcuManager = new MCUManager();
   peers: { [peerId: string]: PeerConnection } = {};
   medias: { [mediaId: string]: Media } = {};
 
@@ -129,15 +127,6 @@ export class Room {
       throw new Error();
     }
     return this.sfuManager.createSFU(media);
-  }
-
-  createMCU(infos: MediaInfo[], subscriber: RTCRtpTransceiver) {
-    const medias = infos.map((info) => this.medias[info.mediaId]);
-    return this.mcuManager.createMCU(medias, subscriber);
-  }
-
-  getMCU(mcuId: string) {
-    return this.mcuManager.getMCU(mcuId);
   }
 }
 
