@@ -88,19 +88,9 @@ const useLocalModule = async (moduleName?: string): Promise<ModuleExtended> => {
   }
 
   // Read the module configs
-  const promises = config.modules.map(async (moduleMeta) => {
-    const { folder } = moduleMeta;
-    let moduleConfig: Module | undefined;
-    try {
-      moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
-    } catch (err) {
-      console.warn(`Couldn't read ${folder}/module.json`);
-    }
-    return { ...moduleMeta, ...moduleConfig };
-  });
 
+  const modules: ModuleExtended[] = await readModuleConfigs(config.modules);
   // Sort the module version
-  const modules: ModuleExtended[] = await Promise.all(promises);
   if (name === undefined) {
     name = await inquiryForSelectModule(
       modules
@@ -185,8 +175,29 @@ export interface ModuleMeta {
 
 export type ModuleExtended = Module & ModuleMeta;
 
+const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExtended[]> => {
+  const promises = moduleMetas.map(async (moduleMeta) => {
+    const { folder } = moduleMeta;
+    let moduleConfig: Module | undefined;
+    try {
+      moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
+    } catch (err) {
+      console.warn(`Couldn't read ${folder}/module.json`);
+    }
+    let packageConfig: Record<string, unknown> | undefined;
+    try {
+      packageConfig = JSON.parse(await fs.readFile(`${folder}/package.json`, { encoding: 'utf8' }));
+    } catch (err) {
+      console.log(`no ${folder}/package.json`);
+    }
+
+    return { ...moduleMeta, ...moduleConfig, ...packageConfig } as ModuleExtended;
+  });
+  return Promise.all(promises);
+};
+
 export const Publish = async () => {
-  let modulesMeta: ModuleMeta[];
+  let moduleMetas: ModuleMeta[];
   let modules: ModuleExtended[] = [];
 
   // First, let's check the nst project configuration for modules
@@ -195,32 +206,17 @@ export const Publish = async () => {
 
     // For the rest of this run, we'll want to chdir to the main project folder
     process.chdir(cwd);
-    console.log({ cwd });
     console.log(`cwd: ${process.cwd()}`);
     const { modules: modulesFromFile }: { [key: string]: unknown; modules: ModuleMeta[] } =
       JSON.parse(file);
-    modulesMeta = modulesFromFile;
+    moduleMetas = modulesFromFile;
   } catch (error) {
     throw Error(error as string);
   }
 
   // Now, check for and read the configs
-  // Check each given module for config file
-  const promises = modulesMeta.map(async (meta) => {
-    const { name } = meta;
-    const folder = path.resolve(meta.folder);
 
-    try {
-      const moduleConfig: Module = JSON.parse(
-        await fs.readFile(`${path.resolve(folder)}/module.json`, { encoding: 'utf8' })
-      );
-      return { ...moduleConfig, name, folder };
-    } catch (e) {
-      console.log(`No config file found in ${path.resolve(folder)}\n`);
-    }
-  });
-
-  const results = await Promise.all(promises);
+  const results = await readModuleConfigs(moduleMetas);
   modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
   console.log(
