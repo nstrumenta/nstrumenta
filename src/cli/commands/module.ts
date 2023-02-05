@@ -195,7 +195,6 @@ export const Publish = async () => {
 
     // For the rest of this run, we'll want to chdir to the main project folder
     process.chdir(cwd);
-    console.log({ cwd });
     console.log(`cwd: ${process.cwd()}`);
     const { modules: modulesFromFile }: { [key: string]: unknown; modules: ModuleMeta[] } =
       JSON.parse(file);
@@ -214,7 +213,7 @@ export const Publish = async () => {
       const moduleConfig: Module = JSON.parse(
         await fs.readFile(`${path.resolve(folder)}/module.json`, { encoding: 'utf8' })
       );
-      return { ...moduleConfig, name, folder };
+      return { ...moduleConfig, folder };
     } catch (e) {
       console.log(`No config file found in ${path.resolve(folder)}\n`);
     }
@@ -258,11 +257,23 @@ export const publishModule = async (module: ModuleExtended) => {
     prePublishCommand,
   } = module;
 
-  if (!version) {
+  // use version from package.json if not specified in module.json
+  let packageVersion = undefined;
+  try {
+    packageVersion = JSON.parse(
+      await fs.readFile(`${folder}/package.json`, {
+        encoding: 'utf8',
+      })
+    ).version;
+  } catch {}
+
+  const moduleVersion = version || packageVersion;
+
+  if (!moduleVersion) {
     throw new Error(`module [${name}] requires version`);
   }
 
-  const fileName = `${name}-${version}.tar.gz`;
+  const fileName = `${name}-${moduleVersion}.tar.gz`;
   const downloadLocation = `${await getNstDir(process.cwd())}/${fileName}`;
   const remoteFileLocation = `modules/${name}/versions/${fileName}`;
   let url = '';
