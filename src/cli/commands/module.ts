@@ -191,8 +191,6 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
       console.log(`no ${folder}/package.json`);
     }
 
-    console.dir({ ...moduleMeta, ...moduleConfig, ...packageConfig });
-
     return { ...moduleMeta, ...moduleConfig, ...packageConfig } as ModuleExtended;
   });
   return Promise.all(promises);
