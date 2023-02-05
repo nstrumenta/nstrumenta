@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.37](https://github.com/nstrumenta/nstrumenta/compare/v3.0.36...v3.0.37) (2023-02-05)
+
+
+### Features
+
+* **module:** reduces duplication in module.json ([#164](https://github.com/nstrumenta/nstrumenta/issues/164)) ([43cb055](https://github.com/nstrumenta/nstrumenta/commit/43cb055c4e8fcd4a56b9b0b3c95fdb0118def6d8))
+
 ### [3.0.36](https://github.com/nstrumenta/nstrumenta/compare/v3.0.35...v3.0.36) (2023-01-27)
 
 
