@@ -6,19 +6,25 @@ import {
   Connection,
   JoinWebRTC,
   NstrumentaClientBase,
+  PublishWebRTC,
   StorageService,
   WebSocketLike,
   getEndpoints,
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
+import { ClientSDK, Kind } from './video/src';
 
 export const endpoints = getEndpoints('prod');
 
-export { ClientSDK, Kind, MediaInfo, MCU, SubscriberType } from './video/src';
+export { Kind, MediaInfo, SubscriberType } from './video/src';
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
+  public webrtcClient: ClientSDK | null = null;
+
   constructor() {
     super();
+
+    this.webrtcClient = new ClientSDK();
   }
 
   public async connect(connectOptions?: ConnectOptions): Promise<Connection> {
@@ -136,6 +142,16 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       });
     });
   }
+
+  public publishWebRTC = async (request: {
+    peerId: string;
+    track?: MediaStreamTrack;
+    simulcast?: boolean;
+    kind: Kind;
+  }) => {
+    console.log('browserClient publishWebRTC', { request });
+    return this.callRPC<PublishWebRTC>('publishWebRTC', request);
+  };
 
   public joinWebRTC = async (
     room: string

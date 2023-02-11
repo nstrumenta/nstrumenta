@@ -1,6 +1,5 @@
-import Event from "rx.mini";
-import { MediaInfo } from "../";
-import { MCU } from "../domain/mcu/mcu";
+import Event from 'rx.mini';
+import { MediaInfo } from '../';
 
 export class Events {
   readonly onConnect = new Event();
@@ -11,5 +10,4 @@ export class Events {
   readonly onTrack = new Event<[MediaStream, MediaInfo]>();
   readonly onDataChannel = new Event<[RTCDataChannel]>();
   readonly onUnsubscribe = new Event<[MediaInfo]>();
-  readonly onMixerCreated = new Event<[MCU]>();
 }

@@ -14,14 +14,15 @@ import {
   HandleSubscribe,
   HandleUnPublish,
   HandleUnPublishDone,
+  HandleUnSubscribe,
   ListenMixedAudio,
   Publish,
   RemoveMixedAudioTrack,
   RPC,
   Subscribe,
   UnPublish,
-} from '../';
-import { HandleUnSubscribe, UnSubscribe } from '..';
+  UnSubscribe,
+} from '..';
 import { Events } from '../context/events';
 
 export class Connection {
@@ -46,7 +47,7 @@ export class Connection {
         };
         channel.onmessage = ({ data }) => {
           const { type, payload } = JSON.parse(data) as RPC;
-          console.log('from sfu', type, payload);
+          console.log('from sfu!', type, payload);
           //@ts-ignore
           if (this[type]) {
             //@ts-ignore

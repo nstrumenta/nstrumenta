@@ -29,15 +29,20 @@ export interface StartLog extends RPC {
 export interface JoinWebRTC extends RPC {
   type: 'joinWebRTC';
   request: { room: string };
-  response: { peerId: string ; offer: any };
+  response: { peerId: string; offer: any };
 }
 
 export interface AnswerWebRTC extends RPC {
   type: 'answerWebRTC';
-  request: { peerId: string ; room: string ; answer: any };
+  request: { peerId: string; room: string; answer: any };
 }
 
 export interface CandidateWebRTC extends RPC {
   type: 'candidateWebRTC';
-  request: { peerId: string ; room: string ; candidate: any };
+  request: { peerId: string; room: string; candidate: any };
+}
+
+export interface PublishWebRTC extends RPC {
+  type: 'publishWebRTC';
+  request: { peerId: string; track?: any; simulcast?: boolean; kind: any };
 }

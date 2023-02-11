@@ -1,7 +1,6 @@
-import Event from "rx.mini";
-import { MediaInfo } from "../";
-import { Connection } from "../responder/connection";
-
+import Event from 'rx.mini';
+import { MediaInfo } from '..';
+import { Connection } from '../responder/connection';
 export class User {
   private readonly peer = this.connection.peer;
 
@@ -16,7 +15,7 @@ export class User {
     this.peerId = peerId;
     this.connection.peerId = peerId;
 
-    // datachannelが開かれるまで
+    // datachannel until is opened
     this.peer.onicecandidate = ({ candidate }) => {
       if (candidate) {
         this.candidates.push(candidate);
@@ -39,7 +38,7 @@ export class User {
     if (request.track) {
       const transceiver = this.peer.getTransceivers().slice(-1)[0];
       transceiver.sender.replaceTrack(request.track);
-      transceiver.direction = "sendonly";
+      transceiver.direction = 'sendonly';
 
       if (request.simulcast) {
         const params = transceiver.sender.getParameters();
@@ -56,8 +55,7 @@ export class User {
         transceiver.sender.setParameters(params);
       }
     }
-    if (offer)
-      await this.peer.setLocalDescription(await this.peer.createAnswer());
+    if (offer) await this.peer.setLocalDescription(await this.peer.createAnswer());
     return this.peer;
   }
 }

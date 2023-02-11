@@ -1,17 +1,13 @@
-import { MediaInfo } from "../..";
-import { Connection } from "../../responder/connection";
-import { Events } from "../../context/events";
-import Event from "rx.mini";
+import Event from 'rx.mini';
+import { MediaInfo } from '../..';
+import { Events } from '../../context/events';
+import { Connection } from '../../responder/connection';
 
 export class Consumer {
   datachannel?: RTCDataChannel;
   readonly onMessage = new Event<[any]>();
 
-  constructor(
-    private connection: Connection,
-    private events: Events,
-    private info: MediaInfo
-  ) {}
+  constructor(private connection: Connection, private events: Events, private info: MediaInfo) {}
 
   initAV(mid: string) {
     this.connection.ontrack.subscribe(({ transceiver, streams }) => {

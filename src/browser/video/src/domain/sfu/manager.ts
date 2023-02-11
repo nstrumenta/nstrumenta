@@ -1,4 +1,4 @@
-import { MediaInfo } from "../../";
+import { MediaInfo } from "../..";
 import { Events } from "../../context/events";
 import { Connection } from "../../responder/connection";
 import { Consumer } from "./consumer";

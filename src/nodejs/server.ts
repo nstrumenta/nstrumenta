@@ -16,6 +16,7 @@ import {
   JoinWebRTC,
   LogConfig,
   Ping,
+  PublishWebRTC,
   RPC,
   Subscribe,
   Unsubscribe,
@@ -36,6 +37,7 @@ import {
   handleAnswer,
   handleCandidate,
   handleJoin,
+  handlePublish,
 } from './video/examples/server-demo/src/handler';
 import { createContext } from './video/examples/server-demo/src/context/context';
 
@@ -455,6 +457,16 @@ export class NstrumentaServer {
                 {
                   await handleAnswer(weriftCtx, room, peerId, answer);
                   this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                }
+              }
+              break;
+            case 'publishWebRTC':
+              {
+                const { peerId, track, simulcast, kind } = contents as PublishWebRTC['request'];
+                {
+                  const roomName = 'room';
+                  await handlePublish(weriftCtx, roomName, peerId, track, simulcast || false, kind);
+                  this.respondRPC<PublishWebRTC>(ws, responseChannel, {});
                 }
               }
               break;

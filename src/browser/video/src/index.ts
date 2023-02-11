@@ -1,5 +1,4 @@
 export { ClientSDK } from './responder/sdk';
-export { MCU } from './domain/mcu/mcu';
 export type {
   MediaInfo,
   RPC,

@@ -1,10 +1,7 @@
-import { MediaInfo, SubscriberType } from '../';
-import { Kind } from '..';
-import { listenMixedAudio } from '../actions/mcu';
+import { Kind, MediaInfo, SubscriberType } from '..';
 import { subscribe, unsubscribe } from '../actions/sfu';
 import { join, publish, unPublish } from '../actions/user';
 import { Events } from '../context/events';
-import { MCUManager } from '../domain/mcu/manager';
 import { SFUManager } from '../domain/sfu/manager';
 import { User } from '../domain/user';
 import { Connection } from './connection';
@@ -13,7 +10,6 @@ export class ClientSDK {
   events = new Events();
   connection = new Connection(this.events);
   sfu = new SFUManager(this.events, this.connection);
-  mcu = new MCUManager(this.events, this.connection);
   user?: User;
   medias: { [id: string]: MediaInfo } = {};
   streams: { [id: string]: { stream: MediaStream; info: MediaInfo } } = {};
@@ -73,17 +69,11 @@ export class ClientSDK {
     return medias;
   }
 
-  async listenMixedAudio(infos: MediaInfo[]) {
-    return await listenMixedAudio(this.connection, this.mcu, this.events)(infos);
-  }
-
   addMixedAudioTrack(mixerId: string, info: MediaInfo) {
-    this.mcu.getMixer(mixerId).add(info);
     this.connection.addMixedAudioTrack([mixerId, info]);
   }
 
   removeMixedAudioTrack(mixerId: string, info: MediaInfo) {
-    this.mcu.getMixer(mixerId).remove(info);
     this.connection.removeMixedAudioTrack([mixerId, info]);
   }
 
