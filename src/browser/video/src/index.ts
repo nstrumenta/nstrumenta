@@ -1,4 +1,4 @@
-export { ClientSDK } from './responder/sdk';
+export { WebrtcClient } from './responder/WebrtcClient';
 export type {
   MediaInfo,
   RPC,

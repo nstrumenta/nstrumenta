@@ -9,7 +9,7 @@ export class User {
   onCandidate = new Event<[RTCIceCandidate]>();
   published: MediaInfo[] = [];
 
-  constructor(readonly roomName: string, private connection: Connection) {}
+  constructor(private connection: Connection) {}
 
   join = async (peerId: string, offer: RTCSessionDescription) => {
     this.peerId = peerId;

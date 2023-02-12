@@ -10,13 +10,13 @@ import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  AnswerWebRTC,
-  CandidateWebRTC,
+  webrtcAnswer,
+  webrtcCandidate,
   DEFAULT_HOST_PORT,
-  JoinWebRTC,
+  webrtcJoin,
   LogConfig,
   Ping,
-  PublishWebRTC,
+  webrtcPublish,
   RPC,
   Subscribe,
   Unsubscribe,
@@ -442,40 +442,38 @@ export class NstrumentaServer {
                 });
               }
               break;
-            case 'joinWebRTC':
+            case 'webrtcJoin':
               {
-                const { room } = contents as JoinWebRTC['request'];
                 {
-                  const { peerId, offer } = await handleJoin(weriftCtx, room);
-                  this.respondRPC<JoinWebRTC>(ws, responseChannel, { peerId, offer });
+                  const { peerId, offer } = await handleJoin(weriftCtx);
+                  this.respondRPC<webrtcJoin>(ws, responseChannel, { peerId, offer });
                 }
               }
               break;
-            case 'answerWebRTC':
+            case 'webrtcAnswer':
               {
-                const { peerId, room, answer } = contents as AnswerWebRTC['request'];
+                const { peerId, answer } = contents as webrtcAnswer['request'];
                 {
-                  await handleAnswer(weriftCtx, room, peerId, answer);
-                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                  await handleAnswer(weriftCtx, peerId, answer);
+                  this.respondRPC<webrtcAnswer>(ws, responseChannel, {});
                 }
               }
               break;
-            case 'publishWebRTC':
+            case 'webrtcPublish':
               {
-                const { peerId, track, simulcast, kind } = contents as PublishWebRTC['request'];
+                const { peerId, track, simulcast, kind } = contents as webrtcPublish['request'];
                 {
-                  const roomName = 'room';
-                  await handlePublish(weriftCtx, roomName, peerId, track, simulcast || false, kind);
-                  this.respondRPC<PublishWebRTC>(ws, responseChannel, {});
+                  await handlePublish(weriftCtx, peerId, track, simulcast || false, kind);
+                  this.respondRPC<webrtcPublish>(ws, responseChannel, {});
                 }
               }
               break;
-            case 'candidateWebRTC':
+            case 'webrtcCandidate':
               {
-                const { peerId, room, candidate } = contents as CandidateWebRTC['request'];
+                const { peerId, candidate } = contents as webrtcCandidate['request'];
                 {
-                  await handleCandidate(weriftCtx, room, peerId, candidate);
-                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                  await handleCandidate(weriftCtx, peerId, candidate);
+                  this.respondRPC<webrtcAnswer>(ws, responseChannel, {});
                 }
               }
               break;

@@ -1,6 +1,5 @@
-import { v4 } from 'uuid';
-import { Room } from '../../../../../../shared/video/packages/core/src';
 import { RTCIceCandidate, RTCSessionDescription } from 'werift';
+import { Room } from '../../../../../../shared/video/packages/core/src';
 // import { workerThreadsWrapper, wrap } from 'airpc';
 // import { Worker } from 'worker_threads';
 
@@ -8,11 +7,9 @@ import { RTCIceCandidate, RTCSessionDescription } from 'werift';
 // const workerLoaderPath = process.argv[2] === 'prod' ? workerPath : process.argv[2];
 
 export class RoomManager {
-  rooms: { [name: string]: Room } = {};
+  room: Room;
 
-  create(name = v4()) {
-    // console.log(process.cwd(), process.env.PWD);
-
+  constructor() {
     // const room = wrap(
     //   Room,
     //   workerThreadsWrapper(
@@ -21,27 +18,18 @@ export class RoomManager {
     //     })
     //   )
     // );
-    const room = new Room();
-    this.rooms[name] = room as any;
-    return name;
+    this.room = new Room();
   }
 
-  async join(name: string) {
-    if (!this.rooms[name]) {
-      this.create(name);
-    }
-    const room = this.rooms[name];
-
-    return room.join();
+  async join() {
+    return this.room.join();
   }
 
-  async answer(name: string, peerId: string, answer: RTCSessionDescription) {
-    const room = this.rooms[name];
-    return room.connection.handleAnswer(peerId, answer);
+  async answer(peerId: string, answer: RTCSessionDescription) {
+    return this.room.connection.handleAnswer(peerId, answer);
   }
 
-  async candidate(name: string, peerId: string, candidate: RTCIceCandidate) {
-    const room = this.rooms[name];
-    return room.connection.handleCandidate(peerId, candidate);
+  async candidate(peerId: string, candidate: RTCIceCandidate) {
+    return this.room.connection.handleCandidate(peerId, candidate);
   }
 }

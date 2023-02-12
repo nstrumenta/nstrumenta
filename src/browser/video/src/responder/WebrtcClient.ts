@@ -6,7 +6,7 @@ import { SFUManager } from '../domain/sfu/manager';
 import { User } from '../domain/user';
 import { Connection } from './connection';
 
-export class ClientSDK {
+export class WebrtcClient {
   events = new Events();
   connection = new Connection(this.events);
   sfu = new SFUManager(this.events, this.connection);
@@ -37,8 +37,8 @@ export class ClientSDK {
     return this.user?.peerId;
   }
 
-  async join(roomName: string, peerId: string, offer: RTCSessionDescription) {
-    const { answer, user, candidates } = await join(this.connection)(roomName, peerId, offer);
+  async join(peerId: string, offer: RTCSessionDescription) {
+    const { answer, user, candidates } = await join(this.connection)(peerId, offer);
     this.user = user;
 
     return { answer, candidates, user };

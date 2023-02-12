@@ -5,9 +5,8 @@ import { User } from '../domain/user';
 import { Connection } from '../responder/connection';
 
 export const join =
-  (connection: Connection) =>
-  async (roomName: string, peerId: string, offer: RTCSessionDescription) => {
-    const user = new User(roomName, connection);
+  (connection: Connection) => async (peerId: string, offer: RTCSessionDescription) => {
+    const user = new User(connection);
     const { answer, candidates } = await user.join(peerId, offer);
     return { user, answer, candidates };
   };
