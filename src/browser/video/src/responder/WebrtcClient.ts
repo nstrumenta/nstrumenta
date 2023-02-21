@@ -69,13 +69,6 @@ export class WebrtcClient {
     return medias;
   }
 
-  addMixedAudioTrack(mixerId: string, info: MediaInfo) {
-    this.connection.addMixedAudioTrack([mixerId, info]);
-  }
-
-  removeMixedAudioTrack(mixerId: string, info: MediaInfo) {
-    this.connection.removeMixedAudioTrack([mixerId, info]);
-  }
 
   changeQuality(info: MediaInfo, type: SubscriberType) {
     this.connection.changeQuality([this.peerId!, info, type]);

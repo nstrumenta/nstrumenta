@@ -26,23 +26,24 @@ export interface StartLog extends RPC {
   request: { name: string; channels: string[] };
 }
 
-export interface webrtcJoin extends RPC {
+export interface WebrtcJoin extends RPC {
   type: 'webrtcJoin';
   request: {};
   response: { peerId: string; offer: any };
 }
 
-export interface webrtcAnswer extends RPC {
+export interface WebrtcAnswer extends RPC {
   type: 'webrtcAnswer';
   request: { peerId: string; answer: any };
 }
 
-export interface webrtcCandidate extends RPC {
+export interface WebrtcCandidate extends RPC {
   type: 'webrtcCandidate';
   request: { peerId: string; candidate: any };
 }
 
-export interface webrtcPublish extends RPC {
+export interface WebrtcPublish extends RPC {
   type: 'webrtcPublish';
-  request: { peerId: string; track?: any; simulcast?: boolean; kind: any };
+  request: { peerId: string; kind: string };
+  response: { info: any; offer: any };
 }

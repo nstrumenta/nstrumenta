@@ -55,7 +55,7 @@ export class Connection {
     });
   }
 
-  private async createOffer(peerID: string) {
+  async createOffer(peerID: string) {
     const peer = this.room.peers[peerID];
     await peer.setLocalDescription(await peer.createOffer());
     return peer;
@@ -64,7 +64,6 @@ export class Connection {
   handleAnswer = async (peerId: string, answer: RTCSessionDescription) => {
     const peer = this.room.peers[peerId];
     await peer.setRemoteDescription(answer);
-    this.sendRPC<HandleAnswerDone>({ type: 'handleAnswerDone', payload: [] }, peer);
   };
 
   handleCandidate = async (peerId: string, candidate: RTCIceCandidate) => {

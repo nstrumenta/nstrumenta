@@ -10,17 +10,18 @@ import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  webrtcAnswer,
-  webrtcCandidate,
   DEFAULT_HOST_PORT,
-  webrtcJoin,
   LogConfig,
+  NstrumentaClientEvent,
   Ping,
-  webrtcPublish,
   RPC,
   Subscribe,
   Unsubscribe,
   getEndpoints,
+  WebrtcAnswer,
+  WebrtcCandidate,
+  WebrtcJoin,
+  WebrtcPublish,
 } from '../shared';
 
 import {
@@ -32,14 +33,14 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
-import WritableStream = NodeJS.WritableStream;
+import { createContext } from './video/examples/server-demo/src/context/context';
 import {
   handleAnswer,
   handleCandidate,
   handleJoin,
   handlePublish,
 } from './video/examples/server-demo/src/handler';
-import { createContext } from './video/examples/server-demo/src/context/context';
+import WritableStream = NodeJS.WritableStream;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -120,7 +121,7 @@ export class NstrumentaServer {
   backplaneClient?: NstrumentaClient;
   allowCrossProjectApiKey: boolean;
   allowUnverifiedConnection: boolean;
-  listeners: Map<string, Array<ListenerCallback>>;
+  listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
@@ -327,6 +328,12 @@ export class NstrumentaServer {
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
+    const broadcastEventToClients = (event: NstrumentaClientEvent) => {
+      verifiedConnections.forEach((connection) => {
+        connection.send(makeBusMessageFromJsonObject('__event', { event, timestamp: Date.now() }));
+      });
+    };
+
     setInterval(() => {
       updateStatus();
       this.listeners.get('status')?.forEach((callback) => callback(this.status));
@@ -338,11 +345,7 @@ export class NstrumentaServer {
     }, 3000);
 
     setInterval(() => {
-      verifiedConnections.forEach((connection) => {
-        connection.send(
-          makeBusMessageFromJsonObject('_nstrumenta', { type: 'health', sendTimestamp: Date.now() })
-        );
-      });
+      broadcastEventToClients('health');
     }, 30000);
 
     wss.on('connection', async (ws, req) => {
@@ -446,34 +449,36 @@ export class NstrumentaServer {
               {
                 {
                   const { peerId, offer } = await handleJoin(weriftCtx);
-                  this.respondRPC<webrtcJoin>(ws, responseChannel, { peerId, offer });
+                  this.respondRPC<WebrtcJoin>(ws, responseChannel, { peerId, offer });
                 }
               }
               break;
             case 'webrtcAnswer':
               {
-                const { peerId, answer } = contents as webrtcAnswer['request'];
+                const { peerId, answer } = contents as WebrtcAnswer['request'];
                 {
                   await handleAnswer(weriftCtx, peerId, answer);
-                  this.respondRPC<webrtcAnswer>(ws, responseChannel, {});
+                  this.respondRPC<WebrtcAnswer>(ws, responseChannel, {});
                 }
               }
               break;
             case 'webrtcPublish':
               {
-                const { peerId, track, simulcast, kind } = contents as webrtcPublish['request'];
+                const { peerId, kind } = contents as WebrtcPublish['request'];
                 {
-                  await handlePublish(weriftCtx, peerId, track, simulcast || false, kind);
-                  this.respondRPC<webrtcPublish>(ws, responseChannel, {});
+                  const { info, offer } = await handlePublish(weriftCtx, peerId, kind);
+                  await this.respondRPC<WebrtcPublish>(ws, responseChannel, { info, offer });
+
+                  broadcastEventToClients('webrtcPublish');
                 }
               }
               break;
             case 'webrtcCandidate':
               {
-                const { peerId, candidate } = contents as webrtcCandidate['request'];
+                const { peerId, candidate } = contents as WebrtcCandidate['request'];
                 {
                   await handleCandidate(weriftCtx, peerId, candidate);
-                  this.respondRPC<webrtcAnswer>(ws, responseChannel, {});
+                  this.respondRPC<WebrtcAnswer>(ws, responseChannel, {});
                 }
               }
               break;

@@ -30,6 +30,10 @@ export type WebSocketLike = WebSocket;
 export type NstrumentaClientEvent =
   | 'open'
   | 'close'
+  | 'status'
+  | 'clients'
+  | 'health'
+  | 'subscriptions'
   | 'webrtcPublish'
   | 'webrtcUnPublish'
   | 'webrtcConnect';

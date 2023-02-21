@@ -1,4 +1,4 @@
-import { MediaStreamTrack, RTCIceCandidate, RTCSessionDescription } from 'werift';
+import { RTCIceCandidate, RTCSessionDescription } from 'werift';
 import { Kind } from '../../../../../shared/video/packages/core/src';
 import { Context } from './context/context';
 
@@ -25,11 +25,16 @@ export const handleCandidate = async (
 export const handlePublish = async (
   { roomManager }: Context,
   publisherId: string,
-  track: MediaStreamTrack,
-  simulcast: boolean,
-  kind: Kind
+  kind: string
 ) => {
   const room = roomManager.room;
-  const { media } = room.createMedia(publisherId, { simulcast, kind });
-  return room.publish(media);
+  const { media, peer } = room.createMedia(publisherId, { kind: kind as Kind });
+  room.publish(media).then(({ peers, info }) => {
+    peers.forEach((peer) => {
+      console.log('send rpc to each connected peer', info);
+    });
+  });
+
+  await room.connection.createOffer(publisherId);
+  return { info: media.info, offer: peer.localDescription };
 };

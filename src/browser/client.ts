@@ -1,12 +1,12 @@
 import {
-  webrtcAnswer,
-  webrtcCandidate,
+  WebrtcAnswer,
+  WebrtcCandidate,
   ClientStatus,
   ConnectOptions,
   Connection,
-  webrtcJoin,
+  WebrtcJoin,
   NstrumentaClientBase,
-  webrtcPublish,
+  WebrtcPublish,
   StorageService,
   WebSocketLike,
   getEndpoints,
@@ -135,6 +135,10 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
             resolve(this.connection);
           }
         }
+        if (channel == '__event') {
+          const { event } = contents;
+          this.listeners.get(event)?.forEach((callback) => callback());
+        }
 
         this.subscriptions.get(channel)?.forEach((subscription) => {
           subscription(contents);
@@ -143,26 +147,36 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
     });
   }
 
-  public webrtcPublish = async (request: {
-    peerId: string;
-    track?: MediaStreamTrack;
-    simulcast?: boolean;
-    kind: Kind;
-  }) => {
+  public webrtcPublish = async (request: { track?: MediaStreamTrack; kind: Kind }) => {
     console.log('browserClient webrtcpublish', { request });
-    return this.callRPC<webrtcPublish>('webrtcPublish', request);
+    if (this.webrtcClient?.peerId) {
+      //connection publish
+      const { info, offer } = await this.callRPC<WebrtcPublish>('webrtcPublish', {
+        peerId: this.webrtcClient.peerId,
+        kind: request.kind,
+      });
+      console.log('client received info and offer', info, offer);
+      //user publish
+      const peer = await this.webrtcClient.user?.publish(request, offer as RTCSessionDescription);
+
+      this.webrtcClient.user!.published = [...this.webrtcClient.user!.published, info];
+      return this.webrtcAnswer(this.webrtcClient.peerId, peer!.localDescription!);
+    }
+    throw 'webrtcClient not connected';
   };
+
+  
 
   public webrtcJoin = async (): Promise<{ peerId: string; offer: RTCSessionDescription }> => {
     console.log('browserClient webrtcjoin');
-    return this.callRPC<webrtcJoin>('webrtcJoin', {});
+    return this.callRPC<WebrtcJoin>('webrtcJoin', {});
   };
 
   public webrtcCandidate = async (
     peerId: string,
     candidate: RTCIceCandidate
   ): Promise<undefined> => {
-    return this.callRPC<webrtcCandidate>('webrtcCandidate', {
+    return this.callRPC<WebrtcCandidate>('webrtcCandidate', {
       peerId,
       candidate,
     }) as Promise<undefined>;
@@ -172,7 +186,7 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
     peerId: string,
     answer: RTCSessionDescription
   ): Promise<undefined> => {
-    return this.callRPC<webrtcAnswer>('webrtcAnswer', {
+    return this.callRPC<WebrtcAnswer>('webrtcAnswer', {
       peerId,
       answer,
     }) as Promise<undefined>;
