@@ -32,7 +32,7 @@ export class Connection {
   readonly ondatachannel = new Event<[RTCDataChannel]>();
   datachannels: { [label: string]: RTCDataChannel } = {};
   readonly peer: RTCPeerConnection = new RTCPeerConnection({
-    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    iceServers: [{ urls: 'stun:stun.nstrumenta.com' }],
   });
   peerId!: string;
 
