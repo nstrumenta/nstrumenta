@@ -1,5 +1,13 @@
+export type NstrumentaRPCType =
+  | 'ping'
+  | 'subscribe'
+  | 'unsubscribe'
+  | 'startLog'
+  | 'joinWebRTC'
+  | 'answerWebRTC'
+  | 'candidateWebRTC';
 export interface RPC {
-  type: string;
+  type: NstrumentaRPCType;
   request: Record<string, unknown>;
   response?: Record<string, unknown>;
 }
@@ -26,24 +34,18 @@ export interface StartLog extends RPC {
   request: { name: string; channels: string[] };
 }
 
-export interface WebrtcJoin extends RPC {
-  type: 'webrtcJoin';
-  request: {};
+export interface JoinWebRTC extends RPC {
+  type: 'joinWebRTC';
+  request: { room: string };
   response: { peerId: string; offer: any };
 }
 
-export interface WebrtcAnswer extends RPC {
-  type: 'webrtcAnswer';
-  request: { peerId: string; answer: any };
+export interface AnswerWebRTC extends RPC {
+  type: 'answerWebRTC';
+  request: { peerId: string; room: string; answer: any };
 }
 
-export interface WebrtcCandidate extends RPC {
-  type: 'webrtcCandidate';
-  request: { peerId: string; candidate: any };
-}
-
-export interface WebrtcPublish extends RPC {
-  type: 'webrtcPublish';
-  request: { peerId: string; kind: string };
-  response: { info: any; offer: any };
+export interface CandidateWebRTC extends RPC {
+  type: 'candidateWebRTC';
+  request: { peerId: string; room: string; candidate: any };
 }

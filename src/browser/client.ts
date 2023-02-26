@@ -1,19 +1,18 @@
 import {
-  WebrtcAnswer,
-  WebrtcCandidate,
+  AnswerWebRTC,
+  CandidateWebRTC,
   ClientStatus,
   ConnectOptions,
   Connection,
-  WebrtcJoin,
+  JoinWebRTC,
   NstrumentaClientBase,
-  WebrtcPublish,
   StorageService,
   WebSocketLike,
   getEndpoints,
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
-import { WebrtcClient, Kind } from './video/src';
+import { WebrtcClient } from './video/src';
 
 export const endpoints = getEndpoints('prod');
 
@@ -147,47 +146,33 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
     });
   }
 
-  public webrtcPublish = async (request: { track?: MediaStreamTrack; kind: Kind }) => {
-    console.log('browserClient webrtcpublish', { request });
-    if (this.webrtcClient?.peerId) {
-      //connection publish
-      const { info, offer } = await this.callRPC<WebrtcPublish>('webrtcPublish', {
-        peerId: this.webrtcClient.peerId,
-        kind: request.kind,
-      });
-      console.log('client received info and offer', info, offer);
-      //user publish
-      const peer = await this.webrtcClient.user?.publish(request, offer as RTCSessionDescription);
-
-      this.webrtcClient.user!.published = [...this.webrtcClient.user!.published, info];
-      return this.webrtcAnswer(this.webrtcClient.peerId, peer!.localDescription!);
-    }
-    throw 'webrtcClient not connected';
+  public joinWebRTC = async (
+    room: string
+  ): Promise<{ peerId: string; offer: RTCSessionDescription }> => {
+    console.log('browserClient joinWebRTC');
+    return this.callRPC<JoinWebRTC>('joinWebRTC', { room });
   };
 
-  
-
-  public webrtcJoin = async (): Promise<{ peerId: string; offer: RTCSessionDescription }> => {
-    console.log('browserClient webrtcjoin');
-    return this.callRPC<WebrtcJoin>('webrtcJoin', {});
-  };
-
-  public webrtcCandidate = async (
+  public candidateWebRTC = async (
     peerId: string,
+    room: string,
     candidate: RTCIceCandidate
   ): Promise<undefined> => {
-    return this.callRPC<WebrtcCandidate>('webrtcCandidate', {
+    return this.callRPC<CandidateWebRTC>('candidateWebRTC', {
       peerId,
+      room,
       candidate,
     }) as Promise<undefined>;
   };
 
-  public webrtcAnswer = async (
+  public answerWebRTC = async (
     peerId: string,
+    room: string,
     answer: RTCSessionDescription
   ): Promise<undefined> => {
-    return this.callRPC<WebrtcAnswer>('webrtcAnswer', {
+    return this.callRPC<AnswerWebRTC>('answerWebRTC', {
       peerId,
+      room,
       answer,
     }) as Promise<undefined>;
   };

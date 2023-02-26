@@ -1,23 +1,24 @@
 import { RTCIceCandidate, RTCSessionDescription } from 'werift';
-import { Kind } from '../../../../../shared/video/packages/core/src';
 import { Context } from './context/context';
 
-export const handleJoin = async ({ roomManager }: Context) => {
-  return roomManager.join();
+export const handleJoin = async ({ roomManager }: Context, name: string) => {
+  return roomManager.join(name);
 };
 
 export const handleAnswer = async (
   { roomManager }: Context,
+  name: string,
   peerId: string,
   answer: RTCSessionDescription
 ) => {
-  return roomManager.answer(peerId, answer);
+  return roomManager.answer(name, peerId, answer);
 };
 
 export const handleCandidate = async (
   { roomManager }: Context,
+  name: string,
   peerId: string,
   candidate: RTCIceCandidate
 ) => {
-  return roomManager.candidate(peerId, candidate);
+  return roomManager.candidate(name, peerId, candidate);
 };
