@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.39](https://github.com/nstrumenta/nstrumenta/compare/v3.0.38...v3.0.39) (2023-02-26)
+
+
+### Features
+
+* **webrtc:** removes roomName ; NstrumentaClientEvents ([#166](https://github.com/nstrumenta/nstrumenta/issues/166)) ([8901c20](https://github.com/nstrumenta/nstrumenta/commit/8901c20f75ec46b99247fe6ec4c155cc62f9a031))
+
 ### [3.0.38](https://github.com/nstrumenta/nstrumenta/compare/v3.0.37...v3.0.38) (2023-02-21)
 
 
