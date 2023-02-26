@@ -17,11 +17,10 @@ import {
   RPC,
   Subscribe,
   Unsubscribe,
-  getEndpoints,
   WebrtcAnswer,
   WebrtcCandidate,
   WebrtcJoin,
-  WebrtcPublish,
+  getEndpoints,
 } from '../shared';
 
 import {
@@ -38,7 +37,6 @@ import {
   handleAnswer,
   handleCandidate,
   handleJoin,
-  handlePublish,
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
 
@@ -449,8 +447,7 @@ export class NstrumentaServer {
               {
                 {
                   const { peerId, offer } = await handleJoin(weriftCtx);
-                  await this.respondRPC<WebrtcJoin>(ws, responseChannel, { peerId, offer });
-                  broadcastEventToClients('webrtcJoin');
+                  this.respondRPC<WebrtcJoin>(ws, responseChannel, { peerId, offer });
                 }
               }
               break;
@@ -461,16 +458,6 @@ export class NstrumentaServer {
                   await handleAnswer(weriftCtx, peerId, answer);
                   await this.respondRPC<WebrtcAnswer>(ws, responseChannel, {});
                   broadcastEventToClients('webrtcAnswer');
-                }
-              }
-              break;
-            case 'webrtcPublish':
-              {
-                const { peerId, kind } = contents as WebrtcPublish['request'];
-                {
-                  const { info, offer } = await handlePublish(weriftCtx, peerId, kind);
-                  await this.respondRPC<WebrtcPublish>(ws, responseChannel, { info, offer });
-                  broadcastEventToClients('webrtcPublish');
                 }
               }
               break;

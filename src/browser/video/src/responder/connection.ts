@@ -47,7 +47,7 @@ export class Connection {
         };
         channel.onmessage = ({ data }) => {
           const { type, payload } = JSON.parse(data) as RPC;
-          console.log('from sfu!', type, payload);
+          console.log('from sfu', type, payload);
           //@ts-ignore
           if (this[type]) {
             //@ts-ignore

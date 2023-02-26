@@ -1,7 +1,7 @@
-import { v4 } from 'uuid';
-import { Kind, RTCDataChannel, RTCRtpTransceiver, MediaStreamTrack } from 'werift';
-import { Track } from './track';
 import { Event } from 'rx.mini';
+import { v4 } from 'uuid';
+import { Kind, MediaStreamTrack, RTCDataChannel, RTCRtpTransceiver } from 'werift';
+import { Track } from './track';
 
 export class Media {
   readonly mediaId = 'm_' + v4();
