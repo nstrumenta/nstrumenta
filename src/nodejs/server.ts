@@ -449,7 +449,8 @@ export class NstrumentaServer {
               {
                 {
                   const { peerId, offer } = await handleJoin(weriftCtx);
-                  this.respondRPC<WebrtcJoin>(ws, responseChannel, { peerId, offer });
+                  await this.respondRPC<WebrtcJoin>(ws, responseChannel, { peerId, offer });
+                  broadcastEventToClients('webrtcJoin');
                 }
               }
               break;
@@ -458,7 +459,8 @@ export class NstrumentaServer {
                 const { peerId, answer } = contents as WebrtcAnswer['request'];
                 {
                   await handleAnswer(weriftCtx, peerId, answer);
-                  this.respondRPC<WebrtcAnswer>(ws, responseChannel, {});
+                  await this.respondRPC<WebrtcAnswer>(ws, responseChannel, {});
+                  broadcastEventToClients('webrtcAnswer');
                 }
               }
               break;
@@ -468,7 +470,6 @@ export class NstrumentaServer {
                 {
                   const { info, offer } = await handlePublish(weriftCtx, peerId, kind);
                   await this.respondRPC<WebrtcPublish>(ws, responseChannel, { info, offer });
-
                   broadcastEventToClients('webrtcPublish');
                 }
               }

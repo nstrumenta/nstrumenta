@@ -34,7 +34,9 @@ export type NstrumentaClientEvent =
   | 'clients'
   | 'health'
   | 'subscriptions'
+  | 'webrtcJoin'
   | 'webrtcPublish'
+  | 'webrtcAnswer'
   | 'webrtcUnPublish'
   | 'webrtcConnect';
 
