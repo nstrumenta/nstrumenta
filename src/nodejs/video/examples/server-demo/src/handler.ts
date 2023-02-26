@@ -1,12 +1,5 @@
-import {
-  RTCIceCandidate,
-  RTCSessionDescription,
-} from "werift";
-import { Context } from "./context/context";
-
-export const handleCreate = async ({ roomManager }: Context) => {
-  return roomManager.create();
-};
+import { RTCIceCandidate, RTCSessionDescription } from 'werift';
+import { Context } from './context/context';
 
 export const handleJoin = async ({ roomManager }: Context, name: string) => {
   return roomManager.join(name);

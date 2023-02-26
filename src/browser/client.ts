@@ -12,13 +12,18 @@ import {
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
+import { WebrtcClient } from './video/src';
 
 export const endpoints = getEndpoints('prod');
 
-export { ClientSDK, Kind, MediaInfo, MCU, SubscriberType } from './video/src';
+export { Kind, MediaInfo, SubscriberType } from './video/src';
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
+  public webrtcClient: WebrtcClient | null = null;
+
   constructor() {
     super();
+
+    this.webrtcClient = new WebrtcClient();
   }
 
   public async connect(connectOptions?: ConnectOptions): Promise<Connection> {
@@ -128,6 +133,10 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
             this.clientId = clientId;
             resolve(this.connection);
           }
+        }
+        if (channel == '__event') {
+          const { event } = contents;
+          this.listeners.get(event)?.forEach((callback) => callback());
         }
 
         this.subscriptions.get(channel)?.forEach((subscription) => {

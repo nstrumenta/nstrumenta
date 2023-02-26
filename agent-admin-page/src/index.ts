@@ -1,4 +1,5 @@
 import { NstrumentaBrowserClient } from 'nstrumenta/dist/browser/client';
+import { NstrumentaClientEvent } from '../../dist/shared';
 
 const client = new NstrumentaBrowserClient();
 
@@ -12,8 +13,8 @@ const init = async () => {
     let agentLogSubscription = false;
     console.log('client open');
 
-    client.addSubscription('_nstrumenta', (message) => {
-      switch (message.type) {
+    client.addSubscription('__event', (message) => {
+      switch (message.event as NstrumentaClientEvent) {
         case 'health':
           document.getElementById('health').innerText = new Date(Date.now()).toLocaleString();
           break;

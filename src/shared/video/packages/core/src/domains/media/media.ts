@@ -1,15 +1,10 @@
-import { v4 } from "uuid";
-import {
-  Kind,
-  RTCDataChannel,
-  RTCRtpTransceiver,
-  MediaStreamTrack,
-} from "werift";
-import { Track } from "./track";
-import { Event } from "rx.mini";
+import { Event } from 'rx.mini';
+import { v4 } from 'uuid';
+import { Kind, MediaStreamTrack, RTCDataChannel, RTCRtpTransceiver } from 'werift';
+import { Track } from './track';
 
 export class Media {
-  readonly mediaId = "m_" + v4();
+  readonly mediaId = 'm_' + v4();
   readonly onMessage = new Event<[Buffer | string]>();
   tracks: Track[] = [];
   transceiver?: RTCRtpTransceiver;
@@ -18,9 +13,8 @@ export class Media {
 
   constructor(readonly kind: Kind, readonly publisherId: string) {}
 
-  initAV(transceiver: RTCRtpTransceiver, simulcast: boolean) {
+  initAV(transceiver: RTCRtpTransceiver) {
     this.transceiver = transceiver;
-    this.simulcast = simulcast;
     return this;
   }
 
@@ -60,4 +54,4 @@ export type MediaInfo = {
   simulcast: boolean;
 };
 
-export type MediaInfoKind = Kind | "mixer";
+export type MediaInfoKind = Kind;

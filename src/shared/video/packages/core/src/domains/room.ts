@@ -1,7 +1,6 @@
 import { v4 } from 'uuid';
-import { Kind, RTCRtpTransceiver, useAbsSendTime, useSdesMid, useSdesRTPStreamId } from 'werift';
+import { Kind, useAbsSendTime, useSdesMid, useSdesRTPStreamId } from 'werift';
 import { Connection } from '../responders/connection';
-import { sleep } from '../utils/helper';
 import { Media, MediaInfo } from './media/media';
 import { PeerConnection } from './peer';
 import { SFUManager } from './sfu/manager';
@@ -51,48 +50,23 @@ export class Room {
     });
   }
 
-  createMedia(publisherId: string, { simulcast, kind }: CreateMediaRequest) {
-    console.log('publish', publisherId, { simulcast, kind });
+  createMedia(publisherId: string, { kind }: CreateMediaRequest) {
+    console.log('publish', publisherId, { kind });
     const peer = this.peers[publisherId];
 
     const media = new Media(kind, publisherId);
     this.medias[media.mediaId] = media;
 
-    if (kind === 'application') {
-      const label = `__messaging:${media.mediaId}`;
-      const datachannel =
-        peer.sctpTransport!.channelByLabel(label) || peer.createDataChannel(label);
-      media.initData(datachannel);
-    } else {
-      const simulcastId = peer.simulcastIndex++;
-      const transceiver = simulcast
-        ? peer.addTransceiver('video', {
-            direction: 'recvonly',
-            simulcast: [
-              { rid: simulcastId + 'high', direction: 'recv' },
-              { rid: simulcastId + 'low', direction: 'recv' },
-            ],
-          })
-        : peer.addTransceiver(kind, { direction: 'recvonly' });
-      media.initAV(transceiver, simulcast);
-    }
+    const transceiver = peer.addTransceiver(kind, { direction: 'recvonly' });
+    media.initAV(transceiver);
 
     return { media, peer };
   }
 
   async publish(media: Media) {
-    if (media.kind !== 'application' && media.transceiver) {
-      if (media.simulcast) {
-        await media.transceiver.onTrack.asPromise();
-        media.transceiver.receiver.tracks.forEach((track) => media.addTrack(track));
-      } else {
-        const [track] = await media.transceiver.onTrack.asPromise();
-        media.addTrack(track);
-      }
-    } else {
-      // todo fix
-      // cause of datachannel send stuck
-      await sleep(100);
+    if (media.transceiver) {
+      const [track] = await media.transceiver.onTrack.asPromise();
+      media.addTrack(track);
     }
 
     const peers = Object.values(this.peers);
@@ -130,4 +104,4 @@ export class Room {
   }
 }
 
-export type CreateMediaRequest = { kind: Kind; simulcast: boolean };
+export type CreateMediaRequest = { kind: Kind };
