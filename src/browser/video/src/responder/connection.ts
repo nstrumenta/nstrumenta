@@ -14,14 +14,15 @@ import {
   HandleSubscribe,
   HandleUnPublish,
   HandleUnPublishDone,
+  HandleUnSubscribe,
   ListenMixedAudio,
   Publish,
   RemoveMixedAudioTrack,
   RPC,
   Subscribe,
   UnPublish,
-} from '../';
-import { HandleUnSubscribe, UnSubscribe } from '..';
+  UnSubscribe,
+} from '..';
 import { Events } from '../context/events';
 
 export class Connection {

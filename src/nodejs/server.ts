@@ -10,16 +10,18 @@ import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  AnswerWebRTC,
-  CandidateWebRTC,
   DEFAULT_HOST_PORT,
-  JoinWebRTC,
   LogConfig,
+  NstrumentaClientEvent,
   Ping,
   RPC,
   Subscribe,
   Unsubscribe,
+  AnswerWebRTC,
+  CandidateWebRTC,
+  JoinWebRTC,
   getEndpoints,
+  NstrumentaRPCType,
 } from '../shared';
 
 import {
@@ -31,13 +33,13 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
-import WritableStream = NodeJS.WritableStream;
+import { createContext } from './video/examples/server-demo/src/context/context';
 import {
   handleAnswer,
   handleCandidate,
   handleJoin,
 } from './video/examples/server-demo/src/handler';
-import { createContext } from './video/examples/server-demo/src/context/context';
+import WritableStream = NodeJS.WritableStream;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -118,7 +120,7 @@ export class NstrumentaServer {
   backplaneClient?: NstrumentaClient;
   allowCrossProjectApiKey: boolean;
   allowUnverifiedConnection: boolean;
-  listeners: Map<string, Array<ListenerCallback>>;
+  listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd();
@@ -325,6 +327,12 @@ export class NstrumentaServer {
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
+    const broadcastEventToClients = (event: NstrumentaClientEvent) => {
+      verifiedConnections.forEach((connection) => {
+        connection.send(makeBusMessageFromJsonObject('__event', { event, timestamp: Date.now() }));
+      });
+    };
+
     setInterval(() => {
       updateStatus();
       this.listeners.get('status')?.forEach((callback) => callback(this.status));
@@ -336,11 +344,7 @@ export class NstrumentaServer {
     }, 3000);
 
     setInterval(() => {
-      verifiedConnections.forEach((connection) => {
-        connection.send(
-          makeBusMessageFromJsonObject('_nstrumenta', { type: 'health', sendTimestamp: Date.now() })
-        );
-      });
+      broadcastEventToClients('health');
     }, 30000);
 
     wss.on('connection', async (ws, req) => {
@@ -398,7 +402,7 @@ export class NstrumentaServer {
         if (channel.startsWith('__rpc')) {
           const [base, type, id] = channel.split('/');
           const responseChannel = `${base}/${type}/${id}/response`;
-          switch (type) {
+          switch (type as NstrumentaRPCType) {
             case 'subscribe':
               {
                 const { channel } = contents as Subscribe['request'];
@@ -454,7 +458,8 @@ export class NstrumentaServer {
                 const { peerId, room, answer } = contents as AnswerWebRTC['request'];
                 {
                   await handleAnswer(weriftCtx, room, peerId, answer);
-                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                  await this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
+                  broadcastEventToClients('webrtcAnswer');
                 }
               }
               break;

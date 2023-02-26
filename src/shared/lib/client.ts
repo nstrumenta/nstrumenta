@@ -27,6 +27,16 @@ export type SubscriptionCallback = (message?: any) => void;
 
 export type WebSocketLike = WebSocket;
 
+export type NstrumentaClientEvent =
+  | 'open'
+  | 'close'
+  | 'status'
+  | 'clients'
+  | 'health'
+  | 'subscriptions'
+  | 'webrtcAnswer'
+  | 'webrtcConnect';
+
 export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocketLike;
   wsUrl: string;
@@ -150,7 +160,7 @@ export abstract class NstrumentaClientBase {
     };
   };
 
-  public addListener(eventType: 'open' | 'close', callback: ListenerCallback) {
+  public addListener(eventType: NstrumentaClientEvent, callback: ListenerCallback) {
     if (!this.listeners.get(eventType)) {
       this.listeners.set(eventType, []);
     }
