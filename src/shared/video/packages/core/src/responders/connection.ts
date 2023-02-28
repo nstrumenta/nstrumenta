@@ -3,13 +3,11 @@ import { leave, unPublish } from '../actions/room';
 import { changeQuality, subscribe, unsubscribe } from '../actions/sfu';
 import { Room } from '../domains/room';
 import {
-  AddMixedAudioTrack,
   ChangeQuality,
   GetMedias,
   HandleAnswerDone,
   HandleJoin,
   HandleLeave,
-  HandleListenMixedAudio,
   HandleMedias,
   HandlePublish,
   HandlePublishDone,
@@ -18,13 +16,11 @@ import {
   HandleUnPublishDone,
   HandleUnSubscribe,
   Leave,
-  ListenMixedAudio,
   Publish,
-  RemoveMixedAudioTrack,
   RPC,
   Subscribe,
   UnPublish,
-  UnSubscribe,
+  UnSubscribe
 } from '../typings/rpc';
 
 export class Connection {
