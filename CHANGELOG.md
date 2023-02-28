@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.40](https://github.com/nstrumenta/nstrumenta/compare/v3.0.39...v3.0.40) (2023-02-28)
+
+
+### Features
+
+* **webrtc:** removes throw from getSFU ([7a6baee](https://github.com/nstrumenta/nstrumenta/commit/7a6baeeae44e762e8e2a80e9529c91838fec72fc))
+
 ### [3.0.39](https://github.com/nstrumenta/nstrumenta/compare/v3.0.38...v3.0.39) (2023-02-26)
 
 
