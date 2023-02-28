@@ -98,7 +98,7 @@ export class Room {
 
     const media = this.medias[info.mediaId];
     if (!media) {
-      throw new Error();
+      console.log(`${info.mediaId} no longer in sfu`);
     }
     return this.sfuManager.createSFU(media);
   }
