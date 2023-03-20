@@ -10,18 +10,20 @@ import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  DEFAULT_HOST_PORT,
-  LogConfig,
-  NstrumentaClientEvent,
-  Ping,
-  RPC,
-  Subscribe,
-  Unsubscribe,
   AnswerWebRTC,
   CandidateWebRTC,
+  DEFAULT_HOST_PORT,
   JoinWebRTC,
-  getEndpoints,
+  LogConfig,
+  NstrumentaClientEvent,
   NstrumentaRPCType,
+  Ping,
+  RPC,
+  StartRecording,
+  StopRecording,
+  Subscribe,
+  Unsubscribe,
+  getEndpoints,
 } from '../shared';
 
 import {
@@ -40,6 +42,11 @@ import {
   handleJoin,
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
+import { Track } from '../shared/video/packages/core/src/domains/media/track';
+import { MediaRecorder } from 'werift';
+import { writeFile } from 'fs/promises';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import path = require('path');
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -115,6 +122,8 @@ export type DataLog =
       mcapWriter: McapWriter;
     };
 
+export type TrackRecording = { localPath: string; track: Track };
+
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
@@ -126,6 +135,7 @@ export class NstrumentaServer {
   cwd = process.cwd();
   logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
+  trackRecordings: Map<string, MediaRecorder> = new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -444,6 +454,72 @@ export class NstrumentaServer {
                 });
               }
               break;
+            case 'startRecording':
+              {
+                const { name, channels, config } = contents as StartRecording['request'];
+                {
+                  await this.startLog(name, channels, config);
+                  for (const [roomName, room] of Object.entries(weriftCtx.roomManager.rooms)) {
+                    for (const [mediaName, media] of Object.entries(room.medias)) {
+                      media.tracks.forEach(async (track) => {
+                        const trackRecordingId = `${name}${roomName}${mediaName}${track.track.id}`;
+                        console.log(track.track);
+                        const recorder = new MediaRecorder(
+                          [track.track],
+                          `.nst/video/${trackRecordingId}.webm`,
+                          {
+                            width: 640,
+                            height: 480,
+                            waitForKeyframe: false,
+                            defaultDuration: 10_000,
+                          }
+                        );
+                        await recorder.start();
+                        this.trackRecordings.set(name, recorder);
+                        // setInterval(() => {
+                        //   console.log(media.transceiver!.receiver, track.track.ssrc);
+                        //   media.transceiver!.receiver.sendRtcpPLI(track.track.ssrc!);
+                        // }, 1_000);
+                      });
+                    }
+                  }
+                  await this.respondRPC<StartRecording>(ws, responseChannel, {});
+                }
+              }
+              break;
+            case 'stopRecording':
+              {
+                const { name } = contents as StopRecording['request'];
+                {
+                  await this.finishLog(name);
+                  await this.trackRecordings.get(name)?.stop();
+                  const webmPath = this.trackRecordings.get(name)?.path;
+                  if (webmPath) {
+                    const { name, dir, base } = path.parse(webmPath);
+                    const webmName = base;
+                    const mp4Name = name + '.mp4';
+                    const mp4Path = path.join(dir, mp4Name);
+                    const ffmpeg = createFFmpeg({ log: true });
+                    await ffmpeg.load();
+                    ffmpeg.FS('writeFile', webmName, await fetchFile(webmPath));
+                    await ffmpeg.run('-i', webmName, mp4Name);
+                    await writeFile(mp4Path, ffmpeg.FS('readFile', mp4Name));
+                    try {
+                      const remoteFileLocation = await this.uploadLog({
+                        localPath: mp4Path,
+                        name: mp4Name,
+                      });
+                      logger.log(`uploaded ${remoteFileLocation}`);
+                    } catch (error) {
+                      logger.log(`Problem uploading log: ${mp4Name}, localPath: ${mp4Path}`);
+                    }
+                  }
+
+                  await this.respondRPC<StopRecording>(ws, responseChannel, {});
+                }
+              }
+              break;
+
             case 'joinWebRTC':
               {
                 const { room } = contents as JoinWebRTC['request'];
@@ -453,6 +529,7 @@ export class NstrumentaServer {
                 }
               }
               break;
+
             case 'answerWebRTC':
               {
                 const { peerId, room, answer } = contents as AnswerWebRTC['request'];
@@ -519,7 +596,7 @@ export class NstrumentaServer {
         });
 
         this.dataLogs.forEach(async (dataLog) => {
-          if (dataLog.channels.includes(channel)) {
+          if (dataLog.channels?.includes(channel)) {
             switch (dataLog.type) {
               case 'stream':
                 {
@@ -597,6 +674,8 @@ export class NstrumentaServer {
     await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
     logger.log({ name, cwdNstDir: nstDir, localPath });
+
+    // set up dataLogs
     if (config) {
       const type = 'mcap';
       const fileHandle = await fs.open(localPath, 'w');
@@ -633,8 +712,6 @@ export class NstrumentaServer {
       const stream = await createWriteStream(localPath);
       this.dataLogs.set(name, { type, localPath, channels, stream });
     }
-
-    return this.dataLogs;
   }
 
   public async finishLog(name: string) {

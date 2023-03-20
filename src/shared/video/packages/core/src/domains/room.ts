@@ -104,4 +104,4 @@ export class Room {
   }
 }
 
-export type CreateMediaRequest = { kind: Kind };
+export type CreateMediaRequest = { kind: Kind }

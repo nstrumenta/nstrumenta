@@ -1,8 +1,12 @@
+import { LogConfig } from './lib';
+
 export type NstrumentaRPCType =
   | 'ping'
   | 'subscribe'
   | 'unsubscribe'
-  | 'startLog'
+  | 'startRecording'
+  | 'stopRecording'
+  | 'endRecording'
   | 'joinWebRTC'
   | 'answerWebRTC'
   | 'candidateWebRTC';
@@ -29,9 +33,13 @@ export interface Unsubscribe extends RPC {
   request: { channel: string; subscriptionId: string };
 }
 
-export interface StartLog extends RPC {
-  type: 'startLog';
-  request: { name: string; channels: string[] };
+export interface StartRecording extends RPC {
+  type: 'startRecording';
+  request: { name: string; channels: string[]; config?: LogConfig };
+}
+export interface StopRecording extends RPC {
+  type: 'stopRecording';
+  request: { name: string };
 }
 
 export interface JoinWebRTC extends RPC {
