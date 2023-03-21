@@ -31,6 +31,7 @@ import {
   JitterBufferCallback,
   RtpSourceCallback,
   WebmCallback,
+  WebmOption,
   saveToFileSystem,
 } from 'werift';
 import {
@@ -51,6 +52,7 @@ import {
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
 import path = require('path');
+import { SupportedCodec } from 'werift/lib/rtp/src/container/webm';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -461,35 +463,55 @@ export class NstrumentaServer {
               break;
             case 'startRecording':
               {
-                const { name, channels, config } = contents as StartRecording['request'];
+                const {
+                  name: sessionName,
+                  channels,
+                  config,
+                } = contents as StartRecording['request'];
                 {
-                  await this.startLog(name, channels, config);
+                  await this.startLog(sessionName, channels, config);
                   let trackNumber = 0;
                   for (const [roomName, room] of Object.entries(weriftCtx.roomManager.rooms)) {
                     for (const [mediaName, media] of Object.entries(room.medias)) {
                       media.tracks.forEach(async (mediaTrack) => {
                         const track = mediaTrack.track;
-                        const trackRecordingId = `${name}${roomName}${mediaName}${track.id}`;
+                        const trackRecordingId = `${sessionName}${roomName}${mediaName}${track.id}`;
                         const filePath = `.nst/video/${trackRecordingId}.webm`;
-                        console.log(track);
                         const rtpSourceCallback = new RtpSourceCallback();
                         trackNumber = trackNumber + 1;
-                        const webm = new WebmCallback(
-                          [
-                            {
-                              width: 640,
-                              height: 480,
-                              kind: 'video',
-                              codec: 'VP8',
-                              clockRate: 90000,
-                              trackNumber,
-                            },
-                          ],
-                          { duration: 1000 * 10 }
-                        );
+                        const codecParameters = track.codec;
+                        const clockRate = codecParameters?.clockRate || 90000;
+
+                        const trackConfig: {
+                          width?: number | undefined;
+                          height?: number | undefined;
+                          kind: 'audio' | 'video';
+                          codec: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS';
+                          clockRate: number;
+                          trackNumber: number;
+                        } = {
+                          width: 640,
+                          height: 480,
+                          kind: track.kind === 'video' ? 'video' : 'audio',
+                          codec: codecParameters?.mimeType.toUpperCase().includes('VP8')
+                            ? 'VP8'
+                            : codecParameters?.mimeType.toUpperCase().includes('VP9')
+                            ? 'VP9'
+                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
+                            ? 'AV1'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'MPEG4/ISO/AVC'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'OPUS'
+                            : 'VP8',
+                          clockRate,
+                          trackNumber,
+                        };
+                        console.log(trackConfig);
+                        const webm = new WebmCallback([trackConfig]);
 
                         {
-                          const jitterBuffer = new JitterBufferCallback(90000);
+                          const jitterBuffer = new JitterBufferCallback(clockRate);
                           const depacketizer = new DepacketizeCallback('vp8', {
                             isFinalPacketInSequence: (h) => h.marker,
                           });
@@ -498,7 +520,7 @@ export class NstrumentaServer {
                           jitterBuffer.pipe(depacketizer.input);
                           depacketizer.pipe((input: any) => {
                             if (input?.frame?.timestamp) {
-                              input.frame.time = input.frame.timestamp;
+                              input.frame.time = (input.frame.timestamp * 1000) / clockRate;
                             }
                             return webm.inputVideo(input);
                           });
@@ -512,7 +534,7 @@ export class NstrumentaServer {
                           transceiver.receiver.sendRtcpPLI(track.ssrc!);
                         }, 2_000);
 
-                        this.trackRecordings.set(name, { filePath, rtpSourceCallback });
+                        this.trackRecordings.set(trackRecordingId, { filePath, rtpSourceCallback });
                       });
                     }
                   }
@@ -525,20 +547,29 @@ export class NstrumentaServer {
                 const { name } = contents as StopRecording['request'];
                 {
                   await this.finishLog(name);
-                  await this.trackRecordings.get(name)?.rtpSourceCallback.stop();
-                  const webmPath = this.trackRecordings.get(name)?.filePath;
-                  if (webmPath) {
-                    const { base: webmName } = path.parse(webmPath);
-                    try {
-                      const remoteFileLocation = await this.uploadLog({
-                        localPath: webmPath,
-                        name: webmName,
-                      });
-                      logger.log(`uploaded ${remoteFileLocation}`);
-                    } catch (error) {
-                      logger.log(`Problem uploading log: ${webmName}, localPath: ${webmPath}`);
-                    }
-                  }
+
+                  await Promise.all(
+                    Array.from(this.trackRecordings).map(async ([key, trackRecording]) => {
+                      console.log('finishing recording track', key);
+                      await trackRecording.rtpSourceCallback.stop();
+
+                      const webmPath = trackRecording.filePath;
+                      if (webmPath) {
+                        const { base: webmName } = path.parse(webmPath);
+                        try {
+                          const remoteFileLocation = await this.uploadLog({
+                            localPath: webmPath,
+                            name: webmName,
+                          });
+                          logger.log(`uploaded ${remoteFileLocation}`);
+                        } catch (error) {
+                          logger.log(`Problem uploading log: ${webmName}, localPath: ${webmPath}`);
+                        }
+                      }
+                    })
+                  );
+
+                  this.trackRecordings.clear();
 
                   await this.respondRPC<StopRecording>(ws, responseChannel, {});
                 }
