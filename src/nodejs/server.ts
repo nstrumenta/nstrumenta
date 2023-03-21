@@ -27,12 +27,20 @@ import {
 } from '../shared';
 
 import {
+  DepacketizeCallback,
+  JitterBufferCallback,
+  RtpSourceCallback,
+  WebmCallback,
+  saveToFileSystem,
+} from 'werift';
+import {
   BusMessageType,
   deserializeWireMessage,
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
+import { Track } from '../shared/video/packages/core/src/domains/media/track';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
 import { createContext } from './video/examples/server-demo/src/context/context';
@@ -42,10 +50,6 @@ import {
   handleJoin,
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
-import { Track } from '../shared/video/packages/core/src/domains/media/track';
-import { MediaRecorder } from 'werift';
-import { writeFile } from 'fs/promises';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import path = require('path');
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
@@ -135,7 +139,8 @@ export class NstrumentaServer {
   cwd = process.cwd();
   logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
-  trackRecordings: Map<string, MediaRecorder> = new Map();
+  trackRecordings: Map<string, { filePath: string; rtpSourceCallback: RtpSourceCallback }> =
+    new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -459,27 +464,55 @@ export class NstrumentaServer {
                 const { name, channels, config } = contents as StartRecording['request'];
                 {
                   await this.startLog(name, channels, config);
+                  let trackNumber = 0;
                   for (const [roomName, room] of Object.entries(weriftCtx.roomManager.rooms)) {
                     for (const [mediaName, media] of Object.entries(room.medias)) {
-                      media.tracks.forEach(async (track) => {
-                        const trackRecordingId = `${name}${roomName}${mediaName}${track.track.id}`;
-                        console.log(track.track);
-                        const recorder = new MediaRecorder(
-                          [track.track],
-                          `.nst/video/${trackRecordingId}.webm`,
-                          {
-                            width: 640,
-                            height: 480,
-                            waitForKeyframe: false,
-                            defaultDuration: 10_000,
-                          }
+                      media.tracks.forEach(async (mediaTrack) => {
+                        const track = mediaTrack.track;
+                        const trackRecordingId = `${name}${roomName}${mediaName}${track.id}`;
+                        const filePath = `.nst/video/${trackRecordingId}.webm`;
+                        console.log(track);
+                        const rtpSourceCallback = new RtpSourceCallback();
+                        trackNumber = trackNumber + 1;
+                        const webm = new WebmCallback(
+                          [
+                            {
+                              width: 640,
+                              height: 480,
+                              kind: 'video',
+                              codec: 'VP8',
+                              clockRate: 90000,
+                              trackNumber,
+                            },
+                          ],
+                          { duration: 1000 * 10 }
                         );
-                        await recorder.start();
-                        this.trackRecordings.set(name, recorder);
-                        // setInterval(() => {
-                        //   console.log(media.transceiver!.receiver, track.track.ssrc);
-                        //   media.transceiver!.receiver.sendRtcpPLI(track.track.ssrc!);
-                        // }, 1_000);
+
+                        {
+                          const jitterBuffer = new JitterBufferCallback(90000);
+                          const depacketizer = new DepacketizeCallback('vp8', {
+                            isFinalPacketInSequence: (h) => h.marker,
+                          });
+
+                          rtpSourceCallback.pipe(jitterBuffer.input);
+                          jitterBuffer.pipe(depacketizer.input);
+                          depacketizer.pipe((input: any) => {
+                            if (input?.frame?.timestamp) {
+                              input.frame.time = input.frame.timestamp;
+                            }
+                            return webm.inputVideo(input);
+                          });
+                        }
+
+                        webm.pipe(saveToFileSystem(filePath));
+
+                        const transceiver = mediaTrack.receiver;
+                        track.onReceiveRtp.subscribe(rtpSourceCallback.input);
+                        setInterval(() => {
+                          transceiver.receiver.sendRtcpPLI(track.ssrc!);
+                        }, 2_000);
+
+                        this.trackRecordings.set(name, { filePath, rtpSourceCallback });
                       });
                     }
                   }
@@ -492,26 +525,18 @@ export class NstrumentaServer {
                 const { name } = contents as StopRecording['request'];
                 {
                   await this.finishLog(name);
-                  await this.trackRecordings.get(name)?.stop();
-                  const webmPath = this.trackRecordings.get(name)?.path;
+                  await this.trackRecordings.get(name)?.rtpSourceCallback.stop();
+                  const webmPath = this.trackRecordings.get(name)?.filePath;
                   if (webmPath) {
-                    const { name, dir, base } = path.parse(webmPath);
-                    const webmName = base;
-                    const mp4Name = name + '.mp4';
-                    const mp4Path = path.join(dir, mp4Name);
-                    const ffmpeg = createFFmpeg({ log: true });
-                    await ffmpeg.load();
-                    ffmpeg.FS('writeFile', webmName, await fetchFile(webmPath));
-                    await ffmpeg.run('-i', webmName, mp4Name);
-                    await writeFile(mp4Path, ffmpeg.FS('readFile', mp4Name));
+                    const { base: webmName } = path.parse(webmPath);
                     try {
                       const remoteFileLocation = await this.uploadLog({
-                        localPath: mp4Path,
-                        name: mp4Name,
+                        localPath: webmPath,
+                        name: webmName,
                       });
                       logger.log(`uploaded ${remoteFileLocation}`);
                     } catch (error) {
-                      logger.log(`Problem uploading log: ${mp4Name}, localPath: ${mp4Path}`);
+                      logger.log(`Problem uploading log: ${webmName}, localPath: ${webmPath}`);
                     }
                   }
 
