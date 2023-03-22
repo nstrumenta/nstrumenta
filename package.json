@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.0.40",
+  "version": "3.0.40-local",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -53,6 +53,8 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.11.0",
+    "@ffmpeg/ffmpeg": "^0.11.6",
     "@google-cloud/storage": "^5.16.1",
     "@mcap/core": "^0.2.2",
     "@types/bytebuffer": "^5.0.42",
@@ -65,11 +67,12 @@
     "express": "^4.17.1",
     "form-data": "^4.0.0",
     "inquirer": "^8.1.5",
+    "rx.mini": "^1.2.2",
     "semver": "^7.3.5",
     "serve-index": "^1.9.1",
     "tar": "^6.1.11",
     "uuid": "^9.0.0",
-    "werift": "^0.17.7",
+    "werift": "^0.18.2",
     "ws": "^8.2.2"
   },
   "engines": {

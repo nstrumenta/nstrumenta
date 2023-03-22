@@ -7,6 +7,8 @@ import {
   DataQueryResponse,
   Ping,
   RPC,
+  StartRecording,
+  StopRecording,
   Subscribe,
   Unsubscribe,
   getEndpoints,
@@ -218,6 +220,14 @@ export abstract class NstrumentaClientBase {
 
   public async startLog(name: string, channels: string[], config?: LogConfig) {
     this.send('_nstrumenta', { command: 'startLog', name, channels, config });
+  }
+
+  public async startRecording(name: string, channels: string[], config?: LogConfig) {
+    return this.callRPC<StartRecording>('startRecording', { name, channels, config });
+  }
+
+  public async stopRecording(name: string) {
+    return this.callRPC<StopRecording>('stopRecording', { name });
   }
 
   public async finishLog(name: string) {

@@ -4,26 +4,36 @@ import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
 import { createWriteStream } from 'fs';
-import fs from 'fs/promises';
+import fs, { appendFile, writeFile } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  DEFAULT_HOST_PORT,
-  LogConfig,
-  NstrumentaClientEvent,
-  Ping,
-  RPC,
-  Subscribe,
-  Unsubscribe,
   AnswerWebRTC,
   CandidateWebRTC,
+  DEFAULT_HOST_PORT,
   JoinWebRTC,
-  getEndpoints,
+  LogConfig,
+  NstrumentaClientEvent,
   NstrumentaRPCType,
+  Ping,
+  RPC,
+  StartRecording,
+  StopRecording,
+  Subscribe,
+  Unsubscribe,
+  getEndpoints,
 } from '../shared';
 
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import {
+  DepacketizeCallback,
+  JitterBufferCallback,
+  RtpSourceCallback,
+  WebmCallback,
+  WebmOutput,
+} from 'werift';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -40,6 +50,7 @@ import {
   handleJoin,
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
+import path = require('path');
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -115,6 +126,11 @@ export type DataLog =
       mcapWriter: McapWriter;
     };
 
+type TrackRecording = {
+  filePath: string;
+  stop: () => void;
+};
+
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
@@ -126,6 +142,7 @@ export class NstrumentaServer {
   cwd = process.cwd();
   logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
+  trackRecordings: Map<string, TrackRecording> = new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -444,6 +461,165 @@ export class NstrumentaServer {
                 });
               }
               break;
+            case 'startRecording':
+              {
+                const {
+                  name: sessionName,
+                  channels,
+                  config,
+                } = contents as StartRecording['request'];
+                {
+                  await this.startLog(sessionName, channels, config);
+                  let trackNumber = 0;
+                  for (const [roomName, room] of Object.entries(weriftCtx.roomManager.rooms)) {
+                    for (const [mediaName, media] of Object.entries(room.medias)) {
+                      media.tracks.forEach(async (mediaTrack) => {
+                        const track = mediaTrack.track;
+                        const trackRecordingId = `${sessionName}_${mediaName}_${track.id}`;
+                        const filePath = `.nst/video/pre-${trackRecordingId}.webm`;
+                        const rtpSourceCallback = new RtpSourceCallback();
+                        trackNumber = trackNumber + 1;
+                        const codecParameters = track.codec;
+                        const codecName: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS' =
+                          codecParameters?.mimeType.toUpperCase().includes('VP8')
+                            ? 'VP8'
+                            : codecParameters?.mimeType.toUpperCase().includes('VP9')
+                            ? 'VP9'
+                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
+                            ? 'AV1'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'MPEG4/ISO/AVC'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'OPUS'
+                            : 'VP8';
+                        const clockRate = codecParameters?.clockRate || 90000;
+
+                        const trackConfig: {
+                          width?: number | undefined;
+                          height?: number | undefined;
+                          kind: 'audio' | 'video';
+                          codec: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS';
+                          clockRate: number;
+                          trackNumber: number;
+                        } = {
+                          width: 640,
+                          height: 480,
+                          kind: track.kind === 'video' ? 'video' : 'audio',
+                          codec: codecName,
+                          clockRate,
+                          trackNumber,
+                        };
+                        console.log(trackConfig);
+                        const webm = new WebmCallback([trackConfig]);
+
+                        {
+                          const jitterBuffer = new JitterBufferCallback(clockRate);
+                          const depacketizer = new DepacketizeCallback(codecName, {
+                            isFinalPacketInSequence: (h) => h.marker,
+                          });
+
+                          rtpSourceCallback.pipe(jitterBuffer.input);
+                          jitterBuffer.pipe(depacketizer.input);
+                          depacketizer.pipe((input: any) => {
+                            if (input?.frame?.timestamp) {
+                              input.frame.time = (input.frame.timestamp * 1000) / clockRate;
+                            }
+                            return webm.inputVideo(input);
+                          });
+                        }
+
+                        webm.pipe(async (value: WebmOutput) => {
+                          if (value.saveToFile) {
+                            await appendFile(filePath, value.saveToFile);
+                          }
+                        });
+
+                        const transceiver = mediaTrack.receiver;
+                        const { unSubscribe } = track.onReceiveRtp.subscribe(
+                          rtpSourceCallback.input
+                        );
+                        const intervalId = setInterval(() => {
+                          transceiver.receiver.sendRtcpPLI(track.ssrc!);
+                        }, 2_000);
+
+                        this.trackRecordings.set(trackRecordingId, {
+                          filePath,
+                          stop: async () => {
+                            clearInterval(intervalId);
+                            await unSubscribe();
+                          },
+                        });
+                      });
+                    }
+                  }
+                  await this.respondRPC<StartRecording>(ws, responseChannel, {});
+                }
+              }
+              break;
+            case 'stopRecording':
+              {
+                const { name } = contents as StopRecording['request'];
+                {
+                  await this.finishLog(name);
+
+                  const trackRecordingsArray = Array.from(this.trackRecordings);
+                  // clear ahead of processing to avoid triggering again during processing
+                  this.trackRecordings.clear();
+
+                  await Promise.all(
+                    trackRecordingsArray.map(async ([key, trackRecording]) => {
+                      console.log('finishing recording track', key);
+                      await trackRecording.stop();
+
+                      const webmPath = trackRecording.filePath;
+                      const startTime = Date.now();
+                      const { name, dir, base } = path.parse(webmPath);
+                      const webmName = base;
+                      // final name removes 'pre-'
+                      const postCopyName = `${webmName.slice(4)}`;
+                      const postCopyPath = path.join(dir, postCopyName);
+                      try {
+                        const ffmpeg = createFFmpeg({ log: true });
+                        await ffmpeg.load();
+                        ffmpeg.FS('writeFile', webmName, await fetchFile(webmPath));
+                        await ffmpeg.run(
+                          '-i',
+                          webmName,
+                          '-vcodec',
+                          'copy',
+                          '-acodec',
+                          'copy',
+                          postCopyName
+                        );
+                        await writeFile(postCopyPath, ffmpeg.FS('readFile', postCopyName));
+                        console.log(`finished webm copy in ${Date.now() - startTime}ms`);
+                      } catch (error) {
+                        console.log('failed to copy with ffmpeg, uploading original recording');
+                        const remoteFileLocation = await this.uploadLog({
+                          localPath: webmPath,
+                          name: webmName,
+                        });
+                        logger.log(`uploaded ${remoteFileLocation}`);
+                      }
+                      try {
+                        const remoteFileLocation = await this.uploadLog({
+                          localPath: postCopyPath,
+                          name: postCopyName,
+                        });
+                        logger.log(`uploaded ${remoteFileLocation}`);
+                      } catch (error) {
+                        logger.log(
+                          `Problem uploading log: ${postCopyName}, localPath: ${postCopyPath}`
+                        );
+                      }
+                    })
+                  );
+
+                  await this.respondRPC<StopRecording>(ws, responseChannel, {});
+                }
+              }
+              break;
+
             case 'joinWebRTC':
               {
                 const { room } = contents as JoinWebRTC['request'];
@@ -453,6 +629,7 @@ export class NstrumentaServer {
                 }
               }
               break;
+
             case 'answerWebRTC':
               {
                 const { peerId, room, answer } = contents as AnswerWebRTC['request'];
@@ -519,7 +696,7 @@ export class NstrumentaServer {
         });
 
         this.dataLogs.forEach(async (dataLog) => {
-          if (dataLog.channels.includes(channel)) {
+          if (dataLog.channels?.includes(channel)) {
             switch (dataLog.type) {
               case 'stream':
                 {
@@ -597,6 +774,8 @@ export class NstrumentaServer {
     await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
     logger.log({ name, cwdNstDir: nstDir, localPath });
+
+    // set up dataLogs
     if (config) {
       const type = 'mcap';
       const fileHandle = await fs.open(localPath, 'w');
@@ -633,14 +812,15 @@ export class NstrumentaServer {
       const stream = await createWriteStream(localPath);
       this.dataLogs.set(name, { type, localPath, channels, stream });
     }
-
-    return this.dataLogs;
   }
 
   public async finishLog(name: string) {
     logger.log(`<finishLog>: ${name}`);
     const dataLog = this.dataLogs.get(name);
-    if (!dataLog) throw new Error('log name not found');
+    if (!dataLog) {
+      console.warn('log name not found');
+      return;
+    }
     const { localPath } = dataLog;
     logger.log(`Finishing log: ${dataLog?.localPath}`);
     switch (dataLog?.type) {
