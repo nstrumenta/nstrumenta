@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.41](https://github.com/nstrumenta/nstrumenta/compare/v3.0.40...v3.0.41) (2023-03-22)
+
+
+### Features
+
+* **webrtc:** adds recording of webrtc ([#168](https://github.com/nstrumenta/nstrumenta/issues/168)) ([a42760b](https://github.com/nstrumenta/nstrumenta/commit/a42760b720371d15e31abcaf29e5244e23de2ad3))
+
+
+### Bug Fixes
+
+* **ffmpeg:** skipLibCheck to avoid issue with ffmpeg import ([a7f90c2](https://github.com/nstrumenta/nstrumenta/commit/a7f90c26e81c7089c5370ea41fd7dc7c9bb16b46))
+
 ### [3.0.40](https://github.com/nstrumenta/nstrumenta/compare/v3.0.39...v3.0.40) (2023-02-28)
 
 
