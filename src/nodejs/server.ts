@@ -4,7 +4,7 @@ import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
 import { createWriteStream } from 'fs';
-import fs from 'fs/promises';
+import fs, { appendFile, writeFile } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -26,13 +26,13 @@ import {
   getEndpoints,
 } from '../shared';
 
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import {
   DepacketizeCallback,
   JitterBufferCallback,
   RtpSourceCallback,
   WebmCallback,
-  WebmOption,
-  saveToFileSystem,
+  WebmOutput,
 } from 'werift';
 import {
   BusMessageType,
@@ -41,7 +41,6 @@ import {
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
-import { Track } from '../shared/video/packages/core/src/domains/media/track';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
 import { createContext } from './video/examples/server-demo/src/context/context';
@@ -52,7 +51,6 @@ import {
 } from './video/examples/server-demo/src/handler';
 import WritableStream = NodeJS.WritableStream;
 import path = require('path');
-import { SupportedCodec } from 'werift/lib/rtp/src/container/webm';
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
@@ -128,7 +126,10 @@ export type DataLog =
       mcapWriter: McapWriter;
     };
 
-export type TrackRecording = { localPath: string; track: Track };
+type TrackRecording = {
+  filePath: string;
+  stop: () => void;
+};
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
@@ -141,8 +142,7 @@ export class NstrumentaServer {
   cwd = process.cwd();
   logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
-  trackRecordings: Map<string, { filePath: string; rtpSourceCallback: RtpSourceCallback }> =
-    new Map();
+  trackRecordings: Map<string, TrackRecording> = new Map();
   status: ServerStatus;
 
   constructor(options: NstrumentaServerOptions) {
@@ -475,11 +475,23 @@ export class NstrumentaServer {
                     for (const [mediaName, media] of Object.entries(room.medias)) {
                       media.tracks.forEach(async (mediaTrack) => {
                         const track = mediaTrack.track;
-                        const trackRecordingId = `${sessionName}${roomName}${mediaName}${track.id}`;
-                        const filePath = `.nst/video/${trackRecordingId}.webm`;
+                        const trackRecordingId = `${sessionName}_${mediaName}_${track.id}`;
+                        const filePath = `.nst/video/pre-${trackRecordingId}.webm`;
                         const rtpSourceCallback = new RtpSourceCallback();
                         trackNumber = trackNumber + 1;
                         const codecParameters = track.codec;
+                        const codecName: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS' =
+                          codecParameters?.mimeType.toUpperCase().includes('VP8')
+                            ? 'VP8'
+                            : codecParameters?.mimeType.toUpperCase().includes('VP9')
+                            ? 'VP9'
+                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
+                            ? 'AV1'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'MPEG4/ISO/AVC'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'OPUS'
+                            : 'VP8';
                         const clockRate = codecParameters?.clockRate || 90000;
 
                         const trackConfig: {
@@ -493,17 +505,7 @@ export class NstrumentaServer {
                           width: 640,
                           height: 480,
                           kind: track.kind === 'video' ? 'video' : 'audio',
-                          codec: codecParameters?.mimeType.toUpperCase().includes('VP8')
-                            ? 'VP8'
-                            : codecParameters?.mimeType.toUpperCase().includes('VP9')
-                            ? 'VP9'
-                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
-                            ? 'AV1'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'MPEG4/ISO/AVC'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'OPUS'
-                            : 'VP8',
+                          codec: codecName,
                           clockRate,
                           trackNumber,
                         };
@@ -512,7 +514,7 @@ export class NstrumentaServer {
 
                         {
                           const jitterBuffer = new JitterBufferCallback(clockRate);
-                          const depacketizer = new DepacketizeCallback('vp8', {
+                          const depacketizer = new DepacketizeCallback(codecName, {
                             isFinalPacketInSequence: (h) => h.marker,
                           });
 
@@ -526,15 +528,27 @@ export class NstrumentaServer {
                           });
                         }
 
-                        webm.pipe(saveToFileSystem(filePath));
+                        webm.pipe(async (value: WebmOutput) => {
+                          if (value.saveToFile) {
+                            await appendFile(filePath, value.saveToFile);
+                          }
+                        });
 
                         const transceiver = mediaTrack.receiver;
-                        track.onReceiveRtp.subscribe(rtpSourceCallback.input);
-                        setInterval(() => {
+                        const { unSubscribe } = track.onReceiveRtp.subscribe(
+                          rtpSourceCallback.input
+                        );
+                        const intervalId = setInterval(() => {
                           transceiver.receiver.sendRtcpPLI(track.ssrc!);
                         }, 2_000);
 
-                        this.trackRecordings.set(trackRecordingId, { filePath, rtpSourceCallback });
+                        this.trackRecordings.set(trackRecordingId, {
+                          filePath,
+                          stop: async () => {
+                            clearInterval(intervalId);
+                            await unSubscribe();
+                          },
+                        });
                       });
                     }
                   }
@@ -548,28 +562,58 @@ export class NstrumentaServer {
                 {
                   await this.finishLog(name);
 
+                  const trackRecordingsArray = Array.from(this.trackRecordings);
+                  // clear ahead of processing to avoid triggering again during processing
+                  this.trackRecordings.clear();
+
                   await Promise.all(
-                    Array.from(this.trackRecordings).map(async ([key, trackRecording]) => {
+                    trackRecordingsArray.map(async ([key, trackRecording]) => {
                       console.log('finishing recording track', key);
-                      await trackRecording.rtpSourceCallback.stop();
+                      await trackRecording.stop();
 
                       const webmPath = trackRecording.filePath;
-                      if (webmPath) {
-                        const { base: webmName } = path.parse(webmPath);
-                        try {
-                          const remoteFileLocation = await this.uploadLog({
-                            localPath: webmPath,
-                            name: webmName,
-                          });
-                          logger.log(`uploaded ${remoteFileLocation}`);
-                        } catch (error) {
-                          logger.log(`Problem uploading log: ${webmName}, localPath: ${webmPath}`);
-                        }
+                      const startTime = Date.now();
+                      const { name, dir, base } = path.parse(webmPath);
+                      const webmName = base;
+                      // final name removes 'pre-'
+                      const postCopyName = `${webmName.slice(4)}`;
+                      const postCopyPath = path.join(dir, postCopyName);
+                      try {
+                        const ffmpeg = createFFmpeg({ log: true });
+                        await ffmpeg.load();
+                        ffmpeg.FS('writeFile', webmName, await fetchFile(webmPath));
+                        await ffmpeg.run(
+                          '-i',
+                          webmName,
+                          '-vcodec',
+                          'copy',
+                          '-acodec',
+                          'copy',
+                          postCopyName
+                        );
+                        await writeFile(postCopyPath, ffmpeg.FS('readFile', postCopyName));
+                        console.log(`finished webm copy in ${Date.now() - startTime}ms`);
+                      } catch (error) {
+                        console.log('failed to copy with ffmpeg, uploading original recording');
+                        const remoteFileLocation = await this.uploadLog({
+                          localPath: webmPath,
+                          name: webmName,
+                        });
+                        logger.log(`uploaded ${remoteFileLocation}`);
+                      }
+                      try {
+                        const remoteFileLocation = await this.uploadLog({
+                          localPath: postCopyPath,
+                          name: postCopyName,
+                        });
+                        logger.log(`uploaded ${remoteFileLocation}`);
+                      } catch (error) {
+                        logger.log(
+                          `Problem uploading log: ${postCopyName}, localPath: ${postCopyPath}`
+                        );
                       }
                     })
                   );
-
-                  this.trackRecordings.clear();
 
                   await this.respondRPC<StopRecording>(ws, responseChannel, {});
                 }
@@ -773,7 +817,10 @@ export class NstrumentaServer {
   public async finishLog(name: string) {
     logger.log(`<finishLog>: ${name}`);
     const dataLog = this.dataLogs.get(name);
-    if (!dataLog) throw new Error('log name not found');
+    if (!dataLog) {
+      console.warn('log name not found');
+      return;
+    }
     const { localPath } = dataLog;
     logger.log(`Finishing log: ${dataLog?.localPath}`);
     switch (dataLog?.type) {
