@@ -139,7 +139,7 @@ export class NstrumentaServer {
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
-  cwd = process.cwd();
+  cwd = process.cwd() === '/' ? '' : process.cwd();
   logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
   trackRecordings: Map<string, TrackRecording> = new Map();
@@ -476,7 +476,9 @@ export class NstrumentaServer {
                       media.tracks.forEach(async (mediaTrack) => {
                         const track = mediaTrack.track;
                         const trackRecordingId = `${sessionName}_${mediaName}_${track.id}`;
-                        const filePath = `.nst/video/pre-${trackRecordingId}.webm`;
+                        const nstDir = await getNstDir(this.cwd);
+                        await fs.mkdir(`${nstDir}/video`, { recursive: true });
+                        const filePath = `${nstDir}/video/pre-${trackRecordingId}.webm`;
                         const rtpSourceCallback = new RtpSourceCallback();
                         trackNumber = trackNumber + 1;
                         const codecParameters = track.codec;
