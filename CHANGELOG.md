@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.42](https://github.com/nstrumenta/nstrumenta/compare/v3.0.41...v3.0.42) (2023-03-22)
+
+
+### Bug Fixes
+
+* **video:** uses nstDir for video recordings ([86e0c5d](https://github.com/nstrumenta/nstrumenta/commit/86e0c5dccac2f9376b281d1f6bfa3c7cfcdbea40))
+
 ### [3.0.41](https://github.com/nstrumenta/nstrumenta/compare/v3.0.40...v3.0.41) (2023-03-22)
 
 
