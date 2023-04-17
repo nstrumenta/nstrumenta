@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.43](https://github.com/nstrumenta/nstrumenta/compare/v3.0.42...v3.0.43) (2023-04-17)
+
+
+### Features
+
+* **storage:** makes storage available without agent required ([748c3e2](https://github.com/nstrumenta/nstrumenta/commit/748c3e22be2e38b52d356285616bdae66df7f236))
+
 ### [3.0.42](https://github.com/nstrumenta/nstrumenta/compare/v3.0.41...v3.0.42) (2023-03-22)
 
 
