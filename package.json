@@ -21,6 +21,7 @@
     "build:browser": "tsc --project ./src/browser",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
     "dev": "nodemon -- agent start --debug=true --tag=local",
+    "dev:local-functions": "NSTRUMENTA_LOCAL=true nodemon -- agent start --debug=true --tag=local",
     "start:agent": "npm run build:cli ; npx node ./dist/cli/index.js agent start --tag=local",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",

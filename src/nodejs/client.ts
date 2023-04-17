@@ -11,6 +11,10 @@ import {
 import { deserializeWireMessage } from '../shared/lib/busMessage';
 
 export class NstrumentaClient extends NstrumentaClientBase {
+  constructor() {
+    super(resolveApiKey());
+  }
+
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
       console.log('connecting to nstrumenta');

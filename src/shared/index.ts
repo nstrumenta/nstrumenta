@@ -1,7 +1,7 @@
 export const DEFAULT_HOST_PORT = '8088';
 
 const BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
-const BASE_URL_LOCAL = 'http://localhost:8088';
+const BASE_URL_LOCAL = 'http://localhost:8080';
 
 export const getEndpoints = (env: 'local' | 'prod') => {
   const baseUrl = env === 'local' ? BASE_URL_LOCAL : BASE_URL;
