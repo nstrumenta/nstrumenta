@@ -1,13 +1,28 @@
 {
   "configurations": [
     {
-      "name": "Launch via NPM",
+      "name": "npm run dev",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",
       "runtimeArgs": [
         "run-script",
         "dev"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
+      "name": "npm run dev:local-functions",
+      "request": "launch",
+      "console": "internalConsole",
+      "outputCapture": "std",
+      "runtimeArgs": [
+        "run-script",
+        "dev:local-functions"
       ],
       "runtimeExecutable": "npm",
       "skipFiles": [

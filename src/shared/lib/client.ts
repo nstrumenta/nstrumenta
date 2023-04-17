@@ -86,18 +86,20 @@ export const getToken = async (apiKey: string): Promise<string> => {
 
 export abstract class NstrumentaClientBase {
   public ws: WebSocketLike | null = null;
-  public apiKey: string | null = null;
+  public apiKey?: string;
   public listeners: Map<string, Array<ListenerCallback>>;
   public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
   public messageBuffer: Array<ArrayBufferLike>;
+  public storage: StorageService;
   private datalogs: Map<string, Array<string>>;
   public clientId: string | null = null;
   private endpoints;
 
   public connection: Connection = { status: ClientStatus.INIT };
 
-  constructor() {
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.datalogs = new Map();
@@ -106,6 +108,7 @@ export abstract class NstrumentaClientBase {
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
+    this.storage = new StorageService(apiKey ? { apiKey } : undefined);
   }
 
   async shutdown() {
@@ -254,8 +257,6 @@ export abstract class NstrumentaClientBase {
       this.ws?.send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
     });
   }
-
-  storage?: StorageService;
 }
 
 export interface StorageUploadParameters {
@@ -266,15 +267,22 @@ export interface StorageUploadParameters {
 }
 
 export class StorageService {
-  private apiKey: string;
+  private apiKey?: string;
   private endpoints;
 
-  constructor(props: { apiKey: string }) {
-    this.apiKey = props.apiKey;
+  constructor(props?: { apiKey?: string }) {
+    this.apiKey = props?.apiKey ? props.apiKey : undefined;
     this.endpoints = getEndpoints('prod');
   }
 
+  setEndpoints(endpointEnv: 'local' | 'prod') {
+    this.endpoints = getEndpoints(endpointEnv);
+  }
+
   async download(path: string): Promise<Blob> {
+    if (!this.apiKey) {
+      throw new Error('apiKey not set');
+    }
     const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
@@ -298,6 +306,10 @@ export class StorageService {
     limit = 1,
     metadata: metadataOriginal,
   }: DataQueryOptions): Promise<DataQueryResponse> {
+    if (!this.apiKey) {
+      throw new Error('apiKey not set');
+    }
+
     const metadata =
       typeof metadataOriginal === 'string'
         ? JSON.parse(metadataOriginal)
@@ -325,6 +337,10 @@ export class StorageService {
   }
 
   async list(type: string): Promise<string[]> {
+    if (!this.apiKey) {
+      throw new Error('apiKey not set');
+    }
+
     let response = await axios(this.endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
       headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
