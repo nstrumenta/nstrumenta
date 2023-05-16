@@ -279,6 +279,19 @@ export class StorageService {
     this.endpoints = getEndpoints(endpointEnv);
   }
 
+  async getDownloadUrl(path: string): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('apiKey not set');
+    }
+    const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
+      method: 'post',
+      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      data: { path },
+    });
+    console.log('REQ:', response.request);
+    return response.data;
+  }
+
   async download(path: string): Promise<Blob> {
     if (!this.apiKey) {
       throw new Error('apiKey not set');
@@ -301,6 +314,9 @@ export class StorageService {
   async query({
     filenames,
     tag: tags,
+    field,
+    comparison,
+    compareValue,
     before,
     after,
     limit = 1,
@@ -317,7 +333,17 @@ export class StorageService {
         ? metadataOriginal
         : {};
 
-    const data = { tags, before, after, limit, filenames, metadata };
+    const data = {
+      tags,
+      before,
+      after,
+      limit,
+      filenames,
+      metadata,
+      field,
+      comparison,
+      compareValue,
+    };
 
     const config: AxiosRequestConfig = {
       method: 'post',

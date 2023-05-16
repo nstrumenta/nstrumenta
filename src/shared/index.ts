@@ -46,6 +46,19 @@ export interface DataQueryOptionsCLI {
   before?: string;
   after?: string;
   limit?: string;
+  field?: string;
+  comparison?:
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
+  compareValue?: string;
   filenames?: string[];
   metadata?: string;
 }
@@ -55,6 +68,19 @@ export interface DataQueryOptionsClient {
   before?: number;
   after?: number;
   limit?: number;
+  field?: string;
+  comparison?:
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
+  compareValue?: string;
   filenames?: string[];
   metadata?: string | Record<string, unknown>;
 }
