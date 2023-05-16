@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.44](https://github.com/nstrumenta/nstrumenta/compare/v3.0.43...v3.0.44) (2023-05-16)
+
+
+### Features
+
+* **client:** adds getDownloadUrl ; filter in query ([b816f9c](https://github.com/nstrumenta/nstrumenta/commit/b816f9cca58c47ebc51b168d49ba69dcd196730c))
+
 ### [3.0.43](https://github.com/nstrumenta/nstrumenta/compare/v3.0.42...v3.0.43) (2023-04-17)
 
 
