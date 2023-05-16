@@ -20,9 +20,14 @@ export { Kind, MediaInfo, SubscriberType } from './video/src';
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
   public webrtcClient: WebrtcClient | null = null;
 
-  constructor() {
+  constructor(apiKey?: string) {
     super();
-
+    if (apiKey) {
+      this.apiKey = apiKey;
+      localStorage.setItem('apiKey', apiKey);
+    }
+    // initiate the storage service for file upload/download
+    this.storage = new StorageService({ apiKey: apiKey ? apiKey : this.apiKey });
     this.webrtcClient = new WebrtcClient();
   }
 
@@ -70,8 +75,6 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       if (verify) {
         try {
           token = await getToken(this.apiKey);
-          // initiate the storage service for file upload/download
-          this.storage = new StorageService({ apiKey: this.apiKey });
         } catch (error) {
           console.error((error as Error).message);
           throw error;
