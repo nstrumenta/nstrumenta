@@ -264,6 +264,7 @@ export interface StorageUploadParameters {
   data: Blob;
   meta: Record<string, string>;
   dataId?: string;
+  overwrite?: boolean;
 }
 
 export class StorageService {
@@ -376,7 +377,13 @@ export class StorageService {
     return response.data;
   }
 
-  public async upload({ filename, data, meta, dataId: explicitDataId }: StorageUploadParameters) {
+  public async upload({
+    filename,
+    data,
+    meta,
+    dataId: explicitDataId,
+    overwrite,
+  }: StorageUploadParameters) {
     const size = data.size;
     let url;
     let dataId = explicitDataId;
@@ -398,6 +405,7 @@ export class StorageService {
         dataId,
         size,
         metadata: meta,
+        overwrite,
       },
     };
 
