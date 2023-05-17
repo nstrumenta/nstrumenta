@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.45](https://github.com/nstrumenta/nstrumenta/compare/v3.0.44...v3.0.45) (2023-05-17)
+
+
+### Features
+
+* **upload:** adds overwrite to client method ([007a061](https://github.com/nstrumenta/nstrumenta/commit/007a061510c9de1c973a6817ee380da9b41706e5))
+
 ### [3.0.44](https://github.com/nstrumenta/nstrumenta/compare/v3.0.43...v3.0.44) (2023-05-16)
 
 
