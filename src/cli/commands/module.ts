@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import path from 'path';
@@ -11,6 +11,7 @@ import {
   getModuleFromStorage,
   getNearestConfigJson,
   getNstDir,
+  getVersionFromPath,
   inquiryForSelectModule,
   resolveApiKey,
 } from '../utils';
@@ -70,6 +71,76 @@ export const Run = async function (
   const result = await adapters[module.type](module, args);
 
   console.log('=>', result);
+};
+
+export const SetAction = async (options: { action: string; tag?: string }) => {
+  const { action: actionString, tag } = options;
+  const action = JSON.parse(actionString);
+  const apiKey = resolveApiKey();
+
+  try {
+    const response: { data: string } = await axios({
+      method: 'POST',
+      url: endpoints.SET_ACTION,
+      headers: {
+        contentType: 'application/json',
+        'x-api-key': apiKey,
+      },
+      data: { action },
+    });
+
+    const actionId = response.data;
+    console.log(`created action: ${actionId} `, action);
+  } catch (err) {
+    console.error('Error:', (err as AxiosError).response?.data);
+  }
+};
+
+export const CloudRun = async function (
+  moduleName: string,
+  {
+    version,
+  }: {
+    version?: string;
+  },
+  { args }: Command
+): Promise<void> {
+  console.log('Finding ', moduleName);
+  type Module = { id: string; metadata: { id: string; filePath: string } };
+  let modules: Module[] = [];
+  try {
+    const apiKey = resolveApiKey();
+    let response = await axios(endpoints.v2.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    });
+    modules = response.data;
+  } catch (error) {
+    console.log(`Problem fetching data ${(error as Error).name}`);
+  }
+  const matches = modules
+    .filter((module) => module.metadata.id === moduleName)
+    .map((module) => {
+      return {
+        id: module.id,
+        filePath: module.metadata.filePath,
+        version: getVersionFromPath(module.id),
+      };
+    });
+
+  const moduleId = version
+    ? matches.find((match) => semver.eq(version, match.version))?.id
+    : matches.sort((a, b) => semver.compare(a.version, b.version))[0].id;
+
+  console.log('found moduleId: ', moduleId);
+
+  const action = JSON.stringify({
+    task: 'cloudRun',
+    status: 'pending',
+    data: { moduleId, args },
+  });
+
+  SetAction({ action });
 };
 
 const useLocalModule = async (moduleName?: string): Promise<ModuleExtended> => {
@@ -348,7 +419,6 @@ export interface ModuleListOptions {
 }
 
 export const List = async (_: unknown, options: ModuleListOptions) => {
-  const { verbose = false } = options;
   const apiKey = resolveApiKey();
 
   try {
@@ -356,15 +426,8 @@ export const List = async (_: unknown, options: ModuleListOptions) => {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
-
-    const modules = verbose
-      ? response.data
-      : response.data.map(({ id, metadata }: { id: string; metadata: Record<string, unknown> }) =>
-          // deprecate dataId in favor of id
-          metadata ? (metadata.id ? metadata.id : metadata.dataId ? metadata.dataId : id) : id
-        );
-
-    console.log(modules);
+    const modules = response.data;
+    console.log(JSON.stringify(modules));
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }

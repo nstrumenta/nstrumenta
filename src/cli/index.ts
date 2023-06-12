@@ -20,7 +20,7 @@ import {
   SetContextProperty,
 } from './commands/contexts';
 import { ListMachines } from './commands/machines';
-import { List, Publish, Run } from './commands/module';
+import { CloudRun, List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
 import {
   List as ListData,
@@ -103,10 +103,13 @@ moduleCommand
   .action(Run);
 
 moduleCommand
-  .command('list')
-  .option('-v, --verbose', 'verbose listing including versions, metadata')
-  .description('list modules published in current project')
-  .action(List);
+  .command('cloud-run')
+  .argument('[module]', 'module to run')
+  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .description('run module on cloud')
+  .action(CloudRun);
+
+moduleCommand.command('list').description('list modules published in current project').action(List);
 
 const agentCommand = program.command('agent');
 agentCommand
