@@ -1,7 +1,6 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import fs from 'fs/promises';
-import path from 'path';
 import semver from 'semver';
 import tar from 'tar';
 import { getEndpoints } from '../../shared';
@@ -128,16 +127,17 @@ export const CloudRun = async function (
       };
     });
 
-  const moduleId = version
-    ? matches.find((match) => semver.eq(version, match.version))?.id
-    : matches.sort((a, b) => semver.compare(a.version, b.version))[0].id;
+  const specificModule = version
+    ? matches.find((match) => semver.eq(version, match.version))
+    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
 
-  console.log('found moduleId: ', moduleId);
+  if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
+  console.log('found moduleId: ', specificModule?.id);
 
   const action = JSON.stringify({
     task: 'cloudRun',
     status: 'pending',
-    data: { moduleId, args },
+    data: { module: specificModule, args },
   });
 
   SetAction({ action });
