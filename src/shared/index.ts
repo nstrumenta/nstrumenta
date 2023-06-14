@@ -13,6 +13,7 @@ export const getEndpoints = (env: 'local' | 'prod') => {
     GET_UPLOAD_DATA_URL: `${baseUrl}/getUploadDataUrl`,
     REGISTER_AGENT: `${baseUrl}/registerAgent`,
     LIST_AGENTS: `${baseUrl}/listAgents`,
+    SET_ACTION: `${baseUrl}/setAction`,
     SET_AGENT_ACTION: `${baseUrl}/setAgentAction`,
     GET_AGENT_ID_BY_TAG: `${baseUrl}/getAgentIdByTag`,
     CLEAN_AGENT_ACTIONS: `${baseUrl}/cleanAgentActions`,
