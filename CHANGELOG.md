@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.46](https://github.com/nstrumenta/nstrumenta/compare/v3.0.45...v3.0.46) (2023-06-14)
+
+
+### Features
+
+* **module:** adds cloud run ([#169](https://github.com/nstrumenta/nstrumenta/issues/169)) ([ebe0d84](https://github.com/nstrumenta/nstrumenta/commit/ebe0d84b92cc4612ed4d932342b06e8db199f820))
+
 ### [3.0.45](https://github.com/nstrumenta/nstrumenta/compare/v3.0.44...v3.0.45) (2023-05-17)
 
 
