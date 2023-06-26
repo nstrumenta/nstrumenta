@@ -1,6 +1,6 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import { createWriteStream } from 'fs';
-import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
+import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
 import {
@@ -95,6 +95,7 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   await rm(keyfilePath)
   await rm(`${projectId}/.gitignore`)
   await asyncSpawn('fusermount', ['-u', `${projectId}/data`])
+  await rmdir(`${projectId}`)
 }
 
 export const Upload = async (
