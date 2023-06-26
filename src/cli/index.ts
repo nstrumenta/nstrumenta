@@ -24,6 +24,8 @@ import { CloudRun, List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
 import {
   List as ListData,
+  Mount as MountData,
+  Unmount as UnmountData,
   Upload as UploadData,
   Query as QueryData,
   Get as GetData,
@@ -35,7 +37,7 @@ const version = require('../../package.json').version;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
-initContexts();
+if (!process.env.NSTRUMENTA_API_KEY) { initContexts(); }
 
 const program = new Command()
   .version(version, '-v, --version', 'output the current version')
@@ -169,6 +171,14 @@ dataCommand
   .option('-v, --verbose', 'include metadata')
   .description('List data files within project')
   .action(ListData);
+dataCommand
+  .command('mount')
+  .description('mount data to local filesystem (requires gcsfuse)')
+  .action(MountData);
+dataCommand
+  .command('unmount')
+  .description('unmount previously mounted data')
+  .action(UnmountData);
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')

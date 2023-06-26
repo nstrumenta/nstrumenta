@@ -146,7 +146,7 @@ export async function asyncSpawn(
     throw new Error(`spawned process ${cmd} error code ${code}, ${error}`);
   }
 
-  console.log(`spawn ${cmd} output ${output}`);
+  console.log(`spawn ${cmd} output: ${output} stderr: ${error}`);
   return childProcess;
 }
 

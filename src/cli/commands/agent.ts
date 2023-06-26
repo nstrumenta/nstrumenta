@@ -60,7 +60,7 @@ export const RunModule = async (
   let serverModules = new Set<string>();
 
   if (!module) {
-    let response = await axios(endpoints.v2.LIST_MODULES, {
+    let response = await axios(endpoints.LIST_MODULES_V2, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });

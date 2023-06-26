@@ -1,7 +1,7 @@
 export const DEFAULT_HOST_PORT = '8088';
 
 const BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
-const BASE_URL_LOCAL = 'http://localhost:8080';
+const BASE_URL_LOCAL = 'http://tyler.local:6000';
 
 export const getEndpoints = (env: 'local' | 'prod') => {
   const baseUrl = env === 'local' ? BASE_URL_LOCAL : BASE_URL;
@@ -21,16 +21,15 @@ export const getEndpoints = (env: 'local' | 'prod') => {
     GET_PROJECT_DOWNLOAD_URL: `${baseUrl}/getProjectDownloadUrl`,
     GENERATE_DATA_ID: `${baseUrl}/generateDataId`,
     LIST_MODULES: `${baseUrl}/listModules`,
+    LIST_MODULES_V2: `${baseUrl}/listModulesV2`,
     GET_TOKEN: `${baseUrl}/getToken`,
     VERIFY_TOKEN: `${baseUrl}/verifyToken`,
     VERIFY_API_KEY: `${baseUrl}/verifyApiKey`,
     SET_STORAGE_OBJECT: `${baseUrl}/setStorageObject`,
     SET_DATA_METADATA: `${baseUrl}/setDataMetadata`,
     LIST_STORAGE_OBJECTS: `${baseUrl}/listStorageObjects`,
+    GET_DATA_MOUNT: `${baseUrl}/getDataMount`,
     QUERY_DATA: `${baseUrl}/queryData`,
-    v2: {
-      LIST_MODULES: `${baseUrl}/listModulesV2`,
-    },
   };
 };
 
@@ -49,16 +48,16 @@ export interface DataQueryOptionsCLI {
   limit?: string;
   field?: string;
   comparison?:
-    | '<'
-    | '<='
-    | '=='
-    | '>'
-    | '>='
-    | '!='
-    | 'array-contains'
-    | 'array-contains-any'
-    | 'in'
-    | 'not-in';
+  | '<'
+  | '<='
+  | '=='
+  | '>'
+  | '>='
+  | '!='
+  | 'array-contains'
+  | 'array-contains-any'
+  | 'in'
+  | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string;
@@ -71,16 +70,16 @@ export interface DataQueryOptionsClient {
   limit?: number;
   field?: string;
   comparison?:
-    | '<'
-    | '<='
-    | '=='
-    | '>'
-    | '>='
-    | '!='
-    | 'array-contains'
-    | 'array-contains-any'
-    | 'in'
-    | 'not-in';
+  | '<'
+  | '<='
+  | '=='
+  | '>'
+  | '>='
+  | '!='
+  | 'array-contains'
+  | 'array-contains-any'
+  | 'in'
+  | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string | Record<string, unknown>;

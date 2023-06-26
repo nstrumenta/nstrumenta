@@ -109,7 +109,7 @@ export const CloudRun = async function (
   let modules: Module[] = [];
   try {
     const apiKey = resolveApiKey();
-    let response = await axios(endpoints.v2.LIST_MODULES, {
+    let response = await axios(endpoints.LIST_MODULES_V2, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
@@ -422,7 +422,7 @@ export const List = async (_: unknown, options: ModuleListOptions) => {
   const apiKey = resolveApiKey();
 
   try {
-    let response = await axios(endpoints.v2.LIST_MODULES, {
+    let response = await axios(endpoints.LIST_MODULES_V2, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
