@@ -1,20 +1,24 @@
-FROM node:16.14-alpine3.15
+FROM node:20.3-bullseye-slim
 
-# build docker image with nstrumenta installed, pinned to a version supplied in build-args
-# e.g., docker build --build-arg nstrumenta_version=2.1.3 -t nstrumenta:2.1.13 .
-ARG nstrumenta_version
+# curl
+RUN apt-get -y update; apt-get -y install curl
+RUN apt-get install -y gnupg
+RUN apt-get install -y git
 
-ENV USER=node
-ENV PATH="/home/node/.npm-global/bin:${PATH}"
-ENV NPM_CONFIG_PREFIX="/home/node/.npm-global"
+WORKDIR /tmp
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
 
-USER "${USER}"
-RUN mkdir -p "${NPM_CONFIG_PREFIX}/lib"
+#install jq
+RUN apt-get install jq -y
 
-WORKDIR /usr/src/app
+# fuse (for gcsfuse)
+RUN apt-get install fuse -y
 
-# make sure npm modules are installed where permissions allow i/o of config files (needed for packacke 'conf')
-RUN npm --global config set user "${USER}"
+# install go
+RUN curl -OL https://go.dev/dl/go1.20.5.linux-amd64.tar.gz
+RUN tar -C /usr/local -xvf go1.20.5.linux-amd64.tar.gz
+ENV PATH="$PATH:/usr/local/go/bin"
+ENV GOPATH="/usr/local/go"
 
-RUN echo "user=node" > "${NPM_CONFIG_PREFIX}/etc/.npmrc"
-RUN npm install -g nstrumenta@${nstrumenta_version}
+#install gcsfuse
+RUN go install github.com/googlecloudplatform/gcsfuse@master

@@ -1,16 +1,15 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { resolveApiKey } from '../utils';
-import {
-  DataQueryOptions,
-  DataQueryOptionsCLI,
-  DataQueryResponse,
-  getEndpoints,
-  ObjectTypes,
-} from '../../shared';
-import { access, mkdir, readFile, stat } from 'fs/promises';
 import { createWriteStream } from 'fs';
+import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
+import {
+  DataQueryOptionsCLI,
+  DataQueryResponse,
+  ObjectTypes,
+  getEndpoints
+} from '../../shared';
+import { asyncSpawn, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
 const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
@@ -23,7 +22,7 @@ export interface ModuleMeta {
   lastModified: number; // make sure we're actually getting a number, not a string
 }
 
-export interface DataListOptions {}
+export interface DataListOptions { }
 
 export const List = async (_: unknown, options: DataListOptions) => {
   const apiKey = resolveApiKey();
@@ -43,6 +42,60 @@ export const List = async (_: unknown, options: DataListOptions) => {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
 };
+
+
+export interface DataMountOptions { }
+export const Mount = async (_: unknown, options: DataMountOptions) => {
+  const apiKey = resolveApiKey();
+
+  const config: AxiosRequestConfig = {
+    method: 'post',
+    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    data: { type: ObjectTypes.DATA },
+  };
+  let response = await axios(endpoints.GET_DATA_MOUNT, config);
+
+  const { keyFile, bucket, projectId } = response.data
+
+  if (keyFile === undefined || bucket === undefined) {
+    throw new Error('keyFile or bucket undefined in response from getDataMount')
+  }
+
+  // check for gcsfuse
+  await asyncSpawn('gcsfuse', ['-v'])
+
+  await mkdir(`${projectId}/data`, { recursive: true })
+  await writeFile(`${projectId}/.gitignore`, 'keyfile.json\ndata')
+  const keyfilePath = `${projectId}/keyfile.json`
+  await writeFile(keyfilePath, keyFile)
+  await asyncSpawn('gcsfuse', [`--implicit-dirs`, `--only-dir=projects/${projectId}/data`, `--key-file=${keyfilePath}`, `${bucket}`, `${projectId}/data`])
+}
+
+
+export interface DataUnmountOptions { }
+export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
+  const apiKey = resolveApiKey();
+
+  const config: AxiosRequestConfig = {
+    method: 'post',
+    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    data: { type: ObjectTypes.DATA },
+  };
+  let response = await axios(endpoints.GET_DATA_MOUNT, config);
+
+  const { keyFile, bucket, projectId } = response.data
+
+  if (keyFile === undefined || bucket === undefined) {
+    throw new Error('keyFile or bucket undefined in response from getDataMount')
+  }
+
+  // check for gcsfuse
+  await asyncSpawn('gcsfuse', ['-v'])
+  const keyfilePath = `${projectId}/keyfile.json`
+  await rm(keyfilePath)
+  await rm(`${projectId}/.gitignore`)
+  await asyncSpawn('fusermount', ['-u', `${projectId}/data`])
+}
 
 export const Upload = async (
   filenames: string[],
