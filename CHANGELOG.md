@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.47](https://github.com/nstrumenta/nstrumenta/compare/v3.0.46...v3.0.47) (2023-06-26)
+
+
+### Features
+
+* **data:** adds mount and unmount with fuse ([d7fbead](https://github.com/nstrumenta/nstrumenta/commit/d7fbeadeedc7aa27fe24aa6cfb0f7de18366c807))
+* **data:** cleans up dir in unmount ([fb8597e](https://github.com/nstrumenta/nstrumenta/commit/fb8597e74f296d27df65ebfc01adad6fe9af6665))
+
 ### [3.0.46](https://github.com/nstrumenta/nstrumenta/compare/v3.0.45...v3.0.46) (2023-06-14)
 
 
