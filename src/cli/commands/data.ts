@@ -95,6 +95,7 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   await rm(keyfilePath)
   await rm(`${projectId}/.gitignore`)
   await asyncSpawn('fusermount', ['-u', `${projectId}/data`])
+  await rmdir(`${projectId}/data`)
   await rmdir(`${projectId}`)
 }
 
