@@ -16,7 +16,7 @@
       "type": "node"
     },
     {
-      "name": "npm run dev:local-functions",
+      "name": "local-functions npm run dev",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",
