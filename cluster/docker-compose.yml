@@ -1,0 +1,5 @@
+version: '3.8'
+# services:
+## frontend
+## backend (functions via dev.ts)
+## task-queue (temporal)

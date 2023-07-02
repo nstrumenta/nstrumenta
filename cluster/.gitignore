@@ -1,0 +1,11 @@
+secrets
+frontend/.firebase/*
+**/.vscode/settings.json
+
+**/.idea/
+**/.DS_Store
+server/app/nst-compute/logs/
+
+node_modules
+
+.nst
