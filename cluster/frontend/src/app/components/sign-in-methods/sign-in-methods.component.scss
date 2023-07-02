@@ -1,0 +1,23 @@
+.sign-in-methods-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  align-items: center;
+}
+
+.provider-card {
+  margin: 20px auto;
+  width: 400px;
+}
+
+.provider-card-title {
+  display: flex;
+  justify-content: center;
+}
+
+.disabled {
+  background: gray;
+}

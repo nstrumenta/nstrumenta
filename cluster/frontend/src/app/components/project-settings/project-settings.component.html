@@ -1,0 +1,73 @@
+<mat-list>
+  <mat-list-item>name: {{ projectSettings?.name }}</mat-list-item>
+</mat-list>
+<button mat-raised-button (click)="addProjectMember()">
+  Add User
+</button>
+
+<mat-table #table [dataSource]="membersDataSource" class="animate">
+  <ng-container matColumnDef="memberId">
+    <mat-header-cell *matHeaderCellDef> memberId </mat-header-cell>
+    <mat-cell *matCellDef="let member">{{ member.memberId }} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="role">
+    <mat-header-cell *matHeaderCellDef> role </mat-header-cell>
+    <mat-cell *matCellDef="let member">{{ member.role }} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let member">
+      <button *ngIf="member.role != 'owner'" mat-button (click)="removeMember(member.memberId)">
+        remove
+      </button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="membersDisplayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: membersDisplayedColumns" class="animate"></mat-row>
+</mat-table>
+
+<mat-list>
+  <mat-list-item>Service Account</mat-list-item>
+</mat-list>
+<button mat-raised-button (click)="createServiceAccount()">
+  Create Service Account
+</button>
+
+<mat-list>
+  <mat-list-item>Api Keys</mat-list-item>
+</mat-list>
+<button mat-raised-button (click)="createApiKey()">
+  Create Api Key
+</button>
+
+<mat-table #table [dataSource]="apiKeysDataSource" class="animate">
+  <ng-container matColumnDef="keyId">
+    <mat-header-cell *matHeaderCellDef> Key id (id is not the same as the key) </mat-header-cell>
+    <mat-cell *matCellDef="let apiKey">{{ apiKey.keyId }} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="createdAt">
+    <mat-header-cell *matHeaderCellDef> created </mat-header-cell>
+    <mat-cell *matCellDef="let apiKey">{{ apiKey.createdAt | date : 'medium' }} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="lastUsed">
+    <mat-header-cell *matHeaderCellDef> last used </mat-header-cell>
+    <mat-cell *matCellDef="let apiKey">{{ apiKey.lastUsed | date : 'medium' }} </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let apiKey">
+      <button *ngIf="apiKey.role != 'owner'" mat-button (click)="revokeApiKey(apiKey.keyId)">
+        revoke
+      </button>
+    </mat-cell>
+  </ng-container>
+
+  <mat-header-row *matHeaderRowDef="apiKeysDisplayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: apiKeysDisplayedColumns" class="animate"></mat-row>
+</mat-table>

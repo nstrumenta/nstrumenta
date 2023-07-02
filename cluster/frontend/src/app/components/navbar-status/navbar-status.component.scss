@@ -1,0 +1,21 @@
+.mat-card {
+  display: flex;
+  flex-direction: row;
+  height: 32px;
+  padding: 0;
+  border-radius: 4px;
+  padding: 2px;
+  box-shadow: inset 0px 1px 0px 0px rgba(0, 0, 0, 0.2), inset -1px 1px 1px 1px rgba(0, 0, 0, 0.14), inset 0px 0px 0px 0px rgba(0, 0, 0, 0.12);
+}
+
+.spinner {
+  margin: 5px !important;
+  flex: 0, 0, 30px;
+}
+
+.status-message {
+  flex: 1;
+  margin-top: 2px;
+  font-weight: lighter;
+  font-size: small;
+}

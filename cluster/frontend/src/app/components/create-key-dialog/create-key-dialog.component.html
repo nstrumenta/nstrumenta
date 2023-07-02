@@ -1,0 +1,20 @@
+<h2 mat-dialog-title>Creating Key</h2>
+<div style="max-width: 400px;">
+  This key is your secret key and will only displayed once.
+  Copy this now and save it for accessing the API.
+</div>
+<div *ngIf="!key" style="padding: 16px; display: flex;">
+  <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>
+</div>
+<div *ngIf="key" style="padding: 16px; display: flex;">
+  <mat-dialog-content class="mat-typography">
+    {{key}}
+  </mat-dialog-content>
+  <button mat-button [cdkCopyToClipboard]="key">
+    <mat-icon>content_copy</mat-icon>
+  </button>
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="close()">Cancel</button>
+  <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Add</button>
+</div>
