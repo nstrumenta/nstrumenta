@@ -1,0 +1,46 @@
+{
+  "name": "build-server",
+  "version": "1.2.12",
+  "description": "build-server for nstrumenta",
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "npx tsc -p .",
+    "format": "prettier -w ./src",
+    "dev": "NST_AGENT_TYPE=dev NODE_ENV=development NST_TEMPORAL_ADDRESS=34.127.73.17:7233 npx nodemon --watch 'src/**/*.ts' -e ts --exec 'npm run build && node --trace-warnings --inspect=0.0.0.0:9229 dist/index.js'"
+  },
+  "author": "Tyler Bryant",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@google-cloud/compute": "^2.6.0",
+    "@google-cloud/firestore": "^4.8.1",
+    "@google-cloud/storage": "^5.7.0",
+    "@temporalio/client": "^1.7.4",
+    "@temporalio/worker": "^1.7.4",
+    "@temporalio/workflow": "^1.7.4",
+    "@types/express": "^4.17.17",
+    "axios": "^1.4.0",
+    "cors": "^2.8.5",
+    "ejs": "^3.1.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.4",
+    "@types/cors": "^2.8.13",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/node": "^16.11.43",
+    "@types/uuid": "^9.0.2",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.2.1",
+    "typescript": "^4.4.2"
+  },
+  "prettier": {
+    "trailingComma": "all",
+    "tabWidth": 2,
+    "useTabs": false,
+    "semi": false,
+    "singleQuote": true,
+    "preferTemplate": true
+  }
+}
