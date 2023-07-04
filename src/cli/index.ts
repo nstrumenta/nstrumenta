@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
 import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
@@ -34,8 +33,6 @@ import axios from 'axios';
 import { resolveApiKey } from './utils';
 
 const version = require('../../package.json').version;
-
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
 
 if (!process.env.NSTRUMENTA_API_KEY) { initContexts(); }
 
@@ -116,7 +113,7 @@ moduleCommand.command('list').description('list modules published in current pro
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
-  .option('-p,--port <port>', 'websocket port', DEFAULT_HOST_PORT)
+  .option('-p,--port <port>', 'websocket port', '8088')
   .option('-d, --debug <debug>', 'output extra debugging', 'false')
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
@@ -210,35 +207,6 @@ dataCommand
   .option('-o --output <output>', 'output directory')
   .description('Download data by name, tags, or date range')
   .action(GetData);
-
-const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
-adminUtilsCommand
-  .description(
-    "Reference already stored modules in db (newly published modules shouldn't need this)"
-  )
-  .argument('[name]', '')
-  .action(function Admin(name: string) {
-    if (!name) {
-      console.log('util name required');
-      return;
-    }
-    const apiKey = resolveApiKey();
-    console.log(`to call ${endpoints.ADMIN_UTILS}: apiKey: ${apiKey}: ${name}`);
-    axios
-      .post(
-        endpoints.ADMIN_UTILS,
-        { name },
-        {
-          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-        }
-      )
-      .then((result) => {
-        console.log(JSON.stringify(result.data));
-      })
-      .catch(() => {
-        console.log('something went wrong');
-      });
-  });
 
 program.parse(process.argv);
 

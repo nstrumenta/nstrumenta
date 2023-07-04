@@ -3,7 +3,7 @@ import { resolveApiKey } from '../utils';
 import { getContextProperty } from '../../shared/lib/context';
 import { getEndpoints } from '../../shared';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 export interface Machine {
   name: string;

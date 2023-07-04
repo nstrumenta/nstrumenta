@@ -18,7 +18,7 @@ export class NstrumentaClient extends NstrumentaClientBase {
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
       console.log('connecting to nstrumenta');
-      const { wsUrl, apiKey, verify = true } = connectOptions;
+      const { wsUrl, apiKey, apiUrl, verify = true } = connectOptions;
       if (this.reconnection.attempts > 100) {
         throw new Error('Too many reconnection attempts, stopping');
       }
@@ -31,9 +31,9 @@ export class NstrumentaClient extends NstrumentaClientBase {
       let token = 'unverified';
       if (verify) {
         try {
-          token = await getToken(this.apiKey);
+          token = await getToken(this.apiKey, apiUrl);
           // initiate the storage service for file upload/download
-          this.storage = new StorageService({ apiKey: this.apiKey });
+          this.storage = new StorageService({ apiKey: this.apiKey, apiUrl });
         } catch (error) {
           console.error((error as Error).message);
           throw error;

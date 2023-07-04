@@ -15,7 +15,7 @@ import {
   resolveApiKey,
 } from '../utils';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 const blue = (text: string) => {
   return text;

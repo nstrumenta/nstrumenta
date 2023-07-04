@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getEndpoints } from '../index';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 export const verifyToken = async ({
   token,

@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.0.47",
+  "version": "3.0.47-v",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -15,14 +15,15 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
+    "build:agent-admin-page": "(cd agent-admin-page ; npm i ; npm run build)",
     "build:cli": "tsc --project ./src/cli",
     "build:nodejs": "tsc --project ./src/nodejs",
     "build:browser": "tsc --project ./src/browser",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
+    "watch": "nodemon --exec 'npm run build:cli' --watch ./src",
     "dev": "nodemon -- agent start --debug=true --tag=local",
     "dev:local-functions": "NSTRUMENTA_LOCAL=true nodemon -- agent start --debug=true --tag=local",
-    "start:agent": "npm run build:cli ; npx node ./dist/cli/index.js agent start --tag=local",
+    "start:agent": "npx node ./dist/cli/index.js agent start",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch"

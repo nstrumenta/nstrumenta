@@ -10,13 +10,29 @@ services:
       - ./frontend/src:/app/src
     working_dir: /app
     command: "npm run start"
-  # server:
-  #   build:
-  #     context: ./server
-  #   ports:
-  #     - 9229:9229
-  #   volumes:
-  #     - ${PWD}/server/app/:/app
-  #     - /app/node_modules
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   command: sh -c 'npm run dev'
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 5999:5999
+      - 9229:9229
+    volumes:
+      - ./server/app/:/app
+      - ./credentials/:/credentials
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+    command: sh -c 'npm run dev'
+  agent:
+    build:
+      context: ../
+      dockerfile: ./cluster/agent/Dockerfile
+    ports:
+      - 8088:8088
+      - 9230:9230
+    volumes:
+      - ../:/app
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_URL=http://server:5999
+    command: sh -c 'npm run dev'

@@ -12,7 +12,7 @@ import {
 import { asyncSpawn, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 const pipeline = promisify(streamPipeline);
 
 export interface ModuleMeta {

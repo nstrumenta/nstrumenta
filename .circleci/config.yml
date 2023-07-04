@@ -1,0 +1,192 @@
+version: 2
+jobs:
+  build-client:
+    docker:
+      - image: circleci/node:16.13.1
+    working_directory: ~/project/cluster/frontend
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - restore_cache:
+          keys:
+            - frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          command: ./use_cache_or_npm_install.sh
+      - run:
+          command: ./build.sh ${CIRCLE_BRANCH}
+      - save_cache:
+          key: frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - '~/project/cluster/frontend/node_modules'
+      - save_cache:
+          key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - '~/project/cluster/frontend/dist'
+  build-hosted-vm:
+    machine: true
+    working_directory: ~/project/cluster/hosted-vm
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hosted-vm .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/hosted-vm
+  build-data-job-runner:
+    machine: true
+    working_directory: ~/project/cluster/data-job-runner
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/data-job-runner .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/data-job-runner
+  build-cloud-run-agent:
+    machine: true
+    working_directory: ~/project/cluster/hosted-vm
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/hosted-vm .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/hosted-vm
+  build-functions:
+    docker:
+      - image: circleci/node:16.13.1
+    working_directory: ~/project/cluster/functions
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - restore_cache:
+          keys:
+            - functions-node_modules-{{ .Branch }}-{{ checksum "package.json"}}
+      - run:
+          command: ./use_cache_or_npm_install.sh
+      - run:
+          command: ./build.sh
+      - save_cache:
+          key: functions-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - '~/project/cluster/functions/node_modules'
+      - save_cache:
+          key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - '~/project/cluster/functions/dist'
+  build-server:
+    machine: true
+    working_directory: ~/project/cluster/server
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: docker build --rm=false -t gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}
+  run-tests:
+    resource_class: large
+    machine: true
+    working_directory: ~/project/cluster/integration-testing/
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - run:
+          command: echo 'export TEST_ID_BASE="${CIRCLE_SHA1}-${PIPELINE_NUMBER}"' >> "$BASH_ENV"
+      - run:
+          command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
+      - run: ./ci.sh cli
+      - run: ./ci.sh nodejs-client
+      - run: ./ci.sh browser-client
+      - run: ./ci.sh webrtc
+  deploy-client:
+    docker:
+      - image: circleci/node:16.13.1
+    working_directory: ~/project/cluster/frontend
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - restore_cache:
+          keys:
+            - frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
+      - restore_cache:
+          keys:
+            - frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
+      - run: node_modules/.bin/firebase use nstrumenta-dev --token=$FIREBASE_DEPLOY_TOKEN_STAGING
+      - run: node_modules/.bin/firebase deploy --only hosting:${CIRCLE_BRANCH} --token=$FIREBASE_DEPLOY_TOKEN_STAGING
+  deploy-server:
+    docker:
+      - image: google/cloud-sdk
+    steps:
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud beta compute --project=macro-coil-194519 instances create-with-container ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} --zone=us-west1-b --machine-type=n1-standard-1 --subnet=default --network-tier=PREMIUM --service-account=796614042819-compute@developer.gserviceaccount.com --metadata=google-logging-enabled=true --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform --image=cos-stable-70-11021-62-0 --image-project=cos-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=staging-${CIRCLE_BUILD_NUM} --container-image=gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}  --container-restart-policy=always --container-env=NST_AGENT_TYPE=${CIRCLE_BRANCH},NST_TEMPORAL_ADDRESS=34.127.73.17:7233 --container-mount-host-path mount-path=/var/run/docker.sock,host-path=/var/run/docker.sock,mode=rw --labels=container-vm=cos-stable-70-11021-62-0
+  deploy-functions:
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/project/cluster/functions
+    steps:
+      - checkout:
+          path: ~/project/cluster
+      - restore_cache:
+          keys:
+            - functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
+      - run:
+          command: mv /home/circleci/project/cluster/functions/dist .
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          command: ./deploy.sh
+workflows:
+  version: 2
+
+  -deploy:
+    jobs:
+      - build-client
+      - build-server
+      - build-hosted-vm
+      - build-data-job-runner
+      - build-functions
+      - run-tests
+      - deploy-client:
+          requires:
+            - build-client
+          filters:
+            branches:
+              only:
+                - main
+      - hold-deploy-functions:
+          type: approval
+          requires:
+            - build-functions
+          filters:
+            branches:
+              only:
+                - main
+      - deploy-functions:
+          requires:
+            - hold-deploy-functions
+          filters:
+            branches:
+              only:
+                - main
+      - hold-deploy-server:
+          type: approval
+          requires:
+            - build-server
+          filters:
+            branches:
+              only:
+                - main
+      - deploy-server:
+          requires:
+            - hold-deploy-server
+          filters:
+            branches:
+              only:
+                - main

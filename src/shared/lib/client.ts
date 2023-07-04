@@ -43,6 +43,7 @@ export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocketLike;
   wsUrl: string;
   apiKey?: string;
+  apiUrl?: string;
   verify?: boolean;
   id?: string;
 }
@@ -66,15 +67,16 @@ export type Reconnection = {
   timeout: ReturnType<typeof setTimeout> | null;
 };
 
-export const getToken = async (apiKey: string): Promise<string> => {
+export const getToken = async (apiKey: string, apiUrl?: string): Promise<string> => {
+  console.log('getToken', { apiKey, apiUrl })
   const headers = {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
   };
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
-    if (typeof process !== 'undefined') await process.nextTick(() => {});
-    const { data } = await axios.get<{ token: string }>(getEndpoints('prod').GET_TOKEN, {
+    if (typeof process !== 'undefined') await process.nextTick(() => { });
+    const { data } = await axios.get<{ token: string }>(getEndpoints(apiUrl).GET_TOKEN, {
       headers,
     });
     return data.token;
@@ -87,6 +89,7 @@ export const getToken = async (apiKey: string): Promise<string> => {
 export abstract class NstrumentaClientBase {
   public ws: WebSocketLike | null = null;
   public apiKey?: string;
+  public apiUrl?: string;
   public listeners: Map<string, Array<ListenerCallback>>;
   public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
@@ -98,17 +101,17 @@ export abstract class NstrumentaClientBase {
 
   public connection: Connection = { status: ClientStatus.INIT };
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, apiUrl?: string) {
     this.apiKey = apiKey;
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.datalogs = new Map();
     this.messageBuffer = [];
-    this.endpoints = getEndpoints('prod');
+    this.endpoints = getEndpoints(apiUrl);
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
-    this.storage = new StorageService(apiKey ? { apiKey } : undefined);
+    this.storage = new StorageService({ apiKey, apiUrl });
   }
 
   async shutdown() {
@@ -271,14 +274,11 @@ export class StorageService {
   private apiKey?: string;
   private endpoints;
 
-  constructor(props?: { apiKey?: string }) {
+  constructor(props?: { apiKey?: string, apiUrl?: string }) {
     this.apiKey = props?.apiKey ? props.apiKey : undefined;
-    this.endpoints = getEndpoints('prod');
+    this.endpoints = getEndpoints(props?.apiUrl);
   }
 
-  setEndpoints(endpointEnv: 'local' | 'prod') {
-    this.endpoints = getEndpoints(endpointEnv);
-  }
 
   async getDownloadUrl(path: string): Promise<string> {
     if (!this.apiKey) {
@@ -331,8 +331,8 @@ export class StorageService {
       typeof metadataOriginal === 'string'
         ? JSON.parse(metadataOriginal)
         : typeof metadataOriginal === 'object'
-        ? metadataOriginal
-        : {};
+          ? metadataOriginal
+          : {};
 
     const data = {
       tags,

@@ -1,35 +1,28 @@
-export const DEFAULT_HOST_PORT = '8088';
-
-const BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
-const BASE_URL_LOCAL = 'http://tyler.local:6000';
-
-export const getEndpoints = (env: 'local' | 'prod') => {
-  const baseUrl = env === 'local' ? BASE_URL_LOCAL : BASE_URL;
-
+export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
   return {
-    ADMIN_UTILS: `${baseUrl}/adminUtils`,
-    GET_MACHINES: `${baseUrl}/getMachines`,
-    GET_UPLOAD_URL: `${baseUrl}/getUploadUrl`,
-    GET_UPLOAD_DATA_URL: `${baseUrl}/getUploadDataUrl`,
-    REGISTER_AGENT: `${baseUrl}/registerAgent`,
-    LIST_AGENTS: `${baseUrl}/listAgents`,
-    SET_ACTION: `${baseUrl}/setAction`,
-    SET_AGENT_ACTION: `${baseUrl}/setAgentAction`,
-    GET_AGENT_ID_BY_TAG: `${baseUrl}/getAgentIdByTag`,
-    CLEAN_AGENT_ACTIONS: `${baseUrl}/cleanAgentActions`,
-    GET_DOWNLOAD_URL: `${baseUrl}/getDownloadUrl`,
-    GET_PROJECT_DOWNLOAD_URL: `${baseUrl}/getProjectDownloadUrl`,
-    GENERATE_DATA_ID: `${baseUrl}/generateDataId`,
-    LIST_MODULES: `${baseUrl}/listModules`,
-    LIST_MODULES_V2: `${baseUrl}/listModulesV2`,
-    GET_TOKEN: `${baseUrl}/getToken`,
-    VERIFY_TOKEN: `${baseUrl}/verifyToken`,
-    VERIFY_API_KEY: `${baseUrl}/verifyApiKey`,
-    SET_STORAGE_OBJECT: `${baseUrl}/setStorageObject`,
-    SET_DATA_METADATA: `${baseUrl}/setDataMetadata`,
-    LIST_STORAGE_OBJECTS: `${baseUrl}/listStorageObjects`,
-    GET_DATA_MOUNT: `${baseUrl}/getDataMount`,
-    QUERY_DATA: `${baseUrl}/queryData`,
+    ADMIN_UTILS: `${apiUrl}/adminUtils`,
+    GET_MACHINES: `${apiUrl}/getMachines`,
+    GET_UPLOAD_URL: `${apiUrl}/getUploadUrl`,
+    GET_UPLOAD_DATA_URL: `${apiUrl}/getUploadDataUrl`,
+    REGISTER_AGENT: `${apiUrl}/registerAgent`,
+    LIST_AGENTS: `${apiUrl}/listAgents`,
+    SET_ACTION: `${apiUrl}/setAction`,
+    SET_AGENT_ACTION: `${apiUrl}/setAgentAction`,
+    GET_AGENT_ID_BY_TAG: `${apiUrl}/getAgentIdByTag`,
+    CLEAN_AGENT_ACTIONS: `${apiUrl}/cleanAgentActions`,
+    GET_DOWNLOAD_URL: `${apiUrl}/getDownloadUrl`,
+    GET_PROJECT_DOWNLOAD_URL: `${apiUrl}/getProjectDownloadUrl`,
+    GENERATE_DATA_ID: `${apiUrl}/generateDataId`,
+    LIST_MODULES: `${apiUrl}/listModules`,
+    LIST_MODULES_V2: `${apiUrl}/listModulesV2`,
+    GET_TOKEN: `${apiUrl}/getToken`,
+    VERIFY_TOKEN: `${apiUrl}/verifyToken`,
+    VERIFY_API_KEY: `${apiUrl}/verifyApiKey`,
+    SET_STORAGE_OBJECT: `${apiUrl}/setStorageObject`,
+    SET_DATA_METADATA: `${apiUrl}/setDataMetadata`,
+    LIST_STORAGE_OBJECTS: `${apiUrl}/listStorageObjects`,
+    GET_DATA_MOUNT: `${apiUrl}/getDataMount`,
+    QUERY_DATA: `${apiUrl}/queryData`,
   };
 };
 

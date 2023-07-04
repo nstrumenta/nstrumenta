@@ -8,26 +8,28 @@ import {
   NstrumentaClientBase,
   StorageService,
   WebSocketLike,
-  getEndpoints,
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
 import { WebrtcClient } from './video/src';
 
-export const endpoints = getEndpoints('prod');
 
 export { Kind, MediaInfo, SubscriberType } from './video/src';
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
   public webrtcClient: WebrtcClient | null = null;
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, apiUrl?: string) {
     super();
     if (apiKey) {
       this.apiKey = apiKey;
       localStorage.setItem('apiKey', apiKey);
     }
+    if (apiUrl) {
+      this.apiUrl = apiUrl;
+      localStorage.setItem('apiUrl', apiUrl);
+    }
     // initiate the storage service for file upload/download
-    this.storage = new StorageService({ apiKey: apiKey ? apiKey : this.apiKey });
+    this.storage = new StorageService({ apiKey, apiUrl });
     this.webrtcClient = new WebrtcClient();
   }
 
@@ -36,6 +38,7 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       const {
         wsUrl: wsUrlOption = undefined,
         apiKey: apiKeyOption = undefined,
+        apiUrl: apiUrlOption = undefined,
         verify = true,
       } = connectOptions ? connectOptions : {};
 
@@ -44,18 +47,31 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       const wsUrl = wsUrlOption
         ? wsUrlOption
         : wsUrlParam
-        ? wsUrlParam
-        : window.location.origin.replace('http', 'ws');
+          ? wsUrlParam
+          : window.location.origin.replace('http', 'ws');
+
+      const apiUrlParam = new URLSearchParams(search).get('apiUrl');
+      const apiUrlLocalStore = localStorage.getItem('apiUrl');
+      const apiUrl = apiUrlOption
+        ? apiUrlOption
+        : apiUrlParam
+          ? apiUrlParam
+          : apiUrlLocalStore
+            ? apiUrlLocalStore
+            : prompt('Enter your nstrumenta apiUrl');
+      if (apiUrl) {
+        localStorage.setItem('apiUrl', apiUrl);
+      }
 
       const apiKeyParam = new URLSearchParams(search).get('apiKey');
-      const apiLocalStore = localStorage.getItem('apiKey');
+      const apiKeyLocalStore = localStorage.getItem('apiKey');
       const apiKey = apiKeyOption
         ? apiKeyOption
         : apiKeyParam
-        ? apiKeyParam
-        : apiLocalStore
-        ? apiLocalStore
-        : prompt('Enter your nstrumenta apiKey');
+          ? apiKeyParam
+          : apiKeyLocalStore
+            ? apiKeyLocalStore
+            : prompt('Enter your nstrumenta apiKey');
       if (apiKey) {
         localStorage.setItem('apiKey', apiKey);
       }
@@ -71,10 +87,19 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       }
 
       this.apiKey = apiKey;
+
+      if (!apiUrl) {
+        throw new Error(
+          'nstrumenta api url is missing, pass it as an argument to NstrumentaClient.connect({apiUrl: "your apiUrl"}) '
+        );
+      }
+
+      this.apiUrl = apiUrl;
+
       let token = 'unverified';
       if (verify) {
         try {
-          token = await getToken(this.apiKey);
+          token = await getToken(this.apiKey, this.apiUrl);
         } catch (error) {
           console.error((error as Error).message);
           throw error;

@@ -32,7 +32,7 @@ export interface ActionData {
   [key: string]: any
 }
 
-const port = process.env.API_PORT ?? 6000
+const port = process.env.API_PORT ?? 5999
 
 const app = express()
 app.use(express.json())

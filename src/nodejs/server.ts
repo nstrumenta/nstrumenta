@@ -4,7 +4,7 @@ import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
 import { createWriteStream } from 'fs';
-import fs, { appendFile, writeFile } from 'fs/promises';
+import fs, { appendFile, mkdir, open, readFile, stat, writeFile } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -12,7 +12,6 @@ import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils
 import {
   AnswerWebRTC,
   CandidateWebRTC,
-  DEFAULT_HOST_PORT,
   JoinWebRTC,
   LogConfig,
   NstrumentaClientEvent,
@@ -52,7 +51,7 @@ import {
 import WritableStream = NodeJS.WritableStream;
 import path = require('path');
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 const createPrefixTransform = (prefix: string) =>
   new Transform({
@@ -89,17 +88,17 @@ export type AgentActionStatus = 'pending' | 'complete';
 
 export type BackplaneCommand =
   | {
-      task: 'runModule';
-      actionId: string;
-      status: AgentActionStatus;
-      data: CommandRunModuleData;
-    }
+    task: 'runModule';
+    actionId: string;
+    status: AgentActionStatus;
+    data: CommandRunModuleData;
+  }
   | {
-      task: 'stopModule';
-      actionId: string;
-      status: AgentActionStatus;
-      data: CommandStopModuleData;
-    };
+    task: 'stopModule';
+    actionId: string;
+    status: AgentActionStatus;
+    data: CommandStopModuleData;
+  };
 
 export interface NstrumentaServerOptions {
   apiKey: string;
@@ -113,18 +112,18 @@ export interface NstrumentaServerOptions {
 
 export type DataLog =
   | {
-      type: 'stream';
-      localPath: string;
-      channels: string[];
-      stream: WritableStream;
-    }
+    type: 'stream';
+    localPath: string;
+    channels: string[];
+    stream: WritableStream;
+  }
   | {
-      type: 'mcap';
-      localPath: string;
-      channels: string[];
-      channelIds: Map<string, number>;
-      mcapWriter: McapWriter;
-    };
+    type: 'mcap';
+    localPath: string;
+    channels: string[];
+    channelIds: Map<string, number>;
+    mcapWriter: McapWriter;
+  };
 
 type TrackRecording = {
   filePath: string;
@@ -180,12 +179,12 @@ export class NstrumentaServer {
 
   public async run() {
     const { apiKey, debug } = this.options;
-    const port = this.options.port || DEFAULT_HOST_PORT;
+    const port = this.options.port ?? 8088;
 
     // server makes a local .nst folder at the cwd
     // this allows multiple servers and working directories on the same machine
     const cwdNstDir = `${this.cwd}/.nst`;
-    await fs.mkdir(cwdNstDir, { recursive: true });
+    await mkdir(cwdNstDir, { recursive: true });
 
     logger.log(`nstrumenta working directory: ${cwdNstDir}`);
 
@@ -341,6 +340,10 @@ export class NstrumentaServer {
       res.status(200).send('OK');
     });
 
+    app.get('/apiUrl', function (req, res) {
+      res.status(200).send(process.env.NSTRUMENTA_API_URL);
+    });
+
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
@@ -477,7 +480,7 @@ export class NstrumentaServer {
                         const track = mediaTrack.track;
                         const trackRecordingId = `${sessionName}_${mediaName}_${track.id}`;
                         const nstDir = await getNstDir(this.cwd);
-                        await fs.mkdir(`${nstDir}/video`, { recursive: true });
+                        await mkdir(`${nstDir}/video`, { recursive: true });
                         const filePath = `${nstDir}/video/pre-${trackRecordingId}.webm`;
                         const rtpSourceCallback = new RtpSourceCallback();
                         trackNumber = trackNumber + 1;
@@ -486,14 +489,14 @@ export class NstrumentaServer {
                           codecParameters?.mimeType.toUpperCase().includes('VP8')
                             ? 'VP8'
                             : codecParameters?.mimeType.toUpperCase().includes('VP9')
-                            ? 'VP9'
-                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
-                            ? 'AV1'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'MPEG4/ISO/AVC'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'OPUS'
-                            : 'VP8';
+                              ? 'VP9'
+                              : codecParameters?.mimeType.toUpperCase().includes('AV1')
+                                ? 'AV1'
+                                : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                                  ? 'MPEG4/ISO/AVC'
+                                  : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                                    ? 'OPUS'
+                                    : 'VP8';
                         const clockRate = codecParameters?.clockRate || 90000;
 
                         const trackConfig: {
@@ -720,7 +723,7 @@ export class NstrumentaServer {
                   contents.timestamp !== undefined
                     ? contents.timestamp.sec !== undefined
                       ? BigInt(contents.timestamp.sec) * BigInt(1_000_000_000) +
-                        BigInt(contents.timestamp.nsec)
+                      BigInt(contents.timestamp.nsec)
                       : BigInt(contents.timestamp) * BigInt(1_000_000)
                     : BigInt(Date.now()) * BigInt(1_000_000);
 
@@ -773,14 +776,14 @@ export class NstrumentaServer {
   public async startLog(name: string, channels: string[], config?: LogConfig) {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
-    await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
+    await mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
     logger.log({ name, cwdNstDir: nstDir, localPath });
 
     // set up dataLogs
     if (config) {
       const type = 'mcap';
-      const fileHandle = await fs.open(localPath, 'w');
+      const fileHandle = await open(localPath, 'w');
       const fileHandleWritable = new FileHandleWritable(fileHandle);
       const mcapWriter = new McapWriter({
         writable: fileHandleWritable,
@@ -850,7 +853,7 @@ export class NstrumentaServer {
 
     try {
       const apiKey = resolveApiKey();
-      size = (await fs.stat(localPath)).size;
+      size = (await stat(localPath)).size;
 
       const data = {
         name,
@@ -876,7 +879,7 @@ export class NstrumentaServer {
       throw new Error(message);
     }
 
-    const fileBuffer = await fs.readFile(localPath);
+    const fileBuffer = await readFile(localPath);
 
     // start the request, return promise
     await axios.put(url, fileBuffer, {

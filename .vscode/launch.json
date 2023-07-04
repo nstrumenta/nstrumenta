@@ -29,6 +29,15 @@
         "<node_internals>/**"
       ],
       "type": "node"
+    },
+    {
+        "name": "Docker: Attach to Node",
+        "type": "node",
+        "request": "attach",
+        "port": 9230,
+        "address": "localhost",
+        "localRoot": "${workspaceFolder}/",
+        "remoteRoot": "/app"
     }
   ]
 }
