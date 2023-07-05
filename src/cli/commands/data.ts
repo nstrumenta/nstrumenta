@@ -27,20 +27,17 @@ export interface DataListOptions { }
 export const List = async (_: unknown, options: DataListOptions) => {
   const apiKey = resolveApiKey();
 
-  try {
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-      data: { type: ObjectTypes.DATA },
-    };
-    let response = await axios(endpoints.LIST_STORAGE_OBJECTS, config);
+  const config: AxiosRequestConfig = {
+    method: 'post',
+    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    data: { type: ObjectTypes.DATA },
+  };
+  let response = await axios(endpoints.LIST_STORAGE_OBJECTS, config);
 
-    const data = response.data;
+  const data = response.data;
 
-    console.log(JSON.stringify(data, undefined, 2));
-  } catch (error) {
-    console.log(`Problem fetching data ${(error as Error).name}`);
-  }
+  console.log(JSON.stringify(data, undefined, 2));
+
 };
 
 

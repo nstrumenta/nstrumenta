@@ -1,17 +1,19 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
-import { ChildProcessWithoutNullStreams } from 'child_process'
-import { ActionData } from '../index'
 import {
   Client as TemporalClient,
   Connection as TemporalConnection,
 } from '@temporalio/client'
+import { ChildProcessWithoutNullStreams } from 'child_process'
+import { readFileSync } from 'fs'
+import { ActionData } from '../index'
 import { createRunModule } from '../temporal/workflows'
-import { createHash } from 'crypto'
-import { v4 as uuid } from 'uuid'
 import { CreateApiKeyService } from './ApiKeyService'
 
-const PROJECT_ID = 'macro-coil-194519'
+const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
+if (keyfile == undefined)
+  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
+const serviceAccount = JSON.parse(readFileSync(keyfile, 'utf8'))
 
 export interface CloudDataJobService {
   createJob(
@@ -96,7 +98,7 @@ export const createCloudDataJobService = ({
     const workflowId = `workflow-${actionId}`
     const taskQueue = `queue-${actionId}`
 
-    const imageId = `gcr.io/${PROJECT_ID}/data-job-runner:latest`
+    const imageId = `gcr.io/${serviceAccount.project_id}/data-job-runner:latest`
 
     const apiKeyService = CreateApiKeyService({ firestore })
 

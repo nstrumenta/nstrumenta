@@ -3,8 +3,13 @@ import { uuid4 } from '@temporalio/workflow'
 import { ChildProcessWithoutNullStreams } from 'child_process'
 import { ActionData } from '../index'
 import { readFile, rm, writeFile } from 'fs/promises'
+import { readFileSync } from 'fs'
 
-const GCP_PROJECT = 'macro-coil-194519'
+const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
+if (keyfile == undefined)
+  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
+const adminServiceAccount = JSON.parse(readFileSync(keyfile, 'utf8'))
+const GCP_PROJECT = adminServiceAccount.project_id;
 
 export interface CloudAdminService {
   createServiceAccount(
@@ -85,6 +90,13 @@ export const createCloudAdminService = ({
       await firestore
         .doc(actionPath)
         .set({ status: 'started' }, { merge: true })
+
+      await asyncSpawn(
+        'gcloud',
+        `auth activate-service-account --key-file ${keyfile}`.split(
+          ' ',
+        ),
+      )
       await asyncSpawn(
         'gcloud',
         `iam service-accounts create ${serviceAccount} --project ${GCP_PROJECT}`.split(
@@ -117,10 +129,17 @@ export const createCloudAdminService = ({
           ' ',
         ),
       )
+
+      //upload cloud function zip (built in nstrumenta/cluster/functions)
+      await asyncSpawn(
+        'gcloud',
+        `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(' ')
+      )
+
       //deploy cloud function
       await asyncSpawn(
         'gcloud',
-        `functions deploy ${serviceAccount} --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://nstrumenta-dev.appspot.com/functions/storageObjectFinalize-function-source.zip`.split(
+        `functions deploy ${serviceAccount} --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${btoa(keyFile)}`.split(
           ' ',
         ),
       )

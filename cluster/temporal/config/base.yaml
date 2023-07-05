@@ -7,7 +7,7 @@ cors:
   cookieInsecure: false
   allowOrigins:
     - http://localhost:8233 # used at development by https://github.com/temporalio/ui
-refreshInterval: 1m
+refreshInterval: 10m
 defaultNamespace: default
 showTemporalSystemNamespace: false
 feedbackUrl:

@@ -36,3 +36,23 @@ services:
       - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
       - NSTRUMENTA_API_URL=http://server:5999
     command: sh -c 'npm run dev'
+  temporal:
+    build:
+      context: ./temporal
+      dockerfile: Dockerfile
+    ports:
+      - 7233:7233
+      - 8233:8233
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+  developer:
+    build:
+      context: ../
+      dockerfile: ./cluster/developer/Dockerfile
+    privileged: true
+    volumes:
+      - ../:/app
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_URL=http://server:5999
+    command: tail -f /dev/null
