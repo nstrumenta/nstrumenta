@@ -35,7 +35,7 @@ export class DataDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private afs: AngularFirestore,
     public sanitizer: DomSanitizer
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.dataPath =
@@ -62,6 +62,9 @@ export class DataDetailComponent implements OnInit, OnDestroy {
             }
             if (doc.name.toLowerCase().endsWith('.json')) {
               this.contents = JSON.stringify(await (await fetch(url)).json());
+            }
+            if (doc.name.toLowerCase().endsWith('.txt') || doc.name.toLowerCase().endsWith('.log')) {
+              this.contents = await (await fetch(url)).text();
             }
             this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
           })
