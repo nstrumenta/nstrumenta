@@ -8,6 +8,7 @@ services:
       - 5000:5000
     volumes:
       - ./frontend/src:/app/src
+      - ./credentials:/credentials
     working_dir: /app
     command: "npm run start"
   server:
