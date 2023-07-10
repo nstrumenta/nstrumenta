@@ -68,7 +68,7 @@ export const createCloudDataJobService = ({
       throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
     }
 
-    console.log(`spawn ${cmd} output ${output}`)
+    console.log(`spawn ${cmd} output: ${output} stderr: ${error}`);
     return output
   }
 
@@ -77,7 +77,7 @@ export const createCloudDataJobService = ({
     projectId: string,
     data: ActionData,
   ) {
-    const address = process.env.NST_TEMPORAL_ADDRESS
+    const address = process.env.NSTRUMENTA_TEMPORAL_ADDRESS
     const connection = await TemporalConnection.connect({
       address,
       tls: false,
@@ -106,6 +106,12 @@ export const createCloudDataJobService = ({
     if (!apiKey) throw new Error('failed to create temporary apiKey')
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    await asyncSpawn(
+      'gcloud',
+      `config set core/project ${serviceAccount.project_id}`.split(
+        ' ',
+      ),
+    )
     await asyncSpawn('gcloud', [
       'run',
       'jobs',
@@ -114,7 +120,7 @@ export const createCloudDataJobService = ({
       '--memory=4Gi',
       `--image=${imageId}`,
       '--region=us-west1',
-      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NST_TEMPORAL_ADDRESS=${address},TASK_QUEUE=${taskQueue}`,
+      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_TEMPORAL_ADDRESS=${address},TASK_QUEUE=${taskQueue}`,
     ])
     await asyncSpawn('gcloud', [
       'run',

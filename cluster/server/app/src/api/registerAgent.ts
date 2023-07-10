@@ -61,11 +61,9 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
   try {
     const projectPath = `/projects/${projectId}`
     const project = await (await firestore.doc(projectPath).get()).data()
-    const backplaneUrl = project?.backplaneUrl
 
     const agentDoc = {
       projectId,
-      backplaneUrl,
       createdAt: Date.now(),
     }
 
@@ -82,7 +80,7 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
 
     return res
       .status(200)
-      .send({ agentId, backplaneUrl, actionsCollectionPath })
+      .send({ agentId, actionsCollectionPath })
   } catch (error) {
     console.error(error)
     res.status(404).send(`Error fetching hosts`)

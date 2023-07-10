@@ -23,6 +23,7 @@ services:
       - ./credentials/:/credentials
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - NSTRUMENTA_TEMPORAL_ADDRESS=$NSTRUMENTA_TEMPORAL_ADDRESS
     command: sh -c 'npm run dev'
   agent:
     build:

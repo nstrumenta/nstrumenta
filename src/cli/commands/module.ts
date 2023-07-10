@@ -105,7 +105,7 @@ export const CloudRun = async function (
   { args }: Command
 ): Promise<void> {
   console.log('Finding ', moduleName);
-  type Module = { id: string; metadata: { id: string; filePath: string } };
+  type Module = { id: string; metadata: { filePath: string } };
   let modules: Module[] = [];
   try {
     const apiKey = resolveApiKey();
@@ -118,7 +118,7 @@ export const CloudRun = async function (
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
   const matches = modules
-    .filter((module) => module.metadata.id === moduleName)
+    .filter((module) => module.id.startsWith(moduleName))
     .map((module) => {
       return {
         id: module.id,
@@ -193,39 +193,39 @@ const useLocalModule = async (moduleName?: string): Promise<ModuleExtended> => {
 // TODO: Accept a well-defined runnable module definition object, specifically with the actual
 //  tmp file location defined, rather than constructing the tmp file location again here
 const adapters: Record<ModuleTypes, (module: ModuleExtended, args?: string[]) => Promise<unknown>> =
-  {
-    // For now, run a script with npm dependencies in an environment that has node/npm
-    nodejs: async (module, args: string[] = []) => {
-      console.log(`adapt ${module.name} in ${module.folder} with args`, args);
+{
+  // For now, run a script with npm dependencies in an environment that has node/npm
+  nodejs: async (module, args: string[] = []) => {
+    console.log(`adapt ${module.name} in ${module.folder} with args`, args);
 
-      let result;
-      try {
-        const cwd = `${module.folder}`;
-        console.log(blue(`[cwd: ${cwd}] npm install...`));
-        await asyncSpawn('npm', ['install'], { cwd });
-        // module will resolve NSTRUMENTA_API_KEY from env var
-        const { entry = `npm run start -- ` } = module;
-        const [command, ...entryArgs] = entry.split(' ');
-        console.log(`::: start the module...`, command, entryArgs, { entry });
-        result = await asyncSpawn(command, [...entryArgs, ...args], {
-          cwd,
-          stdio: 'inherit',
-          shell: true,
-        });
-      } catch (err) {
-        console.log('problem', err);
-      }
-      return result;
-    },
-    sandbox: async (module) => {
-      const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
-      return '';
-    },
-    algorithm: async (module) => {
-      console.log('adapt', module.name);
-      return '';
-    },
-  };
+    let result;
+    try {
+      const cwd = `${module.folder}`;
+      console.log(blue(`[cwd: ${cwd}] npm install...`));
+      await asyncSpawn('npm', ['install'], { cwd });
+      // module will resolve NSTRUMENTA_API_KEY from env var
+      const { entry = `npm run start -- ` } = module;
+      const [command, ...entryArgs] = entry.split(' ');
+      console.log(`::: start the module...`, command, entryArgs, { entry });
+      result = await asyncSpawn(command, [...entryArgs, ...args], {
+        cwd,
+        stdio: 'inherit',
+        shell: true,
+      });
+    } catch (err) {
+      console.log('problem', err);
+    }
+    return result;
+  },
+  sandbox: async (module) => {
+    const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
+    return '';
+  },
+  algorithm: async (module) => {
+    console.log('adapt', module.name);
+    return '';
+  },
+};
 
 export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
 
@@ -331,7 +331,7 @@ export const publishModule = async (module: ModuleExtended) => {
 
   const fileName = `${name}-${version}.tar.gz`;
   const downloadLocation = `${await getNstDir(process.cwd())}/${fileName}`;
-  const remoteFileLocation = `modules/${name}/versions/${fileName}`;
+  const remoteFileLocation = `modules/${fileName}`;
   let url = '';
   let size = 0;
 

@@ -91,7 +91,7 @@ export const resolveApiKey = () => {
   if (!apiKey) {
     try {
       apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    } catch {}
+    } catch { }
   } else {
     if (!notifiedApiKeyResolution) {
       console.log('using NSTRUMENTA_API_KEY from environment variable');
@@ -256,10 +256,10 @@ export const getModuleFromStorage = async ({
       const version = versionString
         ? versionString
         : serverModules[name]
-            .map(({ version }) => version)
-            .sort(semver.compare)
-            .reverse()
-            .shift();
+          .map(({ version }) => version)
+          .sort(semver.compare)
+          .reverse()
+          .shift();
       path = serverModules[name].find((module) => module.version === version)?.path;
     }
   } catch (error) {

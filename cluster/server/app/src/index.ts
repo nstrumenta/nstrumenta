@@ -27,7 +27,7 @@ const path = require('path')
 const ejs = require('ejs')
 
 export interface ActionData {
-  payload: { projectId: string; [key: string]: any }
+  payload: { projectId: string;[key: string]: any }
 
   [key: string]: any
 }
@@ -379,11 +379,15 @@ firestore
                       )
                       break
                     case 'cloudRun':
-                      cloudDataJobService.createJob(
-                        doc.ref.path,
-                        projectId,
-                        data as ActionData,
-                      )
+                      try {
+                        cloudDataJobService.createJob(
+                          doc.ref.path,
+                          projectId,
+                          data as ActionData,
+                        )
+                      } catch (err) {
+                        console.error(err)
+                      }
                       break
                     case 'createServiceAccount':
                       cloudAdminService.createServiceAccount(
