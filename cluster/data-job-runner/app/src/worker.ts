@@ -5,7 +5,7 @@ async function run() {
   // Step 1: Register Workflows and Activities with the Worker and connect to
   // the Temporal server.
   const connection = await NativeConnection.connect({
-    address: process.env.NST_TEMPORAL_ADDRESS,
+    address: process.env.NSTRUMENTA_TEMPORAL_ADDRESS,
     tls: false,
   });
 
