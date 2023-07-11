@@ -29,36 +29,6 @@
         "**/.*",
         "**/node_modules/**"
       ]
-    },
-    {
-      "target": "staging",
-      "public": "dist",
-      "headers": [
-        {
-          "source": "**",
-          "headers": [
-            {
-              "key": "Access-Control-Allow-Origin",
-              "value": "*"
-            }
-          ]
-        }
-      ],
-      "rewrites": [
-        {
-          "source": "/getHosts",
-          "function": "getHosts"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ],
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
-      ]
     }
   ],
   "functions": {

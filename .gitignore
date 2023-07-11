@@ -77,3 +77,4 @@ profile
 .nst
 
 **/.vscode/settings.json
+cluster/frontend/.firebaserc

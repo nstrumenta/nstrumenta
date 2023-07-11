@@ -108,6 +108,12 @@ export const createCloudDataJobService = ({
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
     await asyncSpawn(
       'gcloud',
+      `auth activate-service-account --key-file ${keyfile}`.split(
+        ' ',
+      ),
+    )
+    await asyncSpawn(
+      'gcloud',
       `config set core/project ${serviceAccount.project_id}`.split(
         ' ',
       ),

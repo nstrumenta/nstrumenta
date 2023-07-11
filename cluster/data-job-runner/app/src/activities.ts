@@ -36,7 +36,7 @@ async function asyncSpawn(
 export async function createRunModuleTask(moduleName: string, version: string, args: string[]): Promise<string> {
   console.log({ moduleName, version, args })
 
-  const res = await asyncSpawn('nst', ['module', 'run', '--non-interactive', '--name', moduleName, '--module-version', version, '--', ...args])
+  const res = await asyncSpawn('nst', ['module', 'run', '--name', moduleName, '--module-version', version, '--', ...args])
 
   return `createRunModuleTask complete ${res}`
 }
