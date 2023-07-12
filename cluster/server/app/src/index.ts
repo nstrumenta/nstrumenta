@@ -40,12 +40,12 @@ app.use(express.json())
 app.use(cors())
 
 Object.keys({ ...functions }).map((fn) => {
-  console.log(`register POST listener [${fn}]`)
+  // console.log(`register POST listener [${fn}]`)
   app.post(`/${fn}`, ({ ...functions } as Record<string, any>)[fn])
 })
 
 Object.keys(functions).map((fn) => {
-  console.log(`register GET listener [${fn}]`)
+  // console.log(`register GET listener [${fn}]`)
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
 

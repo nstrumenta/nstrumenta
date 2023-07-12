@@ -19,7 +19,7 @@ services:
       - ./credentials/:/credentials
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
-      - NSTRUMENTA_TEMPORAL_ADDRESS=$NSTRUMENTA_TEMPORAL_ADDRESS
+      - NSTRUMENTA_API_URL=http://server:5999
     command: 'npm run start'
   agent:
     build:
@@ -31,15 +31,6 @@ services:
       - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
       - NSTRUMENTA_API_URL=http://server:5999
     command: 'npm run start:agent'
-  temporal:
-    build:
-      context: ./temporal
-      dockerfile: Dockerfile
-    ports:
-      - 7233:7233
-      - 8233:8233
-    environment:
-      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
   developer:
     build:
       context: ../

@@ -48,5 +48,6 @@ RUN npm link
 COPY ./cluster/data-job-runner/app /app
 WORKDIR /app
 RUN npm i
+RUN npm build
 
-ENTRYPOINT [ "npm", "run", "start" ]
+CMD [ "node", "" ]

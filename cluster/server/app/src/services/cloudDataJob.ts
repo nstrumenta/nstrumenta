@@ -43,7 +43,7 @@ export const createCloudDataJobService = ({
   async function asyncSpawn(
     cmd: string,
     args?: string[],
-    options?: { cwd?: string },
+    options?: { cwd?: string; quiet?: boolean },
     errCB?: (code: number) => void,
   ) {
     console.log(`spawn [${cmd} ${args?.join(' ')}]`)
@@ -67,8 +67,9 @@ export const createCloudDataJobService = ({
 
       throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
     }
-
-    console.log(`spawn ${cmd} output: ${output} stderr: ${error}`);
+    if (!options?.quiet) {
+      console.log(`spawn ${cmd} output: ${output} stderr: ${error}`)
+    }
     return output
   }
 
@@ -77,16 +78,6 @@ export const createCloudDataJobService = ({
     projectId: string,
     data: ActionData,
   ) {
-    const address = process.env.NSTRUMENTA_TEMPORAL_ADDRESS
-    const connection = await TemporalConnection.connect({
-      address,
-      tls: false,
-    })
-
-    const client = new TemporalClient({
-      connection,
-    })
-
     console.log({ projectId })
 
     console.dir(data)
@@ -96,7 +87,6 @@ export const createCloudDataJobService = ({
 
     const actionId = actionPath.split('/').slice(-1)[0]
     const workflowId = `workflow-${actionId}`
-    const taskQueue = `queue-${actionId}`
 
     const imageId = `gcr.io/${serviceAccount.project_id}/data-job-runner:latest`
 
@@ -108,16 +98,13 @@ export const createCloudDataJobService = ({
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
     await asyncSpawn(
       'gcloud',
-      `auth activate-service-account --key-file ${keyfile}`.split(
-        ' ',
-      ),
+      `auth activate-service-account --key-file ${keyfile}`.split(' '),
     )
     await asyncSpawn(
       'gcloud',
-      `config set core/project ${serviceAccount.project_id}`.split(
-        ' ',
-      ),
+      `config set core/project ${serviceAccount.project_id}`.split(' '),
     )
+    // could use the region for the firebase project
     await asyncSpawn('gcloud', [
       'run',
       'jobs',
@@ -126,7 +113,9 @@ export const createCloudDataJobService = ({
       '--memory=4Gi',
       `--image=${imageId}`,
       '--region=us-west1',
-      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_TEMPORAL_ADDRESS=${address},TASK_QUEUE=${taskQueue}`,
+      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL=${
+        process.env.NSTRUMENTA_API_URL
+      },ACTION_PATH=${actionPath},ACTION_DATA=${btoa(JSON.stringify(data))}`,
     ])
     await asyncSpawn('gcloud', [
       'run',
@@ -136,16 +125,8 @@ export const createCloudDataJobService = ({
       '--region=us-west1',
     ])
 
-    const handle = await client.workflow.start(createRunModule, {
-      args: [moduleName, version, args],
-      taskQueue,
-      workflowId,
-    })
-    console.log(`Started workflow ${handle.workflowId}`)
+    console.log(`started ${workflowId}`)
 
-    console.log(await handle.result())
-
-    //clean up execution
     const listExecutionsOutput = await asyncSpawn('gcloud', [
       'run',
       'jobs',
@@ -160,16 +141,46 @@ export const createCloudDataJobService = ({
         new RegExp(`${workflowId}-.....`),
       )
       if (executionMatch) {
-        const exectutionId = executionMatch[0]
-        await asyncSpawn('gcloud', [
-          'run',
-          'jobs',
-          'executions',
-          'delete',
-          exectutionId,
-          '--region=us-west1',
-          '-q',
-        ])
+        const executionId = executionMatch[0]
+        // watch for status
+        await new Promise<void>((resolve, reject) => {
+          const interval = setInterval(async () => {
+            const description = JSON.parse(
+              await asyncSpawn(
+                'gcloud',
+                [
+                  'run',
+                  'jobs',
+                  'executions',
+                  'describe',
+                  executionId,
+                  '--region=us-west1',
+                  '--format="json"',
+                ],
+                { quiet: true },
+              ),
+            )
+            const message = description.status.conditions[0].message
+            if (!message.startsWith('Waiting')) {
+              console.log(`${executionId} ${message}`)
+              clearInterval(interval)
+              resolve()
+            }
+          }, 500)
+          setTimeout(async () => {
+            clearInterval(interval)
+            await asyncSpawn('gcloud', [
+              'run',
+              'jobs',
+              'executions',
+              'delete',
+              executionId,
+              '--region=us-west1',
+              '-q',
+            ])
+            reject(new Error(`timeout on ${workflowId} ${executionId}`))
+          }, 60 * 60_000)
+        })
       }
     }
 
