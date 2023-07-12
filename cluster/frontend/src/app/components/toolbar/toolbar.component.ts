@@ -1,12 +1,10 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
-import * as uuid from 'uuid';
 
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
 
@@ -18,7 +16,6 @@ import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
 export class ToolbarComponent implements OnInit {
   @Output() drawerToggleClick = new EventEmitter();
   downloadURL: Observable<string>;
-  collectionPath: string;
   projectId: string;
   uploads = new Map<string, { name: string; progress: Observable<number> }>();
 
@@ -29,7 +26,6 @@ export class ToolbarComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private storage: AngularFireStorage,
-    private afs: AngularFirestore,
     public authService: AuthService,
     public router: Router,
     private breakpointObserver: BreakpointObserver
@@ -48,12 +44,22 @@ export class ToolbarComponent implements OnInit {
   }
 
   upload(files: Array<File>) {
-    files.forEach((file) => {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    files.forEach(async (file) => {
+      let filePath = `projects/${this.projectId}/data/${file.name}`;
+      let exists = undefined;
+      try {
+        await firstValueFrom(this.storage.ref(filePath).getDownloadURL());
+        exists = true;
+      } catch {
+        exists = false;
+      }
+      if (exists) {
+        if (!confirm(`${file.name} exists, overwrite?`)) {
+          return;
+        }
+      }
       console.log(`uploading ${file.name}`);
-      const filePathUuid = uuid.v4();
-      this.projectId = this.route.snapshot.paramMap.get('projectId');
-      this.collectionPath = `projects/${this.projectId}/data`;
-      const filePath = `${this.collectionPath}/${filePathUuid}/${file.name}`;
       console.log(filePath);
       const fileRef = this.storage.ref(filePath);
       const metadata: UploadMetadata = {
