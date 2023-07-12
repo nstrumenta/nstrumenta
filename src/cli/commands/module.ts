@@ -11,7 +11,7 @@ import {
   getNearestConfigJson,
   getNstDir,
   getVersionFromPath,
-  resolveApiKey
+  resolveApiKey,
 } from '../utils';
 
 const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
@@ -36,28 +36,14 @@ export const Run = async function (
 
   console.log('Running module', name, 'version', version);
 
-
   module = await getModuleFromStorage({ name, path, version });
 
   switch (module.type) {
-    case 'nodejs': {
-      console.log(`${module.name} in ${module.folder} with args`, args);
-      const cwd = `${module.folder}`;
-      const { entry = `npm run start -- ` } = module;
-      const [command, ...entryArgs] = entry.split(' ');
-      console.log(`::: start the module...`, command, entryArgs, { entry });
-      await asyncSpawn(command, [...entryArgs, ...args], {
-        cwd,
-        stdio: 'inherit',
-        shell: true,
-      });
-    }
-      break;
-    default: {
-      console.log(`${module.name} in ${module.folder} with args`, args);
-      const cwd = `${module.folder}`;
-      const { entry } = module;
-      if (entry) {
+    case 'nodejs':
+      {
+        console.log(`${module.name} in ${module.folder} with args`, args);
+        const cwd = `${module.folder}`;
+        const { entry = `npm run start -- ` } = module;
         const [command, ...entryArgs] = entry.split(' ');
         console.log(`::: start the module...`, command, entryArgs, { entry });
         await asyncSpawn(command, [...entryArgs, ...args], {
@@ -66,9 +52,24 @@ export const Run = async function (
           shell: true,
         });
       }
+      break;
+    default: {
+      console.log(`${module.name} in ${module.folder} with args`, args);
+      const cwd = `${module.folder}`;
+      const { entry } = module;
+      if (entry) {
+        const [command, ...entryArgs] = entry.split(' ');
+        console.log(command, entryArgs, { entry });
+        await process.nextTick(() => { });
+        await asyncSpawn(command, [...entryArgs, ...args], {
+          cwd,
+          stdio: 'inherit',
+          shell: true,
+        });
+      }
     }
-  };
-}
+  }
+};
 
 export const SetAction = async (options: { action: string; tag?: string }) => {
   const { action: actionString, tag } = options;
@@ -125,7 +126,7 @@ export const CloudRun = async function (
       };
     });
 
-  console.log(modules, matches)
+  console.log(modules, matches);
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
     : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
@@ -231,16 +232,9 @@ export const Publish = async () => {
 };
 
 export const publishModule = async (module: ModuleExtended) => {
-  const {
-    version,
-    folder,
-    name,
-    includes = ['.'],
-    excludes = [],
-    prePublishCommand,
-  } = module;
+  const { version, folder, name, includes = ['.'], excludes = [], prePublishCommand } = module;
 
-  console.log('publishModule', { module })
+  console.log('publishModule', { module });
   if (!version) {
     throw new Error(`module [${name}] requires version`);
   }

@@ -89,7 +89,7 @@ export const resolveApiKey = () => {
   if (!apiKey) {
     try {
       apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    } catch { }
+    } catch {}
   }
 
   if (!apiKey)
@@ -193,15 +193,19 @@ export const getFolderFromStorage = async (
     }
 
     try {
-      const options = {
-        gzip: true,
-        file: file,
-        cwd: extractFolder,
-      };
-      await tar.extract(options);
-    } catch (err) {
-      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
-      throw err;
+      await asyncSpawn('tar', ['-zxvf', file], { cwd: extractFolder });
+    } catch {
+      try {
+        const options = {
+          gzip: true,
+          file: file,
+          cwd: extractFolder,
+        };
+        await tar.extract(options);
+      } catch (err) {
+        console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
+        throw err;
+      }
     }
   }
 
@@ -248,10 +252,10 @@ export const getModuleFromStorage = async ({
       const version = versionString
         ? versionString
         : serverModules[name]
-          .map(({ version }) => version)
-          .sort(semver.compare)
-          .reverse()
-          .shift();
+            .map(({ version }) => version)
+            .sort(semver.compare)
+            .reverse()
+            .shift();
       path = serverModules[name].find((module) => module.version === version)?.path;
     }
   } catch (error) {
