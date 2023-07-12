@@ -11,8 +11,7 @@ import {
   getNearestConfigJson,
   getNstDir,
   getVersionFromPath,
-  inquiryForSelectModule,
-  resolveApiKey,
+  resolveApiKey
 } from '../utils';
 
 const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
@@ -24,16 +23,12 @@ const blue = (text: string) => {
 export const Run = async function (
   {
     name,
-    local,
     path,
     moduleVersion: version,
-    nonInteractive,
   }: {
     name?: string;
-    local?: boolean;
     path?: string;
     moduleVersion?: string;
-    nonInteractive?: boolean;
   },
   { args }: Command
 ): Promise<void> {
@@ -41,36 +36,39 @@ export const Run = async function (
 
   console.log('Running module', name, 'version', version);
 
-  if (nonInteractive) {
-    if (!name) {
-      throw new Error('module name required for non-interactive mode');
-    }
 
-    if (local) {
-      console.log('non-interactive overrides local, fetches latest version from server');
-    }
-  }
+  module = await getModuleFromStorage({ name, path, version });
 
-  switch (nonInteractive) {
-    case false:
-      if (Boolean(local)) {
-        module = await useLocalModule(name);
-        break;
+  switch (module.type) {
+    case 'nodejs': {
+      console.log(`${module.name} in ${module.folder} with args`, args);
+      const cwd = `${module.folder}`;
+      const { entry = `npm run start -- ` } = module;
+      const [command, ...entryArgs] = entry.split(' ');
+      console.log(`::: start the module...`, command, entryArgs, { entry });
+      await asyncSpawn(command, [...entryArgs, ...args], {
+        cwd,
+        stdio: 'inherit',
+        shell: true,
+      });
+    }
+      break;
+    default: {
+      console.log(`${module.name} in ${module.folder} with args`, args);
+      const cwd = `${module.folder}`;
+      const { entry } = module;
+      if (entry) {
+        const [command, ...entryArgs] = entry.split(' ');
+        console.log(`::: start the module...`, command, entryArgs, { entry });
+        await asyncSpawn(command, [...entryArgs, ...args], {
+          cwd,
+          stdio: 'inherit',
+          shell: true,
+        });
       }
-    default:
-      module = await getModuleFromStorage({ name, path, nonInteractive, version });
-  }
-
-  if (module === undefined) {
-    throw new Error(
-      `module: ${blue(name || '--')} isn't defined ${local ? 'in nstrumenta config' : 'in project'}`
-    );
-  }
-
-  const result = await adapters[module.type](module, args);
-
-  console.log('=>', result);
-};
+    }
+  };
+}
 
 export const SetAction = async (options: { action: string; tag?: string }) => {
   const { action: actionString, tag } = options;
@@ -127,6 +125,7 @@ export const CloudRun = async function (
       };
     });
 
+  console.log(modules, matches)
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
     : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
@@ -143,91 +142,7 @@ export const CloudRun = async function (
   SetAction({ action });
 };
 
-const useLocalModule = async (moduleName?: string): Promise<ModuleExtended> => {
-  let config: { [key: string]: unknown; modules: ModuleExtended[] };
-  let name = moduleName;
-
-  // Locate the module config via the .nstrumenta/config.json
-  try {
-    config = JSON.parse(
-      await fs.readFile(`.nstrumenta/config.json`, {
-        encoding: 'utf8',
-      })
-    );
-  } catch (error) {
-    throw Error(error as string);
-  }
-
-  // Read the module configs
-
-  const modules: ModuleExtended[] = await readModuleConfigs(config.modules);
-  // Sort the module version
-  if (name === undefined) {
-    name = await inquiryForSelectModule(
-      modules
-        .sort((a, b) => semver.compare(a.version, b.version))
-        .reverse()
-        .map((module) => module.name)
-    );
-  }
-
-  // Find the particular module we need
-  // TODO: Allow choosing a version; For now, this just grabs the latest version
-  const module: ModuleExtended | undefined = modules.find((module) => module.name === name);
-  if (module === undefined) {
-    throw new Error('problem finding module in config');
-  }
-
-  const folder = `${process.cwd()}/${module.folder}`;
-
-  return {
-    ...module,
-    folder,
-  };
-};
-
-// adapters/handlers for each type of module, run files (maybe memory??) in the
-// running agent's environment
-
-// Assumes that the files are already in place
-// TODO: Accept a well-defined runnable module definition object, specifically with the actual
-//  tmp file location defined, rather than constructing the tmp file location again here
-const adapters: Record<ModuleTypes, (module: ModuleExtended, args?: string[]) => Promise<unknown>> =
-{
-  // For now, run a script with npm dependencies in an environment that has node/npm
-  nodejs: async (module, args: string[] = []) => {
-    console.log(`adapt ${module.name} in ${module.folder} with args`, args);
-
-    let result;
-    try {
-      const cwd = `${module.folder}`;
-      console.log(blue(`[cwd: ${cwd}] npm install...`));
-      await asyncSpawn('npm', ['install'], { cwd });
-      // module will resolve NSTRUMENTA_API_KEY from env var
-      const { entry = `npm run start -- ` } = module;
-      const [command, ...entryArgs] = entry.split(' ');
-      console.log(`::: start the module...`, command, entryArgs, { entry });
-      result = await asyncSpawn(command, [...entryArgs, ...args], {
-        cwd,
-        stdio: 'inherit',
-        shell: true,
-      });
-    } catch (err) {
-      console.log('problem', err);
-    }
-    return result;
-  },
-  sandbox: async (module) => {
-    const { folder } = await getModuleFromStorage({ name: module.name, nonInteractive: true });
-    return '';
-  },
-  algorithm: async (module) => {
-    console.log('adapt', module.name);
-    return '';
-  },
-};
-
-export type ModuleTypes = 'sandbox' | 'nodejs' | 'algorithm';
+export type ModuleTypes = 'sandbox' | 'nodejs' | 'script' | 'algorithm';
 
 export interface Module {
   name: string;
@@ -321,10 +236,11 @@ export const publishModule = async (module: ModuleExtended) => {
     folder,
     name,
     includes = ['.'],
-    excludes = ['node_modules'],
+    excludes = [],
     prePublishCommand,
   } = module;
 
+  console.log('publishModule', { module })
   if (!version) {
     throw new Error(`module [${name}] requires version`);
   }

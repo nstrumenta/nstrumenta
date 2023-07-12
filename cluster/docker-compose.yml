@@ -1,5 +1,51 @@
-version: '3.8'
-# services:
-## frontend
-## backend (functions via dev.ts)
-## task-queue (temporal)
+version: '3'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - 5000:5000
+    working_dir: /app
+    command: "npm run serve:dist"
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 5999:5999
+      - 9229:9229
+    volumes:
+      - ./credentials/:/credentials
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - NSTRUMENTA_TEMPORAL_ADDRESS=$NSTRUMENTA_TEMPORAL_ADDRESS
+    command: 'npm run start'
+  agent:
+    build:
+      context: ../
+      dockerfile: ./cluster/agent/Dockerfile
+    ports:
+      - 8088:8088
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_URL=http://server:5999
+    command: 'npm run start:agent'
+  temporal:
+    build:
+      context: ./temporal
+      dockerfile: Dockerfile
+    ports:
+      - 7233:7233
+      - 8233:8233
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+  developer:
+    build:
+      context: ../
+      dockerfile: ./cluster/developer/Dockerfile
+    privileged: true
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_URL=http://server:5999
+    command: tail -f /dev/null

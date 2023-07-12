@@ -250,7 +250,6 @@ export class NstrumentaServer {
                       'run',
                       `--name=${moduleName}`,
                       version ? `--module-version=${version}` : '',
-                      '--non-interactive',
                       '--',
                       ...(args ? args : []),
                     ],

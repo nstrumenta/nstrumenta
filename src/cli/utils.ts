@@ -84,19 +84,12 @@ export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
 
 const config = new Conf(schema as any);
 
-let notifiedApiKeyResolution = false;
-
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
   if (!apiKey) {
     try {
       apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
     } catch { }
-  } else {
-    if (!notifiedApiKeyResolution) {
-      console.log('using NSTRUMENTA_API_KEY from environment variable');
-      notifiedApiKeyResolution = true;
-    }
   }
 
   if (!apiKey)
@@ -223,7 +216,6 @@ export const inquiryForSelectModule = async (choices: string[]): Promise<string>
 export const getModuleFromStorage = async ({
   name: moduleName,
   path,
-  nonInteractive,
   version: versionString,
 }: {
   name?: string;
@@ -251,7 +243,7 @@ export const getModuleFromStorage = async ({
   });
 
   try {
-    if (nonInteractive && name) {
+    if (name) {
       console.log(name, serverModules[name]);
       const version = versionString
         ? versionString
