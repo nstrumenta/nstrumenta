@@ -37,8 +37,7 @@ const getUploadDataUrlBase: APIEndpoint<GetUploadDataArgs> = async (
     const storagePathBase = `projects/${projectId}/data`
 
     console.log(`generate data upload url for name: ${name}`)
-    const dataId = dataIdUserSpecified ? dataIdUserSpecified : uuid()
-    const filePath = `${storagePathBase}/${dataId}/${name}`
+    const filePath = `${storagePathBase}/${name}`
     const uploadUrl = await generateV4UploadSignedUrl(
       filePath,
       {
@@ -52,7 +51,7 @@ const getUploadDataUrlBase: APIEndpoint<GetUploadDataArgs> = async (
     )
     return res
       .status(200)
-      .send({ uploadUrl, remoteFilePath: filePath, dataId, ...metadata })
+      .send({ uploadUrl, remoteFilePath: filePath, ...metadata })
   } catch (error) {
     if (
       error instanceof Error &&

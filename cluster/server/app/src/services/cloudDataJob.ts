@@ -157,7 +157,11 @@ export const createCloudDataJobService = ({
             )
             const message = description.status.conditions[0].message
             if (!message?.startsWith('Waiting')) {
-              console.log(`${executionId} ${message}`)
+              console.log(
+                `${executionId} ${
+                  message ?? JSON.stringify(description.status)
+                }`,
+              )
               clearInterval(interval)
               resolve()
             }

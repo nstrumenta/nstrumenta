@@ -3,12 +3,7 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import {
-  DataQueryOptionsCLI,
-  DataQueryResponse,
-  ObjectTypes,
-  getEndpoints
-} from '../../shared';
+import { DataQueryOptionsCLI, DataQueryResponse, ObjectTypes, getEndpoints } from '../../shared';
 import { asyncSpawn, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -22,7 +17,7 @@ export interface ModuleMeta {
   lastModified: number; // make sure we're actually getting a number, not a string
 }
 
-export interface DataListOptions { }
+export interface DataListOptions {}
 
 export const List = async (_: unknown, options: DataListOptions) => {
   const apiKey = resolveApiKey();
@@ -37,11 +32,9 @@ export const List = async (_: unknown, options: DataListOptions) => {
   const data = response.data;
 
   console.log(JSON.stringify(data, undefined, 2));
-
 };
 
-
-export interface DataMountOptions { }
+export interface DataMountOptions {}
 export const Mount = async (_: unknown, options: DataMountOptions) => {
   const apiKey = resolveApiKey();
 
@@ -52,24 +45,29 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { keyFile, bucket, projectId } = response.data
+  const { keyFile, bucket, projectId } = response.data;
 
   if (keyFile === undefined || bucket === undefined) {
-    throw new Error('keyFile or bucket undefined in response from getDataMount')
+    throw new Error('keyFile or bucket undefined in response from getDataMount');
   }
 
   // check for gcsfuse
-  await asyncSpawn('gcsfuse', ['-v'])
+  await asyncSpawn('gcsfuse', ['-v']);
 
-  await mkdir(`${projectId}/data`, { recursive: true })
-  await writeFile(`${projectId}/.gitignore`, 'keyfile.json\ndata')
-  const keyfilePath = `${projectId}/keyfile.json`
-  await writeFile(keyfilePath, keyFile)
-  await asyncSpawn('gcsfuse', [`--implicit-dirs`, `--only-dir=projects/${projectId}/data`, `--key-file=${keyfilePath}`, `${bucket}`, `${projectId}/data`])
-}
+  await mkdir(`${projectId}/data`, { recursive: true });
+  await writeFile(`${projectId}/.gitignore`, 'keyfile.json\ndata');
+  const keyfilePath = `${projectId}/keyfile.json`;
+  await writeFile(keyfilePath, keyFile);
+  await asyncSpawn('gcsfuse', [
+    `--implicit-dirs`,
+    `--only-dir=projects/${projectId}/data`,
+    `--key-file=${keyfilePath}`,
+    `${bucket}`,
+    `${projectId}/data`,
+  ]);
+};
 
-
-export interface DataUnmountOptions { }
+export interface DataUnmountOptions {}
 export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   const apiKey = resolveApiKey();
 
@@ -80,21 +78,21 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { keyFile, bucket, projectId } = response.data
+  const { keyFile, bucket, projectId } = response.data;
 
   if (keyFile === undefined || bucket === undefined) {
-    throw new Error('keyFile or bucket undefined in response from getDataMount')
+    throw new Error('keyFile or bucket undefined in response from getDataMount');
   }
 
   // check for gcsfuse
-  await asyncSpawn('gcsfuse', ['-v'])
-  const keyfilePath = `${projectId}/keyfile.json`
-  await rm(keyfilePath)
-  await rm(`${projectId}/.gitignore`)
-  await asyncSpawn('fusermount', ['-u', `${projectId}/data`])
-  await rmdir(`${projectId}/data`)
-  await rmdir(`${projectId}`)
-}
+  await asyncSpawn('gcsfuse', ['-v']);
+  const keyfilePath = `${projectId}/keyfile.json`;
+  await rm(keyfilePath);
+  await rm(`${projectId}/.gitignore`);
+  await asyncSpawn('fusermount', ['-u', `${projectId}/data`]);
+  await rmdir(`${projectId}/data`);
+  await rmdir(`${projectId}`);
+};
 
 export const Upload = async (
   filenames: string[],
@@ -102,10 +100,6 @@ export const Upload = async (
 ) => {
   if (filenames.length === 0) {
     return console.log('Please specify at least one filename');
-  }
-
-  if (overwrite && !dataId) {
-    console.warn('nothing will be overwritten if no dataId provided');
   }
 
   try {
@@ -149,7 +143,6 @@ export const Upload = async (
 interface UploadResponse {
   filename: string;
   remoteFilePath: string;
-  dataId: string;
 }
 
 export const uploadFile = async ({
@@ -179,7 +172,6 @@ export const uploadFile = async ({
     data: {
       name,
       size,
-      dataId,
       metadata: { tags },
       overwrite,
     },
@@ -188,10 +180,6 @@ export const uploadFile = async ({
 
   url = response.data?.uploadUrl;
   remoteFilePath = response.data?.remoteFilePath;
-  dataId = response.data?.dataId;
-  if (typeof dataId === 'undefined') {
-    throw new Error('dataId is invalid');
-  }
 
   await axios.put(url, fileBuffer, {
     maxBodyLength: Infinity,
@@ -202,7 +190,7 @@ export const uploadFile = async ({
     },
   });
 
-  return { filename, remoteFilePath, dataId };
+  return { filename, remoteFilePath };
 };
 
 export const query = async ({
