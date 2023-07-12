@@ -1,0 +1,65 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "test-cli",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "test",
+            ],
+            "env": {
+                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
+                "AGENT_TAG": "local"
+            },
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "name": "test-Publish",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "test",
+                "--",
+                "-t",
+                "Publish"
+            ],
+            "env": {
+                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
+                "AGENT_TAG": "local"
+            },
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+        {
+            "name": "test-CloudRun",
+            "request": "launch",
+            "runtimeArgs": [
+                "run-script",
+                "test",
+                "--",
+                "-t",
+                "CloudRun"
+            ],
+            "env": {
+                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
+                "NSTRUMENTA_API_URL": "http://localhost:5999",
+            },
+            "runtimeExecutable": "npm",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "type": "node"
+        },
+    ]
+}

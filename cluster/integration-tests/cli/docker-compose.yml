@@ -1,0 +1,36 @@
+version: '3'
+services:
+  server:
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    ports:
+      - 5999:5999
+      - 9229:9229
+    volumes:
+      - ../../server/app/:/app
+      - ../../credentials/:/credentials
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+    command: sh -c 'npm run dev'
+  agent:
+    build:
+      context: ../../../
+      dockerfile: ./cluster/agent/Dockerfile
+    ports:
+      - 8088:8088
+      - 9230:9230
+    volumes:
+      - ../../../:/app
+    environment:
+      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_URL=http://server:5999
+    command: sh -c 'npm run dev'
+  cli:
+    container_name: cli
+    build:
+      context: ./client
+    environment:
+      - TEST_ID=${TEST_ID}
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - NSTRUMENTA_WS_URL=ws://cloud:8080
