@@ -1,13 +1,8 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
-import {
-  Client as TemporalClient,
-  Connection as TemporalConnection,
-} from '@temporalio/client'
 import { ChildProcessWithoutNullStreams } from 'child_process'
 import { readFileSync } from 'fs'
 import { ActionData } from '../index'
-import { createRunModule } from '../temporal/workflows'
 import { CreateApiKeyService } from './ApiKeyService'
 
 const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
@@ -46,7 +41,7 @@ export const createCloudDataJobService = ({
     options?: { cwd?: string; quiet?: boolean },
     errCB?: (code: number) => void,
   ) {
-    console.log(`spawn [${cmd} ${args?.join(' ')}]`)
+    if (!options?.quiet) console.log(`spawn [${cmd} ${args?.join(' ')}]`)
     const process = spawn(cmd, args || [], options)
 
     let output = ''

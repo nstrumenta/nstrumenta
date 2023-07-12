@@ -48,6 +48,6 @@ RUN npm link
 COPY ./cluster/data-job-runner/app /app
 WORKDIR /app
 RUN npm i
-RUN npm build
+RUN npm run build
 
 CMD [ "node", "" ]
