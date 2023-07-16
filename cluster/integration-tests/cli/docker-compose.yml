@@ -10,17 +10,9 @@ services:
       - ../../../cluster/credentials/:/credentials
     environment:
       - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
+      - NST_AGENT_TYPE=dev
     command: 'npm run start'
-  agent:
-    build:
-      context: ../../../
-      dockerfile: ./cluster/agent/Dockerfile
-    ports:
-      - 8088:8088
-    environment:
-      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=http://server:5999
-    command: 'npm run start:agent'
   cli:
     container_name: cli
     build:
