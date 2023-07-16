@@ -1,19 +1,5 @@
-import fs from 'fs'
-import { Firestore } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
+import { firestore } from '../authentication/ServiceAccount'
 
 export interface ListObjectsArgs {
   projectId: string

@@ -1,19 +1,6 @@
-import { Firestore, FieldValue, QuerySnapshot } from '@google-cloud/firestore'
-import fs from 'fs'
+import { QuerySnapshot } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-// @ts-ignore
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
+import { firestore } from '../authentication/ServiceAccount'
 
 export interface RegisterAgentArgs {
   projectId: string
@@ -59,15 +46,12 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
   const { projectId } = args
   const { tag } = req.body
   try {
-    const projectPath = `/projects/${projectId}`
-    const project = await (await firestore.doc(projectPath).get()).data()
-
     const agentDoc = {
       projectId,
       createdAt: Date.now(),
     }
 
-    const projectAgentsPath = `${projectPath}/agents`
+    const projectAgentsPath = `/projects/${projectId}/agents`
     const documentReference = await firestore
       .collection(projectAgentsPath)
       .add(agentDoc)
@@ -78,9 +62,7 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
       await tagAgent({ projectId, agentId, tag })
     }
 
-    return res
-      .status(200)
-      .send({ agentId, actionsCollectionPath })
+    return res.status(200).send({ agentId, actionsCollectionPath })
   } catch (error) {
     console.error(error)
     res.status(404).send(`Error fetching hosts`)

@@ -11,7 +11,7 @@ services:
       - ../../server/app/:/app
       - ../../credentials/:/credentials
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
     command: sh -c 'npm run dev'
   cli:
     container_name: cli

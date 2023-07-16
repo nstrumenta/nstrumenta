@@ -17,7 +17,7 @@ services:
     volumes:
       - ./credentials/:/credentials
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
       - NSTRUMENTA_API_URL=http://server:5999
     command: 'npm run start'
   agent:

@@ -6,10 +6,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5999:5999
-    volumes:
-      - ../../../cluster/credentials/:/credentials
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
       - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
       - NST_AGENT_TYPE=dev
     command: 'npm run start'

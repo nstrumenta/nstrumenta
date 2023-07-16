@@ -1,5 +1,4 @@
 import { Firestore } from '@google-cloud/firestore'
-import { Storage } from '@google-cloud/storage'
 import { CreateApiKeyService } from './services/ApiKeyService'
 import { createArchiveService } from './services/firestoreArchive'
 import { createSandboxService } from './services/sandbox'
@@ -16,6 +15,11 @@ import {
 } from 'fs'
 import { mkdir, readFile } from 'fs/promises'
 import * as functions from './api'
+import {
+  bucketName,
+  serviceAccount,
+  storage,
+} from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
 
@@ -27,7 +31,7 @@ const path = require('path')
 const ejs = require('ejs')
 
 export interface ActionData {
-  payload: { projectId: string;[key: string]: any }
+  payload: { projectId: string; [key: string]: any }
 
   [key: string]: any
 }
@@ -60,11 +64,6 @@ server.listen(port, () => {
   console.log('listening on *:', port)
 })
 
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(readFileSync(keyfile, 'utf8'))
-
 const agentType = process.env.NST_AGENT_TYPE || 'main'
 console.log('agentType: ', agentType)
 
@@ -77,14 +76,6 @@ const firestore = new Firestore({
   timestampsInSnapshots: true,
 })
 
-const storage = new Storage({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
-const bucketName = `${serviceAccount.project_id}.appspot.com`
 const bucket = storage.bucket(bucketName)
 
 const compute = new Compute(serviceAccount)

@@ -1,8 +1,10 @@
 # Credentials for your project
 these are intentionally not checked in to the source repository
 ```
-cluster % ls  credentials
-firebaseConfig.js       nstrumenta-admin.json   readme.md
+cluster % ls -a credentials
+.                       .gitignore              apiKey.json             readme.md
+..                      .vscode                 firebaseConfig.js       singleLineFromJson.mjs
+.env                    activate.sh             nstrumenta-admin.json
 ```
 
 make a .js file from the firebase config object
@@ -21,9 +23,14 @@ export const firebaseConfig = {
 };
 ```
 
-and
+### .env file with 
+```env
+GCLOUD_SERVICE_KEY=[contents of keyfile]
+NSTRUMENTA_API_URL=[nstrumenta domain api url] 
+NSTRUMENTA_API_KEY=[nstrumenta project api key]
+```
 
-add the key from your firebase admin service account
+the key from your firebase admin service account
 https://cloud.google.com/iam/docs/keys-create-delete
 
 ### nstrumenta-admin.json 
@@ -41,3 +48,5 @@ https://cloud.google.com/iam/docs/keys-create-delete
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/SERVICE_ACCOUNT_EMAIL"
 }
 ```
+
+

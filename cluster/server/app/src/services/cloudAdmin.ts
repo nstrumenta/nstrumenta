@@ -4,12 +4,10 @@ import { ChildProcessWithoutNullStreams } from 'child_process'
 import { ActionData } from '../index'
 import { readFile, rm, writeFile } from 'fs/promises'
 import { readFileSync } from 'fs'
+import { serviceAccount } from '../authentication/ServiceAccount'
 
-const adminKeyFilePath = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (adminKeyFilePath == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const adminServiceAccount = JSON.parse(readFileSync(adminKeyFilePath, 'utf8'))
-const GCP_PROJECT = adminServiceAccount.project_id;
+const adminServiceAccount = serviceAccount
+const GCP_PROJECT = adminServiceAccount.project_id
 
 export interface CloudAdminService {
   createServiceAccount(
@@ -78,19 +76,21 @@ export const createCloudAdminService = ({
     ) {
       console.log(`keyFile already exists on ${projectId}`)
     } else {
-      const serviceAccount = `${projectId.slice(0, 20)}-${uuid4().replaceAll(
-        '-',
-        '',
-      )}`
+      const nonAdminServiceAccount = `${projectId.slice(
+        0,
+        20,
+      )}-${uuid4().replaceAll('-', '')}`
         .slice(0, 30)
         .toLowerCase()
-      const keyfileName = `${serviceAccount}.json`
+      const keyfileName = `${nonAdminServiceAccount}.json`
       const bucketName = `${GCP_PROJECT}.appspot.com`
       // mark action as started
       await firestore
         .doc(actionPath)
         .set({ status: 'started' }, { merge: true })
-
+      const adminKeyFilePath = './credentials.json'
+      process.env['GOOGLE_APPLICATION_CREDENTIALS'] = adminKeyFilePath
+      await writeFile(adminKeyFilePath, JSON.stringify(serviceAccount), 'utf-8')
       await asyncSpawn(
         'gcloud',
         `auth activate-service-account --key-file ${adminKeyFilePath}`.split(
@@ -99,14 +99,14 @@ export const createCloudAdminService = ({
       )
       await asyncSpawn(
         'gcloud',
-        `iam service-accounts create ${serviceAccount} --project ${GCP_PROJECT}`.split(
+        `iam service-accounts create ${nonAdminServiceAccount} --project ${GCP_PROJECT}`.split(
           ' ',
         ),
       )
 
       await asyncSpawn(
         'gcloud',
-        `iam service-accounts keys create ${keyfileName} --iam-account ${serviceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com --project ${GCP_PROJECT}`.split(
+        `iam service-accounts keys create ${keyfileName} --iam-account ${nonAdminServiceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com --project ${GCP_PROJECT}`.split(
           ' ',
         ),
       )
@@ -120,14 +120,22 @@ export const createCloudAdminService = ({
       // upload cloud function zip (built in nstrumenta/cluster/functions)
       await asyncSpawn(
         'gcloud',
-        `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(' ')
+        `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(
+          ' ',
+        ),
       )
 
       // deploy cloud function
-      const adminCredentialsForCloudFunction = btoa(JSON.stringify({ project_id: adminServiceAccount.project_id, client_email: adminServiceAccount.client_email, private_key: adminServiceAccount.private_key }))
+      const adminCredentialsForCloudFunction = btoa(
+        JSON.stringify({
+          project_id: adminServiceAccount.project_id,
+          client_email: adminServiceAccount.client_email,
+          private_key: adminServiceAccount.private_key,
+        }),
+      )
       await asyncSpawn(
         'gcloud',
-        `functions deploy ${serviceAccount} --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
+        `functions deploy ${nonAdminServiceAccount} --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
           ' ',
         ),
       )
@@ -135,12 +143,15 @@ export const createCloudAdminService = ({
       //set cors on the bucket
       await asyncSpawn(
         'gcloud',
-        `storage buckets update gs://${bucketName} --cors-file=./src/cors.json`.split(' '),)
+        `storage buckets update gs://${bucketName} --cors-file=./src/cors.json`.split(
+          ' ',
+        ),
+      )
 
       // set access to the bucket for the new serviceAccount
       await asyncSpawn(
         'gsutil',
-        `iam ch serviceAccount:${serviceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com:legacyBucketWriter gs://${bucketName}`.split(
+        `iam ch serviceAccount:${nonAdminServiceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com:legacyBucketWriter gs://${bucketName}`.split(
           ' ',
         ),
       )

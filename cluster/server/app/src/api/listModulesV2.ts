@@ -1,20 +1,6 @@
-import fs from 'fs'
-import { Firestore } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
+import { firestore } from '../authentication/ServiceAccount'
 import { ListModulesArgs } from './types'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
 
 const listModulesV2Base: APIEndpoint<ListModulesArgs> = async (
   req,
@@ -29,11 +15,9 @@ const listModulesV2Base: APIEndpoint<ListModulesArgs> = async (
     const docRefs = await collection.listDocuments()
     const modulePromises = docRefs.map(async (docRef) => {
       const doc = await docRef.get()
-      // TODO: add options for verbose version info
       return { id: doc.id, metadata: doc.data() }
     })
     const modules = await Promise.all(modulePromises)
-    console.log(modules)
 
     return res.status(200).send(modules)
   } catch (error) {

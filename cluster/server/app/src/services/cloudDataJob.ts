@@ -1,14 +1,10 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { readFileSync } from 'fs'
+import { writeFile } from 'fs/promises'
+import { serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 import { CreateApiKeyService } from './ApiKeyService'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(readFileSync(keyfile, 'utf8'))
 
 export interface CloudDataJobService {
   createJob(
@@ -75,11 +71,6 @@ export const createCloudDataJobService = ({
   ) {
     console.log({ projectId })
 
-    console.dir(data)
-    const moduleName = data.data.module.id.split('#')[0]
-    const version = data.data.module.version
-    const args = data.data.args.slice(1)
-
     const actionId = actionPath.split('/').slice(-1)[0]
     const workflowId = `workflow-${actionId}`
 
@@ -91,6 +82,8 @@ export const createCloudDataJobService = ({
     if (!apiKey) throw new Error('failed to create temporary apiKey')
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    const keyfile = './credentials.json'
+    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
     await asyncSpawn(
       'gcloud',
       `auth activate-service-account --key-file ${keyfile}`.split(' '),

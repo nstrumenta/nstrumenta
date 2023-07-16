@@ -1,20 +1,6 @@
-import { GetSignedUrlConfig, Storage } from '@google-cloud/storage'
-import fs from 'fs'
+import { GetSignedUrlConfig } from '@google-cloud/storage'
 import { APIEndpoint, withAuth } from '../authentication'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-
-const storage = new Storage({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
-const bucketName = `${serviceAccount.project_id}.appspot.com`
+import { bucketName, storage } from '../authentication/ServiceAccount'
 
 export interface DownloadModuleFilesArgs {
   projectId: string

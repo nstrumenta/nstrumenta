@@ -4,7 +4,6 @@ import Conf from 'conf';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
-import inspector from 'node:inspector';
 import nodePath from 'node:path';
 import path from 'path';
 import semver from 'semver';
@@ -50,9 +49,7 @@ export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
 
   const log = (...args: unknown[]) => {
     const chunk = `${util.format.apply(logger, [prefix || '', ...args])}\n`;
-    // send log to any active debug inspectors
-    // @ts-ignore
-    inspector.console.log(chunk);
+
     logger.logStream.push(chunk, 'utf-8');
   };
 

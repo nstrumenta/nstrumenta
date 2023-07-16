@@ -22,8 +22,8 @@ services:
       - ./server/app/:/app
       - ./credentials/:/credentials
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/nstrumenta-admin.json
-      - NSTRUMENTA_API_URL=$NSTRUMENTA_API_URL
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
   agent:
     build:
@@ -36,7 +36,7 @@ services:
       - ../:/app
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=$NSTRUMENTA_API_URL
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
   developer:
     build:
@@ -48,5 +48,5 @@ services:
       - ./credentials:/credentials
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=$NSTRUMENTA_API_URL
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: tail -f /dev/null

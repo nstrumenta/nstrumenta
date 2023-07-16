@@ -1,20 +1,6 @@
 import crypto from 'crypto'
-import Firestore from '@google-cloud/firestore'
-import fs from 'fs'
 import { Request, Response } from 'express'
-
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-// @ts-ignore
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
+import { firestore } from './ServiceAccount'
 
 export type AuthResult =
   | { authenticated: false; projectId: string; message?: string }
@@ -43,9 +29,11 @@ export const auth: AuthFunction = async (req, res) => {
 
   try {
     const hash = createHash(key)
-    const doc = await firestore.collection('keys').doc(hash).get()
+    const docData = await (
+      await firestore.collection('keys').doc(hash).get()
+    ).data()
 
-    if (!doc.exists || !doc.data().projectId) {
+    if (docData == undefined) {
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
@@ -57,7 +45,7 @@ export const auth: AuthFunction = async (req, res) => {
       ip: req.ip,
     })
 
-    return { authenticated: true, projectId: doc.data().projectId }
+    return { authenticated: true, projectId: docData.projectId }
   } catch (error) {
     console.log(error)
     return { authenticated: false, message: 'error', projectId: '' }

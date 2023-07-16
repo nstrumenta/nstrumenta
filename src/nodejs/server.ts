@@ -845,7 +845,7 @@ export class NstrumentaServer {
     }
   }
 
-  // @ts-ignore
+  
   public async uploadLog({ localPath, name }: { localPath: string; name: string }) {
     let url = '';
     let size = 0;

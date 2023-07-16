@@ -1,23 +1,13 @@
 import {
   DocumentData,
-  Firestore,
-  QueryDocumentSnapshot,
+  QueryDocumentSnapshot
 } from '@google-cloud/firestore'
-import fs from 'fs'
 import { APIEndpoint, withAuth } from '../authentication'
+import { firestore } from '../authentication/ServiceAccount'
 
-const keyfile = process.env.GOOGLE_APPLICATION_CREDENTIALS
-if (keyfile == undefined)
-  throw new Error('GOOGLE_APPLICATION_CREDENTIALS not set to path of keyfile')
-const serviceAccount = JSON.parse(fs.readFileSync(keyfile, 'utf8'))
-// @ts-ignore
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
+
+
+
 
 export interface GetDataMetadataArgs {
   projectId: string

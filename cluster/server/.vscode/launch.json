@@ -13,9 +13,7 @@
             ],
             "cwd": "${workspaceFolder}/app",
             "runtimeExecutable": "npm",
-            "env": {
-                "GOOGLE_APPLICATION_CREDENTIALS": "../../credentials/nstrumenta-admin.json"
-            },
+            "envFile": "../../credentials/.env",
             "skipFiles": [
                 "<node_internals>/**"
             ],
