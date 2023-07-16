@@ -11,7 +11,6 @@ import semver from 'semver';
 import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
 import util, { promisify } from 'util';
-import { getCurrentContext } from '../shared/lib/context';
 import { schema } from '../shared/schema';
 import { Module, ModuleExtended } from './commands/module';
 
@@ -86,16 +85,12 @@ const config = new Conf(schema as any);
 
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
-  if (!apiKey) {
-    try {
-      apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    } catch {}
-  }
 
-  if (!apiKey)
+  if (!apiKey) {
     throw new Error(
-      'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+      'nstrumenta api key is not set, set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
     );
+  }
 
   return apiKey;
 };

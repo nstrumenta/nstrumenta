@@ -6,7 +6,6 @@ import {
   makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../../shared/lib/busMessage';
-import { getCurrentContext } from '../../shared/lib/context';
 import { resolveApiKey } from '../utils';
 
 const red = (text: string) => {
@@ -15,17 +14,14 @@ const red = (text: string) => {
 
 export const Send = async (url: string, { channel }: { channel: string }) => {
   const apiKey = resolveApiKey();
-  const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
-  url = url ? url : contextWsHost;
-  channel = channel ? channel : contextChannel;
 
   if (!url) {
-    console.log(red('no ws host specified either as argument or in current context'));
+    console.log(red('no ws host specified'));
     return;
   }
 
   if (!channel) {
-    console.log(red('no ws channel specified either as cli option or in current context'));
+    console.log(red('no ws channel specified'));
     return;
   }
 
@@ -57,17 +53,13 @@ export const Subscribe = async (
   url: string,
   { channel, messageOnly }: { channel?: string; messageOnly?: boolean }
 ) => {
-  const { wsHost: contextWsHost, channel: contextChannel } = getCurrentContext();
-  url = url ? url : contextWsHost;
-  channel = channel ? channel : contextChannel;
-
   if (!url) {
-    console.log(red('no ws host specified either as argument or in current context'));
+    console.log(red('no ws host specified'));
     return;
   }
 
   if (!channel) {
-    console.log(red('no ws channel specified either as cli option or in current context'));
+    console.log(red('no ws channel'));
     return;
   }
 

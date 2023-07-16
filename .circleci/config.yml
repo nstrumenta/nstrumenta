@@ -12,6 +12,7 @@ jobs:
             - frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           command: ./use_cache_or_npm_install.sh
+      - run: echo $FIREBASE_CONFIG > ${HOME}/cluster/credentials/firebaseConfig.js
       - run:
           command: ./build.sh ${CIRCLE_BRANCH}
       - save_cache:
@@ -124,7 +125,7 @@ jobs:
     steps:
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud beta compute --project=macro-coil-194519 instances create-with-container ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} --zone=us-west1-b --machine-type=n1-standard-1 --subnet=default --network-tier=PREMIUM --service-account=796614042819-compute@developer.gserviceaccount.com --metadata=google-logging-enabled=true --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform --image=cos-stable-70-11021-62-0 --image-project=cos-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=staging-${CIRCLE_BUILD_NUM} --container-image=gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}  --container-restart-policy=always --container-env=NST_AGENT_TYPE=${CIRCLE_BRANCH},NST_TEMPORAL_ADDRESS=34.127.73.17:7233 --container-mount-host-path mount-path=/var/run/docker.sock,host-path=/var/run/docker.sock,mode=rw --labels=container-vm=cos-stable-70-11021-62-0
+      - run: gcloud beta compute --project=${GOOGLE_PROJECT_ID} instances create-with-container ${CIRCLE_BRANCH}-${CIRCLE_BUILD_NUM} --zone=us-west1-b --machine-type=n1-standard-1 --subnet=default --network-tier=PREMIUM --metadata=google-logging-enabled=true --maintenance-policy=MIGRATE --scopes=https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append,https://www.googleapis.com/auth/compute,https://www.googleapis.com/auth/cloud-platform --image=cos-stable-70-11021-62-0 --image-project=cos-cloud --boot-disk-size=10GB --boot-disk-type=pd-ssd --boot-disk-device-name=staging-${CIRCLE_BUILD_NUM} --container-image=gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}  --container-restart-policy=always --container-env=NST_AGENT_TYPE=${CIRCLE_BRANCH},NST_TEMPORAL_ADDRESS=34.127.73.17:7233 --container-mount-host-path mount-path=/var/run/docker.sock,host-path=/var/run/docker.sock,mode=rw --labels=container-vm=cos-stable-70-11021-62-0
   deploy-functions:
     docker:
       - image: google/cloud-sdk

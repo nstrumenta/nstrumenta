@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
   List as ListAgents,
@@ -8,33 +7,19 @@ import {
   SetAction as SetAgentAction,
   Start,
 } from './commands/agent';
-import { AddKey, ListProjects, SetProject } from './commands/auth';
 import {
-  AddContext,
-  ClearConfig,
-  DeleteContext,
-  GetCurrentContext,
-  ListContexts,
-  SetContext,
-  SetContextProperty,
-} from './commands/contexts';
+  Get as GetData,
+  List as ListData,
+  Mount as MountData,
+  Query as QueryData,
+  Unmount as UnmountData,
+  Upload as UploadData,
+} from './commands/data';
 import { ListMachines } from './commands/machines';
 import { CloudRun, List, Publish, Run } from './commands/module';
 import { Send, Subscribe } from './commands/pubsub';
-import {
-  List as ListData,
-  Mount as MountData,
-  Unmount as UnmountData,
-  Upload as UploadData,
-  Query as QueryData,
-  Get as GetData,
-} from './commands/data';
-import axios from 'axios';
-import { resolveApiKey } from './utils';
 
 const version = require('../../package.json').version;
-
-if (!process.env.NSTRUMENTA_API_KEY) { initContexts(); }
 
 const program = new Command()
   .version(version, '-v, --version', 'output the current version')
@@ -46,25 +31,6 @@ machineCommand
   .alias('ls')
   .description('List host machines for current project')
   .action(ListMachines);
-
-const authCommand = program.command('auth');
-authCommand
-  .command('add')
-  .description('Add API Key for project')
-  .argument('[key]', 'API Key')
-  .action(AddKey);
-
-authCommand
-  .command('list')
-  .alias('ls')
-  .description('List projects with keys stored')
-  .action(ListProjects);
-
-authCommand
-  .command('set')
-  .argument('[id]', 'Project ID')
-  .description('Set current project')
-  .action(SetProject);
 
 program
   .command('send')
@@ -141,26 +107,6 @@ agentCommand
   .description('cancels all pending actions for an agent')
   .action(CleanAgentActions);
 
-const contextCommand = program.command('context');
-contextCommand.command('add').description('Add a context').action(AddContext);
-contextCommand.command('list').description('List all stored contexts').action(ListContexts);
-contextCommand.command('show').description('Show current context').action(GetCurrentContext);
-contextCommand.command('delete').description('Delete a context').action(DeleteContext);
-contextCommand
-  .command('set')
-  .description('Set current context to one of the stored contexts')
-  .action(SetContext);
-contextCommand
-  .command('set-property')
-  .description('set one of the available properties on the current context')
-  .argument('[name]', 'property name')
-  .option('-v, --value <value>')
-  .action(SetContextProperty);
-
-if (process.env.NODE_ENV === 'development') {
-  contextCommand.command('clear').description('** clear all local config!! **').action(ClearConfig);
-}
-
 const dataCommand = program.command('data');
 dataCommand
   .command('list')
@@ -171,10 +117,7 @@ dataCommand
   .command('mount')
   .description('mount data to local filesystem (requires gcsfuse)')
   .action(MountData);
-dataCommand
-  .command('unmount')
-  .description('unmount previously mounted data')
-  .action(UnmountData);
+dataCommand.command('unmount').description('unmount previously mounted data').action(UnmountData);
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')

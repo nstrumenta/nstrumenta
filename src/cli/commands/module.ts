@@ -4,7 +4,6 @@ import fs from 'fs/promises';
 import semver from 'semver';
 import tar from 'tar';
 import { getEndpoints } from '../../shared';
-import { getCurrentContext } from '../../shared/lib/context';
 import {
   asyncSpawn,
   getModuleFromStorage,
@@ -60,7 +59,7 @@ export const Run = async function (
       if (entry) {
         const [command, ...entryArgs] = entry.split(' ');
         console.log(command, entryArgs, { entry });
-        await process.nextTick(() => { });
+        await process.nextTick(() => {});
         await asyncSpawn(command, [...entryArgs, ...args], {
           cwd,
           stdio: 'inherit',
@@ -172,10 +171,14 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
       console.warn(`Couldn't read ${folder}/module.json`);
     }
     let packageConfig: Record<string, unknown> | undefined;
-    try {
-      packageConfig = JSON.parse(await fs.readFile(`${folder}/package.json`, { encoding: 'utf8' }));
-    } catch (err) {
-      console.log(`no ${folder}/package.json`);
+    if (moduleConfig?.type == 'nodejs') {
+      try {
+        packageConfig = JSON.parse(
+          await fs.readFile(`${folder}/package.json`, { encoding: 'utf8' })
+        );
+      } catch (err) {
+        console.log(`no ${folder}/package.json`);
+      }
     }
 
     return { ...moduleMeta, ...moduleConfig, ...packageConfig } as ModuleExtended;
@@ -207,9 +210,7 @@ export const Publish = async () => {
   modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
   console.log(
-    `publishing ${modules.length} modules: [${modules
-      .map(({ name }) => name)
-      .join(', ')}] to project ${getCurrentContext().projectId}\n`
+    `publishing ${modules.length} modules: [${modules.map(({ name }) => name).join(', ')}]}\n`
   );
 
   try {

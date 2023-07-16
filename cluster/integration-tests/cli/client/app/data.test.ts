@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { randomUUID } from 'node:crypto';
-import { asyncSpawn } from './module.test';
+import { asyncSpawn } from './AsyncSpawn';
 
 const tempDir = './temp';
 const testId = process.env.TEST_ID || randomUUID();
@@ -8,14 +8,14 @@ const testId = process.env.TEST_ID || randomUUID();
 export const pollNstrumenta = async (
   requiredString,
   timeout = 10000,
-  command = 'nst data list'
+  command = 'data list'
 ): Promise<string> => {
   const start = Date.now();
   console.log('starting polling for data...', { requiredString });
 
   const response = await new Promise<string>(async function poll(resolve, reject) {
     await process.nextTick(() => {});
-    const result = await asyncSpawn('npx', command.split(' '), { quiet: true });
+    const result = await asyncSpawn('nst', command.split(' '), { quiet: true });
     if (result.match(requiredString)) {
       resolve(result);
       return;
@@ -63,8 +63,8 @@ describe('Data', () => {
   describe('Upload', () => {
     test('single file', async () => {
       const result = await asyncSpawn(
-        'npx',
-        `nst data upload ${testFile} -t test-id-${testId}`.split(' '),
+        'nst',
+        `data upload ${testFile} -t test-id-${testId}`.split(' '),
         { cwd: tempDir }
       );
       expect(result).toContain(`test-id-${testId}`);
@@ -72,8 +72,8 @@ describe('Data', () => {
 
     test('multiple files', async () => {
       await asyncSpawn(
-        'npx',
-        `nst data upload ${testFile2} ${testFile3} --tags test-id-${testId}`.split(' '),
+        'nst',
+        `data upload ${testFile2} ${testFile3} --tags test-id-${testId}`.split(' '),
         { cwd: tempDir }
       );
 

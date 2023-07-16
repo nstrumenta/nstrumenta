@@ -14,7 +14,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5999:5999
-      - 9229:9229
     volumes:
       - ./credentials/:/credentials
     environment:
@@ -28,7 +27,7 @@ services:
     ports:
       - 8088:8088
     environment:
-      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_API_URL=http://server:5999
     command: 'npm run start:agent'
   developer:
@@ -37,6 +36,6 @@ services:
       dockerfile: ./cluster/developer/Dockerfile
     privileged: true
     environment:
-      - NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_API_URL=http://server:5999
     command: tail -f /dev/null

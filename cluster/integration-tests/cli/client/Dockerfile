@@ -1,9 +1,21 @@
 FROM node:16.13.2-alpine3.15
 
-WORKDIR /app
+#install nstrumenta
+RUN npm i -g nstrumenta
 
-COPY ./app/ /app/
 
+
+# context is top level of nstrumenta repo
+COPY . /nstrumenta/
+WORKDIR /nstrumenta
 RUN npm install
+RUN npm run build
+RUN npm link
+
+COPY ./cluster/integration-tests/cli/client/app/ /app
+WORKDIR /app
+RUN npm install
+
+
 
 ENTRYPOINT ["npm", "run", "test-from-docker-compose"]
