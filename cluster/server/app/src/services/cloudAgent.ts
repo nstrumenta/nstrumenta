@@ -157,6 +157,7 @@ export const createCloudAgentService = ({
     const imageId = `gcr.io/${gcpProjectId}/agent:latest`
 
     //create apiKey specifically for the cloud agent
+    console.log({ projectId })
     const apiKey = await apiKeyService.createAndAddApiKey(projectId)
     let description: GCloudDescribeResults | undefined = undefined
     try {
