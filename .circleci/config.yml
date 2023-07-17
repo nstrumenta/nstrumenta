@@ -97,8 +97,6 @@ jobs:
       - checkout:
           path: ~/project
       - run:
-          command: echo 'export TEST_ID_BASE="${CIRCLE_SHA1}-${PIPELINE_NUMBER}"' >> "$BASH_ENV"
-      - run:
           command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
       - run: ./ci.sh cli
   deploy-client:
