@@ -1,12 +1,9 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
+import { serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 import { ApiKeyService } from './ApiKeyService'
-
-const PROJECT_HOST_MACHINE_COLLECTION_ID = 'machines'
-
-const PROJECT_ID = process.env.NSTRUMENTA_GCP_PROJECT
 
 const buildResourceName = (actionPath: string) => {
   const projectId = actionPath.split('/')[1]
@@ -15,38 +12,15 @@ const buildResourceName = (actionPath: string) => {
     .toLowerCase()
     .replace(/_/g, '-')
     .replace(/[^-a-z0-9]/, '')
-    .substr(0, 61)
+    .slice(0, 61)
 }
 
-function parseCreateVMResults(results: GCloudDescribeResults) {
-  const {
-    networkInterfaces: [
-      {
-        accessConfigs: [{ natIP: ipAddress }],
-      },
-    ],
-    name,
-    creationTimestamp: createdAt,
-    status,
-  } = results
-
-  const url = `https://${name}.vm.nstrumenta.com`
-  const wsUrl = `wss://${name}.vm.nstrumenta.com`
-  return {
-    name,
-    url,
-    wsUrl,
-    createdAt,
-    status,
-  }
-}
-
-export interface SandboxVMMetaData {
+export interface CloudAgentVMMetaData {
   createdAt: string
   ipAddress: string
 }
 
-export interface SandboxServiceDependencies {
+export interface CloudAgentServiceDependencies {
   firestore: Firestore
   compute: any
   spawn: (
@@ -61,9 +35,8 @@ export interface SandboxServiceDependencies {
 interface CreateVMArgs {
   projectId: string
   apiKey: string
-  actionPath: string
+  instanceId: string
   imageId: string
-  machineType: string
 }
 
 interface PushImageArgs {
@@ -74,18 +47,14 @@ interface StoreTarballArgs {
   actionPath: string
   imageId: string
 }
-export interface SandboxService {
-  deploySandbox(
+export interface CloudAgentService {
+  deployCloudAgent(
     actionPath: string,
     data: ActionData,
     apiKeyService: ApiKeyService,
   ): Promise<void>
 
-  deleteDeployedSandbox(actionPath: string, data: ActionData): Promise<void>
-
-  stopDeployedSandbox(actionPath: string, data: ActionData): Promise<void>
-
-  updateProject(path: string, data: ActionData): Promise<void>
+  deleteDeployedCloudAgent(actionPath: string, data: ActionData): Promise<void>
 }
 
 export interface GCloudDescribeResults {
@@ -98,11 +67,11 @@ export interface GCloudDescribeResults {
   [key: string]: unknown
 }
 
-export const createSandboxService = ({
+export const createCloudAgentService = ({
   firestore,
   spawn,
   storage,
-}: SandboxServiceDependencies): SandboxService => {
+}: CloudAgentServiceDependencies): CloudAgentService => {
   async function asyncSpawn(
     cmd: string,
     args?: string[],
@@ -131,178 +100,88 @@ export const createSandboxService = ({
       throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
     }
 
-    console.log(`spawn ${cmd} output ${output}`)
+    console.log(`spawn ${cmd} output ${output} ${error}`)
     return output
   }
 
-  async function createVM({
+  async function cloudRunDeployCloudAgent({
     projectId,
-    actionPath,
+    instanceId,
     imageId,
     apiKey,
-    machineType,
   }: CreateVMArgs) {
-    const hostInstanceId = buildResourceName(actionPath)
+    await asyncSpawn(
+      'gcloud',
+      `config set core/project ${serviceAccount.project_id}`.split(' '),
+    )
 
-    const results = await asyncSpawn('gcloud', [
-      'beta',
-      'compute',
-      'instances',
-      'create-with-container',
-      `${hostInstanceId}`,
-      `--container-image=${imageId}`,
-      '--zone',
-      'us-west1-a',
-      '--format=json',
-      `--machine-type=${machineType}`,
-      `--container-env=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${hostInstanceId},NSTRUMENTA_API_KEY=${apiKey}`,
+    await asyncSpawn('gcloud', `config set run/region europe-west3`.split(' '))
+
+    await asyncSpawn('gcloud', [
+      'run',
+      'deploy',
+      `${instanceId}`,
+      `--image=${imageId}`,
+      '--allow-unauthenticated',
+      '--port=8088',
+      `--service-account=${serviceAccount.client_email}`,
+      '--max-instances=1',
+      '--no-cpu-throttling',
+      `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey}`,
     ])
 
-    console.log('compute instance created')
+    const description = JSON.parse(
+      await asyncSpawn(
+        'gcloud',
+        `run services describe ${instanceId} --format=json`.split(' '),
+      ),
+    )
 
-    return JSON.parse(results)[0]
+    return description
   }
 
-  async function deploySandbox(
+  async function deployCloudAgent(
     actionPath: string,
-    data: { payload: { projectId: string; machineType?: string } },
+    data: { payload: { projectId: string } },
     apiKeyService: ApiKeyService,
   ) {
     const {
-      payload: { projectId, machineType },
+      payload: { projectId },
     } = data
 
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
 
-    const imageId = `gcr.io/${PROJECT_ID}/hosted-vm:latest`
+    const instanceId = buildResourceName(actionPath)
+    const gcpProjectId = serviceAccount.project_id
+    const imageId = `gcr.io/${gcpProjectId}/agent:latest`
 
-    //create apiKey
+    //create apiKey specifically for the hostedVm
     const apiKey = await apiKeyService.createAndAddApiKey(projectId)
-
+    let description: GCloudDescribeResults | undefined = undefined
     try {
-      console.log('[sandbox] invoke createVM')
-      if (!apiKey) throw new Error('api key not set, unable to createVM')
-      const vm = await createVM({
-        actionPath,
+      console.log('[sandbox] invoke createCloudAgent')
+      if (!apiKey)
+        throw new Error('api key not set, unable to createCloudAgent')
+
+      description = await cloudRunDeployCloudAgent({
+        instanceId,
         apiKey,
         imageId,
         projectId,
-        machineType: machineType || '',
       })
-
-      console.log(`set action ${actionPath} to deployed`, vm)
-      await firestore.doc(actionPath).set(
-        {
-          status: 'deployed',
-          vm,
-        },
-        {
-          merge: true,
-        },
-      )
     } catch (err: any) {
       console.log(`failed to deploy sandbox ${err.message}`)
       await firestore
         .doc(actionPath)
         .set({ status: 'error', error: err.message }, { merge: true })
     }
-  }
-
-  async function deleteDeployedSandbox(
-    actionPath: string,
-    data: { payload: { projectId: string; hostInstanceMachineId: string } },
-  ) {
-    console.log('deleteDeployedSandbox', data)
-    const {
-      payload: { projectId, hostInstanceMachineId },
-    } = data
-
-    // mark action as started
-    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    const machinePath = `projects/${projectId}/machines/${instanceId}`
 
     try {
-      const metaPath = `projects/${projectId}/${PROJECT_HOST_MACHINE_COLLECTION_ID}/${hostInstanceMachineId}`
-
-      const meta = await (await firestore.doc(metaPath).get()).data()
-
-      if (meta?.status != 'stopped') {
-        await stopDeployedSandbox(actionPath, data)
+      if (description) {
+        firestore.doc(machinePath).set(description)
       }
-
-      //remove machine from project
-      await firestore.doc(metaPath).delete()
-
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'complete' }, { merge: true })
-    } catch (err) {
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
-    }
-  }
-
-  async function stopDeployedSandbox(
-    actionPath: string,
-    data: { payload: { projectId: string; hostInstanceMachineId: string } },
-  ) {
-    console.log('stopDeployedSandbox', data)
-    const {
-      payload: { projectId, hostInstanceMachineId },
-    } = data
-
-    try {
-      const metaPath = `projects/${projectId}/${PROJECT_HOST_MACHINE_COLLECTION_ID}/${hostInstanceMachineId}`
-      const status = await (await firestore.doc(metaPath).get()).data()?.status
-
-      if (status == 'stopped') {
-        throw `${hostInstanceMachineId} already stopped`
-      }
-
-      const results = await asyncSpawn('gcloud', [
-        'compute',
-        'instances',
-        'delete',
-        `${hostInstanceMachineId}`,
-        '-q',
-        '--zone',
-        'us-west1-a',
-      ])
-      console.log(results)
-      //set status to stopped
-      await firestore.doc(metaPath).set({ status: 'stopped' }, { merge: true })
-
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'complete' }, { merge: true })
-    } catch (err) {
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
-    }
-  }
-
-  // This sort of thing might feel better in some sort of project service, but it's ok
-  async function updateProject(
-    actionPath: string,
-    data: {
-      payload: { projectId: string; hostInstanceMachineId: string }
-      vm: GCloudDescribeResults
-    },
-  ) {
-    const {
-      payload: { projectId },
-      vm,
-    } = data
-    const { name: hostInstanceId } = vm
-    const machinePath = `${PROJECT_HOST_MACHINE_COLLECTION_ID}/${hostInstanceId}`
-
-    const metaPath = `projects/${projectId}/${PROJECT_HOST_MACHINE_COLLECTION_ID}/${hostInstanceId}`
-    const machineDoc = { projectId, metaPath, vm }
-    try {
-      firestore.doc(machinePath).set(machineDoc)
-      firestore.doc(metaPath).set({ ...parseCreateVMResults(vm) })
       firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
     } catch (err) {
       firestore
@@ -311,10 +190,42 @@ export const createSandboxService = ({
     }
   }
 
+  async function deleteDeployedCloudAgent(
+    actionPath: string,
+    data: { payload: { projectId: string; instanceId: string } },
+  ) {
+    console.log('deleteDeployedCloudAgent', data)
+    const {
+      payload: { projectId, instanceId },
+    } = data
+
+    // mark action as started
+    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    const machineDocPath = `projects/${projectId}/machines/${instanceId}`
+
+    try {
+      await asyncSpawn(
+        'gcloud',
+        `config set run/region europe-west3`.split(' '),
+      )
+      await asyncSpawn('gcloud', 'config set disable_prompts true'.split(' '))
+      await asyncSpawn('gcloud', ['run', 'services', 'delete', `${instanceId}`])
+
+      await firestore
+        .doc(machineDocPath)
+        .set({ deleted: true }, { merge: true })
+      await firestore
+        .doc(actionPath)
+        .set({ status: 'complete' }, { merge: true })
+    } catch (err) {
+      await firestore
+        .doc(actionPath)
+        .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
+    }
+  }
+
   return {
-    deploySandbox,
-    deleteDeployedSandbox,
-    stopDeployedSandbox,
-    updateProject,
+    deployCloudAgent,
+    deleteDeployedCloudAgent,
   }
 }

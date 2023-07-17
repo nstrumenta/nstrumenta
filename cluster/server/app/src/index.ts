@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore'
 import { CreateApiKeyService } from './services/ApiKeyService'
 import { createArchiveService } from './services/firestoreArchive'
-import { createSandboxService } from './services/sandbox'
+import { createCloudAgentService } from './services/sandbox'
 
 import { spawn } from 'child_process'
 import cors from 'cors'
@@ -83,7 +83,7 @@ const compute = new Compute(serviceAccount)
 // Wire services to their dependencies
 
 const archiveService = createArchiveService({ firestore })
-const sandboxService = createSandboxService({
+const sandboxService = createCloudAgentService({
   firestore,
   compute,
   spawn,
@@ -350,21 +350,15 @@ firestore
                         data as ActionData,
                       )
                       break
-                    case 'deployHostedVM':
-                      sandboxService.deploySandbox(
+                    case 'deployCloudAgent':
+                      sandboxService.deployCloudAgent(
                         doc.ref.path,
                         data as ActionData,
                         apiKeyService,
                       )
                       break
-                    case 'deleteDeployedHostedVM':
-                      sandboxService.deleteDeployedSandbox(
-                        doc.ref.path,
-                        data as ActionData,
-                      )
-                      break
-                    case 'stopDeployedHostedVM':
-                      sandboxService.stopDeployedSandbox(
+                    case 'deleteDeployedCloudAgent':
+                      sandboxService.deleteDeployedCloudAgent(
                         doc.ref.path,
                         data as ActionData,
                       )
@@ -399,19 +393,6 @@ firestore
                       break
                     default:
                       console.log(`unrecognized server task:${data?.task}`)
-                      break
-                  }
-                }
-
-                if (data?.status != null && data.status === 'deployed') {
-                  switch (data.task) {
-                    case 'deployHostedVM':
-                      sandboxService.updateProject(
-                        doc.ref.path,
-                        data as ActionData,
-                      )
-                      break
-                    default:
                       break
                   }
                 }

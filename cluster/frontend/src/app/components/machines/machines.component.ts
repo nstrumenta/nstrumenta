@@ -1,14 +1,12 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthService } from 'src/app/auth/auth.service';
 import { VmService } from 'src/app/vm.service';
 
 @Component({
@@ -28,35 +26,47 @@ export class MachinesComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private afs: AngularFirestore,
-    private storage: AngularFireStorage,
-    private authService: AuthService,
     public dialog: MatDialog,
     private vmService: VmService
   ) {}
 
   ngOnInit() {
     this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/machines';
+
     this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const key = a.payload.doc.id;
-                  return { key: key, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
-        );
-      })
+      this.afs
+        .collection<any>(this.dataPath)
+        .snapshotChanges()
+        .pipe(
+          map((items) => {
+            return items.map((a) => {
+              const data = a.payload.doc.data();
+              const { serverStatus, deleted } = data;
+              const name = a.payload.doc.id;
+              const createdAt = data.metadata?.creationTimestamp;
+              const url = data.status?.url;
+              const status = deleted
+                ? 'Deleted'
+                : data.status?.conditions && data.status?.conditions[0]?.type;
+              return { name, createdAt, url, status, serverStatus };
+            });
+          })
+        )
+        .subscribe((dataSource) => {
+          this.dataSource = new MatTableDataSource(dataSource);
+          this.dataSource.sort = this.sort;
+          this.dataSource.sortingDataAccessor = (item, property) => {
+            switch (property) {
+              case 'date': {
+                let newDate = new Date(item.date);
+                return newDate;
+              }
+              default: {
+                return item[property];
+              }
+            }
+          };
+        })
     );
   }
 
@@ -86,23 +96,15 @@ export class MachinesComponent implements OnInit, OnDestroy {
       : this.dataSource.data.forEach((row) => this.selection.select(row));
   }
 
-  stopSelected() {
-    this.selection.selected.forEach((item) => {
-      console.log('stopping', item);
-      this.vmService.stopDeployedHostedVM({ hostInstanceMachineId: item.key });
-    });
-    this.selection.clear();
-  }
-
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.vmService.deleteDeployedHostedVM({ hostInstanceMachineId: item.key });
+      this.vmService.deleteDeployedCloudAgent({ instanceId: item.key });
     });
     this.selection.clear();
   }
 
-  createMachine(machineType: 'e2-micro' | 'n1-standard-1') {
-    this.vmService.deployHostedVM(machineType);
+  createMachine() {
+    this.vmService.deployCloudAgent();
   }
 }

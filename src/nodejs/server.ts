@@ -88,42 +88,41 @@ export type AgentActionStatus = 'pending' | 'complete';
 
 export type BackplaneCommand =
   | {
-    task: 'runModule';
-    actionId: string;
-    status: AgentActionStatus;
-    data: CommandRunModuleData;
-  }
+      task: 'runModule';
+      actionId: string;
+      status: AgentActionStatus;
+      data: CommandRunModuleData;
+    }
   | {
-    task: 'stopModule';
-    actionId: string;
-    status: AgentActionStatus;
-    data: CommandStopModuleData;
-  };
+      task: 'stopModule';
+      actionId: string;
+      status: AgentActionStatus;
+      data: CommandStopModuleData;
+    };
 
 export interface NstrumentaServerOptions {
   apiKey: string;
+  apiUrl: string;
   port?: string;
   tag?: string;
   debug?: boolean;
-  noBackplane?: boolean;
-  allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection?: boolean;
 }
 
 export type DataLog =
   | {
-    type: 'stream';
-    localPath: string;
-    channels: string[];
-    stream: WritableStream;
-  }
+      type: 'stream';
+      localPath: string;
+      channels: string[];
+      stream: WritableStream;
+    }
   | {
-    type: 'mcap';
-    localPath: string;
-    channels: string[];
-    channelIds: Map<string, number>;
-    mcapWriter: McapWriter;
-  };
+      type: 'mcap';
+      localPath: string;
+      channels: string[];
+      channelIds: Map<string, number>;
+      mcapWriter: McapWriter;
+    };
 
 type TrackRecording = {
   filePath: string;
@@ -133,7 +132,6 @@ type TrackRecording = {
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
-  allowCrossProjectApiKey: boolean;
   allowUnverifiedConnection: boolean;
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
@@ -149,11 +147,7 @@ export class NstrumentaServer {
     this.listeners = new Map();
     logger.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
-    if (!options.noBackplane) {
-      this.backplaneClient = new NstrumentaClient();
-    }
-    this.allowCrossProjectApiKey =
-      options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
+
     this.allowUnverifiedConnection =
       options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
     this.status = {
@@ -178,7 +172,7 @@ export class NstrumentaServer {
   }
 
   public async run() {
-    const { apiKey, debug } = this.options;
+    const { apiKey, apiUrl, debug } = this.options;
     const port = this.options.port ?? 8088;
 
     // server makes a local .nst folder at the cwd
@@ -373,12 +367,11 @@ export class NstrumentaServer {
       logger.log('a user connected - clientsCount = ' + wss.clients.size);
       ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
-          const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
           try {
             if (!this.allowUnverifiedConnection) {
               logger.log('attempting to verify token');
               // first message from a connected websocket must be a token
-              await verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey });
+              await verifyToken({ token: busMessage.toString(), apiKey, apiUrl });
             }
             logger.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
@@ -488,14 +481,14 @@ export class NstrumentaServer {
                           codecParameters?.mimeType.toUpperCase().includes('VP8')
                             ? 'VP8'
                             : codecParameters?.mimeType.toUpperCase().includes('VP9')
-                              ? 'VP9'
-                              : codecParameters?.mimeType.toUpperCase().includes('AV1')
-                                ? 'AV1'
-                                : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                                  ? 'MPEG4/ISO/AVC'
-                                  : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                                    ? 'OPUS'
-                                    : 'VP8';
+                            ? 'VP9'
+                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
+                            ? 'AV1'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'MPEG4/ISO/AVC'
+                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
+                            ? 'OPUS'
+                            : 'VP8';
                         const clockRate = codecParameters?.clockRate || 90000;
 
                         const trackConfig: {
@@ -722,7 +715,7 @@ export class NstrumentaServer {
                   contents.timestamp !== undefined
                     ? contents.timestamp.sec !== undefined
                       ? BigInt(contents.timestamp.sec) * BigInt(1_000_000_000) +
-                      BigInt(contents.timestamp.nsec)
+                        BigInt(contents.timestamp.nsec)
                       : BigInt(contents.timestamp) * BigInt(1_000_000)
                     : BigInt(Date.now()) * BigInt(1_000_000);
 
@@ -845,7 +838,6 @@ export class NstrumentaServer {
     }
   }
 
-  
   public async uploadLog({ localPath, name }: { localPath: string; name: string }) {
     let url = '';
     let size = 0;

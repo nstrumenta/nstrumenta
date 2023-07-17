@@ -3,7 +3,10 @@ import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 import { getEndpoints } from '../../shared';
 import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
+
+const apiUrl = process.env.NSTRUMENTA_API_URL;
+if (!apiUrl) throw new Error('NSTRUMENTA_API_URL not set');
+const endpoints = getEndpoints(apiUrl);
 const logger = createLogger();
 
 export const Start = async function (options: {
@@ -16,6 +19,7 @@ export const Start = async function (options: {
 
   const server = new NstrumentaServer({
     apiKey,
+    apiUrl,
     port: port ?? 8088,
     tag: tag ? tag : process.env.HOST_INSTANCE_ID,
     debug: debug === 'true',

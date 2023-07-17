@@ -4,16 +4,13 @@
   </mat-form-field>
   <ng-container *ngIf="selection.hasValue()">
     {{selection.selected.length}} machines selected:
-    <button mat-icon-button matTooltip="Stop Selected" (click)="stopSelected()">
-      <mat-icon color="accent">stop</mat-icon>
-    </button>
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
       <mat-icon color="accent">delete</mat-icon>
     </button>
   </ng-container>
 </div>
 
-<mat-table #table [dataSource]="dataSource" matSort matSortActive="createdAt" matSortDirection="desc" class="animate">
+<mat-table #table [dataSource]="dataSource" matSort matSortActive="name" matSortDirection="desc" class="animate">
 
   <!-- Checkbox Column -->
   <ng-container matColumnDef="select">
@@ -40,7 +37,8 @@
 
   <ng-container matColumnDef="createdAt">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.createdAt | date : 'medium'}} </mat-cell>
+    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.createdAt | date : 'medium'}}
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="status">
@@ -67,6 +65,6 @@
   <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
 </mat-table>
 
-<button mat-fab id="fab" (click)="createMachine('n1-standard-1')">
+<button mat-fab id="fab" (click)="createMachine()">
   <mat-icon>add</mat-icon>
 </button>

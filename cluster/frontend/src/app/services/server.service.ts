@@ -9,9 +9,8 @@ export type ServerTasks =
   | 'duplicateProject'
   | 'createApiKey'
   | 'revokeApiKey'
-  | 'deployHostedVM'
-  | 'stopDeployedHostedVM'
-  | 'deleteDeployedHostedVM'
+  | 'deployCloudAgent'
+  | 'deleteDeployedCloudAgent'
   | 'createServiceAccount'
   | 'buildFromGithub'
   | 'buildFromFolder'
@@ -65,7 +64,11 @@ export class ServerService {
               const key = ref.path;
               console.log('watching for project action to complete ', key);
               this.subscriptionsByTask[key] = ref.onSnapshot((snapshot) => {
-                const val = snapshot.data() as { status: string; task: string; payload?: Record<string, unknown> };
+                const val = snapshot.data() as {
+                  status: string;
+                  task: string;
+                  payload?: Record<string, unknown>;
+                };
                 console.log(val);
                 switch (val.status) {
                   case 'complete':
@@ -73,9 +76,9 @@ export class ServerService {
                     //redact api key from action
                     if (task === 'createApiKey') {
                       const responseDeepCopy = JSON.parse(JSON.stringify(val));
-                      const { payload } = val
-                      payload.key = 'redacted'
-                      this.afs.doc(key).update({ payload })
+                      const { payload } = val;
+                      payload.key = 'redacted';
+                      this.afs.doc(key).update({ payload });
                       resolve(responseDeepCopy);
                     }
                     resolve(val);
