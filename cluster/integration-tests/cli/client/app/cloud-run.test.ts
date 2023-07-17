@@ -12,6 +12,7 @@ describe('CloudRun', () => {
   const moduleName = `module-${testId}`;
 
   if (!process.env.NSTRUMENTA_API_KEY) return;
+  if (!process.env.NSTRUMENTA_API_URL) return;
 
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;
