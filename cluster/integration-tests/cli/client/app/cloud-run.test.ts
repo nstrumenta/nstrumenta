@@ -73,7 +73,7 @@ nst data unmount
   });
 
   test('publish', async () => {
-    console.log(`api key: ${process.env.NSTRUMENTA_API_KEY}`)
+    console.log(`api key: ${process.env.NSTRUMENTA_API_KEY}`);
     const output = await asyncSpawn('nst', 'module publish'.split(' '), {
       cwd: testFolderBase,
       env: process.env,
@@ -81,7 +81,12 @@ nst data unmount
     console.log(output);
     expect(output).not.toContain('Request failed');
 
-    const result = await pollNstrumenta(moduleName, 20_000, 'module list');
+    const result = await pollNstrumenta({
+      matchString: moduleName,
+      interval: 1_000,
+      timeout: 20_000,
+      command: 'module list',
+    });
     expect(result).toEqual(expect.stringMatching(new RegExp(`modules.*${moduleName}`)));
   }, 20_000);
 
@@ -94,7 +99,12 @@ nst data unmount
       { cwd: testFolderBase, quiet: true }
     );
 
-    const result = await pollNstrumenta(uploadFileName, 60_000);
+    const result = await pollNstrumenta({
+      matchString: uploadFileName,
+      interval: 5_000,
+      timeout: 60_000,
+      command: 'module list',
+    });
     await expect(result).toBeTruthy();
   }, 60_000);
 });

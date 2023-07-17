@@ -304,26 +304,33 @@ async function buildFromGithub(actionPath: string, data: any) {
 }
 
 // subscribe to all projects with matching agentType
-let projectActionSubscriptions: Function[] = []
+let projectActionSubscriptions: Map<string, Function> = new Map()
 firestore
   .collection('projects')
   .where('agentType', '==', agentType)
   .onSnapshot((projectsSnapshot) => {
-    if (projectActionSubscriptions.length > 0) {
-      console.log(
-        `clearing ${projectActionSubscriptions.length}  existing action subscriptions`,
-      )
-      projectActionSubscriptions.forEach((unsubscribe) => {
+    let projectIds: string[] = []
+    projectsSnapshot.forEach(async (project) => {
+      projectIds.push(project.ref.path.split('/')[1])
+    })
+    // unsubscribe to previous if needed
+    projectActionSubscriptions.forEach((unsubscribe, projectId) => {
+      if (!projectIds.includes(projectId)) {
+        console.log(`unsubscribe watching for actions ${projectId}`)
         unsubscribe()
-      })
-      projectActionSubscriptions = []
-    }
+        projectActionSubscriptions.delete(projectId)
+      }
+    })
 
     projectsSnapshot.forEach(async (project) => {
       const projectId = project.ref.path.split('/')[1]
+      if (projectActionSubscriptions.has(projectId)) {
+        return
+      }
       console.log(`watching for actions ${projectId}`)
       // watch for actions
-      projectActionSubscriptions.push(
+      projectActionSubscriptions.set(
+        projectId,
         firestore
           .collection(`${project.ref.path}/actions`)
           .onSnapshot((actionsSnapshot) => {
@@ -392,7 +399,9 @@ firestore
                       )
                       break
                     default:
-                      console.log(`unrecognized server task:${data?.task}`)
+                      const unrecognizedMessage = `unrecognized server task:${data?.task}`
+                      console.log(unrecognizedMessage)
+                      doc.ref.set({ status: unrecognizedMessage })
                       break
                   }
                 }
