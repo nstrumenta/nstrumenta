@@ -94,7 +94,7 @@ nst data unmount
       { cwd: testFolderBase, quiet: true }
     );
 
-    const result = await pollNstrumenta(uploadFileName, 180_000);
+    const result = await pollNstrumenta(uploadFileName, 60_000);
     await expect(result).toBeTruthy();
-  }, 180_000);
+  }, 60_000);
 });
