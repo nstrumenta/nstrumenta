@@ -101,9 +101,7 @@ export const createCloudDataJobService = ({
       '--memory=4Gi',
       `--image=${imageId}`,
       '--region=us-west1',
-      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL=${
-        process.env.NSTRUMENTA_API_URL
-      },ACTION_PATH=${actionPath},ACTION_DATA=${btoa(JSON.stringify(data))}`,
+      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL=${process.env.NSTRUMENTA_API_URL},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(JSON.stringify(data))}`,
     ])
     await asyncSpawn('gcloud', [
       'run',

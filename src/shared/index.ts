@@ -1,28 +1,29 @@
 export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
+  const url = apiUrl.trim();
   return {
-    ADMIN_UTILS: `${apiUrl}/adminUtils`,
-    GET_MACHINES: `${apiUrl}/getMachines`,
-    GET_UPLOAD_URL: `${apiUrl}/getUploadUrl`,
-    GET_UPLOAD_DATA_URL: `${apiUrl}/getUploadDataUrl`,
-    REGISTER_AGENT: `${apiUrl}/registerAgent`,
-    LIST_AGENTS: `${apiUrl}/listAgents`,
-    SET_ACTION: `${apiUrl}/setAction`,
-    SET_AGENT_ACTION: `${apiUrl}/setAgentAction`,
-    GET_AGENT_ID_BY_TAG: `${apiUrl}/getAgentIdByTag`,
-    CLEAN_AGENT_ACTIONS: `${apiUrl}/cleanAgentActions`,
-    GET_DOWNLOAD_URL: `${apiUrl}/getDownloadUrl`,
-    GET_PROJECT_DOWNLOAD_URL: `${apiUrl}/getProjectDownloadUrl`,
-    GENERATE_DATA_ID: `${apiUrl}/generateDataId`,
-    LIST_MODULES: `${apiUrl}/listModules`,
-    LIST_MODULES_V2: `${apiUrl}/listModulesV2`,
-    GET_TOKEN: `${apiUrl}/getToken`,
-    VERIFY_TOKEN: `${apiUrl}/verifyToken`,
-    VERIFY_API_KEY: `${apiUrl}/verifyApiKey`,
-    SET_STORAGE_OBJECT: `${apiUrl}/setStorageObject`,
-    SET_DATA_METADATA: `${apiUrl}/setDataMetadata`,
-    LIST_STORAGE_OBJECTS: `${apiUrl}/listStorageObjects`,
-    GET_DATA_MOUNT: `${apiUrl}/getDataMount`,
-    QUERY_DATA: `${apiUrl}/queryData`,
+    ADMIN_UTILS: `${url}/adminUtils`,
+    GET_MACHINES: `${url}/getMachines`,
+    GET_UPLOAD_URL: `${url}/getUploadUrl`,
+    GET_UPLOAD_DATA_URL: `${url}/getUploadDataUrl`,
+    REGISTER_AGENT: `${url}/registerAgent`,
+    LIST_AGENTS: `${url}/listAgents`,
+    SET_ACTION: `${url}/setAction`,
+    SET_AGENT_ACTION: `${url}/setAgentAction`,
+    GET_AGENT_ID_BY_TAG: `${url}/getAgentIdByTag`,
+    CLEAN_AGENT_ACTIONS: `${url}/cleanAgentActions`,
+    GET_DOWNLOAD_URL: `${url}/getDownloadUrl`,
+    GET_PROJECT_DOWNLOAD_URL: `${url}/getProjectDownloadUrl`,
+    GENERATE_DATA_ID: `${url}/generateDataId`,
+    LIST_MODULES: `${url}/listModules`,
+    LIST_MODULES_V2: `${url}/listModulesV2`,
+    GET_TOKEN: `${url}/getToken`,
+    VERIFY_TOKEN: `${url}/verifyToken`,
+    VERIFY_API_KEY: `${url}/verifyApiKey`,
+    SET_STORAGE_OBJECT: `${url}/setStorageObject`,
+    SET_DATA_METADATA: `${url}/setDataMetadata`,
+    LIST_STORAGE_OBJECTS: `${url}/listStorageObjects`,
+    GET_DATA_MOUNT: `${url}/getDataMount`,
+    QUERY_DATA: `${url}/queryData`,
   };
 };
 
@@ -41,16 +42,16 @@ export interface DataQueryOptionsCLI {
   limit?: string;
   field?: string;
   comparison?:
-  | '<'
-  | '<='
-  | '=='
-  | '>'
-  | '>='
-  | '!='
-  | 'array-contains'
-  | 'array-contains-any'
-  | 'in'
-  | 'not-in';
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string;
@@ -63,16 +64,16 @@ export interface DataQueryOptionsClient {
   limit?: number;
   field?: string;
   comparison?:
-  | '<'
-  | '<='
-  | '=='
-  | '>'
-  | '>='
-  | '!='
-  | 'array-contains'
-  | 'array-contains-any'
-  | 'in'
-  | 'not-in';
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string | Record<string, unknown>;
