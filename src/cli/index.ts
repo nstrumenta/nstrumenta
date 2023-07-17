@@ -121,7 +121,6 @@ dataCommand.command('unmount').description('unmount previously mounted data').ac
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')
-  .option('--dataId <dataId>')
   .option('--overwrite', 'allow overwrite existing filename if dataId is specified')
   .argument('<filename...>', 'filename(s) to upload')
   .description('Upload file to project data')
