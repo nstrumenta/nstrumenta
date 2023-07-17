@@ -1,18 +1,5 @@
 version: '3'
 services:
-  server:
-    build:
-      context: ../../server
-      dockerfile: Dockerfile
-    ports:
-      - 5999:5999
-      - 9229:9229
-    volumes:
-      - ../../server/app/:/app
-      - ../../credentials/:/credentials
-    environment:
-      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
-    command: sh -c 'npm run dev'
   cli:
     container_name: cli
     build:

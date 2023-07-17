@@ -4,7 +4,7 @@
   "description": "nodejs client tests",
   "main": "index.js",
   "scripts": {
-    "test-from-docker-compose": "npx wait-on http://server:5999 && echo 'wait-on server:5999 complete' && jest --verbose=true --detectOpenHandles",
+    "test-from-docker-compose": "npx wait-on $NSTRUMENTA_API_URL && echo 'wait-on $NSTRUMENTA_API_URL complete' && jest --verbose=true --detectOpenHandles",
     "test": "jest --detectOpenHandles"
   },
   "author": "Tyler Bryant",

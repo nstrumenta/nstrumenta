@@ -127,7 +127,7 @@ export const createCloudAgentService = ({
       `--service-account=${serviceAccount.client_email}`,
       '--max-instances=1',
       '--no-cpu-throttling',
-      `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey}`,
+      `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL${process.env.NSTRUMENTA_API_URL}`,
     ])
 
     const description = JSON.parse(
@@ -156,7 +156,7 @@ export const createCloudAgentService = ({
     const gcpProjectId = serviceAccount.project_id
     const imageId = `gcr.io/${gcpProjectId}/agent:latest`
 
-    //create apiKey specifically for the hostedVm
+    //create apiKey specifically for the cloud agent
     const apiKey = await apiKeyService.createAndAddApiKey(projectId)
     let description: GCloudDescribeResults | undefined = undefined
     try {

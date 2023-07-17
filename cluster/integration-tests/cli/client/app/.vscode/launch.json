@@ -11,10 +11,7 @@
                 "run-script",
                 "test",
             ],
-            "env": {
-                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
-                "AGENT_TAG": "local"
-            },
+            "envFile": "../../../cluster.env",
             "runtimeExecutable": "npm",
             "skipFiles": [
                 "<node_internals>/**"
@@ -31,10 +28,7 @@
                 "-t",
                 "Publish"
             ],
-            "env": {
-                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
-                "AGENT_TAG": "local"
-            },
+            "envFile": "../../../cluster.env",
             "runtimeExecutable": "npm",
             "skipFiles": [
                 "<node_internals>/**"
@@ -51,10 +45,7 @@
                 "-t",
                 "CloudRun"
             ],
-            "env": {
-                "NSTRUMENTA_WS_URL": "ws://localhost:8088",
-                "NSTRUMENTA_API_URL": "http://localhost:5999",
-            },
+            "envFile": "../../../cluster.env",
             "runtimeExecutable": "npm",
             "skipFiles": [
                 "<node_internals>/**"

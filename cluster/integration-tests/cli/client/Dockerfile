@@ -9,7 +9,7 @@ RUN npm i -g nstrumenta
 COPY . /nstrumenta/
 WORKDIR /nstrumenta
 RUN npm install
-RUN npm run build
+RUN npm run build:cli
 RUN npm link
 
 COPY ./cluster/integration-tests/cli/client/app/ /app
