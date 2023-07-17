@@ -68,14 +68,14 @@ export type Reconnection = {
 };
 
 export const getToken = async (apiKey: string, apiUrl?: string): Promise<string> => {
-  console.log('getToken', { apiKey, apiUrl })
+  console.log('getToken', { apiKey, apiUrl });
   const headers = {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
   };
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
-    if (typeof process !== 'undefined') await process.nextTick(() => { });
+    if (typeof process !== 'undefined') await process.nextTick(() => {});
     const { data } = await axios.get<{ token: string }>(getEndpoints(apiUrl).GET_TOKEN, {
       headers,
     });
@@ -274,11 +274,10 @@ export class StorageService {
   private apiKey?: string;
   private endpoints;
 
-  constructor(props?: { apiKey?: string, apiUrl?: string }) {
+  constructor(props?: { apiKey?: string; apiUrl?: string }) {
     this.apiKey = props?.apiKey ? props.apiKey : undefined;
     this.endpoints = getEndpoints(props?.apiUrl);
   }
-
 
   async getDownloadUrl(path: string): Promise<string> {
     if (!this.apiKey) {
@@ -331,8 +330,8 @@ export class StorageService {
       typeof metadataOriginal === 'string'
         ? JSON.parse(metadataOriginal)
         : typeof metadataOriginal === 'object'
-          ? metadataOriginal
-          : {};
+        ? metadataOriginal
+        : {};
 
     const data = {
       tags,
@@ -377,23 +376,10 @@ export class StorageService {
     return response.data;
   }
 
-  public async upload({
-    filename,
-    data,
-    meta,
-    dataId: explicitDataId,
-    overwrite,
-  }: StorageUploadParameters) {
+  public async upload({ filename, data, meta, overwrite }: StorageUploadParameters) {
     const size = data.size;
     let url;
-    let dataId = explicitDataId;
 
-    if (!dataId) {
-      const res = await axios(this.endpoints.GENERATE_DATA_ID, {
-        headers: { 'x-api-key': this.apiKey!, method: 'post' },
-      });
-      dataId = res.data.dataId;
-    }
     const config: AxiosRequestConfig = {
       method: 'post',
       headers: {
@@ -402,7 +388,6 @@ export class StorageService {
       },
       data: {
         name: filename,
-        dataId,
         size,
         metadata: meta,
         overwrite,
