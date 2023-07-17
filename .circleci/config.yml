@@ -12,7 +12,7 @@ jobs:
             - frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           command: ./use_cache_or_npm_install.sh
-      - run: echo $FIREBASE_CONFIG > ${HOME}/cluster/credentials/firebaseConfig.js
+      - run: echo $FIREBASE_CONFIG > ~/project/cluster/credentials/firebaseConfig.js
       - run:
           command: ./build.sh ${CIRCLE_BRANCH}
       - save_cache:
@@ -67,8 +67,6 @@ jobs:
           keys:
             - functions-node_modules-{{ .Branch }}-{{ checksum "package.json"}}
       - run:
-          command: ./use_cache_or_npm_install.sh
-      - run:
           command: ./build.sh
       - save_cache:
           key: functions-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
@@ -92,7 +90,7 @@ jobs:
   run-tests:
     resource_class: large
     machine: true
-    working_directory: ~/project/cluster/integration-testing/
+    working_directory: ~/project/cluster/integration-tests/
     steps:
       - checkout:
           path: ~/project
@@ -101,9 +99,6 @@ jobs:
       - run:
           command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
       - run: ./ci.sh cli
-      - run: ./ci.sh nodejs-client
-      - run: ./ci.sh browser-client
-      - run: ./ci.sh webrtc
   deploy-client:
     docker:
       - image: circleci/node:16.13.1
