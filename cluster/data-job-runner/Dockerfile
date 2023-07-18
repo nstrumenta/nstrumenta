@@ -25,13 +25,13 @@ ENV GOPATH="/usr/local/go"
 RUN go install github.com/googlecloudplatform/gcsfuse@master
 
 #install nstrumenta
+RUN npm i -g nstrumenta
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/
 WORKDIR /nstrumenta
 RUN npm install
 RUN npm run build:cli
-RUN echo 'alias nst="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
-RUN echo 'alias nstrumenta="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
+RUN npm link
 
 COPY ./cluster/data-job-runner/app /app
 WORKDIR /app
