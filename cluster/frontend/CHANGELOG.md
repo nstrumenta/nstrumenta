@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.7.0](https://github.com/nstrumenta/nstrumenta/compare/v3.1.0...v1.7.0) (2023-07-18)
+
+
+### Features
+
+* **frontend:** removes old deploy script ([f502d46](https://github.com/nstrumenta/nstrumenta/commit/f502d46e7ca8e0e545a9bb3d1f48995f533eb824))
+* **frontend:** updates deploy scripts ([6cb5ccc](https://github.com/nstrumenta/nstrumenta/commit/6cb5cccfc5448e88f790d7a34eaa3f09451d9d5f))
+
 ### [1.6.91](https://github.com/nstrumenta/nst-server/compare/v1.6.90...v1.6.91) (2023-06-27)
 
 
