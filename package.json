@@ -46,6 +46,7 @@
     "@types/node": "^18.7.21",
     "@types/semver": "^7.3.9",
     "@types/serve-index": "^1.9.1",
+    "@types/tar": "^6.1.5",
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.2.0",
     "nodemon": "^2.0.12",
@@ -55,13 +56,9 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@ffmpeg/core": "^0.11.0",
-    "@ffmpeg/ffmpeg": "^0.11.6",
     "@google-cloud/storage": "^5.16.1",
     "@mcap/core": "^0.2.2",
     "@types/bytebuffer": "^5.0.42",
-    "@types/lodash": "^4.14.191",
-    "@types/tar": "^6.1.1",
     "axios": "^0.26.1",
     "bytebuffer": "^5.0.1",
     "commander": "^8.1.0",
@@ -69,12 +66,10 @@
     "express": "^4.17.1",
     "form-data": "^4.0.0",
     "inquirer": "^8.1.5",
-    "rx.mini": "^1.2.2",
     "semver": "^7.3.5",
     "serve-index": "^1.9.1",
-    "tar": "^6.1.11",
+    "tar": "^6.1.15",
     "uuid": "^9.0.0",
-    "werift": "^0.18.2",
     "ws": "^8.2.2"
   },
   "engines": {
