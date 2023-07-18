@@ -1,16 +1,13 @@
 FROM node:16.13.2-alpine3.15
 
-#install nstrumenta
-RUN npm i -g nstrumenta
-
-
-
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/
 WORKDIR /nstrumenta
 RUN npm install
 RUN npm run build:cli
-RUN npm link
+RUN echo 'alias nst="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
+RUN echo 'alias nstrumenta="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
+
 
 COPY ./cluster/integration-tests/cli/client/app/ /app
 WORKDIR /app

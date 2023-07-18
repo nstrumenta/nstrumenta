@@ -5,7 +5,6 @@ import { getEndpoints } from '../../shared';
 import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
 
 const apiUrl = process.env.NSTRUMENTA_API_URL;
-if (!apiUrl) throw new Error('NSTRUMENTA_API_URL not set');
 const endpoints = getEndpoints(apiUrl);
 const logger = createLogger();
 
@@ -14,6 +13,7 @@ export const Start = async function (options: {
   tag?: string;
   debug?: string;
 }): Promise<void> {
+  if (!apiUrl) throw new Error('NSTRUMENTA_API_URL not set');
   const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
 

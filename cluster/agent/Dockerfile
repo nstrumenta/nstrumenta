@@ -4,7 +4,7 @@ FROM node:16.13.2-alpine3.15
 COPY . /app/
 WORKDIR /app
 RUN npm install
-RUN npm run build
+RUN npm run build:cli
 
 EXPOSE 8088
 
