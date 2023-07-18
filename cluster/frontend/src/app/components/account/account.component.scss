@@ -1,0 +1,13 @@
+
+.content {
+  display: flex;
+  height: calc(100vh - 42px);
+
+  .nav {
+    overflow: auto;
+  }
+
+  .outlet {
+    flex: 1;
+  }
+}

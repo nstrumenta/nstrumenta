@@ -1,0 +1,27 @@
+.grid-container {
+  margin: 20px;
+}
+
+.dashboard-card {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  right: 15px;
+  bottom: 15px;
+}
+
+.dashboard-card-content {
+  text-align: center;
+  display: block;
+}
+
+.dashboard-card > img {
+  width: 100%;
+  height: 80%;
+  object-fit: contain;
+  display: inline-block;
+}
+
+.dashboard-header {
+  margin: auto;
+}

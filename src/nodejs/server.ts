@@ -4,36 +4,22 @@ import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
 import { createWriteStream } from 'fs';
-import fs, { appendFile, writeFile } from 'fs/promises';
+import { mkdir, open, readFile, stat } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
 import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
 import {
-  AnswerWebRTC,
-  CandidateWebRTC,
-  DEFAULT_HOST_PORT,
-  JoinWebRTC,
   LogConfig,
   NstrumentaClientEvent,
   NstrumentaRPCType,
   Ping,
   RPC,
-  StartRecording,
-  StopRecording,
   Subscribe,
   Unsubscribe,
   getEndpoints,
 } from '../shared';
 
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
-import {
-  DepacketizeCallback,
-  JitterBufferCallback,
-  RtpSourceCallback,
-  WebmCallback,
-  WebmOutput,
-} from 'werift';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -43,16 +29,10 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
-import { createContext } from './video/examples/server-demo/src/context/context';
-import {
-  handleAnswer,
-  handleCandidate,
-  handleJoin,
-} from './video/examples/server-demo/src/handler';
-import WritableStream = NodeJS.WritableStream;
-import path = require('path');
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+import WritableStream = NodeJS.WritableStream;
+
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 const createPrefixTransform = (prefix: string) =>
   new Transform({
@@ -103,11 +83,10 @@ export type BackplaneCommand =
 
 export interface NstrumentaServerOptions {
   apiKey: string;
+  apiUrl: string;
   port?: string;
   tag?: string;
   debug?: boolean;
-  noBackplane?: boolean;
-  allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection?: boolean;
 }
 
@@ -134,7 +113,6 @@ type TrackRecording = {
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
-  allowCrossProjectApiKey: boolean;
   allowUnverifiedConnection: boolean;
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
@@ -150,11 +128,7 @@ export class NstrumentaServer {
     this.listeners = new Map();
     logger.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
-    if (!options.noBackplane) {
-      this.backplaneClient = new NstrumentaClient();
-    }
-    this.allowCrossProjectApiKey =
-      options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
+
     this.allowUnverifiedConnection =
       options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
     this.status = {
@@ -179,13 +153,13 @@ export class NstrumentaServer {
   }
 
   public async run() {
-    const { apiKey, debug } = this.options;
-    const port = this.options.port || DEFAULT_HOST_PORT;
+    const { apiKey, apiUrl, debug } = this.options;
+    const port = this.options.port ?? 8088;
 
     // server makes a local .nst folder at the cwd
     // this allows multiple servers and working directories on the same machine
     const cwdNstDir = `${this.cwd}/.nst`;
-    await fs.mkdir(cwdNstDir, { recursive: true });
+    await mkdir(cwdNstDir, { recursive: true });
 
     logger.log(`nstrumenta working directory: ${cwdNstDir}`);
 
@@ -251,7 +225,6 @@ export class NstrumentaServer {
                       'run',
                       `--name=${moduleName}`,
                       version ? `--module-version=${version}` : '',
-                      '--non-interactive',
                       '--',
                       ...(args ? args : []),
                     ],
@@ -299,10 +272,6 @@ export class NstrumentaServer {
 
     const server = require('http').Server(app);
 
-    // webrtc begin
-    const weriftCtx = createContext();
-    // webrtc end
-
     const wss = new WebSocketServer({ server: server });
 
     const updateStatus = () => {
@@ -341,6 +310,10 @@ export class NstrumentaServer {
       res.status(200).send('OK');
     });
 
+    app.get('/apiUrl', function (req, res) {
+      res.status(200).send(process.env.NSTRUMENTA_API_URL);
+    });
+
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
@@ -371,12 +344,11 @@ export class NstrumentaServer {
       logger.log('a user connected - clientsCount = ' + wss.clients.size);
       ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
-          const allowCrossProjectApiKey = this.allowCrossProjectApiKey;
           try {
             if (!this.allowUnverifiedConnection) {
               logger.log('attempting to verify token');
               // first message from a connected websocket must be a token
-              await verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey });
+              await verifyToken({ token: busMessage.toString(), apiKey, apiUrl });
             }
             logger.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
@@ -459,196 +431,6 @@ export class NstrumentaServer {
                   sendTimestamp,
                   serverTimestamp: Date.now(),
                 });
-              }
-              break;
-            case 'startRecording':
-              {
-                const {
-                  name: sessionName,
-                  channels,
-                  config,
-                } = contents as StartRecording['request'];
-                {
-                  await this.startLog(sessionName, channels, config);
-                  let trackNumber = 0;
-                  for (const [roomName, room] of Object.entries(weriftCtx.roomManager.rooms)) {
-                    for (const [mediaName, media] of Object.entries(room.medias)) {
-                      media.tracks.forEach(async (mediaTrack) => {
-                        const track = mediaTrack.track;
-                        const trackRecordingId = `${sessionName}_${mediaName}_${track.id}`;
-                        const nstDir = await getNstDir(this.cwd);
-                        await fs.mkdir(`${nstDir}/video`, { recursive: true });
-                        const filePath = `${nstDir}/video/pre-${trackRecordingId}.webm`;
-                        const rtpSourceCallback = new RtpSourceCallback();
-                        trackNumber = trackNumber + 1;
-                        const codecParameters = track.codec;
-                        const codecName: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS' =
-                          codecParameters?.mimeType.toUpperCase().includes('VP8')
-                            ? 'VP8'
-                            : codecParameters?.mimeType.toUpperCase().includes('VP9')
-                            ? 'VP9'
-                            : codecParameters?.mimeType.toUpperCase().includes('AV1')
-                            ? 'AV1'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'MPEG4/ISO/AVC'
-                            : codecParameters?.mimeType.toUpperCase().includes('MP4')
-                            ? 'OPUS'
-                            : 'VP8';
-                        const clockRate = codecParameters?.clockRate || 90000;
-
-                        const trackConfig: {
-                          width?: number | undefined;
-                          height?: number | undefined;
-                          kind: 'audio' | 'video';
-                          codec: 'VP8' | 'VP9' | 'AV1' | 'MPEG4/ISO/AVC' | 'OPUS';
-                          clockRate: number;
-                          trackNumber: number;
-                        } = {
-                          width: 640,
-                          height: 480,
-                          kind: track.kind === 'video' ? 'video' : 'audio',
-                          codec: codecName,
-                          clockRate,
-                          trackNumber,
-                        };
-                        console.log(trackConfig);
-                        const webm = new WebmCallback([trackConfig]);
-
-                        {
-                          const jitterBuffer = new JitterBufferCallback(clockRate);
-                          const depacketizer = new DepacketizeCallback(codecName, {
-                            isFinalPacketInSequence: (h) => h.marker,
-                          });
-
-                          rtpSourceCallback.pipe(jitterBuffer.input);
-                          jitterBuffer.pipe(depacketizer.input);
-                          depacketizer.pipe((input: any) => {
-                            if (input?.frame?.timestamp) {
-                              input.frame.time = (input.frame.timestamp * 1000) / clockRate;
-                            }
-                            return webm.inputVideo(input);
-                          });
-                        }
-
-                        webm.pipe(async (value: WebmOutput) => {
-                          if (value.saveToFile) {
-                            await appendFile(filePath, value.saveToFile);
-                          }
-                        });
-
-                        const transceiver = mediaTrack.receiver;
-                        const { unSubscribe } = track.onReceiveRtp.subscribe(
-                          rtpSourceCallback.input
-                        );
-                        const intervalId = setInterval(() => {
-                          transceiver.receiver.sendRtcpPLI(track.ssrc!);
-                        }, 2_000);
-
-                        this.trackRecordings.set(trackRecordingId, {
-                          filePath,
-                          stop: async () => {
-                            clearInterval(intervalId);
-                            await unSubscribe();
-                          },
-                        });
-                      });
-                    }
-                  }
-                  await this.respondRPC<StartRecording>(ws, responseChannel, {});
-                }
-              }
-              break;
-            case 'stopRecording':
-              {
-                const { name } = contents as StopRecording['request'];
-                {
-                  await this.finishLog(name);
-
-                  const trackRecordingsArray = Array.from(this.trackRecordings);
-                  // clear ahead of processing to avoid triggering again during processing
-                  this.trackRecordings.clear();
-
-                  await Promise.all(
-                    trackRecordingsArray.map(async ([key, trackRecording]) => {
-                      console.log('finishing recording track', key);
-                      await trackRecording.stop();
-
-                      const webmPath = trackRecording.filePath;
-                      const startTime = Date.now();
-                      const { name, dir, base } = path.parse(webmPath);
-                      const webmName = base;
-                      // final name removes 'pre-'
-                      const postCopyName = `${webmName.slice(4)}`;
-                      const postCopyPath = path.join(dir, postCopyName);
-                      try {
-                        const ffmpeg = createFFmpeg({ log: true });
-                        await ffmpeg.load();
-                        ffmpeg.FS('writeFile', webmName, await fetchFile(webmPath));
-                        await ffmpeg.run(
-                          '-i',
-                          webmName,
-                          '-vcodec',
-                          'copy',
-                          '-acodec',
-                          'copy',
-                          postCopyName
-                        );
-                        await writeFile(postCopyPath, ffmpeg.FS('readFile', postCopyName));
-                        console.log(`finished webm copy in ${Date.now() - startTime}ms`);
-                      } catch (error) {
-                        console.log('failed to copy with ffmpeg, uploading original recording');
-                        const remoteFileLocation = await this.uploadLog({
-                          localPath: webmPath,
-                          name: webmName,
-                        });
-                        logger.log(`uploaded ${remoteFileLocation}`);
-                      }
-                      try {
-                        const remoteFileLocation = await this.uploadLog({
-                          localPath: postCopyPath,
-                          name: postCopyName,
-                        });
-                        logger.log(`uploaded ${remoteFileLocation}`);
-                      } catch (error) {
-                        logger.log(
-                          `Problem uploading log: ${postCopyName}, localPath: ${postCopyPath}`
-                        );
-                      }
-                    })
-                  );
-
-                  await this.respondRPC<StopRecording>(ws, responseChannel, {});
-                }
-              }
-              break;
-
-            case 'joinWebRTC':
-              {
-                const { room } = contents as JoinWebRTC['request'];
-                {
-                  const { peerId, offer } = await handleJoin(weriftCtx, room);
-                  this.respondRPC<JoinWebRTC>(ws, responseChannel, { peerId, offer });
-                }
-              }
-              break;
-
-            case 'answerWebRTC':
-              {
-                const { peerId, room, answer } = contents as AnswerWebRTC['request'];
-                {
-                  await handleAnswer(weriftCtx, room, peerId, answer);
-                  await this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
-                  broadcastEventToClients('webrtcAnswer');
-                }
-              }
-              break;
-            case 'candidateWebRTC':
-              {
-                const { peerId, room, candidate } = contents as CandidateWebRTC['request'];
-                {
-                  await handleCandidate(weriftCtx, room, peerId, candidate);
-                  this.respondRPC<AnswerWebRTC>(ws, responseChannel, {});
-                }
               }
               break;
           }
@@ -773,14 +555,14 @@ export class NstrumentaServer {
   public async startLog(name: string, channels: string[], config?: LogConfig) {
     logger.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
-    await fs.mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
+    await mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
     logger.log({ name, cwdNstDir: nstDir, localPath });
 
     // set up dataLogs
     if (config) {
       const type = 'mcap';
-      const fileHandle = await fs.open(localPath, 'w');
+      const fileHandle = await open(localPath, 'w');
       const fileHandleWritable = new FileHandleWritable(fileHandle);
       const mcapWriter = new McapWriter({
         writable: fileHandleWritable,
@@ -843,14 +625,13 @@ export class NstrumentaServer {
     }
   }
 
-  // @ts-ignore
   public async uploadLog({ localPath, name }: { localPath: string; name: string }) {
     let url = '';
     let size = 0;
 
     try {
       const apiKey = resolveApiKey();
-      size = (await fs.stat(localPath)).size;
+      size = (await stat(localPath)).size;
 
       const data = {
         name,
@@ -876,7 +657,7 @@ export class NstrumentaServer {
       throw new Error(message);
     }
 
-    const fileBuffer = await fs.readFile(localPath);
+    const fileBuffer = await readFile(localPath);
 
     // start the request, return promise
     await axios.put(url, fileBuffer, {

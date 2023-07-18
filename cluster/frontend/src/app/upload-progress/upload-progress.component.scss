@@ -1,0 +1,54 @@
+.upload-progress-container {
+  position: fixed;
+  bottom: 2em;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0);
+  display: flex;
+  justify-content: center;
+}
+
+mat-card {
+  min-width: 30rem;
+  max-width: 50rem;
+  padding: 0;
+}
+
+mat-card-header {
+  padding: 10px;
+}
+
+.upload-progress-body {
+  padding: 10px;
+  max-height: 48em;
+  overflow-y: auto;
+}
+
+.upload-progress-item {
+  display: flex;
+  margin-bottom: 10px;
+  flex-direction: column;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+}
+
+mat-label {
+  font-weight: bold;
+  margin-right: 10px;
+  padding: .5em;
+}
+
+.upload-progress-label {
+  width: 18em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+mat-progress-bar {
+  flex-grow: 1;
+  width: 100%;
+}

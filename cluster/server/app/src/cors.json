@@ -1,0 +1,17 @@
+[
+  {
+    "maxAgeSeconds": 3600,
+    "method": ["PUT", "POST", "GET", "OPTIONS"],
+    "origin": ["*"],
+    "responseHeader": [
+      "Access-Control-Allow-Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Range",
+      "Accept-Ranges",
+      "Content-Range",
+      "Content-Encoding",
+      "Content-Length"
+    ]
+  }
+]

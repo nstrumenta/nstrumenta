@@ -1,42 +1,32 @@
-export const DEFAULT_HOST_PORT = '8088';
-
-const BASE_URL = 'https://us-central1-macro-coil-194519.cloudfunctions.net';
-const BASE_URL_LOCAL = 'http://tyler.local:6000';
-
-export const getEndpoints = (env: 'local' | 'prod') => {
-  const baseUrl = env === 'local' ? BASE_URL_LOCAL : BASE_URL;
-
+export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
+  const url = apiUrl.trim();
   return {
-    ADMIN_UTILS: `${baseUrl}/adminUtils`,
-    GET_MACHINES: `${baseUrl}/getMachines`,
-    GET_UPLOAD_URL: `${baseUrl}/getUploadUrl`,
-    GET_UPLOAD_DATA_URL: `${baseUrl}/getUploadDataUrl`,
-    REGISTER_AGENT: `${baseUrl}/registerAgent`,
-    LIST_AGENTS: `${baseUrl}/listAgents`,
-    SET_ACTION: `${baseUrl}/setAction`,
-    SET_AGENT_ACTION: `${baseUrl}/setAgentAction`,
-    GET_AGENT_ID_BY_TAG: `${baseUrl}/getAgentIdByTag`,
-    CLEAN_AGENT_ACTIONS: `${baseUrl}/cleanAgentActions`,
-    GET_DOWNLOAD_URL: `${baseUrl}/getDownloadUrl`,
-    GET_PROJECT_DOWNLOAD_URL: `${baseUrl}/getProjectDownloadUrl`,
-    GENERATE_DATA_ID: `${baseUrl}/generateDataId`,
-    LIST_MODULES: `${baseUrl}/listModules`,
-    LIST_MODULES_V2: `${baseUrl}/listModulesV2`,
-    GET_TOKEN: `${baseUrl}/getToken`,
-    VERIFY_TOKEN: `${baseUrl}/verifyToken`,
-    VERIFY_API_KEY: `${baseUrl}/verifyApiKey`,
-    SET_STORAGE_OBJECT: `${baseUrl}/setStorageObject`,
-    SET_DATA_METADATA: `${baseUrl}/setDataMetadata`,
-    LIST_STORAGE_OBJECTS: `${baseUrl}/listStorageObjects`,
-    GET_DATA_MOUNT: `${baseUrl}/getDataMount`,
-    QUERY_DATA: `${baseUrl}/queryData`,
+    ADMIN_UTILS: `${url}/adminUtils`,
+    GET_MACHINES: `${url}/getMachines`,
+    GET_UPLOAD_URL: `${url}/getUploadUrl`,
+    GET_UPLOAD_DATA_URL: `${url}/getUploadDataUrl`,
+    GET_PROJECT: `${url}/getProject`,
+    REGISTER_AGENT: `${url}/registerAgent`,
+    LIST_AGENTS: `${url}/listAgents`,
+    SET_ACTION: `${url}/setAction`,
+    SET_AGENT_ACTION: `${url}/setAgentAction`,
+    GET_AGENT_ID_BY_TAG: `${url}/getAgentIdByTag`,
+    CLEAN_AGENT_ACTIONS: `${url}/cleanAgentActions`,
+    GET_DOWNLOAD_URL: `${url}/getDownloadUrl`,
+    GET_PROJECT_DOWNLOAD_URL: `${url}/getProjectDownloadUrl`,
+    GENERATE_DATA_ID: `${url}/generateDataId`,
+    LIST_MODULES: `${url}/listModules`,
+    LIST_MODULES_V2: `${url}/listModulesV2`,
+    GET_TOKEN: `${url}/getToken`,
+    VERIFY_TOKEN: `${url}/verifyToken`,
+    VERIFY_API_KEY: `${url}/verifyApiKey`,
+    SET_STORAGE_OBJECT: `${url}/setStorageObject`,
+    SET_DATA_METADATA: `${url}/setDataMetadata`,
+    LIST_STORAGE_OBJECTS: `${url}/listStorageObjects`,
+    GET_DATA_MOUNT: `${url}/getDataMount`,
+    QUERY_DATA: `${url}/queryData`,
   };
 };
-
-export enum ObjectTypes {
-  DATA = 'data',
-  MODULES = 'modules',
-}
 
 export * from './lib';
 
@@ -48,16 +38,16 @@ export interface DataQueryOptionsCLI {
   limit?: string;
   field?: string;
   comparison?:
-  | '<'
-  | '<='
-  | '=='
-  | '>'
-  | '>='
-  | '!='
-  | 'array-contains'
-  | 'array-contains-any'
-  | 'in'
-  | 'not-in';
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string;
@@ -70,16 +60,16 @@ export interface DataQueryOptionsClient {
   limit?: number;
   field?: string;
   comparison?:
-  | '<'
-  | '<='
-  | '=='
-  | '>'
-  | '>='
-  | '!='
-  | 'array-contains'
-  | 'array-contains-any'
-  | 'in'
-  | 'not-in';
+    | '<'
+    | '<='
+    | '=='
+    | '>'
+    | '>='
+    | '!='
+    | 'array-contains'
+    | 'array-contains-any'
+    | 'in'
+    | 'not-in';
   compareValue?: string;
   filenames?: string[];
   metadata?: string | Record<string, unknown>;

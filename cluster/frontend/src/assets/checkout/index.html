@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>nstrumenta</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
+  <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+
+  <!-- Create a button that your customers click to complete their purchase. -->
+  <div style="text-align: center; margin:5%">
+    <button id="checkout-button" role="link"
+      class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">Subscribe</button>
+  </div>
+
+  <!-- PASTE STRIPE CHECKOUT STARTING HERE and comment out the button id="checkout-button" to avoid the extra Pay button -->
+
+  <!-- Load Stripe.js on your website. -->
+  <script src="https://js.stripe.com/v3"></script>
+
+  <!-- Create a button that your customers click to complete their purchase. -->
+  <!-- <button id="checkout-button" role="link">Pay</button> -->
+  <div id="error-message"></div>
+
+  <script>
+    var stripe = Stripe('pk_live_JcOjelnEHe7HZv4R65iUjOWF', {
+      betas: ['checkout_beta_4']
+    });
+
+    var checkoutButton = document.getElementById('checkout-button');
+    checkoutButton.addEventListener('click', function () {
+      // When the customer clicks on the button, redirect
+      // them to Checkout.
+      stripe.redirectToCheckout({
+        items: [{ plan: 'plan_Ejcqrg1lEI3awY', quantity: 1 }],
+
+        // Note that it is not guaranteed your customers will be redirected to this
+        // URL *100%* of the time, it's possible that they could e.g. close the
+        // tab between form submission and the redirect.
+        successUrl: window.location.protocol + '//nstrumenta.com/success',
+        cancelUrl: window.location.protocol + '//nstrumenta.com/canceled',
+      })
+        .then(function (result) {
+          if (result.error) {
+            // If `redirectToCheckout` fails due to a browser or network
+            // error, display the localized error message to your customer.
+            var displayError = document.getElementById('error-message');
+            displayError.textContent = result.error.message;
+          }
+        });
+    });
+  </script>
+
+  <!-- PASTE STRIPE CHECKOUT END  -->
+
+</head>
+
+<body style="min-height: unset">
+
+</body>

@@ -1,0 +1,11 @@
+
+    {
+      "$schema": "https://raw.githubusercontent.com/nstrumenta/nstrumenta/main/module.schema.json",
+      "type": "nodejs",
+      "name": "test",
+      "version": "0.0.1",
+      "entry": "test-module.js",
+      "includes": [
+          "test-module.js"
+      ]
+    }

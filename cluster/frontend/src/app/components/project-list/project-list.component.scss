@@ -1,0 +1,28 @@
+.mat-card:hover {
+  filter: brightness(150%);
+}
+
+.project-card {
+  outline: none;
+  position: absolute;
+  top: 25px;
+  left: 15px;
+  right: 15px;
+  bottom: 25px;
+
+  .mat-card-title {
+    font-size: 20px;
+  }
+}
+
+.mat-card-image {
+  height: 180px;
+  width: 100%;
+  object-fit: contain;
+  margin: 0;
+}
+
+.add-button {
+  display: flex;
+  align-items: center;
+}

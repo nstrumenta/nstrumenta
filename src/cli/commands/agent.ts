@@ -1,9 +1,11 @@
 import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
-import { DEFAULT_HOST_PORT, getEndpoints } from '../../shared';
+import { getEndpoints } from '../../shared';
 import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+
+const apiUrl = process.env.NSTRUMENTA_API_URL;
+const endpoints = getEndpoints(apiUrl);
 const logger = createLogger();
 
 export const Start = async function (options: {
@@ -11,12 +13,14 @@ export const Start = async function (options: {
   tag?: string;
   debug?: string;
 }): Promise<void> {
+  if (!apiUrl) throw new Error('NSTRUMENTA_API_URL not set');
   const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
 
   const server = new NstrumentaServer({
     apiKey,
-    port: port || DEFAULT_HOST_PORT,
+    apiUrl,
+    port: port ?? 8088,
     tag: tag ? tag : process.env.HOST_INSTANCE_ID,
     debug: debug === 'true',
   });
