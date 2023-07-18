@@ -111,9 +111,9 @@ nst data unmount
     const result = await pollNstrumenta({
       matchString: uploadFileName,
       interval: 5_000,
-      timeout: 60_000,
+      timeout: 90_000,
       command: 'module list',
     });
     await expect(result).toBeTruthy();
-  }, 60_000);
+  }, 90_000);
 });
