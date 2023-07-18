@@ -7,7 +7,6 @@
     "build": "ng build --configuration production",
     "serve:dist": "http-server ./dist --port 5000",
     "release": "standard-version --release-as patch",
-    "deploy": "npm run build && firebase deploy",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
