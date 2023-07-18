@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.1.0](https://github.com/nstrumenta/nstrumenta/compare/v3.0.47...v3.1.0) (2023-07-18)
+
+
+### Features
+
+* **cluster:** moves backend components to open source repo! ([#170](https://github.com/nstrumenta/nstrumenta/issues/170)) ([b4954d5](https://github.com/nstrumenta/nstrumenta/commit/b4954d5ab4f91f19c54adeda9cc74f000bd3449c))
+
+
+### Bug Fixes
+
+* **data-mount:** removes data folder so parent is empty ([13cbcf8](https://github.com/nstrumenta/nstrumenta/commit/13cbcf84928a919c48471bf0d50adac0eb4728db))
+
 ### [3.0.47](https://github.com/nstrumenta/nstrumenta/compare/v3.0.46...v3.0.47) (2023-06-26)
 
 
