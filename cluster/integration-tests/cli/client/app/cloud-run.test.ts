@@ -17,10 +17,12 @@ describe('CloudRun', () => {
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;
 
-    const projectId = await asyncSpawn('nst', `project id`.split(' '), {
-      cwd: testFolderBase,
-      quiet: true,
-    });
+    const projectId = (
+      await asyncSpawn('nst', `project id`.split(' '), {
+        cwd: testFolderBase,
+        quiet: true,
+      })
+    ).trim();
 
     console.log({ projectId });
 
