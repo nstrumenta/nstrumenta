@@ -1,6 +1,7 @@
 export * from './adminUtils'
 export * from './closePendingAgentActions'
 export * from './getAgentIdByTagBase'
+export * from './getProject'
 export * from './getDataMetadata'
 export * from './getDataMount'
 export * from './getDownloadUrl'

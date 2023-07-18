@@ -17,6 +17,7 @@ import {
 } from './commands/data';
 import { ListMachines } from './commands/machines';
 import { CloudRun, List, Publish, Run } from './commands/module';
+import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
 
 const version = require('../../package.json').version;
@@ -38,6 +39,14 @@ program
   .option('-c,--channel <channel>', 'channel to send')
   .description('send to host on channel')
   .action(Send);
+
+const projectCommand = program.command('project');
+projectCommand.command('id').alias('name').description('print project id').action(ProjectName);
+projectCommand
+  .command('info')
+  .alias('describe')
+  .description('Read project info')
+  .action(ProjectInfo);
 
 program
   .command('subscribe')

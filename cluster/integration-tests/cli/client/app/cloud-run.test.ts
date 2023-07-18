@@ -17,6 +17,13 @@ describe('CloudRun', () => {
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;
 
+    const projectId = await asyncSpawn('nst', `project id`.split(' '), {
+      cwd: testFolderBase,
+      quiet: true,
+    });
+
+    console.log({ projectId });
+
     // Write a config.json file
     await mkdir(`${testFolderBase}/.nstrumenta`, { recursive: true });
     await writeFile(
@@ -55,7 +62,7 @@ describe('CloudRun', () => {
       `#!/bin/bash
 nst -v
 nst data mount
-echo "Hello World!" > b/data/$2
+echo "Hello World!" > ${projectId}/data/$2
 nst data unmount
       `,
       { encoding: 'utf8' }

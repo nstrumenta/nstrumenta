@@ -16,13 +16,13 @@
       "type": "node"
     },
     {
-      "name": "local-functions npm run dev",
+      "name": "npm run dev:local.env",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",
       "runtimeArgs": [
         "run-script",
-        "dev:local-functions"
+        "dev:local.env"
       ],
       "runtimeExecutable": "npm",
       "skipFiles": [

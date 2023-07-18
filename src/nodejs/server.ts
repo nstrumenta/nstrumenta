@@ -17,7 +17,7 @@ import {
   RPC,
   Subscribe,
   Unsubscribe,
-  getEndpoints
+  getEndpoints,
 } from '../shared';
 
 import {
@@ -31,7 +31,6 @@ import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
 
 import WritableStream = NodeJS.WritableStream;
-import path = require('path');
 
 const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 

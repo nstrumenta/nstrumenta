@@ -5,6 +5,7 @@ export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
     GET_MACHINES: `${url}/getMachines`,
     GET_UPLOAD_URL: `${url}/getUploadUrl`,
     GET_UPLOAD_DATA_URL: `${url}/getUploadDataUrl`,
+    GET_PROJECT: `${url}/getProject`,
     REGISTER_AGENT: `${url}/registerAgent`,
     LIST_AGENTS: `${url}/listAgents`,
     SET_ACTION: `${url}/setAction`,
@@ -26,11 +27,6 @@ export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
     QUERY_DATA: `${url}/queryData`,
   };
 };
-
-export enum ObjectTypes {
-  DATA = 'data',
-  MODULES = 'modules',
-}
 
 export * from './lib';
 

@@ -100,11 +100,14 @@ export async function asyncSpawn(
     shell?: boolean;
     stdio?: 'pipe' | 'inherit';
     env?: Record<string, string>;
+    quiet?: boolean;
   },
   errCB?: (code: number) => void,
   streams: Writable[] = []
 ) {
-  console.log(`spawn [${cmd} ${args?.join(' ')}]`);
+  if (!options?.quiet) {
+    console.log(`${cmd} ${args?.join(' ')}`);
+  }
   args = args || [];
   options = { ...options };
   const childProcess = spawn(cmd, args, options);
@@ -131,7 +134,9 @@ export async function asyncSpawn(
     throw new Error(`spawned process ${cmd} error code ${code}, ${error}`);
   }
 
-  console.log(`spawn ${cmd} output: ${output} stderr: ${error}`);
+  if (!options?.quiet) {
+    console.log(`${cmd} ${args?.join(' ')}`, output, error);
+  }
   return childProcess;
 }
 

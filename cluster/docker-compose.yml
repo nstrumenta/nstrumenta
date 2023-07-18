@@ -18,7 +18,6 @@ services:
       - ./credentials/:/credentials
     environment:
       - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
-      - NSTRUMENTA_API_URL=http://server:5999
     command: 'npm run start'
   agent:
     build:
@@ -28,7 +27,7 @@ services:
       - 8088:8088
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=http://server:5999
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: 'npm run start:agent'
   developer:
     build:
@@ -37,5 +36,5 @@ services:
     privileged: true
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=http://server:5999
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: tail -f /dev/null

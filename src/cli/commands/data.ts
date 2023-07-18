@@ -3,7 +3,7 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { DataQueryOptionsCLI, DataQueryResponse, ObjectTypes, getEndpoints } from '../../shared';
+import { DataQueryOptionsCLI, DataQueryResponse, getEndpoints } from '../../shared';
 import { asyncSpawn, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -25,7 +25,7 @@ export const List = async (_: unknown, options: DataListOptions) => {
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    data: { type: ObjectTypes.DATA },
+    data: { type: 'data' },
   };
   let response = await axios(endpoints.LIST_STORAGE_OBJECTS, config);
 
@@ -41,7 +41,6 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    data: { type: ObjectTypes.DATA },
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
@@ -52,19 +51,23 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
   }
 
   // check for gcsfuse
-  await asyncSpawn('gcsfuse', ['-v']);
+  await asyncSpawn('gcsfuse', ['-v'], { quiet: true });
 
   await mkdir(`${projectId}/data`, { recursive: true });
   await writeFile(`${projectId}/.gitignore`, 'keyfile.json\ndata');
   const keyfilePath = `${projectId}/keyfile.json`;
   await writeFile(keyfilePath, keyFile);
-  await asyncSpawn('gcsfuse', [
-    `--implicit-dirs`,
-    `--only-dir=projects/${projectId}/data`,
-    `--key-file=${keyfilePath}`,
-    `${bucket}`,
-    `${projectId}/data`,
-  ]);
+  await asyncSpawn(
+    'gcsfuse',
+    [
+      `--implicit-dirs`,
+      `--only-dir=projects/${projectId}/data`,
+      `--key-file=${keyfilePath}`,
+      `${bucket}`,
+      `${projectId}/data`,
+    ],
+    { quiet: true }
+  );
 };
 
 export interface DataUnmountOptions {}
@@ -74,7 +77,7 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    data: { type: ObjectTypes.DATA },
+    data: { type: 'data' },
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
@@ -85,11 +88,11 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   }
 
   // check for gcsfuse
-  await asyncSpawn('gcsfuse', ['-v']);
+  await asyncSpawn('gcsfuse', ['-v'], { quiet: true });
   const keyfilePath = `${projectId}/keyfile.json`;
   await rm(keyfilePath);
   await rm(`${projectId}/.gitignore`);
-  await asyncSpawn('fusermount', ['-u', `${projectId}/data`]);
+  await asyncSpawn('fusermount', ['-u', `${projectId}/data`], { quiet: true });
   await rmdir(`${projectId}/data`);
   await rmdir(`${projectId}`);
 };
