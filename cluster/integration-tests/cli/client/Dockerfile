@@ -7,7 +7,7 @@ RUN npm install
 RUN npm run build:cli
 RUN echo 'alias nst="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
 RUN echo 'alias nstrumenta="node /nstrumenta/dist/cli/index.js"' >> ~/.bashrc
-
+ENV ENV=/root/.bashrc
 
 COPY ./cluster/integration-tests/cli/client/app/ /app
 WORKDIR /app
