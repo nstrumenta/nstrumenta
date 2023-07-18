@@ -11,28 +11,8 @@ import {
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
-import { WebrtcClient } from './video/src';
 
-
-export { Kind, MediaInfo, SubscriberType } from './video/src';
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
-  public webrtcClient: WebrtcClient | null = null;
-
-  constructor(apiKey?: string, apiUrl?: string) {
-    super();
-    if (apiKey) {
-      this.apiKey = apiKey;
-      localStorage.setItem('apiKey', apiKey);
-    }
-    if (apiUrl) {
-      this.apiUrl = apiUrl;
-      localStorage.setItem('apiUrl', apiUrl);
-    }
-    // initiate the storage service for file upload/download
-    this.storage = new StorageService({ apiKey, apiUrl });
-    this.webrtcClient = new WebrtcClient();
-  }
-
   public async connect(connectOptions?: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
       const {
@@ -47,18 +27,18 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       const wsUrl = wsUrlOption
         ? wsUrlOption
         : wsUrlParam
-          ? wsUrlParam
-          : window.location.origin.replace('http', 'ws');
+        ? wsUrlParam
+        : window.location.origin.replace('http', 'ws');
 
       const apiUrlParam = new URLSearchParams(search).get('apiUrl');
       const apiUrlLocalStore = localStorage.getItem('apiUrl');
       const apiUrl = apiUrlOption
         ? apiUrlOption
         : apiUrlParam
-          ? apiUrlParam
-          : apiUrlLocalStore
-            ? apiUrlLocalStore
-            : prompt('Enter your nstrumenta apiUrl');
+        ? apiUrlParam
+        : apiUrlLocalStore
+        ? apiUrlLocalStore
+        : prompt('Enter your nstrumenta apiUrl');
       if (apiUrl) {
         localStorage.setItem('apiUrl', apiUrl);
       }
@@ -68,10 +48,10 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       const apiKey = apiKeyOption
         ? apiKeyOption
         : apiKeyParam
-          ? apiKeyParam
-          : apiKeyLocalStore
-            ? apiKeyLocalStore
-            : prompt('Enter your nstrumenta apiKey');
+        ? apiKeyParam
+        : apiKeyLocalStore
+        ? apiKeyLocalStore
+        : prompt('Enter your nstrumenta apiKey');
       if (apiKey) {
         localStorage.setItem('apiKey', apiKey);
       }
