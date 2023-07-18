@@ -1,0 +1,34 @@
+@use '@angular/material' as mat;
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@media (prefers-color-scheme: dark) {
+  @import '@angular/material/prebuilt-themes/pink-bluegrey';
+}
+
+
+html,
+body {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+$indigo: mat.define-palette(mat.$indigo-palette);
+.mat-button:visited {
+  color: mat.get-color-from-palette($indigo, lighter);
+}
+
+.mat-column-select {
+  flex: 0 0 40px;
+}
+
+.fill-remaining-space {
+  flex: 1 1 auto;
+}
+
+#fab {
+  right: 40px;
+  top: 60px;
+  z-index: 1;
+  position: fixed !important;
+}

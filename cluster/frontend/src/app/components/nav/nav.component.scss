@@ -1,0 +1,56 @@
+.main-container {
+  height: 100%;
+  display: flex;
+}
+
+.main-sandbox-container {
+  flex: 1;
+  height: 100%;
+}
+
+.sidenav {
+  align-items: center;
+  width: 200px;
+  flex: 1;
+}
+
+.is-handset .sidenav {
+  position: fixed;
+  flex: 1 0 auto;
+}
+
+.sidenav .mat-toolbar {
+  background: inherit;
+}
+
+.mat-sidenav-content {
+  overflow-y: auto;
+}
+
+.mat-toolbar {
+  height: 42px;
+  box-shadow:
+      0 3px 1px -2px rgba(0,0,0,.2),
+      0 2px 2px 0 rgba(0,0,0,.14),
+      0 1px 5px 0 rgba(0,0,0,.12);
+  -webkit-box-shadow:
+      0 3px 1px -2px rgba(0,0,0,.2),
+      0 2px 2px 0 rgba(0,0,0,.14),
+      0 1px 5px 0 rgba(0,0,0,.12);
+  -moz-box-shadow:
+      0 3px 1px -2px rgba(0,0,0,.2),
+      0 2px 2px 0 rgba(0,0,0,.14),
+      0 1px 5px 0 rgba(0,0,0,.12);
+  z-index: 2;
+  position: relative;
+
+  .mat-primary {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+}
+
+.fill-remaining-space {
+  flex: 1 1 auto;
+}

@@ -1,0 +1,5 @@
+<mat-list>
+  <mat-list-item>User Id: {{(authService?.user | async)?.uid}}</mat-list-item>
+  <mat-list-item>photoURL: {{(authService?.user | async)?.photoURL}}</mat-list-item>
+  <!-- <mat-list-item>credential: {{authService?.credential?.accessToken}}</mat-list-item> -->
+</mat-list>

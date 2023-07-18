@@ -1,0 +1,48 @@
+<div class="main-container" [class.is-handset]="isHandset$">
+  <mat-sidenav-container class="main-sandbox-container" [attr.autosize]="!(isHandset$ | async)" flex>
+    <mat-sidenav #drawer class="sidenav" [attr.fixedInViewport]="isHandset$ | async"
+      [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'">
+      <app-navbar-title></app-navbar-title>
+      <mat-nav-list>
+        <ng-container *ngIf="router.url.startsWith('/projects/')">
+          <a mat-menu-item [routerLink]="['overview']">
+            <mat-icon>home</mat-icon> Overview
+          </a>
+          <a mat-menu-item [routerLink]="['record']">
+            <mat-icon>fiber_manual_record</mat-icon> Record
+          </a>
+          <a mat-menu-item [routerLink]="['data']">
+            <mat-icon>storage</mat-icon> Data
+          </a>
+          <a mat-menu-item [routerLink]="['repositories']">
+            <mat-icon>code</mat-icon> Repositories
+          </a>
+          <a mat-menu-item [routerLink]="['modules']">
+            <mat-icon>category</mat-icon> Modules
+          </a>
+          <a mat-menu-item [routerLink]="['agents']">
+            <mat-icon>developer_board</mat-icon> Agents
+          </a>
+          <a mat-menu-item [routerLink]="['algorithms']">
+            <mat-icon>multiline_chart</mat-icon> Algorithms
+          </a>
+          <a mat-menu-item [routerLink]="['actions']">
+            <mat-icon>list</mat-icon> Action Log
+          </a>
+          <a mat-menu-item [routerLink]="['machines']">
+            <mat-icon>cloud</mat-icon> Machines
+          </a>
+          <a mat-menu-item [routerLink]="['settings']">
+            <mat-icon>settings</mat-icon>Settings
+          </a>
+        </ng-container>
+        <span class="fill-remaining-space"></span>
+      </mat-nav-list>
+    </mat-sidenav>
+    <mat-sidenav-content layout>
+      <app-toolbar (drawerToggleClick)="drawer.toggle()"></app-toolbar>
+      <router-outlet></router-outlet>
+    </mat-sidenav-content>
+
+  </mat-sidenav-container>
+</div>

@@ -1,0 +1,8 @@
+**/node_modules
+*.tar.gz
+.git
+.nst
+**/cache
+**/temp
+**/dist
+**/.firebase

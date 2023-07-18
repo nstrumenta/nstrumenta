@@ -1,16 +1,14 @@
 import axios from 'axios';
 import { getEndpoints } from '../index';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
-
 export const verifyToken = async ({
   token,
   apiKey,
-  allowCrossProjectApiKey,
+  apiUrl,
 }: {
   token: string;
   apiKey: string;
-  allowCrossProjectApiKey: boolean;
+  apiUrl: string;
 }): Promise<boolean> => {
   const headers = {
     'x-api-key': apiKey,
@@ -18,8 +16,8 @@ export const verifyToken = async ({
   };
   try {
     await axios.post(
-      endpoints.VERIFY_TOKEN,
-      { token, allowCrossProjectApiKey },
+      getEndpoints(apiUrl).VERIFY_TOKEN,
+      { token },
       {
         headers,
       }

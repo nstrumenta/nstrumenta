@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { DEFAULT_HOST_PORT, getEndpoints } from '../shared';
-import { initContexts } from '../shared/lib/context';
 import {
   CleanActions as CleanAgentActions,
   List as ListAgents,
@@ -9,35 +7,20 @@ import {
   SetAction as SetAgentAction,
   Start,
 } from './commands/agent';
-import { AddKey, ListProjects, SetProject } from './commands/auth';
 import {
-  AddContext,
-  ClearConfig,
-  DeleteContext,
-  GetCurrentContext,
-  ListContexts,
-  SetContext,
-  SetContextProperty,
-} from './commands/contexts';
-import { ListMachines } from './commands/machines';
-import { CloudRun, List, Publish, Run } from './commands/module';
-import { Send, Subscribe } from './commands/pubsub';
-import {
+  Get as GetData,
   List as ListData,
   Mount as MountData,
+  Query as QueryData,
   Unmount as UnmountData,
   Upload as UploadData,
-  Query as QueryData,
-  Get as GetData,
 } from './commands/data';
-import axios from 'axios';
-import { resolveApiKey } from './utils';
+import { ListMachines } from './commands/machines';
+import { CloudRun, List, Publish, Run } from './commands/module';
+import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
+import { Send, Subscribe } from './commands/pubsub';
 
 const version = require('../../package.json').version;
-
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
-
-if (!process.env.NSTRUMENTA_API_KEY) { initContexts(); }
 
 const program = new Command()
   .version(version, '-v, --version', 'output the current version')
@@ -50,31 +33,20 @@ machineCommand
   .description('List host machines for current project')
   .action(ListMachines);
 
-const authCommand = program.command('auth');
-authCommand
-  .command('add')
-  .description('Add API Key for project')
-  .argument('[key]', 'API Key')
-  .action(AddKey);
-
-authCommand
-  .command('list')
-  .alias('ls')
-  .description('List projects with keys stored')
-  .action(ListProjects);
-
-authCommand
-  .command('set')
-  .argument('[id]', 'Project ID')
-  .description('Set current project')
-  .action(SetProject);
-
 program
   .command('send')
   .argument('[host]', 'websocket host')
   .option('-c,--channel <channel>', 'channel to send')
   .description('send to host on channel')
   .action(Send);
+
+const projectCommand = program.command('project');
+projectCommand.command('id').alias('name').description('print project id').action(ProjectName);
+projectCommand
+  .command('info')
+  .alias('describe')
+  .description('Read project info')
+  .action(ProjectInfo);
 
 program
   .command('subscribe')
@@ -99,7 +71,6 @@ moduleCommand
     'require module locally in the current .nstrumenta project dir; --name also required here'
   )
   .option('-p, --path <path>', 'specify path (complete filename) of published module')
-  .option('--non-interactive', 'requires module name, uses latest version from server')
   .option('--module-version [version]', 'version of the module to run')
   .description('run module')
   .action(Run);
@@ -116,7 +87,7 @@ moduleCommand.command('list').description('list modules published in current pro
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
-  .option('-p,--port <port>', 'websocket port', DEFAULT_HOST_PORT)
+  .option('-p,--port <port>', 'websocket port', '8088')
   .option('-d, --debug <debug>', 'output extra debugging', 'false')
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
@@ -145,26 +116,6 @@ agentCommand
   .description('cancels all pending actions for an agent')
   .action(CleanAgentActions);
 
-const contextCommand = program.command('context');
-contextCommand.command('add').description('Add a context').action(AddContext);
-contextCommand.command('list').description('List all stored contexts').action(ListContexts);
-contextCommand.command('show').description('Show current context').action(GetCurrentContext);
-contextCommand.command('delete').description('Delete a context').action(DeleteContext);
-contextCommand
-  .command('set')
-  .description('Set current context to one of the stored contexts')
-  .action(SetContext);
-contextCommand
-  .command('set-property')
-  .description('set one of the available properties on the current context')
-  .argument('[name]', 'property name')
-  .option('-v, --value <value>')
-  .action(SetContextProperty);
-
-if (process.env.NODE_ENV === 'development') {
-  contextCommand.command('clear').description('** clear all local config!! **').action(ClearConfig);
-}
-
 const dataCommand = program.command('data');
 dataCommand
   .command('list')
@@ -175,14 +126,10 @@ dataCommand
   .command('mount')
   .description('mount data to local filesystem (requires gcsfuse)')
   .action(MountData);
-dataCommand
-  .command('unmount')
-  .description('unmount previously mounted data')
-  .action(UnmountData);
+dataCommand.command('unmount').description('unmount previously mounted data').action(UnmountData);
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')
-  .option('--dataId <dataId>')
   .option('--overwrite', 'allow overwrite existing filename if dataId is specified')
   .argument('<filename...>', 'filename(s) to upload')
   .description('Upload file to project data')
@@ -210,35 +157,6 @@ dataCommand
   .option('-o --output <output>', 'output directory')
   .description('Download data by name, tags, or date range')
   .action(GetData);
-
-const adminUtilsCommand = program.command('admin-utils', '', { hidden: true });
-adminUtilsCommand
-  .description(
-    "Reference already stored modules in db (newly published modules shouldn't need this)"
-  )
-  .argument('[name]', '')
-  .action(function Admin(name: string) {
-    if (!name) {
-      console.log('util name required');
-      return;
-    }
-    const apiKey = resolveApiKey();
-    console.log(`to call ${endpoints.ADMIN_UTILS}: apiKey: ${apiKey}: ${name}`);
-    axios
-      .post(
-        endpoints.ADMIN_UTILS,
-        { name },
-        {
-          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-        }
-      )
-      .then((result) => {
-        console.log(JSON.stringify(result.data));
-      })
-      .catch(() => {
-        console.log('something went wrong');
-      });
-  });
 
 program.parse(process.argv);
 

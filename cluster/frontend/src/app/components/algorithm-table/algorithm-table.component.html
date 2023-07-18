@@ -1,0 +1,56 @@
+<div style="flex-direction:row">
+  <mat-form-field>
+    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+  </mat-form-field>
+  <ng-container *ngIf="selection.hasValue()">
+    {{selection.selected.length}} files selected:
+    <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
+      <mat-icon color="accent">delete</mat-icon>
+    </button>
+  </ng-container>
+</div>
+
+<mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc"
+  class="animate">
+
+  <!-- Checkbox Column -->
+  <ng-container matColumnDef="select">
+    <mat-header-cell *matHeaderCellDef>
+      <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+        [indeterminate]="selection.hasValue() && !isAllSelected()">
+      </mat-checkbox>
+    </mat-header-cell>
+    <mat-cell *matCellDef="let row">
+      <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+        [checked]="selection.isSelected(row)">
+      </mat-checkbox>
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="name">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
+    <mat-cell *matCellDef="let fileDocument">
+      <a mat-button [routerLink]="fileDocument.id +'/builds'">
+        {{ fileDocument.id }}
+      </a>
+    </mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="repository">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Repository </mat-header-cell>
+    <mat-cell *matCellDef="let fileDocument">
+      <a>{{ fileDocument.repository }} </a>
+    </mat-cell>
+  </ng-container>
+
+
+  <ng-container matColumnDef="lastModified">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
+    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
+  </ng-container>
+
+
+  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
+</mat-table>

@@ -4,20 +4,18 @@ import Conf from 'conf';
 import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
-import inspector from 'node:inspector';
 import nodePath from 'node:path';
 import path from 'path';
 import semver from 'semver';
 import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
 import util, { promisify } from 'util';
-import { getCurrentContext } from '../shared/lib/context';
 import { schema } from '../shared/schema';
 import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 const pipeline = promisify(streamPipeline);
 
@@ -51,9 +49,7 @@ export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
 
   const log = (...args: unknown[]) => {
     const chunk = `${util.format.apply(logger, [prefix || '', ...args])}\n`;
-    // send log to any active debug inspectors
-    // @ts-ignore
-    inspector.console.log(chunk);
+
     logger.logStream.push(chunk, 'utf-8');
   };
 
@@ -84,25 +80,14 @@ export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
 
 const config = new Conf(schema as any);
 
-let notifiedApiKeyResolution = false;
-
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
-  if (!apiKey) {
-    try {
-      apiKey = (config.get('keys') as Keys)[getCurrentContext().projectId];
-    } catch {}
-  } else {
-    if (!notifiedApiKeyResolution) {
-      console.log('using NSTRUMENTA_API_KEY from environment variable');
-      notifiedApiKeyResolution = true;
-    }
-  }
 
-  if (!apiKey)
+  if (!apiKey) {
     throw new Error(
-      'nstrumenta api key is not set, use "nst auth" or set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+      'nstrumenta api key is not set, set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
     );
+  }
 
   return apiKey;
 };
@@ -115,11 +100,14 @@ export async function asyncSpawn(
     shell?: boolean;
     stdio?: 'pipe' | 'inherit';
     env?: Record<string, string>;
+    quiet?: boolean;
   },
   errCB?: (code: number) => void,
   streams: Writable[] = []
 ) {
-  console.log(`spawn [${cmd} ${args?.join(' ')}]`);
+  if (!options?.quiet) {
+    console.log(`${cmd} ${args?.join(' ')}`);
+  }
   args = args || [];
   options = { ...options };
   const childProcess = spawn(cmd, args, options);
@@ -146,7 +134,9 @@ export async function asyncSpawn(
     throw new Error(`spawned process ${cmd} error code ${code}, ${error}`);
   }
 
-  console.log(`spawn ${cmd} output: ${output} stderr: ${error}`);
+  if (!options?.quiet) {
+    console.log(`${cmd} ${args?.join(' ')}`, output, error);
+  }
   return childProcess;
 }
 
@@ -200,15 +190,19 @@ export const getFolderFromStorage = async (
     }
 
     try {
-      const options = {
-        gzip: true,
-        file: file,
-        cwd: extractFolder,
-      };
-      await tar.extract(options);
-    } catch (err) {
-      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
-      throw err;
+      await asyncSpawn('tar', ['-zxvf', file], { cwd: extractFolder });
+    } catch {
+      try {
+        const options = {
+          gzip: true,
+          file: file,
+          cwd: extractFolder,
+        };
+        await tar.extract(options);
+      } catch (err) {
+        console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
+        throw err;
+      }
     }
   }
 
@@ -223,7 +217,6 @@ export const inquiryForSelectModule = async (choices: string[]): Promise<string>
 export const getModuleFromStorage = async ({
   name: moduleName,
   path,
-  nonInteractive,
   version: versionString,
 }: {
   name?: string;
@@ -251,7 +244,7 @@ export const getModuleFromStorage = async ({
   });
 
   try {
-    if (nonInteractive && name) {
+    if (name) {
       console.log(name, serverModules[name]);
       const version = versionString
         ? versionString

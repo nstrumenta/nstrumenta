@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { resolveApiKey } from '../utils';
-import { getContextProperty } from '../../shared/lib/context';
 import { getEndpoints } from '../../shared';
 
-const endpoints = process.env.NSTRUMENTA_LOCAL ? getEndpoints('local') : getEndpoints('prod');
+const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 export interface Machine {
   name: string;
@@ -17,11 +16,6 @@ export interface Machine {
 }
 
 export const GetMachines = async () => {
-  const projectId = getContextProperty('projectId');
-  if (!projectId) {
-    throw new Error("No project set - use 'auth set [[projectId]]' first");
-  }
-
   const apiKey = resolveApiKey();
   const headers = {
     'x-api-key': apiKey,

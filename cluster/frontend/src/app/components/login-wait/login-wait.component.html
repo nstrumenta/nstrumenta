@@ -1,0 +1,24 @@
+<div class="login-page">
+  <mat-grid-list cols="1" rowHeight="400">
+    <mat-grid-tile>
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>
+            <div style="display:flex;flex-direction:row">
+              <mat-spinner strokeWidth="3" [diameter]="22" flex></mat-spinner>
+              <div style="margin-left:5px" flex> Logging in:</div>
+            </div>
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <img style="width:40%" src="assets/images/nstrumenta-logo.svg" />
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-raised-button color="primary" (click)="cancel()">
+            Cancel
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+</div>

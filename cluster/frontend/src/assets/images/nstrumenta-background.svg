@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="1440" height="4875" viewBox="0 0 1440 4875" style="background:#f5f7f8" xmlns="http://www.w3.org/2000/svg">
+  <g fill="none" fill-rule="evenodd">
+    <path d="M1440 4875H0V3798h1440z" style="fill: rgb(208, 188, 181);"/>
+    <path d="M 1440 4796.177 L 1440 2771 L 0 2771 L 0 4155.048 C 17.396 3397.807 1455.62 4116.227 1440 4796.177 Z" style="fill: rgb(225, 193, 98);"/>
+    <path d="M 0 3339.578 L 0 1775 L 1440 1775 L 1440 2918.498 C 1413.322 2719.279 -39.212 3046.764 0 3339.578 Z" style="fill: rgb(245, 184, 0);"/>
+    <path d="M 1440 2643.857 C 1379.788 3052.455 -42.34 2321.328 0 2034.01 L 0 905.881 L 1440 905.881 L 1440 2643.857 Z" style="fill: rgb(224, 208, 167);"/>
+    <path d="M 1440 905.88 C 1440 905.88 1302.323 1324.62 -0.66 1131.146 L 0 0 L 1440 0 L 1440 905.88 Z" style="fill: rgb(211, 181, 241);"/>
+    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 1012.128 1922.954"/>
+    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 1341.74 3598.279"/>
+    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 1054.766 3457.354"/>
+    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 702.517 3533.824"/>
+    <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 268.872 4585.275"/>
+  </g>
+</svg>

@@ -8,7 +8,12 @@
     "type": {
       "type": "string",
       "description": "Type of module",
-      "enum": ["algorithm", "nodejs", "sandbox"]
+      "enum": [
+        "algorithm",
+        "nodejs",
+        "script",
+        "sandbox"
+      ]
     },
     "name": {
       "type": "string",
@@ -41,5 +46,9 @@
       "type": "string"
     }
   },
-  "required": ["type", "name", "version"]
+  "required": [
+    "type",
+    "name",
+    "version"
+  ]
 }

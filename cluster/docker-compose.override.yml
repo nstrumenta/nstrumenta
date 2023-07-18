@@ -1,0 +1,52 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+    ports:
+      - 5000:5000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./credentials:/credentials
+    working_dir: /app
+    command: "npm run start"
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 5999:5999
+      - 9229:9229
+    volumes:
+      - ./server/app/:/app
+      - ./credentials/:/credentials
+    environment:
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
+    command: sh -c 'npm run dev'
+  agent:
+    build:
+      context: ../
+      dockerfile: ./cluster/agent/Dockerfile
+    ports:
+      - 8088:8088
+      - 9230:9230
+    volumes:
+      - ../:/app
+    environment:
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
+    command: sh -c 'npm run dev'
+  developer:
+    build:
+      context: ../
+      dockerfile: ./cluster/developer/Dockerfile
+    privileged: true
+    volumes:
+      - ../:/app
+      - ./credentials:/credentials
+    environment:
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
+    command: tail -f /dev/null
