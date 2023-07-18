@@ -1,12 +1,7 @@
 import { spawn } from 'child_process';
 
-async function asyncSpawn(
-  cmd: string,
-  args?: string[],
-  options?: { cwd?: string },
-  errCB?: (code: number) => void
-) {
-  console.log(`spawn [${cmd} ${args?.join(' ')}]`);
+async function asyncSpawn(cmd: string, args?: string[], options?: { cwd?: string }) {
+  console.log(`${cmd} ${args?.join(' ')}`);
   const process = spawn(cmd, args || [], options);
 
   let output = '';
@@ -21,14 +16,10 @@ async function asyncSpawn(
     process.on('close', resolve);
   });
   if (code) {
-    if (errCB) {
-      errCB(code);
-    }
-
     throw new Error(`spawned process ${cmd} error code ${code}, ${error}`);
   }
 
-  console.log(`spawn ${cmd} output ${output}`);
+  console.log(`${cmd} ${args?.join(' ')}`, output, error);
   return output;
 }
 

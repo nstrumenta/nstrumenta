@@ -15,11 +15,6 @@ const buildResourceName = (actionPath: string) => {
     .slice(0, 61)
 }
 
-export interface CloudAgentVMMetaData {
-  createdAt: string
-  ipAddress: string
-}
-
 export interface CloudAgentServiceDependencies {
   firestore: Firestore
   compute: any
@@ -32,21 +27,6 @@ export interface CloudAgentServiceDependencies {
   storage: Storage
 }
 
-interface CreateVMArgs {
-  projectId: string
-  apiKey: string
-  instanceId: string
-  imageId: string
-}
-
-interface PushImageArgs {
-  imageId: string
-}
-
-interface StoreTarballArgs {
-  actionPath: string
-  imageId: string
-}
 export interface CloudAgentService {
   deployCloudAgent(
     actionPath: string,
@@ -104,42 +84,6 @@ export const createCloudAgentService = ({
     return output
   }
 
-  async function cloudRunDeployCloudAgent({
-    projectId,
-    instanceId,
-    imageId,
-    apiKey,
-  }: CreateVMArgs) {
-    await asyncSpawn(
-      'gcloud',
-      `config set core/project ${serviceAccount.project_id}`.split(' '),
-    )
-
-    await asyncSpawn('gcloud', `config set run/region europe-west3`.split(' '))
-
-    await asyncSpawn('gcloud', [
-      'run',
-      'deploy',
-      `${instanceId}`,
-      `--image=${imageId}`,
-      '--allow-unauthenticated',
-      '--port=8088',
-      `--service-account=${serviceAccount.client_email}`,
-      '--max-instances=1',
-      '--no-cpu-throttling',
-      `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL${process.env.NSTRUMENTA_API_URL}`,
-    ])
-
-    const description = JSON.parse(
-      await asyncSpawn(
-        'gcloud',
-        `run services describe ${instanceId} --format=json`.split(' '),
-      ),
-    )
-
-    return description
-  }
-
   async function deployCloudAgent(
     actionPath: string,
     data: { payload: { projectId: string } },
@@ -165,12 +109,35 @@ export const createCloudAgentService = ({
       if (!apiKey)
         throw new Error('api key not set, unable to createCloudAgent')
 
-      description = await cloudRunDeployCloudAgent({
-        instanceId,
-        apiKey,
-        imageId,
-        projectId,
-      })
+      await asyncSpawn(
+        'gcloud',
+        `config set core/project ${serviceAccount.project_id}`.split(' '),
+      )
+
+      await asyncSpawn(
+        'gcloud',
+        `config set run/region europe-west3`.split(' '),
+      )
+
+      await asyncSpawn('gcloud', [
+        'run',
+        'deploy',
+        `${instanceId}`,
+        `--image=${imageId}`,
+        '--allow-unauthenticated',
+        '--port=8088',
+        `--service-account=${serviceAccount.client_email}`,
+        '--max-instances=1',
+        '--no-cpu-throttling',
+        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL${process.env.NSTRUMENTA_API_URL}`,
+      ])
+
+      description = JSON.parse(
+        await asyncSpawn(
+          'gcloud',
+          `run services describe ${instanceId} --format=json`.split(' '),
+        ),
+      )
     } catch (err: any) {
       console.log(`failed to deploy sandbox ${err.message}`)
       await firestore

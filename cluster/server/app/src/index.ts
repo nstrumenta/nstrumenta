@@ -54,7 +54,6 @@ Object.keys(functions).map((fn) => {
 })
 
 app.get('/', (req, res) => {
-  console.log(`GET`, req.headers.from)
   res.status(200).send('server is running')
 })
 
