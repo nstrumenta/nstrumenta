@@ -4,8 +4,7 @@
 # ✔  Applied hosting target main to firebase-project-id
 
 # Updated: main (firebase-project-id)
-npx firebase use $PROJECT_ID
-npx firebase target:apply hosting main $PROJECT_ID
+npx firebase use $FIREBASE_PROJECT_ID
 
 # frontend % npx firebase deploy --only hosting:main               
 
