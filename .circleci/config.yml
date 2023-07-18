@@ -92,7 +92,7 @@ jobs:
 workflows:
   version: 2
 
-  -deploy:
+  -ci:
     jobs:
       - build-frontend
       - build-server
