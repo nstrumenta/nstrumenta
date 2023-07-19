@@ -1,12 +1,8 @@
 import {
-  AnswerWebRTC,
-  CandidateWebRTC,
   ClientStatus,
   ConnectOptions,
   Connection,
-  JoinWebRTC,
   NstrumentaClientBase,
-  StorageService,
   WebSocketLike,
   getToken,
 } from '../shared';
@@ -153,35 +149,4 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       });
     });
   }
-
-  public joinWebRTC = async (
-    room: string
-  ): Promise<{ peerId: string; offer: RTCSessionDescription }> => {
-    console.log('browserClient joinWebRTC');
-    return this.callRPC<JoinWebRTC>('joinWebRTC', { room });
-  };
-
-  public candidateWebRTC = async (
-    peerId: string,
-    room: string,
-    candidate: RTCIceCandidate
-  ): Promise<undefined> => {
-    return this.callRPC<CandidateWebRTC>('candidateWebRTC', {
-      peerId,
-      room,
-      candidate,
-    }) as Promise<undefined>;
-  };
-
-  public answerWebRTC = async (
-    peerId: string,
-    room: string,
-    answer: RTCSessionDescription
-  ): Promise<undefined> => {
-    return this.callRPC<AnswerWebRTC>('answerWebRTC', {
-      peerId,
-      room,
-      answer,
-    }) as Promise<undefined>;
-  };
 }
