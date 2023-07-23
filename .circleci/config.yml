@@ -88,6 +88,7 @@ jobs:
       - run:
           command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
       - run: ./ci.sh cli
+      - run: ./ci.sh nodejs-client
 
 workflows:
   version: 2
