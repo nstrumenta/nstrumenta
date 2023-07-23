@@ -1,6 +1,7 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
+import { writeFile } from 'fs/promises'
 import { serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 import { ApiKeyService } from './ApiKeyService'
@@ -105,10 +106,16 @@ export const createCloudAgentService = ({
     const apiKey = await apiKeyService.createAndAddApiKey(projectId)
     let description: GCloudDescribeResults | undefined = undefined
     try {
-      console.log('[sandbox] invoke createCloudAgent')
+      console.log('[cloudAgent] invoke createCloudAgent')
       if (!apiKey)
         throw new Error('api key not set, unable to createCloudAgent')
 
+      const keyfile = './credentials.json'
+      await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
+      await asyncSpawn(
+        'gcloud',
+        `auth activate-service-account --key-file ${keyfile}`.split(' '),
+      )
       await asyncSpawn(
         'gcloud',
         `config set core/project ${serviceAccount.project_id}`.split(' '),
@@ -129,7 +136,7 @@ export const createCloudAgentService = ({
         `--service-account=${serviceAccount.client_email}`,
         '--max-instances=1',
         '--no-cpu-throttling',
-        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL${process.env.NSTRUMENTA_API_URL}`,
+        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL=${process.env.NSTRUMENTA_API_URL}`,
       ])
 
       description = JSON.parse(
@@ -139,7 +146,7 @@ export const createCloudAgentService = ({
         ),
       )
     } catch (err: any) {
-      console.log(`failed to deploy sandbox ${err.message}`)
+      console.log(`failed to deploy cloudAgent ${err.message}`)
       await firestore
         .doc(actionPath)
         .set({ status: 'error', error: err.message }, { merge: true })

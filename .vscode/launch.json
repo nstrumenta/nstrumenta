@@ -24,6 +24,7 @@
         "run-script",
         "dev:local.env"
       ],
+      "remoteRoot": "/workspaces/nstrumenta/src/cli/commands",
       "runtimeExecutable": "npm",
       "skipFiles": [
         "<node_internals>/**"

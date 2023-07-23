@@ -30,33 +30,7 @@ export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
 
 export * from './lib';
 
-export interface DataQueryOptionsCLI {
-  tag?: string[];
-  id?: string;
-  before?: string;
-  after?: string;
-  limit?: string;
-  field?: string;
-  comparison?:
-    | '<'
-    | '<='
-    | '=='
-    | '>'
-    | '>='
-    | '!='
-    | 'array-contains'
-    | 'array-contains-any'
-    | 'in'
-    | 'not-in';
-  compareValue?: string;
-  filenames?: string[];
-  metadata?: string;
-}
-
-export interface DataQueryOptionsClient {
-  tag?: string[];
-  before?: number;
-  after?: number;
+export interface DataQueryOptions {
   limit?: number;
   field?: string;
   comparison?:
@@ -71,20 +45,6 @@ export interface DataQueryOptionsClient {
     | 'in'
     | 'not-in';
   compareValue?: string;
-  filenames?: string[];
-  metadata?: string | Record<string, unknown>;
 }
-
-export type DataQueryOptions = DataQueryOptionsCLI | DataQueryOptionsClient;
-
-export type DataQueryResponse = {
-  id: string;
-  name: string;
-  dataId: string;
-  filePath: string;
-  tags: string[];
-  size: number;
-  lastModified: number;
-}[];
 
 export * from './rpc';

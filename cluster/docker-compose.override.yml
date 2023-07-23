@@ -10,7 +10,7 @@ services:
       - ./frontend/src:/app/src
       - ./credentials:/credentials
     working_dir: /app
-    command: "npm run start"
+    command: 'npm run start'
   server:
     build:
       context: ./server
@@ -32,21 +32,10 @@ services:
     ports:
       - 8088:8088
       - 9230:9230
+    privileged: true
     volumes:
       - ../:/app
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
-  developer:
-    build:
-      context: ../
-      dockerfile: ./cluster/developer/Dockerfile
-    privileged: true
-    volumes:
-      - ../:/app
-      - ./credentials:/credentials
-    environment:
-      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
-    command: tail -f /dev/null

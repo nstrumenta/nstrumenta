@@ -1,0 +1,25 @@
+{
+  "name": "nodejs-client",
+  "version": "1.0.0",
+  "description": "nodejs client tests",
+  "main": "index.js",
+  "scripts": {
+    "test-from-docker-compose-watch": "npx wait-on ${NSTRUMENTA_API_URL} && jest --detectOpenHandles --watchAll",
+    "test-from-docker-compose": "npx wait-on ${NSTRUMENTA_API_URL} && jest --detectOpenHandles",
+    "test": "jest --detectOpenHandles",
+    "test-from-launch-with-dotenv": "dotenv -e $ENVFILE -- bash -c 'npm run test'"
+  },
+  "author": "Tyler Bryant",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "canvas": "^2.10.1",
+    "nstrumenta": "file:../../../../../../nstrumenta",
+    "wait-on": "^6.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "dotenv-cli": "^7.2.1",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.4"
+  }
+}
