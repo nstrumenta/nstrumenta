@@ -136,14 +136,7 @@ dataCommand
   .action(UploadData);
 dataCommand
   .command('query')
-  .option('-t, --tag <tag...>')
-  .option('--id <id>')
-  .option('-b, --before <before>', 'before timestamp')
-  .option('-a, --after <after>', 'after timestamp')
-  .option('-l, --limit <limit>', 'default to 1')
-  .option('-n, --filenames <filenames...>', 'filenames to filter by')
-  .option('--metadata <metadata>', 'metadata to filter by, stringified json')
-  .description('Get data by name, tags, or date range')
+  .description('query data with field, comparison, compareValue')
   .action(QueryData);
 dataCommand
   .command('get')

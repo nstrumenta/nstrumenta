@@ -3,7 +3,7 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { DataQueryOptionsCLI, DataQueryResponse, getEndpoints } from '../../shared';
+import { DataQueryOptions, getEndpoints } from '../../shared';
 import { asyncSpawn, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -186,26 +186,17 @@ export const uploadFile = async ({
 };
 
 export const query = async ({
-  filenames,
-  id,
-  tag: tags,
-  before: b,
-  after: a,
-  limit: l = '1',
-  metadata: metadataString,
-}: DataQueryOptionsCLI): Promise<DataQueryResponse> => {
+  field,
+  comparison,
+  compareValue,
+  limit,
+}: DataQueryOptions): Promise<Array<Record<string, unknown>>> => {
   const apiKey = resolveApiKey();
-  const before = b ? parseInt(b, 10) : undefined;
-  const after = a ? parseInt(a, 10) : undefined;
-  const limit = l ? parseInt(l, 10) : undefined;
-  const metadata = metadataString ? JSON.parse(metadataString) : {};
-
-  const data = { id, tags, before, after, limit, filenames, metadata };
 
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey },
-    data,
+    data: { field, comparison, compareValue, limit },
   };
 
   try {
@@ -219,19 +210,19 @@ export const query = async ({
   }
 };
 
-export const Query = async (options: DataQueryOptionsCLI) => {
+export const Query = async (options: DataQueryOptions) => {
   const data = await query(options);
   console.log(JSON.stringify(data, undefined, 2));
 };
 
-export const Get = async (options: DataQueryOptionsCLI & { output?: string }) => {
+export const Get = async (options: DataQueryOptions & { output?: string }) => {
   const { output } = options;
   const data = await query(options);
   const downloads = data.map(async (value) => {
-    const { id, filePath } = value;
+    const { filePath } = value as { filePath: string };
 
-    // Create directory for this dataId
-    const dataIdFolder = `${output ? output : '.'}/${id}`;
+    // Create directory if output specified
+    const dataIdFolder = `${output ? output : '.'}/`;
     try {
       await access(dataIdFolder);
     } catch {

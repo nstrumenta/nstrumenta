@@ -6,9 +6,8 @@ import express from 'express';
 import { createWriteStream } from 'fs';
 import { mkdir, open, readFile, stat } from 'fs/promises';
 import serveIndex from 'serve-index';
-import { Readable, Transform, Writable } from 'stream';
 import { WebSocket, WebSocketServer } from 'ws';
-import { asyncSpawn, createLogger, getNstDir, resolveApiKey } from '../cli/utils';
+import { getNstDir, resolveApiKey } from '../cli/utils';
 import {
   LogConfig,
   NstrumentaClientEvent,
@@ -23,7 +22,6 @@ import {
 import {
   BusMessageType,
   deserializeWireMessage,
-  makeBusMessageFromBuffer,
   makeBusMessageFromJsonObject,
 } from '../shared/lib/busMessage';
 import { verifyToken } from '../shared/lib/sessionToken';
@@ -33,16 +31,6 @@ import { FileHandleWritable } from './fileHandleWriteable';
 import WritableStream = NodeJS.WritableStream;
 
 const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
-
-const createPrefixTransform = (prefix: string) =>
-  new Transform({
-    transform(chunk, encoding, callback) {
-      const str = `${prefix} ${chunk}`;
-      callback(null, str);
-    },
-  });
-
-const logger = createLogger();
 
 type ListenerCallback = (event?: any) => void;
 
@@ -118,7 +106,6 @@ export class NstrumentaServer {
   idIncrement = 0;
   children: Map<string, ChildProcess> = new Map();
   cwd = process.cwd() === '/' ? '' : process.cwd();
-  logStreams?: Writable[];
   dataLogs: Map<string, DataLog> = new Map();
   trackRecordings: Map<string, TrackRecording> = new Map();
   status: ServerStatus;
@@ -126,7 +113,7 @@ export class NstrumentaServer {
   constructor(options: NstrumentaServerOptions) {
     this.options = options;
     this.listeners = new Map();
-    logger.log(`starting NstrumentaServer`);
+    console.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
 
     this.allowUnverifiedConnection =
@@ -155,118 +142,6 @@ export class NstrumentaServer {
   public async run() {
     const { apiKey, apiUrl, debug } = this.options;
     const port = this.options.port ?? 8088;
-
-    // server makes a local .nst folder at the cwd
-    // this allows multiple servers and working directories on the same machine
-    const cwdNstDir = `${this.cwd}/.nst`;
-    await mkdir(cwdNstDir, { recursive: true });
-
-    logger.log(`nstrumenta working directory: ${cwdNstDir}`);
-
-    const logFile = createWriteStream(`${cwdNstDir}/${Date.now()}-log.txt`);
-    this.logStreams = [logFile];
-
-    if (this.backplaneClient) {
-      try {
-        //get backplane url
-        const data = this.options.tag ? { tag: this.options.tag } : undefined;
-        let response = await axios(endpoints.REGISTER_AGENT, {
-          method: 'post',
-          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-          data,
-        });
-        const {
-          backplaneUrl,
-          agentId,
-          actionsCollectionPath,
-        }: { backplaneUrl: string; agentId: string; actionsCollectionPath: string } = response.data;
-
-        logger.setPrefix(
-          `(${new Date()})[agent ${this.options.tag || `${agentId.substring(0, 5)}...`}]`
-        );
-        this.status.agentId = agentId;
-        if (backplaneUrl) {
-          this.backplaneClient.addListener('open', () => {
-            logger.log(`Connected to backplane ${backplaneUrl}`);
-            const agentBackplaneStream = new Writable();
-            agentBackplaneStream._write = (chunk, enc, next) => {
-              this.backplaneClient?.send(`${agentId}/stdout`, chunk);
-              next();
-            };
-            this.logStreams?.push(agentBackplaneStream);
-            this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
-              if (debug) {
-                logger.log(message);
-              }
-              const { task, actionId } = message;
-              switch (task) {
-                case 'runModule':
-                  if (!message.data || !message.data.module) {
-                    logger.log('Aborting: runModule command needs to specify data.module');
-                    return;
-                  }
-                  const {
-                    data: { module: moduleName, args, version },
-                  } = message;
-
-                  const logPath = `${await getNstDir(this.cwd)}/${moduleName}-${actionId}.txt`;
-                  const stream = createWriteStream(logPath);
-                  const backplaneStream = new Writable();
-                  backplaneStream._write = (chunk, enc, next) => {
-                    this.backplaneClient?.send(`${actionId}/stdout`, chunk);
-                    next();
-                  };
-
-                  console.log('running module', moduleName, version);
-                  const childProcess = await asyncSpawn(
-                    'nstrumenta',
-                    [
-                      'module',
-                      'run',
-                      `--name=${moduleName}`,
-                      version ? `--module-version=${version}` : '',
-                      '--',
-                      ...(args ? args : []),
-                    ],
-                    { stdio: 'pipe' },
-                    undefined,
-                    [stream, backplaneStream]
-                  );
-                  this.children.set(String(childProcess.pid), childProcess);
-                  childProcess.on('disconnect', () =>
-                    this.children.delete(String(childProcess.pid))
-                  );
-                  const transform = createPrefixTransform(`${moduleName}/${actionId}`);
-                  childProcess.stdout = childProcess.stdout?.pipe(transform) as Readable;
-                  break;
-                case 'stopModule':
-                  break;
-                default:
-                  logger.log('message from backplane', message);
-              }
-            });
-            this.backplaneClient?.send('_nstrumenta', {
-              command: 'registerAgent',
-              agentId,
-              actionsCollectionPath,
-              tag: this.options.tag,
-            });
-          });
-
-          await this.backplaneClient.connect({
-            apiKey,
-            nodeWebSocket: WebSocket as any,
-            wsUrl: backplaneUrl,
-          });
-
-          const storageStream = getStorageUploadIntervalStream(agentId);
-          this.logStreams.push(storageStream);
-        }
-      } catch (err) {
-        logger.warn('failed to get backplaneUrl');
-      }
-    }
-
     const app = express();
     app.set('views', __dirname + '/../..');
 
@@ -338,19 +213,19 @@ export class NstrumentaServer {
     }, 30000);
 
     wss.on('connection', async (ws, req) => {
-      logger.log(req.headers);
+      console.log(req.headers);
       const clientId: string = req.headers['sec-websocket-key']!;
 
-      logger.log('a user connected - clientsCount = ' + wss.clients.size);
+      console.log('a user connected - clientsCount = ' + wss.clients.size);
       ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
           try {
             if (!this.allowUnverifiedConnection) {
-              logger.log('attempting to verify token');
+              console.log('attempting to verify token');
               // first message from a connected websocket must be a token
               await verifyToken({ token: busMessage.toString(), apiKey, apiUrl });
             }
-            logger.log(
+            console.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
               clientId,
               req.socket.remoteAddress
@@ -361,7 +236,7 @@ export class NstrumentaServer {
               .get('clients')
               ?.forEach((callback) => callback([...verifiedConnections.keys()]));
           } catch (error) {
-            logger.log(
+            console.log(
               'unable to verify client, invalid token, closing connection',
               (error as Error).message
             );
@@ -382,7 +257,7 @@ export class NstrumentaServer {
         try {
           deserializedMessage = deserializeWireMessage(busMessage);
         } catch (error) {
-          logger.log(`Couldn't handle ${(error as Error).message}`);
+          console.log(`Couldn't handle ${(error as Error).message}`);
           return;
         }
         const { channel, busMessageType, contents } = deserializedMessage;
@@ -396,7 +271,7 @@ export class NstrumentaServer {
               {
                 const { channel } = contents as Subscribe['request'];
                 const subscriptionId = randomUUID();
-                logger.log(`[nstrumenta] <subscribe> ${channel}`);
+                console.log(`[nstrumenta] <subscribe> ${channel}`);
                 if (!subscriptions.get(ws)) {
                   subscriptions.set(ws, new Map());
                 }
@@ -412,7 +287,7 @@ export class NstrumentaServer {
             case 'unsubscribe':
               {
                 const { channel, subscriptionId } = contents as Unsubscribe['request'];
-                logger.log(`[nstrumenta] <unsubscribe> ${channel} ${subscriptionId}`);
+                console.log(`[nstrumenta] <unsubscribe> ${channel} ${subscriptionId}`);
                 subscriptions.get(ws)?.get(channel)?.delete(subscriptionId);
                 if (
                   subscriptions.get(ws)?.get(channel)?.size &&
@@ -441,23 +316,23 @@ export class NstrumentaServer {
 
         if (contents?.command == 'startLog') {
           const { channels, name, config } = contents;
-          logger.log(`[nstrumenta] <startLog> ${channels} ${JSON.stringify(config)}`);
+          console.log(`[nstrumenta] <startLog> ${channels} ${JSON.stringify(config)}`);
           try {
             await this.startLog(name, channels, config);
           } catch (error) {
-            logger.log((error as Error).message);
+            console.log((error as Error).message);
           }
         }
 
         if (contents?.command == 'finishLog') {
           const { name } = contents;
-          logger.log(`[nstrumenta] <finishLog>`);
+          console.log(`[nstrumenta] <finishLog>`);
           await this.finishLog(name);
         }
 
         if (contents?.command == 'subscribe') {
           const { channel } = contents;
-          logger.log(`[nstrumenta] <subscribe> ${channel}`);
+          console.log(`[nstrumenta] <subscribe> ${channel}`);
           const subscriptionId = randomUUID();
           if (!subscriptions.get(ws)) {
             subscriptions.set(ws, new Map());
@@ -519,32 +394,17 @@ export class NstrumentaServer {
         });
 
         if (debug) {
-          logger.log(channel, busMessageType, contents);
+          console.log(channel, busMessageType, contents);
         }
       });
       ws.on('close', function () {
-        logger.log('client disconnected - clientsCount = ', wss.clients.size);
+        console.log('client disconnected - clientsCount = ', wss.clients.size);
         subscriptions.delete(ws);
       });
     });
 
-    const agentStream = new Writable();
-    agentStream._write = (chunk, enc, next) => {
-      subscriptions.forEach((subChannels, subWebSocket) => {
-        const channel = `_${this.status.agentId}/stdout`;
-        if (this.status.agentId && subChannels.has(channel)) {
-          subWebSocket.send(makeBusMessageFromBuffer(channel, chunk));
-        }
-      });
-      next();
-    };
-    this.logStreams.push(agentStream);
-    this.logStreams.forEach((logStream) => {
-      logger.logStream.pipe(logStream);
-    });
-
     server.listen(port, function () {
-      logger.log('listening on *:' + port);
+      console.log('listening on *:' + port);
     });
   }
 
@@ -553,11 +413,11 @@ export class NstrumentaServer {
   }
 
   public async startLog(name: string, channels: string[], config?: LogConfig) {
-    logger.log('[server] <startLog>', { channels });
+    console.log('[server] <startLog>', { channels });
     const nstDir = await getNstDir(this.cwd);
     await mkdir(`${nstDir}/data`, { recursive: true }); // mkdir in case data dir doesn't yet exist
     const localPath = `${nstDir}/data/${randomUUID()}`;
-    logger.log({ name, cwdNstDir: nstDir, localPath });
+    console.log({ name, cwdNstDir: nstDir, localPath });
 
     // set up dataLogs
     if (config) {
@@ -599,14 +459,14 @@ export class NstrumentaServer {
   }
 
   public async finishLog(name: string) {
-    logger.log(`<finishLog>: ${name}`);
+    console.log(`<finishLog>: ${name}`);
     const dataLog = this.dataLogs.get(name);
     if (!dataLog) {
       console.warn('log name not found');
       return;
     }
     const { localPath } = dataLog;
-    logger.log(`Finishing log: ${dataLog?.localPath}`);
+    console.log(`Finishing log: ${dataLog?.localPath}`);
     switch (dataLog?.type) {
       case 'stream':
         dataLog.stream.end();
@@ -619,9 +479,9 @@ export class NstrumentaServer {
 
     try {
       const remoteFileLocation = await this.uploadLog({ localPath, name });
-      logger.log(`uploaded ${remoteFileLocation}`);
+      console.log(`uploaded ${remoteFileLocation}`);
     } catch (error) {
-      logger.log(`Problem uploading log: ${name}, localPath: ${localPath}`);
+      console.log(`Problem uploading log: ${name}, localPath: ${localPath}`);
     }
   }
 
@@ -650,7 +510,7 @@ export class NstrumentaServer {
       let message = `can't upload ${localPath}`;
       if (axios.isAxiosError(e)) {
         if (e.response?.status === 409) {
-          logger.log(`Conflict: file exists`);
+          console.log(`Conflict: file exists`);
         }
         message = `${message} [${(e as Error).message}]`;
       }
@@ -672,73 +532,3 @@ export class NstrumentaServer {
     return name;
   }
 }
-
-const getStorageUploadIntervalStream = (agentId: string) => {
-  const stream = new Writable();
-  const buffer = { current: '' };
-  stream._write = (chunk, enc, next) => {
-    buffer.current += chunk;
-    next();
-  };
-
-  const LOG_UPLOAD_INTERVAL = 15000;
-  const interval = setInterval(async () => {
-    if (buffer.current === '') return;
-
-    const string = buffer.current;
-    buffer.current = '';
-    const logName = Date.now().toString();
-    const path = `agents/${agentId}/logs/${logName}`;
-    const response = await uploadString(path, string);
-    console.log(`agent ${agentId} upload log [${logName}] response:`, response.status);
-  }, LOG_UPLOAD_INTERVAL);
-
-  stream.on('close', () => {
-    console.log('*** END of LOG STREAM STORAGE! ***');
-    clearInterval(interval);
-  });
-
-  return stream;
-};
-
-const uploadString = async (path: string, str: string) => {
-  let url = '';
-  const buffer = Buffer.from(str);
-  let size = buffer.length;
-
-  try {
-    const apiKey = resolveApiKey();
-
-    const data = {
-      path,
-      size,
-    };
-    const response = await axios.post(endpoints.GET_UPLOAD_URL, data, {
-      headers: {
-        contentType: 'application/json',
-        'x-api-key': apiKey,
-      },
-    });
-
-    url = response.data?.uploadUrl;
-  } catch (e) {
-    let message = `can't upload`;
-    if (axios.isAxiosError(e)) {
-      if (e.response?.status === 409) {
-        logger.log(`Conflict: file exists`);
-      }
-      message = `${message} [${(e as Error).message}]`;
-    }
-    throw new Error(message);
-  }
-
-  // start the request, return promise
-  return await axios.put(url, buffer, {
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    headers: {
-      contentLength: `${size}`,
-      contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    },
-  });
-};

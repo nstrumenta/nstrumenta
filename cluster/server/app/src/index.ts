@@ -24,7 +24,7 @@ import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
 
 console.log('Starting nst-server')
-const Compute = require('@google-cloud/compute')
+const compute = require('@google-cloud/compute')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const path = require('path')
@@ -77,21 +77,21 @@ const firestore = new Firestore({
 
 const bucket = storage.bucket(bucketName)
 
-const compute = new Compute(serviceAccount)
+const computeClient = new compute.InstancesClient(serviceAccount)
 
 // Wire services to their dependencies
 
 const archiveService = createArchiveService({ firestore })
-const sandboxService = createCloudAgentService({
+const cloudAgentService = createCloudAgentService({
   firestore,
-  compute,
+  compute: computeClient,
   spawn,
   storage,
 })
 const apiKeyService = CreateApiKeyService({ firestore })
 const cloudDataJobService = createCloudDataJobService({
   firestore,
-  compute,
+  compute: computeClient,
   spawn,
   storage,
 })
@@ -357,14 +357,14 @@ firestore
                       )
                       break
                     case 'deployCloudAgent':
-                      sandboxService.deployCloudAgent(
+                      cloudAgentService.deployCloudAgent(
                         doc.ref.path,
                         data as ActionData,
                         apiKeyService,
                       )
                       break
                     case 'deleteDeployedCloudAgent':
-                      sandboxService.deleteDeployedCloudAgent(
+                      cloudAgentService.deleteDeployedCloudAgent(
                         doc.ref.path,
                         data as ActionData,
                       )
