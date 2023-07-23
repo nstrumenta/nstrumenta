@@ -9,7 +9,10 @@
       "request": "launch",
       "runtimeArgs": ["run-script", "test-from-launch-with-dotenv"],
       "console": "integratedTerminal",
-      "env": { "ENVFILE": "../../../../credentials/local.env", "NSTRUMENTA_WS_URL": "ws://localhost:8088" },
+      "env": {
+        "ENVFILE": "../../../../credentials/local.env",
+        "NSTRUMENTA_WS_URL": "ws://localhost:8088"
+      },
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
