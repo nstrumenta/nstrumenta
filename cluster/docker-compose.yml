@@ -7,7 +7,7 @@ services:
     ports:
       - 5000:5000
     working_dir: /app
-    command: "npm run serve:dist"
+    command: 'npm run serve:dist'
   server:
     build:
       context: ./server
@@ -29,12 +29,3 @@ services:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: 'npm run start:agent'
-  developer:
-    build:
-      context: ../
-      dockerfile: ./cluster/developer/Dockerfile
-    privileged: true
-    environment:
-      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
-    command: tail -f /dev/null

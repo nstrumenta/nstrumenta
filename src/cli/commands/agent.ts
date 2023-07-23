@@ -2,11 +2,10 @@ import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 import { getEndpoints } from '../../shared';
-import { createLogger, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
+import { getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
 
 const apiUrl = process.env.NSTRUMENTA_API_URL;
 const endpoints = getEndpoints(apiUrl);
-const logger = createLogger();
 
 export const Start = async function (options: {
   port: string;
@@ -41,9 +40,9 @@ export const List = async () => {
       },
     });
 
-    logger.log(response.data);
+    console.log(response.data);
   } catch (err) {
-    logger.error('Error:', (err as Error).message);
+    console.error('Error:', (err as Error).message);
   }
 };
 
@@ -110,7 +109,7 @@ const getAgentIdByTag = async (apiKey: string, tag: string): Promise<string | un
 
     agentId = response.data;
   } catch (error) {
-    logger.error((error as Error).message);
+    console.error((error as Error).message);
   }
 
   return agentId;
@@ -127,7 +126,7 @@ export const SetAction = async (
   const agentId = agentIdArg ? agentIdArg : tag ? await getAgentIdByTag(apiKey, tag) : null;
 
   if (!agentId) {
-    logger.error(`Agent id required`);
+    console.error(`Agent id required`);
     return;
   }
 
@@ -143,9 +142,9 @@ export const SetAction = async (
     });
 
     const actionId = response.data;
-    logger.log(`created action: ${actionId} on agent ${agentId}`, action);
+    console.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
-    logger.error('Error:', (err as AxiosError).response?.data);
+    console.error('Error:', (err as AxiosError).response?.data);
   }
 };
 
@@ -163,6 +162,6 @@ export const CleanActions = async (agentId: string) => {
       data: { agentId },
     });
   } catch (err) {
-    logger.error('Error:', (err as Error).message);
+    console.error('Error:', (err as Error).message);
   }
 };

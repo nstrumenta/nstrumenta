@@ -1,84 +1,22 @@
 import axios from 'axios';
 import { spawn } from 'child_process';
-import Conf from 'conf';
-import { createWriteStream } from 'fs';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
 import nodePath from 'node:path';
 import path from 'path';
 import semver from 'semver';
-import { Duplex, pipeline as streamPipeline, Writable } from 'stream';
 import tar from 'tar';
-import util, { promisify } from 'util';
-import { schema } from '../shared/schema';
 import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
 const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
-const pipeline = promisify(streamPipeline);
-
 const prompt = Inquirer.createPromptModule();
 
 export interface Keys {
   [key: string]: string;
 }
-
-const _createLogStream = () => {
-  const duplex = new Duplex({ encoding: 'utf-8' });
-  duplex._read = () => undefined;
-  duplex._write = (chunk, encoding, next) => {
-    duplex.push(chunk, encoding);
-    next();
-  };
-  return duplex;
-};
-
-interface CreateLoggerOptions {
-  silent?: boolean;
-}
-
-export const createLogger = ({ silent }: CreateLoggerOptions = {}) => {
-  let prefix: string;
-  const logStream = _createLogStream();
-  logStream.on('end', () => {
-    const stream = _createLogStream();
-    logger.logStream = stream;
-  });
-
-  const log = (...args: unknown[]) => {
-    const chunk = `${util.format.apply(logger, [prefix || '', ...args])}\n`;
-
-    logger.logStream.push(chunk, 'utf-8');
-  };
-
-  const setPrefix = (value: string) => {
-    prefix = value;
-  };
-
-  const logger: {
-    logStream: Duplex;
-    log: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-    warn: (...args: unknown[]) => void;
-    setPrefix: (value: string) => void;
-  } = {
-    logStream,
-    log,
-    error: log,
-    warn: log,
-    setPrefix,
-  };
-
-  if (!silent) {
-    logStream.pipe(process.stdout);
-  }
-
-  return logger;
-};
-
-const config = new Conf(schema as any);
 
 export const resolveApiKey = () => {
   let apiKey = process.env.NSTRUMENTA_API_KEY;
@@ -102,8 +40,7 @@ export async function asyncSpawn(
     env?: Record<string, string>;
     quiet?: boolean;
   },
-  errCB?: (code: number) => void,
-  streams: Writable[] = []
+  errCB?: (code: number) => void
 ) {
   if (!options?.quiet) {
     console.log(`${cmd} ${args?.join(' ')}`);
@@ -114,7 +51,6 @@ export async function asyncSpawn(
 
   let output = '';
   let error = '';
-  [...streams, process.stdout].map((stream) => childProcess.stdout?.pipe(stream));
   if (childProcess.stdout && childProcess.stderr) {
     for await (const chunk of childProcess.stdout) {
       output += chunk;
@@ -180,10 +116,9 @@ export const getFolderFromStorage = async (
     try {
       // get the file, write to the nst directory
       console.log('get url', url);
-      const download = await axios.get(url, { responseType: 'stream' });
-      const writeStream = createWriteStream(file);
+      const res = await axios.get(url, { responseType: 'arraybuffer' });
+      await fs.writeFile(file, res.data);
 
-      await pipeline(download.data, writeStream);
       console.log(`file written to ${file}`);
     } catch (err) {
       console.log(':(', err);

@@ -1,6 +1,5 @@
 import { APIEndpoint, withAuth } from '../authentication'
 import { generateV4UploadSignedUrl } from '../shared/utils'
-import { v4 as uuid } from 'uuid'
 
 export interface GetUploadDataArgs {
   projectId: string

@@ -1,10 +1,9 @@
 import { Firestore } from '@google-cloud/firestore'
-import { uuid4 } from '@temporalio/workflow'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { ActionData } from '../index'
 import { readFile, rm, writeFile } from 'fs/promises'
-import { readFileSync } from 'fs'
+import { v4 as uuid } from 'uuid'
 import { serviceAccount } from '../authentication/ServiceAccount'
+import { ActionData } from '../index'
 
 const adminServiceAccount = serviceAccount
 const GCP_PROJECT = adminServiceAccount.project_id
@@ -79,7 +78,7 @@ export const createCloudAdminService = ({
       const nonAdminServiceAccount = `${projectId.slice(
         0,
         20,
-      )}-${uuid4().replaceAll('-', '')}`
+      )}-${uuid().replaceAll('-', '')}`
         .slice(0, 30)
         .toLowerCase()
       const keyfileName = `${nonAdminServiceAccount}.json`
