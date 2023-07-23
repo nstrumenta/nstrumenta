@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.1](https://github.com/nstrumenta/nstrumenta/compare/v3.1.0...v3.1.1) (2023-07-23)
+
+
+### Features
+
+* **deploy:** module deploy and run ([#171](https://github.com/nstrumenta/nstrumenta/issues/171)) ([117a31f](https://github.com/nstrumenta/nstrumenta/commit/117a31fd3aa35bbc384453f1935b60fc675a2bf6))
+* **frontend:** removes old deploy script ([f502d46](https://github.com/nstrumenta/nstrumenta/commit/f502d46e7ca8e0e545a9bb3d1f48995f533eb824))
+* **frontend:** updates deploy scripts ([6cb5ccc](https://github.com/nstrumenta/nstrumenta/commit/6cb5cccfc5448e88f790d7a34eaa3f09451d9d5f))
+* **release:** skips tag for frontend release (still using for release notes) ([508b185](https://github.com/nstrumenta/nstrumenta/commit/508b18572ef31ce1a098389ebe7aa677608f1952))
+
 ## [3.1.0](https://github.com/nstrumenta/nstrumenta/compare/v3.0.47...v3.1.0) (2023-07-18)
 
 
