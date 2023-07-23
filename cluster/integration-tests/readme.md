@@ -12,10 +12,19 @@ https://nstrumenta.com/projects/integration-tests/overview
 nodejs-client % TEST_ID=`uuidgen` NSTRUMENTA_API_KEY=[apikey] docker-compose up --build
 ```
 
+
 ## running with environment file
 
 ```shell
 ENVFILE=../credentials/.env ./ci.sh
 ```
 
+with dotenv for running dev
+```shell
+npx dotenv -e ../../../../credentials/local.env -- bash -c 'echo $NSTRUMENTA_API_URL'
+```
+
+
 ### write tests in ts-jest
+
+

@@ -4,7 +4,6 @@ import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
   DataQueryOptions,
-  DataQueryResponse,
   Ping,
   RPC,
   StartRecording,
@@ -312,34 +311,15 @@ export class StorageService {
   }
 
   async query({
-    filenames,
-    tag: tags,
     field,
     comparison,
     compareValue,
-    before,
-    after,
-    limit = 1,
-    metadata: metadataOriginal,
-  }: DataQueryOptions): Promise<DataQueryResponse> {
+  }: DataQueryOptions): Promise<Array<Record<string, unknown>>> {
     if (!this.apiKey) {
       throw new Error('apiKey not set');
     }
 
-    const metadata =
-      typeof metadataOriginal === 'string'
-        ? JSON.parse(metadataOriginal)
-        : typeof metadataOriginal === 'object'
-        ? metadataOriginal
-        : {};
-
     const data = {
-      tags,
-      before,
-      after,
-      limit,
-      filenames,
-      metadata,
       field,
       comparison,
       compareValue,
