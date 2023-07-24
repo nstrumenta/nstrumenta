@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test-from-docker-compose": "npx wait-on $NSTRUMENTA_API_URL && echo 'wait-on $NSTRUMENTA_API_URL complete' && jest --verbose=true --detectOpenHandles",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles",
+    "test-from-launch-with-dotenv": "dotenv -e $ENVFILE -- bash -c 'npm run test'",
+    "test-from-launch-with-dotenv:data": "dotenv -e $ENVFILE -- bash -c 'npm run test -- -t Data'"
   },
   "author": "Tyler Bryant",
   "license": "UNLICENSED",
@@ -15,6 +17,7 @@
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
+    "dotenv-cli": "^7.2.1",
     "jest": "^27.5.1",
     "ts-jest": "^27.1.4"
   }

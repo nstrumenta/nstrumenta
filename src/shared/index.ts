@@ -16,7 +16,6 @@ export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
     GET_PROJECT_DOWNLOAD_URL: `${url}/getProjectDownloadUrl`,
     GENERATE_DATA_ID: `${url}/generateDataId`,
     LIST_MODULES: `${url}/listModules`,
-    LIST_MODULES_V2: `${url}/listModulesV2`,
     GET_TOKEN: `${url}/getToken`,
     VERIFY_TOKEN: `${url}/verifyToken`,
     VERIFY_API_KEY: `${url}/verifyApiKey`,

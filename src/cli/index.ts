@@ -16,7 +16,7 @@ import {
   Upload as UploadData,
 } from './commands/data';
 import { ListMachines } from './commands/machines';
-import { CloudRun, List, Publish, Run } from './commands/module';
+import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
 
@@ -81,6 +81,13 @@ moduleCommand
   .option('--version <version>', 'optional specific version - otherwise will use latest')
   .description('run module on cloud')
   .action(CloudRun);
+
+moduleCommand
+  .command('host')
+  .argument('[module]', 'module to host on cloud storage')
+  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .description('host published module on cloud storage')
+  .action(Host);
 
 moduleCommand.command('list').description('list modules published in current project').action(List);
 
