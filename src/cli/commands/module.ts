@@ -209,9 +209,7 @@ export const Publish = async () => {
   const results = await readModuleConfigs(moduleMetas);
   modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
-  console.log(
-    `publishing ${modules.length} modules: [${modules.map(({ name }) => name).join(', ')}]}\n`
-  );
+  console.log(`publishing ${modules.length} modules:`, modules);
 
   try {
     console.log(modules.map(({ folder }) => folder));
