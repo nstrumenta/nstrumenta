@@ -1,21 +1,18 @@
 import { chmod, mkdir, writeFile } from 'fs/promises';
 import { randomUUID } from 'node:crypto';
-import { asyncSpawn } from './AsyncSpawn';
-import { pollNstrumenta } from './data.test';
+import { asyncSpawn } from '../utils/AsyncSpawn';
+import { pollNstrumenta } from '../utils/PollNstrumenta';
 
 const testId = process.env.TEST_ID || randomUUID();
 
-console.log('testId', testId);
-
 describe('CloudRun', () => {
-  const testFolderBase = './temp';
+  const testFolderBase = `./temp/${testId}/CloudRun`;
   const moduleName = `module-${testId}`;
-
-  if (!process.env.NSTRUMENTA_API_KEY) return;
-  if (!process.env.NSTRUMENTA_API_URL) return;
 
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;
+
+    await mkdir(`./${testFolderBase}`, { recursive: true });
 
     const projectId = (
       await asyncSpawn('nst', `project id`.split(' '), {
@@ -61,7 +58,7 @@ describe('CloudRun', () => {
     // Write a script
     await writeFile(
       `${testFolderBase}/${testId}/script.sh`,
-      `#!/bin/bash
+      `#!/bin/bash -xe
 nst -v
 nst data mount
 echo "Hello World!" > ${projectId}/data/$2
@@ -96,7 +93,7 @@ nst data unmount
       timeout: 20_000,
       command: 'module list',
     });
-    expect(result).toEqual(expect.stringMatching(new RegExp(`modules.*${moduleName}`)));
+    expect(result).toEqual(expect.stringMatching(moduleName));
   }, 20_000);
 
   test('cloud-run-module', async () => {

@@ -33,7 +33,7 @@ async function createRunModuleTask() {
 
   const data = JSON.parse(atob(process.env.ACTION_DATA));
 
-  const moduleName = data.data.module.id.split('#')[0];
+  const moduleName = data.data.module.name;
   const version = data.data.module.version;
   const args = data.data.args.slice(1);
 
@@ -42,7 +42,6 @@ async function createRunModuleTask() {
   const res = await asyncSpawn('nst', [
     'module',
     'run',
-    '--name',
     moduleName,
     '--module-version',
     version,

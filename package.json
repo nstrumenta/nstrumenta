@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.1.1",
+  "version": "3.1.1-p",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",
@@ -21,6 +21,7 @@
     "build:browser": "tsc --project ./src/browser",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
+    "watch:link": "nodemon --exec 'npm run build:cli && sudo npm link' --watch ./src",
     "dev": "nodemon -- agent start --debug=true --tag=local",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- agent start'",
     "start:agent": "npx node ./dist/cli/index.js agent start",

@@ -20,22 +20,19 @@ const blue = (text: string) => {
 };
 
 export const Run = async function (
+  name: string,
   {
-    name,
-    path,
-    moduleVersion: version,
+    version,
   }: {
-    name?: string;
-    path?: string;
-    moduleVersion?: string;
+    version?: string;
   },
   { args }: Command
 ): Promise<void> {
   let module: ModuleExtended;
 
-  console.log('Running module', name, 'version', version);
+  console.log('Running module', name, 'version', version ?? 'not specified, using latest');
 
-  module = await getModuleFromStorage({ name, path, version });
+  module = await getModuleFromStorage({ name, version });
 
   switch (module.type) {
     case 'nodejs':
@@ -93,6 +90,53 @@ export const SetAction = async (options: { action: string; tag?: string }) => {
   }
 };
 
+export const Host = async function (
+  moduleName: string,
+  {
+    version,
+  }: {
+    version?: string;
+  },
+  { args }: Command
+): Promise<void> {
+  console.log('Finding ', moduleName);
+  let modules: string[] = [];
+  try {
+    const apiKey = resolveApiKey();
+    let response = await axios(endpoints.LIST_MODULES, {
+      method: 'post',
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    });
+    modules = response.data;
+  } catch (error) {
+    console.log(`Problem fetching data ${(error as Error).name}`);
+  }
+  const matches = modules
+    .filter((module) => module.startsWith(moduleName))
+    .map((module) => {
+      return {
+        name: moduleName,
+        filePath: module,
+        version: getVersionFromPath(module),
+      };
+    });
+
+  const specificModule = version
+    ? matches.find((match) => semver.eq(version, match.version))
+    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
+
+  if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
+  console.log('found moduleId: ', specificModule?.name);
+
+  const action = JSON.stringify({
+    task: 'hostModule',
+    status: 'pending',
+    data: { module: specificModule, args },
+  });
+
+  SetAction({ action });
+};
+
 export const CloudRun = async function (
   moduleName: string,
   {
@@ -103,11 +147,10 @@ export const CloudRun = async function (
   { args }: Command
 ): Promise<void> {
   console.log('Finding ', moduleName);
-  type Module = { id: string; metadata: { filePath: string } };
-  let modules: Module[] = [];
+  let modules: string[] = [];
   try {
     const apiKey = resolveApiKey();
-    let response = await axios(endpoints.LIST_MODULES_V2, {
+    let response = await axios(endpoints.LIST_MODULES, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
@@ -116,12 +159,12 @@ export const CloudRun = async function (
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
   const matches = modules
-    .filter((module) => module.id.startsWith(moduleName))
+    .filter((module) => module.startsWith(moduleName))
     .map((module) => {
       return {
-        id: module.id,
-        filePath: module.metadata.filePath,
-        version: getVersionFromPath(module.id),
+        name: moduleName,
+        filePath: module,
+        version: getVersionFromPath(module),
       };
     });
 
@@ -131,7 +174,7 @@ export const CloudRun = async function (
     : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
 
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
-  console.log('found moduleId: ', specificModule?.id);
+  console.log('found moduleId: ', specificModule?.name);
 
   const action = JSON.stringify({
     task: 'cloudRun',
@@ -142,7 +185,7 @@ export const CloudRun = async function (
   SetAction({ action });
 };
 
-export type ModuleTypes = 'sandbox' | 'nodejs' | 'script' | 'algorithm';
+export type ModuleTypes = 'sandbox' | 'web' | 'nodejs' | 'script' | 'algorithm';
 
 export interface Module {
   name: string;
@@ -168,10 +211,10 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
     try {
       moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
     } catch (err) {
-      console.warn(`Couldn't read ${folder}/module.json`);
+      console.log(`Couldn't read ${folder}/module.json`);
     }
     let packageConfig: Record<string, unknown> | undefined;
-    if (moduleConfig?.type == 'nodejs') {
+    if (moduleConfig?.type == 'nodejs' || moduleConfig?.type == 'web') {
       try {
         packageConfig = JSON.parse(
           await fs.readFile(`${folder}/package.json`, { encoding: 'utf8' })
@@ -180,7 +223,9 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
         console.log(`no ${folder}/package.json`);
       }
     }
-
+    console.log({ moduleMeta });
+    console.log({ moduleConfig });
+    console.log({ packageConfig });
     return { ...moduleMeta, ...moduleConfig, ...packageConfig } as ModuleExtended;
   });
   return Promise.all(promises);
@@ -209,9 +254,7 @@ export const Publish = async () => {
   const results = await readModuleConfigs(moduleMetas);
   modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
-  console.log(
-    `publishing ${modules.length} modules: [${modules.map(({ name }) => name).join(', ')}]}\n`
-  );
+  console.log(`publishing ${modules.length} modules:`, modules);
 
   try {
     console.log(modules.map(({ folder }) => folder));
@@ -225,10 +268,6 @@ export const Publish = async () => {
     console.log(results);
   } catch (err) {
     console.log((err as Error).message);
-  } finally {
-    // let's not clean up files here, keep them as a cache
-    // TODO check for existence of the download before downloading
-    // TODO add a clear cache / clean command
   }
 };
 
@@ -237,7 +276,7 @@ export const publishModule = async (module: ModuleExtended) => {
 
   console.log('publishModule', { module });
   if (!version) {
-    throw new Error(`module [${name}] requires version`);
+    throw new Error(`module [${name}] requires version!`);
   }
 
   const fileName = `${name}-${version}.tar.gz`;
@@ -333,7 +372,7 @@ export const List = async (_: unknown, options: ModuleListOptions) => {
   const apiKey = resolveApiKey();
 
   try {
-    let response = await axios(endpoints.LIST_MODULES_V2, {
+    let response = await axios(endpoints.LIST_MODULES, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
