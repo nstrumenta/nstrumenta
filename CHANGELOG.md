@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.2](https://github.com/nstrumenta/nstrumenta/compare/v3.1.1...v3.1.2) (2023-07-25)
+
+
+### Features
+
+* **tests:** adds browser-client tests ([45b0551](https://github.com/nstrumenta/nstrumenta/commit/45b05511cc321a2b4fa491840dd7b9aca08b9718))
+* **tests:** adds browser-client to ci ([e6bdb8c](https://github.com/nstrumenta/nstrumenta/commit/e6bdb8cabea82459bef4e3c7b4641f856c1f9eb5))
+* **tests:** adds docker-compose down to ci script ([9043831](https://github.com/nstrumenta/nstrumenta/commit/90438311121fc7f5755c1c30b3bc9c68bf66114d))
+* **tests:** adds nodejs-client integration test to ci ([259a146](https://github.com/nstrumenta/nstrumenta/commit/259a1463f030ad1e4fb426b4a8ffd06cd03a57ac))
+
 ### [3.1.1](https://github.com/nstrumenta/nstrumenta/compare/v3.1.0...v3.1.1) (2023-07-23)
 
 
