@@ -59,8 +59,6 @@ export async function generateV4UploadSignedUrl(
 
   try {
     const resumableSession = await axios({ url, method: 'POST', headers })
-
-    console.log(`now let's get the location`, resumableSession.headers)
     location = resumableSession.headers.location
   } catch (e) {
     console.log('axios error', e)

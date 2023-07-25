@@ -16,7 +16,7 @@ import {
   Upload as UploadData,
 } from './commands/data';
 import { ListMachines } from './commands/machines';
-import { CloudRun, List, Publish, Run } from './commands/module';
+import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
 
@@ -65,22 +65,25 @@ moduleCommand
 
 moduleCommand
   .command('run')
-  .option('-n, --name <name>', 'specify module name')
-  .option(
-    '-l, --local',
-    'require module locally in the current .nstrumenta project dir; --name also required here'
-  )
-  .option('-p, --path <path>', 'specify path (complete filename) of published module')
-  .option('--module-version [version]', 'version of the module to run')
+  .argument('[module]', 'module to run')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
+
   .description('run module')
   .action(Run);
 
 moduleCommand
   .command('cloud-run')
   .argument('[module]', 'module to run')
-  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('run module on cloud')
   .action(CloudRun);
+
+moduleCommand
+  .command('host')
+  .argument('[module]', 'module to host on cloud storage')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
+  .description('host published module on cloud storage')
+  .action(Host);
 
 moduleCommand.command('list').description('list modules published in current project').action(List);
 

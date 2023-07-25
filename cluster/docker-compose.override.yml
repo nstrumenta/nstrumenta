@@ -39,3 +39,14 @@ services:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
+  developer:
+    build:
+      context: ../
+      dockerfile: ./cluster/developer/Dockerfile
+    privileged: true
+    volumes:
+      - ../:/nstrumenta
+    environment:
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
+    command: tail -f /dev/null
