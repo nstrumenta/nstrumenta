@@ -65,13 +65,8 @@ moduleCommand
 
 moduleCommand
   .command('run')
-  .option('-n, --name <name>', 'specify module name')
-  .option(
-    '-l, --local',
-    'require module locally in the current .nstrumenta project dir; --name also required here'
-  )
-  .option('-p, --path <path>', 'specify path (complete filename) of published module')
-  .option('--module-version [version]', 'version of the module to run')
+  .argument('[module]', 'module to run')
+  .option('--version <version>', 'optional specific version - otherwise will use latest')
   .description('run module')
   .action(Run);
 

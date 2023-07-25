@@ -42,9 +42,8 @@ async function createRunModuleTask() {
   const res = await asyncSpawn('nst', [
     'module',
     'run',
-    '--name',
     moduleName,
-    '--module-version',
+    '--version',
     version,
     '--',
     ...args,

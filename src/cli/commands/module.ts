@@ -20,22 +20,19 @@ const blue = (text: string) => {
 };
 
 export const Run = async function (
+  name: string,
   {
-    name,
-    path,
-    moduleVersion: version,
+    version,
   }: {
-    name?: string;
-    path?: string;
-    moduleVersion?: string;
+    version?: string;
   },
   { args }: Command
 ): Promise<void> {
   let module: ModuleExtended;
 
-  console.log('Running module', name, 'version', version);
+  console.log('Running module', name, 'version', version ?? 'not specified, using latest');
 
-  module = await getModuleFromStorage({ name, path, version });
+  module = await getModuleFromStorage({ name, version });
 
   switch (module.type) {
     case 'nodejs':

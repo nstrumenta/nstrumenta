@@ -76,14 +76,11 @@ export async function asyncSpawn(
   return childProcess;
 }
 
-export const getFolderFromStorage = async (
-  storagePath: string,
-  options: { apiKey: string; baseDir?: string }
-) => {
-  const { apiKey, baseDir = '' } = options;
+export const getFolderFromStorage = async (moduleTarName: string, options: { apiKey: string }) => {
+  const { apiKey } = options;
   const nstDir = await getNstDir(process.cwd());
-  const file = `${nodePath.join(nstDir, baseDir, storagePath)}`;
-  const extractFolder = nodePath.join(nstDir, baseDir, storagePath.replace('.tar.gz', ''));
+  const file = `${nodePath.join(nstDir, moduleTarName)}`;
+  const extractFolder = nodePath.join(nstDir, moduleTarName.replace('.tar.gz', ''));
   try {
     await fs.access(extractFolder);
   } catch {
@@ -94,50 +91,46 @@ export const getFolderFromStorage = async (
     await fs.stat(file);
     console.log(`using cached version of ${file}`);
   } catch {
-    console.log(`get ${storagePath} from storage`);
+    console.log(`get ${moduleTarName} from storage`);
 
     // get the download url
     let url;
+    const downloadUrlConfig = {
+      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    };
+    const downloadUrlData = { path: `modules/${moduleTarName}` };
     try {
-      const downloadUrlConfig = {
-        headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-      };
-      const downloadUrlData = { path: storagePath };
       const downloadUrlResponse = await axios.post(
         endpoints.GET_PROJECT_DOWNLOAD_URL,
         downloadUrlData,
         downloadUrlConfig
       );
       url = downloadUrlResponse.data;
-    } catch (err) {
-      throw new Error(`bad times, path: ${storagePath}`);
+    } catch (error) {
+      throw new Error(error as string);
     }
 
-    try {
-      // get the file, write to the nst directory
-      console.log('get url', url);
-      const res = await axios.get(url, { responseType: 'arraybuffer' });
-      await fs.writeFile(file, res.data);
+    // get the file, write to the nst directory
+    console.log('get url', url);
+    const res = await axios.get(url, { responseType: 'arraybuffer' });
+    await fs.writeFile(file, res.data);
 
-      console.log(`file written to ${file}`);
+    console.log(`file written to ${file}`);
+  }
+
+  try {
+    await asyncSpawn('tar', ['-zxvf', file], { cwd: extractFolder, quiet: true });
+  } catch {
+    try {
+      const options = {
+        gzip: true,
+        file: file,
+        cwd: extractFolder,
+      };
+      await tar.extract(options);
     } catch (err) {
-      console.log(':(', err);
-    }
-
-    try {
-      await asyncSpawn('tar', ['-zxvf', file], { cwd: extractFolder });
-    } catch {
-      try {
-        const options = {
-          gzip: true,
-          file: file,
-          cwd: extractFolder,
-        };
-        await tar.extract(options);
-      } catch (err) {
-        console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
-        throw err;
-      }
+      console.warn(`Error, problem extracting tar ${file} to ${extractFolder}`);
+      throw err;
     }
   }
 
@@ -150,69 +143,39 @@ export const inquiryForSelectModule = async (choices: string[]): Promise<string>
 };
 
 export const getModuleFromStorage = async ({
-  name: moduleName,
-  path,
-  version: versionString,
+  name,
+  version: versionArg,
 }: {
-  name?: string;
-  path?: string;
-  nonInteractive?: boolean;
+  name: string;
   version?: string;
 }): Promise<ModuleExtended> => {
-  let serverModules: Record<string, { path: string; version: string }[]> = {};
-  let name = moduleName;
   const apiKey = resolveApiKey();
 
-  // expected response shape: '["modulename/modulename-x.x.x.tar.gz", ...]'
-  let response = await axios(endpoints.LIST_MODULES, {
+  const response = await axios(endpoints.LIST_MODULES, {
     method: 'post',
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
   });
 
-  response.data.forEach((path: string) => {
-    const name = path.split('/')[0];
-    const version = getVersionFromPath(path);
-    if (!serverModules[name]) {
-      serverModules[name] = [];
-    }
-    serverModules[name].push({ path: `modules/${path}`, version });
-  });
+  const serverModules = (response.data as string[])
+    .filter((moduleTarName) => moduleTarName.startsWith(name))
+    .map((match) => {
+      return {
+        moduleTarName: match,
+        version: match.replace(`${name}-`, '').replace('.tar.gz', ''),
+      };
+    });
 
-  try {
-    if (name) {
-      console.log(name, serverModules[name]);
-      const version = versionString
-        ? versionString
-        : serverModules[name]
-            .map(({ version }) => version)
-            .sort(semver.compare)
-            .reverse()
-            .shift();
-      path = serverModules[name].find((module) => module.version === version)?.path;
-    }
-  } catch (error) {
-    console.warn(`name ${name} not found in`, Object.keys(serverModules));
-    throw new Error('invalid module name');
-  }
-
-  if (name === undefined && path === undefined) {
-    // If user hasn't specified module name, ask for it here
-    name = await inquiryForSelectModule(Object.keys(serverModules));
-    const chosenVersion = await inquiryForSelectModule(
-      serverModules[name]
-        .map((module) => module.version)
+  const version = versionArg
+    ? versionArg
+    : serverModules
+        .map(({ version }) => version)
         .sort(semver.compare)
         .reverse()
-    );
-    path = `${serverModules[name].find((module) => module.version === chosenVersion)?.path}`;
-  }
+        .shift();
 
-  if (!path) {
-    throw new Error('no module and version chosen, or no path specified');
-  }
+  const path = `${name}-${version}.tar.gz`;
 
-  const folder = await getFolderFromStorage(path, { apiKey, baseDir: 'modules' });
-  console.log(`saved ${moduleName} to ${folder}`);
+  const folder = await getFolderFromStorage(path, { apiKey });
 
   let moduleConfig: Module;
   try {
