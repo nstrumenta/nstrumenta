@@ -66,21 +66,22 @@ moduleCommand
 moduleCommand
   .command('run')
   .argument('[module]', 'module to run')
-  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
+
   .description('run module')
   .action(Run);
 
 moduleCommand
   .command('cloud-run')
   .argument('[module]', 'module to run')
-  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('run module on cloud')
   .action(CloudRun);
 
 moduleCommand
   .command('host')
   .argument('[module]', 'module to host on cloud storage')
-  .option('--version <version>', 'optional specific version - otherwise will use latest')
+  .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('host published module on cloud storage')
   .action(Host);
 

@@ -43,7 +43,7 @@ async function createRunModuleTask() {
     'module',
     'run',
     moduleName,
-    '--version',
+    '--module-version',
     version,
     '--',
     ...args,
