@@ -58,7 +58,7 @@ describe('CloudRun', () => {
     // Write a script
     await writeFile(
       `${testFolderBase}/${testId}/script.sh`,
-      `#!/bin/bash
+      `#!/bin/bash -xe
 nst -v
 nst data mount
 echo "Hello World!" > ${projectId}/data/$2
