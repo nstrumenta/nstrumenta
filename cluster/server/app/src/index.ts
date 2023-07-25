@@ -98,6 +98,7 @@ const cloudDataJobService = createCloudDataJobService({
 const cloudAdminService = createCloudAdminService({
   firestore,
   spawn,
+  storage,
 })
 
 function walk(base: string, callback: (path: string) => void) {
@@ -372,6 +373,17 @@ firestore
                     case 'cloudRun':
                       try {
                         cloudDataJobService.createJob(
+                          doc.ref.path,
+                          projectId,
+                          data as ActionData,
+                        )
+                      } catch (err) {
+                        console.error(err)
+                      }
+                      break
+                    case 'hostModule':
+                      try {
+                        cloudAdminService.hostModule(
                           doc.ref.path,
                           projectId,
                           data as ActionData,
