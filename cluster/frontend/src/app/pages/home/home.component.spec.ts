@@ -18,7 +18,6 @@ import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { AlgorithmsComponent } from '../algorithms/algorithms.component';
 import { ExperimentsComponent } from '../experiments/experiments.component';
 import { OverviewComponent } from '../overview/overview.component';
-import { SandboxesComponent } from '../sandboxes/sandboxes.component';
 import { HomeComponent } from './home.component';
 
 describe('HomeComponent', () => {
@@ -33,7 +32,6 @@ describe('HomeComponent', () => {
         AppComponent,
         NavComponent,
         MachinesComponent,
-        SandboxesComponent,
         DataTableComponent,
         ExperimentsComponent,
         AlgorithmsComponent,
