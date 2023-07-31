@@ -1,4 +1,4 @@
-.mat-card:hover {
+.mat-mdc-card:hover {
   filter: brightness(150%);
 }
 
@@ -10,12 +10,12 @@
   right: 15px;
   bottom: 25px;
 
-  .mat-card-title {
+  .mat-mdc-card-title {
     font-size: 20px;
   }
 }
 
-.mat-card-image {
+.mat-mdc-card-image {
   height: 180px;
   width: 100%;
   object-fit: contain;

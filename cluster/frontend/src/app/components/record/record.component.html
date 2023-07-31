@@ -53,7 +53,9 @@
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
     <mat-cell *matCellDef="let recordSource">
-      <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.name" />
+      <mat-form-field>
+        <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.name" />
+      </mat-form-field>
     </mat-cell>
   </ng-container>
 
@@ -61,7 +63,9 @@
   <ng-container matColumnDef="type">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Type </mat-header-cell>
     <mat-cell *matCellDef="let recordSource">
-      <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.type" />
+      <mat-form-field>
+        <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.type" />
+      </mat-form-field>
     </mat-cell>
   </ng-container>
 

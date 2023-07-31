@@ -36,7 +36,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import * as Sentry from '@sentry/browser';
-import { PlotlyModule } from 'angular-plotly.js';
 import { environment } from 'src/environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -89,8 +88,6 @@ import { FileSizePipe } from './pipes/file-size.pipe';
 import { SafePipe } from './pipes/safe.pipe';
 import { VscodeService } from './services/vscode.service';
 import { UploadProgressComponent } from './upload-progress/upload-progress.component';
-
-PlotlyModule.plotlyjs = (<any>window).Plotly;
 
 declare let process: any;
 if (process.env.NODE_ENV === 'production') {
@@ -147,7 +144,6 @@ export class SentryErrorHandler implements ErrorHandler {
     ClipboardModule,
     DragDropModule,
     MatDividerModule,
-    PlotlyModule,
     MatProgressBarModule,
     MatChipsModule,
   ],

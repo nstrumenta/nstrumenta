@@ -1,7 +1,7 @@
 <div *ngIf="authService.user | async">
   <mat-grid-list rowHeight="100px" [cols]="breakpoint">
     <mat-grid-tile>
-      <mat-card mat-button class="project-card" (click)="newProjectDialog()">
+      <mat-card appearance="outlined" mat-button class="project-card" (click)="newProjectDialog()">
         <mat-card-title class="add-button">
           <mat-icon>add</mat-icon>
           Add Project
@@ -20,7 +20,7 @@
     <ng-container matColumnDef="id">
       <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
       <mat-cell *matCellDef="let fileDocument">
-        <a mat-button [routerLink]="[fileDocument.id,'overview']">
+        <a mat-button style="text-align: left; "[routerLink]="[fileDocument.id,'overview']">
           {{ fileDocument.id }}
         </a>
       </mat-cell>

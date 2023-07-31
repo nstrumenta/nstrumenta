@@ -18,7 +18,7 @@
   </mat-toolbar-row>
   <mat-grid-list cols="2" rowHeight="500px">
     <mat-grid-tile *ngFor="let sandbox of sandboxes | async" colspan="1" [rowspan]="1">
-      <mat-card *ngIf="sandbox.screenshot" class="dashboard-card">
+      <mat-card appearance="outlined" *ngIf="sandbox.screenshot" class="dashboard-card">
         <mat-card-header>
           <mat-card-title>
             {{ sandbox.lastModified | date: "long" }}

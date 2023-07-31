@@ -23,10 +23,10 @@ import {
   templateUrl: './project-settings.component.html',
   styles: [
     `
-      .mat-column-keyId {
-        flex: 0 0 60%;
-      }
-    `,
+          .mat-column-keyId {
+            flex: 0 0 60%;
+          }
+        `,
   ],
 })
 export class ProjectSettingsComponent implements OnInit, OnDestroy {

@@ -14,7 +14,7 @@ import { map } from 'rxjs/operators';
   styleUrls: ['./data-table.component.scss'],
 })
 export class DataTableComponent implements OnInit {
-  displayedColumns = ['select', 'name', 'size', 'tags', 'lastModified', 'actions'];
+  displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
@@ -54,7 +54,9 @@ export class DataTableComponent implements OnInit {
       });
     this.route.queryParamMap.subscribe((params: ParamMap) => {
       this.filterParam = params.get('filter');
-      this.dataSource.filter = this.filterParam;
+      if (this.filterParam && this.dataSource) {
+        this.dataSource.filter = this.filterParam;
+      }
     });
   }
   applyFilter(filterValue: string) {

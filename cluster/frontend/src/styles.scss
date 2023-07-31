@@ -14,12 +14,16 @@ body {
 }
 
 $indigo: mat.define-palette(mat.$indigo-palette);
-.mat-button:visited {
+.mat-mdc-button:visited {
   color: mat.get-color-from-palette($indigo, lighter);
 }
 
+.full-width-table {
+  width: 100%;
+}
+
 .mat-column-select {
-  flex: 0 0 40px;
+  flex: 0 0 60px;
 }
 
 .fill-remaining-space {
