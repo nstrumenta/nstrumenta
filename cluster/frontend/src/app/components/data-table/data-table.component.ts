@@ -4,7 +4,7 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { deleteObject, getDownloadURL, ref, getStorage } from 'firebase/storage';
 import { map } from 'rxjs/operators';
 
@@ -18,11 +18,13 @@ export class DataTableComponent implements OnInit {
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
+  filterParam: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private afs: AngularFirestore,
     public dialog: MatDialog
   ) {}
@@ -47,13 +49,21 @@ export class DataTableComponent implements OnInit {
       .subscribe(async (dataSource) => {
         this.dataSource = new MatTableDataSource(dataSource);
         this.dataSource.sort = this.sort;
+        this.dataSource.filter = this.filterParam;
         return;
       });
+    this.route.queryParamMap.subscribe((params: ParamMap) => {
+      this.filterParam = params.get('filter');
+      this.dataSource.filter = this.filterParam;
+    });
   }
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim();
     filterValue = filterValue.toLowerCase();
-    this.dataSource.filter = filterValue;
+    this.router.navigate([], {
+      queryParams: { filter: filterValue },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /** Whether the number of selected elements matches the total number of rows. */

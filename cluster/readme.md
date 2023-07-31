@@ -11,5 +11,5 @@ cluster % NSTRUMENTA_API_KEY=[api key] NSTRUMENTA_API_URL=[server url (required 
 this uses the docker-compose.override.yml that runs dev servers and opens debugger ports for attaching (see e.g. frontend/.vscode/launch.json)
 
 ```shell
-cluster % NSTRUMENTA_API_KEY=[api key] NSTRUMENTA_API_URL=[server url (required for cloud run)] docker-compose up
+docker-compose --env-file=./credentials/local.env up --build --scale agent=0
 ```

@@ -7,10 +7,13 @@ import { AgentDetailComponent } from './components/agent-detail/agent-detail.com
 import { AgentsComponent } from './components/agents/agents.component';
 import { AlgorithmBuildsComponent } from './components/algorithm-builds/algorithm-builds.component';
 import { DataDetailComponent } from './components/data-detail/data-detail.component';
+import { DataTableComponent } from './components/data-table/data-table.component';
 import { IntegrationsComponent } from './components/integrations/integrations.component';
 import { LoginWaitComponent } from './components/login-wait/login-wait.component';
 import { LoginComponent } from './components/login/login.component';
 import { MachinesComponent } from './components/machines/machines.component';
+import { ModuleDetailsComponent } from './components/module-details/module-details.component';
+import { ModulesComponent } from './components/modules/modules.component';
 import { NavComponent } from './components/nav/nav.component';
 import { ProjectListComponent } from './components/project-list/project-list.component';
 import { ProjectSettingsComponent } from './components/project-settings/project-settings.component';
@@ -20,12 +23,8 @@ import { RepositoryJobsComponent } from './components/repository-jobs/repository
 import { SignInMethodsComponent } from './components/sign-in-methods/sign-in-methods.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { AlgorithmsComponent } from './pages/algorithms/algorithms.component';
-import { DataTableComponent } from './components/data-table/data-table.component';
 import { HomeComponent } from './pages/home/home.component';
-import { OverviewComponent } from './pages/overview/overview.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
-import { ModulesComponent } from './components/modules/modules.component';
-import { ModuleDetailsComponent } from './components/module-details/module-details.component';
 
 const userRoutes: Routes = [
   {
@@ -36,7 +35,7 @@ const userRoutes: Routes = [
       {
         path: '',
         children: [
-          { path: 'overview', component: OverviewComponent },
+          { path: 'overview', component: DataTableComponent },
           { path: 'data', component: DataTableComponent },
           { path: 'data/:dataId', component: DataDetailComponent },
           { path: 'record', component: RecordComponent },
