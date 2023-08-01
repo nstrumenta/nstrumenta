@@ -61,7 +61,7 @@ describe('CloudRun', () => {
       `#!/bin/bash -xe
 nst -v
 nst data mount
-echo "Hello World!" > ${projectId}/data/$3
+echo "Hello World!" > ${projectId}/data/$2
 nst data unmount
       `,
       { encoding: 'utf8' }
