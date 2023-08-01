@@ -87,7 +87,6 @@ export const getToken = async (apiKey: string, apiUrl?: string): Promise<string>
 export abstract class NstrumentaClientBase {
   public ws: WebSocketLike | null = null;
   public apiKey?: string;
-  public apiUrl?: string;
   public listeners: Map<string, Array<ListenerCallback>>;
   public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
@@ -99,8 +98,9 @@ export abstract class NstrumentaClientBase {
 
   public connection: Connection = { status: ClientStatus.INIT };
 
-  constructor(apiKey?: string, apiUrl?: string) {
+  constructor(apiKey?: string) {
     this.apiKey = apiKey;
+    const apiUrl = atob(apiKey?.split(':')[1] ?? '');
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.datalogs = new Map();
@@ -199,7 +199,7 @@ export abstract class NstrumentaClientBase {
       {
         headers: {
           contentType: 'application/json',
-          'x-api-key': this.apiKey!,
+          'x-api-key': this.apiKey?.split(':')[0]!,
         },
       }
     );
@@ -270,10 +270,12 @@ export interface StorageUploadParameters {
 
 export class StorageService {
   private apiKey?: string;
+  private apiKeyHeader: string;
   private endpoints;
 
   constructor(props?: { apiKey?: string; apiUrl?: string }) {
     this.apiKey = props?.apiKey ? props.apiKey : undefined;
+    this.apiKeyHeader = this.apiKey?.split(':')[0]!;
     this.endpoints = getEndpoints(props?.apiUrl);
   }
 
@@ -283,7 +285,7 @@ export class StorageService {
     }
     const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
-      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
       data: { path },
     });
     console.log('REQ:', response.request);
@@ -296,7 +298,7 @@ export class StorageService {
     }
     const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
       method: 'post',
-      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
       data: { path },
     });
     console.log('REQ:', response.request);
@@ -326,7 +328,7 @@ export class StorageService {
 
     const config: AxiosRequestConfig = {
       method: 'post',
-      headers: { 'x-api-key': this.apiKey },
+      headers: { 'x-api-key': this.apiKeyHeader },
       data,
     };
 
@@ -348,7 +350,7 @@ export class StorageService {
 
     let response = await axios(this.endpoints.LIST_STORAGE_OBJECTS, {
       method: 'post',
-      headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
+      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
       data: { type },
     });
 
@@ -362,7 +364,7 @@ export class StorageService {
     const config: AxiosRequestConfig = {
       method: 'post',
       headers: {
-        'x-api-key': this.apiKey!,
+        'x-api-key': this.apiKeyHeader!,
         'Content-Type': 'application/json',
       },
       data: {
