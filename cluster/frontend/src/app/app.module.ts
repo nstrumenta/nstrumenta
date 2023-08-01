@@ -62,8 +62,6 @@ import { NavbarStatusComponent } from './components/navbar-status/navbar-status.
 import { NavbarTitleComponent } from './components/navbar-title/navbar-title.component';
 import { NavbarVscodeComponent } from './components/navbar-vscode/navbar-vscode.component';
 import { NewProjectDialogComponent } from './components/new-project-dialog/new-project-dialog.component';
-import { CloneProjectDialogComponent } from './components/overview-dashboard/clone-project-dialog.component';
-import { OverviewDashboardComponent } from './components/overview-dashboard/overview-dashboard.component';
 import { ProjectListComponent } from './components/project-list/project-list.component';
 import { ProjectSettingsComponent } from './components/project-settings/project-settings.component';
 import { RecordComponent } from './components/record/record.component';
@@ -150,7 +148,6 @@ export class SentryErrorHandler implements ErrorHandler {
     EditDialogComponent,
     FileSizePipe,
     NewProjectDialogComponent,
-    OverviewDashboardComponent,
     SafePipe,
     AddItemDialogComponent,
     CreateKeyDialogComponent,
@@ -168,7 +165,6 @@ export class SentryErrorHandler implements ErrorHandler {
     AddProjectMemberDialogComponent,
     ConfirmationDialogComponent,
     DateAsQueryParamPipe,
-    CloneProjectDialogComponent,
     AddEmailProviderDialogComponent,
     ModulesComponent,
     ModuleDetailsComponent,
