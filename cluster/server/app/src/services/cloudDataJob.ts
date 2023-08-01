@@ -69,7 +69,7 @@ export const createCloudDataJobService = ({
     projectId: string,
     data: ActionData,
   ) {
-    console.log({ projectId })
+    console.log('create cloud run job', { projectId, data })
 
     const actionId = actionPath.split('/').slice(-1)[0]
     const workflowId = `workflow-${actionId}`

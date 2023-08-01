@@ -4,8 +4,8 @@
   "description": "nodejs client tests",
   "main": "index.js",
   "scripts": {
-    "test-from-docker-compose-watch": "npx wait-on ${NSTRUMENTA_API_URL} && jest --detectOpenHandles --watchAll",
-    "test-from-docker-compose": "npx wait-on ${NSTRUMENTA_API_URL} && jest --detectOpenHandles",
+    "test-from-docker-compose-watch": "npx wait-on ${NSTRUMENTA_WAIT_ON} && jest --detectOpenHandles --watchAll",
+    "test-from-docker-compose": "npx wait-on ${NSTRUMENTA_WAIT_ON} && jest --detectOpenHandles",
     "test": "jest --detectOpenHandles",
     "test-from-launch-with-dotenv": "dotenv -e $ENVFILE -- bash -c 'npm run test'"
   },
