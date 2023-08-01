@@ -30,28 +30,30 @@ export class DataTableComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/data';
-    this.afs
-      .collection<any>(this.dataPath)
-      .snapshotChanges()
-      .pipe(
-        map((items) => {
-          return items.map((a) => {
-            const data = a.payload.doc.data();
-            // ensure that data.size is a number
-            // uploader puts string into data.size
-            data.size = parseInt(data.size);
-            const key = a.payload.doc.id;
-            return { key: key, ...data };
-          });
-        })
-      )
-      .subscribe(async (dataSource) => {
-        this.dataSource = new MatTableDataSource(dataSource);
-        this.dataSource.sort = this.sort;
-        this.dataSource.filter = this.filterParam;
-        return;
-      });
+    this.route.paramMap.subscribe((paramMap) => {
+      this.dataPath = '/projects/' + paramMap.get('projectId') + '/data';
+      this.afs
+        .collection<any>(this.dataPath)
+        .snapshotChanges()
+        .pipe(
+          map((items) => {
+            return items.map((a) => {
+              const data = a.payload.doc.data();
+              // ensure that data.size is a number
+              // uploader puts string into data.size
+              data.size = parseInt(data.size);
+              const key = a.payload.doc.id;
+              return { key: key, ...data };
+            });
+          })
+        )
+        .subscribe(async (dataSource) => {
+          this.dataSource = new MatTableDataSource(dataSource);
+          this.dataSource.sort = this.sort;
+          this.dataSource.filter = this.filterParam;
+          return;
+        });
+    });
     this.route.queryParamMap.subscribe((params: ParamMap) => {
       this.filterParam = params.get('filter');
       if (this.filterParam && this.dataSource) {

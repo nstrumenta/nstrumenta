@@ -1,13 +1,14 @@
-<div *ngIf="(authService.user | async) ; else loggedOut ">
+<div *ngIf="loggedIn ; else loggedOut ">
   <mat-menu #appMenu="matMenu">
     <button mat-menu-item [routerLink]="['/account']">Settings</button>
     <button mat-menu-item (click)="logout()">Sign out</button>
   </mat-menu>
   <button mat-icon-button [matMenuTriggerFor]="appMenu">
-    <img *ngIf="avatarURL" class="png-icon" style="width: 24px; height: 24px;" [src]="avatarURL" />
-    <mat-icon *ngIf="avatarURL == null">account_circle</mat-icon>
+    <img *ngIf="auth.currentUser?.photoURL" class="png-icon" style="width: 24px; height: 24px;"
+      [src]="auth.currentUser?.photoURL" />
+    <mat-icon *ngIf="!auth.currentUser?.photoURL">account_circle</mat-icon>
   </button>
 </div>
 <ng-template #loggedOut>
-  <button mat-button [routerLink]="['/login']"> Sign in</button>
+  <button mat-button (click)="login()"> Sign in</button>
 </ng-template>

@@ -1,41 +1,34 @@
-import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
-import { AuthService } from '../../auth/auth.service';
+import { Component, inject } from '@angular/core';
+import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
 import { Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-navbar-account',
   templateUrl: './navbar-account.component.html',
   styleUrls: ['./navbar-account.component.scss'],
 })
-export class NavbarAccountComponent implements OnInit, OnDestroy {
+export class NavbarAccountComponent {
   subscriptions = new Array<Subscription>();
-  avatarURL = null;
-  userId = '';
-  constructor(public authService: AuthService, private ngZone: NgZone, private router: Router) {}
+  auth: Auth = inject(Auth);
+  private authService = inject(AuthService);
+  loggedIn = false;
+  user$ = user(this.auth);
+  userSubscription: Subscription;
 
-  logout() {
-    this.authService.logout();
-  }
-
-  login() {
-    this.authService.loginWithGithub();
-  }
-
-  ngOnInit() {
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        if (user) {
-          this.userId = user.uid;
-          this.avatarURL = user.photoURL;
-        }
-      })
-    );
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+  constructor() {
+    this.userSubscription = this.user$.subscribe((aUser: User | null) => {
+      this.loggedIn = aUser ? true : false;
+      this.authService.setUser(aUser);
     });
+  }
+
+  async logout() {
+    await this.auth.signOut();
+    this.loggedIn = false;
+  }
+
+  async login() {
+    return await signInWithPopup(this.auth, new GithubAuthProvider());
   }
 }
