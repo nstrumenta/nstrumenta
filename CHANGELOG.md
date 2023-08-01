@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.3](https://github.com/nstrumenta/nstrumenta/compare/v3.1.2...v3.1.3) (2023-08-01)
+
+
+### Features
+
+* **frontend:** upgrades to Angular 15, apiUrl in key ([#173](https://github.com/nstrumenta/nstrumenta/issues/173)) ([2d55b41](https://github.com/nstrumenta/nstrumenta/commit/2d55b41e3f490480fc15d832c30ad46ba89cc63c))
+* **test:** increase cli cloud-run timeout ([f68e171](https://github.com/nstrumenta/nstrumenta/commit/f68e171d735aa50c9fc53495cf02e8a493969c62))
+* **tests:** updates script ([9ff7954](https://github.com/nstrumenta/nstrumenta/commit/9ff79545fb578575a5348222260d69c2772a6eae))
+
+
+### Bug Fixes
+
+* **browser-client:** updates browser client to use apiUrl from apiKey ([c45eec4](https://github.com/nstrumenta/nstrumenta/commit/c45eec460c7aeda0e04e786da8f8c8f32fc18d09))
+* **browser:** split key for header ([5c4aab0](https://github.com/nstrumenta/nstrumenta/commit/5c4aab0abaebc1194a42ad0ef92bb34fa6a5f9d1))
+
 ### [3.1.2](https://github.com/nstrumenta/nstrumenta/compare/v3.1.1...v3.1.2) (2023-07-25)
 
 
