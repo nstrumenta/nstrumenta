@@ -61,7 +61,7 @@ describe('CloudRun', () => {
       `#!/bin/bash -xe
 nst -v
 nst data mount
-echo "Hello World!" > ${projectId}/data/$\{2\}.txt
+echo "Hello World!" > ${projectId}/data/$3
 nst data unmount
       `,
       { encoding: 'utf8' }
@@ -97,11 +97,11 @@ nst data unmount
   }, 20_000);
 
   test('cloud-run-module', async () => {
-    const uploadFileName = `cloud-run-module-${testId}`;
-    console.log(`nst module cloud-run ${moduleName} -- arg1-${testId} arg2-${uploadFileName}`);
+    const uploadFileName = `cloud-run-module-${testId}.txt`;
+    console.log(`nst module cloud-run ${moduleName} -- ${uploadFileName}`);
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} -- arg1-${testId} arg2-${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} -- ${uploadFileName}`.split(' '),
       { cwd: testFolderBase, quiet: true }
     );
 
