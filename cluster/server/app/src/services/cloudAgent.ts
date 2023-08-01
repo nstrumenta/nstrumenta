@@ -85,6 +85,22 @@ export const createCloudAgentService = ({
     return output
   }
 
+  async function gcloudConfig() {
+    const keyfile = './credentials.json'
+    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
+    await asyncSpawn(
+      'gcloud',
+      `auth activate-service-account --key-file ${keyfile}`.split(' '),
+    )
+    await asyncSpawn('gcloud', 'config set disable_prompts true'.split(' '))
+    await asyncSpawn(
+      'gcloud',
+      `config set core/project ${serviceAccount.project_id}`.split(' '),
+    )
+    // TODO pull region from project doc
+    await asyncSpawn('gcloud', `config set run/region europe-west3`.split(' '))
+  }
+
   async function deployCloudAgent(
     actionPath: string,
     data: { payload: { projectId: string } },
@@ -110,21 +126,7 @@ export const createCloudAgentService = ({
       if (!apiKey)
         throw new Error('api key not set, unable to createCloudAgent')
 
-      const keyfile = './credentials.json'
-      await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
-      await asyncSpawn(
-        'gcloud',
-        `auth activate-service-account --key-file ${keyfile}`.split(' '),
-      )
-      await asyncSpawn(
-        'gcloud',
-        `config set core/project ${serviceAccount.project_id}`.split(' '),
-      )
-
-      await asyncSpawn(
-        'gcloud',
-        `config set run/region europe-west3`.split(' '),
-      )
+      await gcloudConfig()
 
       await asyncSpawn('gcloud', [
         'run',
@@ -136,7 +138,7 @@ export const createCloudAgentService = ({
         `--service-account=${serviceAccount.client_email}`,
         '--max-instances=1',
         '--no-cpu-throttling',
-        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey},NSTRUMENTA_API_URL=${process.env.NSTRUMENTA_API_URL}`,
+        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey}`,
       ])
 
       description = JSON.parse(
@@ -179,11 +181,7 @@ export const createCloudAgentService = ({
     const machineDocPath = `projects/${projectId}/machines/${instanceId}`
 
     try {
-      await asyncSpawn(
-        'gcloud',
-        `config set run/region europe-west3`.split(' '),
-      )
-      await asyncSpawn('gcloud', 'config set disable_prompts true'.split(' '))
+      await gcloudConfig()
       await asyncSpawn('gcloud', ['run', 'services', 'delete', `${instanceId}`])
 
       await firestore
@@ -193,9 +191,11 @@ export const createCloudAgentService = ({
         .doc(actionPath)
         .set({ status: 'complete' }, { merge: true })
     } catch (err) {
+      const error = (err as Error)?.message ?? JSON.stringify(err)
+      console.log(error)
       await firestore
         .doc(actionPath)
-        .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
+        .set({ status: 'error', error }, { merge: true })
     }
   }
 

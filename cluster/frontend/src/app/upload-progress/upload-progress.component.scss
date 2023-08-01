@@ -8,16 +8,6 @@
   justify-content: center;
 }
 
-mat-card {
-  min-width: 30rem;
-  max-width: 50rem;
-  padding: 0;
-}
-
-mat-card-header {
-  padding: 10px;
-}
-
 .upload-progress-body {
   padding: 10px;
   max-height: 48em;
@@ -46,9 +36,4 @@ mat-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-mat-progress-bar {
-  flex-grow: 1;
-  width: 100%;
 }

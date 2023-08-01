@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
-import { VscodeService } from 'src/app/services/vscode.service';
+import { Component } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { VscodeService } from 'src/app/services/vscode.service';
 
 @Component({
   selector: 'app-navbar-vscode',
@@ -12,13 +12,9 @@ export class NavbarVscodeComponent {
   init() {
     this.vscodeService.init();
     this.vscodeService.message$.subscribe((message) => {
-      const snackBarRef = this.snackbar.open(
-        'nstrumenta-vscode:' + message.type,
-        'Close',
-        {
-          duration: 2000,
-        }
-      );
+      const snackBarRef = this.snackbar.open('nstrumenta-vscode:' + message.type, 'Close', {
+        duration: 2000,
+      });
       snackBarRef.afterDismissed().subscribe(() => {});
 
       snackBarRef.onAction().subscribe(() => {});

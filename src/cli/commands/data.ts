@@ -3,11 +3,10 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { DataQueryOptions, getEndpoints } from '../../shared';
-import { asyncSpawn, resolveApiKey } from '../utils';
+import { DataQueryOptions } from '../../shared';
+import { asyncSpawn, endpoints, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 const pipeline = promisify(streamPipeline);
 
 export interface ModuleMeta {

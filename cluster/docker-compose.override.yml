@@ -23,7 +23,6 @@ services:
       - ./credentials/:/credentials
     environment:
       - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
   agent:
     build:
@@ -37,7 +36,6 @@ services:
       - ../:/app
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: sh -c 'npm run dev'
   developer:
     build:
@@ -48,5 +46,4 @@ services:
       - ../:/nstrumenta
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: tail -f /dev/null

@@ -1,10 +1,9 @@
 const apiKey = process.env.NSTRUMENTA_API_KEY;
-const apiUrl = process.env.NSTRUMENTA_API_URL;
 const wsUrl = process.env.NSTRUMENTA_WS_URL;
 
 describe('Page with browser client', () => {
   beforeAll(async () => {
-    await page.goto(`http://localhost:3000?wsUrl=${wsUrl}&apiKey=${apiKey}&apiUrl=${apiUrl}`);
+    await page.goto(`http://localhost:3000?wsUrl=${wsUrl}&apiKey=${apiKey}`);
   });
 
   it('loads', async () => {

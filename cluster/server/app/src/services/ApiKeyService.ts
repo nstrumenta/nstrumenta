@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore'
 import { createHash } from 'crypto'
-import { ActionData } from '../index'
 import { v4 as uuid } from 'uuid'
+import { ActionData } from '../index'
 
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
@@ -35,15 +35,14 @@ export function CreateApiKeyService({
 
         const projectPath = `/projects/${projectId}`
 
-        const projectSettings = await (
-          await firestore.doc(projectPath).get()
-        ).data()
-        const apiKeys = projectSettings?.apiKeys ? projectSettings.apiKeys : {}
+        const projectDoc = await (await firestore.doc(projectPath).get()).data()
+        const apiKeys = projectDoc?.apiKeys ? projectDoc.apiKeys : {}
         apiKeys[keyId] = { createdAt }
 
         await firestore.doc(projectPath).update({ apiKeys })
 
-        return key
+        const keyWithUrl = `${key}:${btoa(projectDoc?.apiUrl)}`
+        return keyWithUrl
       } catch (err) {
         console.log(err)
       }
@@ -61,6 +60,9 @@ export function CreateApiKeyService({
     ) {
       console.log('createApiKey', projectId)
 
+      const projectPath = `projects/${projectId}`
+      const project = await (await firestore.doc(projectPath).get()).data()
+
       const key = uuid()
       const keyId = createKeyId(key)
 
@@ -68,9 +70,13 @@ export function CreateApiKeyService({
         const doc = firestore.collection('keys').doc(keyId)
         await doc.set({ projectId, createdAt: Date.now() })
 
+        const keyWithUrl = `${key}:${btoa(project?.apiUrl)}`
         await firestore
           .doc(actionPath)
-          .set({ status: 'complete', payload: { key, keyId } }, { merge: true })
+          .set(
+            { status: 'complete', payload: { key: keyWithUrl, keyId } },
+            { merge: true },
+          )
       } catch (err) {
         console.log(err)
         await firestore
@@ -103,5 +109,8 @@ export function CreateApiKeyService({
 }
 
 function createKeyId(key: string) {
-  return createHash('sha256').update(key).update('salt').digest('hex')
+  return createHash('sha256')
+    .update(key.split(':')[0])
+    .update('salt')
+    .digest('hex')
 }

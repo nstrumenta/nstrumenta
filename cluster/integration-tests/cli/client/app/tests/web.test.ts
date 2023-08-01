@@ -9,7 +9,7 @@ describe('web', () => {
   const testFolderBase = `./temp/${testId}/web`;
   const moduleName = `web-module-${testId}`;
 
-  console.log(`apiKey=${process.env.NSTRUMENTA_API_KEY} apiUrl=${process.env.NSTRUMENTA_API_URL}`);
+  console.log(`apiKey=${process.env.NSTRUMENTA_API_KEY}`);
 
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;

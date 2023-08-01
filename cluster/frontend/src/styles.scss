@@ -1,9 +1,45 @@
 @use '@angular/material' as mat;
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
-@media (prefers-color-scheme: dark) {
-  @import '@angular/material/prebuilt-themes/pink-bluegrey';
-}
 
+@include mat.core();
+
+$my-typography: mat.define-typography-config(
+  $font-family: 'Roboto',
+);
+
+// Define a dark theme
+$dark-theme: mat.define-dark-theme(
+  (
+    color: (
+      primary: mat.define-palette(mat.$pink-palette),
+      accent: mat.define-palette(mat.$blue-grey-palette),
+    ),
+    // Only include `typography` and `density` in the default dark theme.
+    typography: $my-typography,
+    density: 0,
+  )
+);
+
+// Define a light theme
+$light-theme: mat.define-light-theme(
+  (
+    color: (
+      primary: mat.define-palette(mat.$indigo-palette),
+      accent: mat.define-palette(mat.$pink-palette),
+    ),
+  )
+);
+
+@include mat.all-component-typographies($my-typography);
+
+// Apply the dark theme by default
+@include mat.all-component-themes($dark-theme);
+
+// Apply the light theme only when the user prefers light themes.
+@media (prefers-color-scheme: light) {
+  // Use the `-color` mixins to only apply color styles without reapplying the same
+  // typography and density styles.
+  @include mat.all-component-themes($light-theme);
+}
 
 html,
 body {
@@ -14,12 +50,20 @@ body {
 }
 
 $indigo: mat.define-palette(mat.$indigo-palette);
-.mat-button:visited {
+.mat-mdc-button:visited {
   color: mat.get-color-from-palette($indigo, lighter);
 }
 
+.full-width-table {
+  width: 100%;
+}
+
+.icon-big {
+  transform: scale(1.5);
+}
+
 .mat-column-select {
-  flex: 0 0 40px;
+  flex: 0 0 60px;
 }
 
 .fill-remaining-space {

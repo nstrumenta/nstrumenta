@@ -1,21 +1,12 @@
 <div *ngIf="authService.user | async">
-  <mat-grid-list rowHeight="100px" [cols]="breakpoint">
-    <mat-grid-tile>
-      <mat-card mat-button class="project-card" (click)="newProjectDialog()">
-        <mat-card-title class="add-button">
-          <mat-icon>add</mat-icon>
-          Add Project
-        </mat-card-title>
-      </mat-card>
-    </mat-grid-tile>
-  </mat-grid-list>
   <div style="flex-direction:row">
     <mat-form-field>
       <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
     </mat-form-field>
   </div>
 
-  <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc" class="animate">
+  <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc"
+    class="animate">
 
     <ng-container matColumnDef="id">
       <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
@@ -38,3 +29,8 @@
   </mat-table>
 
 </div>
+
+
+<button mat-fab id="fab" (click)="newProjectDialog()">
+  <mat-icon>add</mat-icon>
+</button>

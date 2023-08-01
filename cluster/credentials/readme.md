@@ -26,7 +26,6 @@ export const firebaseConfig = {
 ### .env file with 
 ```env
 GCLOUD_SERVICE_KEY=[contents of keyfile]
-NSTRUMENTA_API_URL=[nstrumenta domain api url] 
 NSTRUMENTA_API_KEY=[nstrumenta project api key]
 ```
 

@@ -99,7 +99,7 @@ export class MachinesComponent implements OnInit, OnDestroy {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.vmService.deleteDeployedCloudAgent({ instanceId: item.key });
+      this.vmService.deleteDeployedCloudAgent({ instanceId: item.name });
     });
     this.selection.clear();
   }
