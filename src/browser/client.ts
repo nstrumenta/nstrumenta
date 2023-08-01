@@ -14,7 +14,6 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       const {
         wsUrl: wsUrlOption = undefined,
         apiKey: apiKeyOption = undefined,
-        apiUrl: apiUrlOption = undefined,
         verify = true,
       } = connectOptions ? connectOptions : {};
 
@@ -25,19 +24,6 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
         : wsUrlParam
         ? wsUrlParam
         : window.location.origin.replace('http', 'ws');
-
-      const apiUrlParam = new URLSearchParams(search).get('apiUrl');
-      const apiUrlLocalStore = localStorage.getItem('apiUrl');
-      const apiUrl = apiUrlOption
-        ? apiUrlOption
-        : apiUrlParam
-        ? apiUrlParam
-        : apiUrlLocalStore
-        ? apiUrlLocalStore
-        : prompt('Enter your nstrumenta apiUrl');
-      if (apiUrl) {
-        localStorage.setItem('apiUrl', apiUrl);
-      }
 
       const apiKeyParam = new URLSearchParams(search).get('apiKey');
       const apiKeyLocalStore = localStorage.getItem('apiKey');
@@ -51,6 +37,7 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       if (apiKey) {
         localStorage.setItem('apiKey', apiKey);
       }
+      const apiUrl = atob(apiKey?.split(':')[1] ?? '');
 
       if (this.reconnection.attempts > 100) {
         throw new Error('Too many reconnection attempts, stopping');
@@ -63,13 +50,6 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       }
 
       this.apiKey = apiKey;
-
-      if (!apiUrl) {
-        throw new Error(
-          'nstrumenta api url is missing, pass it as an argument to NstrumentaClient.connect({apiUrl: "your apiUrl"}) '
-        );
-      }
-
       this.apiUrl = apiUrl;
 
       let token = 'unverified';
