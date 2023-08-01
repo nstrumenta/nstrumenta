@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.4](https://github.com/nstrumenta/nstrumenta/compare/v3.1.3...v3.1.4) (2023-08-01)
+
+
+### Bug Fixes
+
+* **browser:** fixes storage apiUrl ([5ec806b](https://github.com/nstrumenta/nstrumenta/commit/5ec806bee1ac80c517f34810a023b0d1aa351e23))
+
 ### [3.1.3](https://github.com/nstrumenta/nstrumenta/compare/v3.1.2...v3.1.3) (2023-08-01)
 
 
