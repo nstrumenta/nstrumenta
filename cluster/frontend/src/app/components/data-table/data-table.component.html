@@ -1,9 +1,9 @@
-<div style="flex-direction:row">
+<div style="flex-direction: row">
   <mat-form-field>
-    <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+    <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
   </mat-form-field>
   <ng-container *ngIf="selection.hasValue()">
-    {{selection.selected.length}} files selected:
+    {{ selection.selected.length }} files selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
       <mat-icon color="accent">delete</mat-icon>
     </button>
@@ -13,8 +13,8 @@
   </ng-container>
 </div>
 
-<mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc" class="animate">
-
+<mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc"
+  class="animate">
   <!-- Checkbox Column -->
   <ng-container matColumnDef="select">
     <mat-header-cell *matHeaderCellDef>
@@ -38,33 +38,27 @@
     </mat-cell>
   </ng-container>
 
-
   <ng-container matColumnDef="size">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Size </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.size | fileSize }} </mat-cell>
   </ng-container>
 
-
   <ng-container matColumnDef="lastModified">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="tags">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Tags </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument" [matTooltip]="fileDocument.tags"> {{ fileDocument.tags }} </mat-cell>
+    <mat-cell *matCellDef="let fileDocument">
+      {{ fileDocument.lastModified | date : 'medium' }}
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument" style="align-content:center">
+    <mat-cell *matCellDef="let fileDocument" style="align-content: center">
       <button mat-icon-button matTooltip="Download Selected" (click)="download(fileDocument)">
         <mat-icon color="accent">cloud_download</mat-icon>
       </button>
     </mat-cell>
   </ng-container>
 
-
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns" class="animate"></mat-row>
 </mat-table>

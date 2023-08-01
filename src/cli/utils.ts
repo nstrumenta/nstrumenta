@@ -10,7 +10,8 @@ import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
+export const apiUrl = atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!);
+export const endpoints = getEndpoints(apiUrl);
 
 const prompt = Inquirer.createPromptModule();
 
@@ -19,7 +20,7 @@ export interface Keys {
 }
 
 export const resolveApiKey = () => {
-  let apiKey = process.env.NSTRUMENTA_API_KEY;
+  let apiKey = process.env.NSTRUMENTA_API_KEY?.split(':')[0];
 
   if (!apiKey) {
     throw new Error(

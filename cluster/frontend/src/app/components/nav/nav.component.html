@@ -5,9 +5,6 @@
       <app-navbar-title></app-navbar-title>
       <mat-nav-list>
         <ng-container *ngIf="router.url.startsWith('/projects/')">
-          <a mat-menu-item [routerLink]="['overview']">
-            <mat-icon>home</mat-icon> Overview
-          </a>
           <a mat-menu-item [routerLink]="['record']">
             <mat-icon>fiber_manual_record</mat-icon> Record
           </a>

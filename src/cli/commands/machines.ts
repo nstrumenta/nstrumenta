@@ -1,8 +1,5 @@
 import axios from 'axios';
-import { resolveApiKey } from '../utils';
-import { getEndpoints } from '../../shared';
-
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
+import { endpoints, resolveApiKey } from '../utils';
 
 export interface Machine {
   name: string;

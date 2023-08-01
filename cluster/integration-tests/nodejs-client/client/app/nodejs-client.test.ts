@@ -28,7 +28,6 @@ describe('NodeJS client', () => {
           });
           console.debug('calling nstClient.connect');
           nstClient.connect({
-            apiUrl: process.env.NSTRUMENTA_API_URL,
             wsUrl: process.env.NSTRUMENTA_WS_URL,
           });
         })
@@ -56,7 +55,6 @@ describe('NodeJS client', () => {
           console.debug('calling nstClient.connect');
           nstClient.connect({
             wsUrl: process.env.NSTRUMENTA_WS_URL,
-            apiUrl: process.env.NSTRUMENTA_API_URL,
           });
         })
       ).toBeDefined();
@@ -81,7 +79,6 @@ describe('NodeJS client', () => {
           console.debug('calling nstClient.connect');
           nstClient.connect({
             wsUrl: process.env.NSTRUMENTA_WS_URL,
-            apiUrl: process.env.NSTRUMENTA_API_URL,
           });
         })
       ).toBeDefined();
@@ -117,7 +114,6 @@ describe('NodeJS client', () => {
           console.debug('calling nstClient.connect');
           nstClient.connect({
             wsUrl: process.env.NSTRUMENTA_WS_URL,
-            apiUrl: process.env.NSTRUMENTA_API_URL,
           });
         })
       ).toBeDefined();
@@ -177,7 +173,6 @@ describe('NodeJS client', () => {
           console.debug('calling nstClient.connect');
           nstClient.connect({
             wsUrl: process.env.NSTRUMENTA_WS_URL,
-            apiUrl: process.env.NSTRUMENTA_API_URL,
           });
         })
       ).toBeDefined();
@@ -236,7 +231,6 @@ describe('NodeJS client', () => {
           });
           console.debug('calling nstClient.connect');
           nstClient.connect({
-            apiUrl: process.env.NSTRUMENTA_API_URL,
             wsUrl: process.env.NSTRUMENTA_WS_URL,
           });
         })
@@ -255,7 +249,6 @@ describe('NodeJS client', () => {
           console.debug('calling nstClient.connect');
           await nstClient.connect({
             wsUrl: process.env.NSTRUMENTA_WS_URL,
-            apiUrl: process.env.NSTRUMENTA_API_URL,
           });
 
           console.debug('client open');
@@ -369,7 +362,6 @@ describe('NodeJS client', () => {
       const nstClient = new NstrumentaClient();
       await nstClient.connect({
         wsUrl: process.env.NSTRUMENTA_WS_URL,
-        apiUrl: process.env.NSTRUMENTA_API_URL,
       });
 
       const filename = `data-query-${testId}.txt`;

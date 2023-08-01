@@ -4,7 +4,7 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { deleteObject, getDownloadURL, ref, getStorage } from 'firebase/storage';
 import { map } from 'rxjs/operators';
 
@@ -14,46 +14,60 @@ import { map } from 'rxjs/operators';
   styleUrls: ['./data-table.component.scss'],
 })
 export class DataTableComponent implements OnInit {
-  displayedColumns = ['select', 'name', 'size', 'tags', 'lastModified', 'actions'];
+  displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
+  filterParam: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private afs: AngularFirestore,
     public dialog: MatDialog
   ) {}
 
   ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/data';
-    this.afs
-      .collection<any>(this.dataPath)
-      .snapshotChanges()
-      .pipe(
-        map((items) => {
-          return items.map((a) => {
-            const data = a.payload.doc.data();
-            // ensure that data.size is a number
-            // uploader puts string into data.size
-            data.size = parseInt(data.size);
-            const key = a.payload.doc.id;
-            return { key: key, ...data };
-          });
-        })
-      )
-      .subscribe(async (dataSource) => {
-        this.dataSource = new MatTableDataSource(dataSource);
-        this.dataSource.sort = this.sort;
-        return;
-      });
+    this.route.paramMap.subscribe((paramMap) => {
+      this.dataPath = '/projects/' + paramMap.get('projectId') + '/data';
+      this.afs
+        .collection<any>(this.dataPath)
+        .snapshotChanges()
+        .pipe(
+          map((items) => {
+            return items.map((a) => {
+              const data = a.payload.doc.data();
+              // ensure that data.size is a number
+              // uploader puts string into data.size
+              data.size = parseInt(data.size);
+              const key = a.payload.doc.id;
+              return { key: key, ...data };
+            });
+          })
+        )
+        .subscribe(async (dataSource) => {
+          this.dataSource = new MatTableDataSource(dataSource);
+          this.dataSource.sort = this.sort;
+          this.dataSource.filter = this.filterParam;
+          return;
+        });
+    });
+    this.route.queryParamMap.subscribe((params: ParamMap) => {
+      this.filterParam = params.get('filter');
+      if (this.filterParam && this.dataSource) {
+        this.dataSource.filter = this.filterParam;
+      }
+    });
   }
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim();
     filterValue = filterValue.toLowerCase();
-    this.dataSource.filter = filterValue;
+    this.router.navigate([], {
+      queryParams: { filter: filterValue },
+      queryParamsHandling: 'merge',
+    });
   }
 
   /** Whether the number of selected elements matches the total number of rows. */

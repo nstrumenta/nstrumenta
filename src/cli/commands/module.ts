@@ -11,9 +11,8 @@ import {
   getNstDir,
   getVersionFromPath,
   resolveApiKey,
+  endpoints,
 } from '../utils';
-
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 const blue = (text: string) => {
   return text;

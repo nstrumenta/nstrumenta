@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
+import { User } from '@angular/fire/auth';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { ActivatedRoute } from '@angular/router';
-import firebase from 'firebase/compat';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
@@ -13,7 +13,7 @@ import { ServerService } from './server.service';
 export class ProjectService {
   currentProject = new BehaviorSubject<string>('');
   projects: Observable<any[]>;
-  user: firebase.User;
+  user: User;
   currentProjectId: string;
 
   constructor(

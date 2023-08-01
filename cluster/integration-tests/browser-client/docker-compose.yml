@@ -8,7 +8,6 @@ services:
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
       - NSTRUMENTA_WS_URL=ws://agent:8088
       - WAIT_ON_URL=http://agent:8088
   agent:
@@ -19,4 +18,3 @@ services:
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}

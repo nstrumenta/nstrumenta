@@ -1,8 +1,5 @@
 import axios, { AxiosRequestConfig } from 'axios';
-import { getEndpoints } from '../../shared';
-import { resolveApiKey } from '../utils';
-
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
+import { endpoints, resolveApiKey } from '../utils';
 
 export const Info = async () => {
   const apiKey = resolveApiKey();

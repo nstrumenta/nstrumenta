@@ -7,7 +7,7 @@ import { createWriteStream } from 'fs';
 import { mkdir, open, readFile, stat } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
-import { getNstDir, resolveApiKey } from '../cli/utils';
+import { apiUrl, endpoints, getNstDir, resolveApiKey } from '../cli/utils';
 import {
   LogConfig,
   NstrumentaClientEvent,
@@ -16,7 +16,6 @@ import {
   RPC,
   Subscribe,
   Unsubscribe,
-  getEndpoints,
 } from '../shared';
 
 import {
@@ -29,8 +28,6 @@ import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
 
 import WritableStream = NodeJS.WritableStream;
-
-const endpoints = getEndpoints(process.env.NSTRUMENTA_API_URL);
 
 type ListenerCallback = (event?: any) => void;
 
@@ -71,7 +68,6 @@ export type BackplaneCommand =
 
 export interface NstrumentaServerOptions {
   apiKey: string;
-  apiUrl: string;
   port?: string;
   tag?: string;
   debug?: boolean;
@@ -140,7 +136,7 @@ export class NstrumentaServer {
   }
 
   public async run() {
-    const { apiKey, apiUrl, debug } = this.options;
+    const { apiKey, debug } = this.options;
     const port = this.options.port ?? 8088;
     const app = express();
     app.set('views', __dirname + '/../..');
@@ -186,7 +182,7 @@ export class NstrumentaServer {
     });
 
     app.get('/apiUrl', function (req, res) {
-      res.status(200).send(process.env.NSTRUMENTA_API_URL);
+      res.status(200).send(apiUrl);
     });
 
     const verifiedConnections: Map<string, WebSocket> = new Map();
