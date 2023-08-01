@@ -27,5 +27,4 @@ services:
       - 8088:8088
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL}
     command: 'npm run start:agent'

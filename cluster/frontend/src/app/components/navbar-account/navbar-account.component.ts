@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
+import { Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 
@@ -12,6 +13,7 @@ export class NavbarAccountComponent {
   subscriptions = new Array<Subscription>();
   auth: Auth = inject(Auth);
   private authService = inject(AuthService);
+  private router = inject(Router);
   loggedIn = false;
   user$ = user(this.auth);
   userSubscription: Subscription;
@@ -26,6 +28,7 @@ export class NavbarAccountComponent {
   async logout() {
     await this.auth.signOut();
     this.loggedIn = false;
+    this.router.navigate(['/']);
   }
 
   async login() {

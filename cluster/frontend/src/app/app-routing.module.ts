@@ -4,7 +4,6 @@ import { AccountComponent } from './components/account/account.component';
 import { ActionsComponent } from './components/actions/actions.component';
 import { AgentDetailComponent } from './components/agent-detail/agent-detail.component';
 import { AgentsComponent } from './components/agents/agents.component';
-import { AlgorithmBuildsComponent } from './components/algorithm-builds/algorithm-builds.component';
 import { DataDetailComponent } from './components/data-detail/data-detail.component';
 import { DataTableComponent } from './components/data-table/data-table.component';
 import { MachinesComponent } from './components/machines/machines.component';
@@ -16,7 +15,6 @@ import { ProjectSettingsComponent } from './components/project-settings/project-
 import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { AlgorithmsComponent } from './pages/algorithms/algorithms.component';
 import { HomeComponent } from './pages/home/home.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
 
@@ -37,11 +35,6 @@ const userRoutes: Routes = [
           { path: 'agents/:agentId', component: AgentDetailComponent },
           { path: 'machines', component: MachinesComponent },
           { path: 'repositories', component: RepositoriesComponent },
-          {
-            path: 'algorithms/:algorithmId/builds',
-            component: AlgorithmBuildsComponent,
-          },
-          { path: 'algorithms', component: AlgorithmsComponent },
           { path: 'settings', component: ProjectSettingsComponent },
           { path: 'modules', component: ModulesComponent },
           { path: 'modules:/:moduleId', component: ModuleDetailsComponent },

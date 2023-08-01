@@ -4,8 +4,8 @@ import { LayoutModule } from '@angular/cdk/layout';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, Injectable, NgModule } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { FIREBASE_OPTIONS } from '@angular/fire/compat';
 import { getAuth, provideAuth } from '@angular/fire/auth';
+import { FIREBASE_OPTIONS } from '@angular/fire/compat';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -39,6 +39,7 @@ import * as Sentry from '@sentry/browser';
 import { environment } from 'src/environments/environment';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { AuthService } from './auth/auth.service';
 import { AccountComponent } from './components/account/account.component';
 import { ActionsComponent } from './components/actions/actions.component';
 import { AddEmailProviderDialogComponent } from './components/add-email-provider-dialog/add-email-provider-dialog.component';
@@ -46,14 +47,11 @@ import { AddItemDialogComponent } from './components/add-item-dialog/add-item-di
 import { AddProjectMemberDialogComponent } from './components/add-project-member-dialog/add-project-member-dialog.component';
 import { AgentDetailComponent } from './components/agent-detail/agent-detail.component';
 import { AgentsComponent } from './components/agents/agents.component';
-import { AlgorithmBuildsComponent } from './components/algorithm-builds/algorithm-builds.component';
-import { AlgorithmTableComponent } from './components/algorithm-table/algorithm-table.component';
 import { ConfirmationDialogComponent } from './components/confirmation-dialog/confirmation-dialog.component';
 import { CreateKeyDialogComponent } from './components/create-key-dialog/create-key-dialog.component';
 import { DataDetailComponent } from './components/data-detail/data-detail.component';
 import { DataTableComponent } from './components/data-table/data-table.component';
 import { EditDialogComponent } from './components/edit-dialog/edit-dialog.component';
-import { LogoComponent } from './components/logo/logo.component';
 import { MachinesComponent } from './components/machines/machines.component';
 import { ModuleDetailsComponent } from './components/module-details/module-details.component';
 import { ModulesComponent } from './components/modules/modules.component';
@@ -72,16 +70,13 @@ import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
-import { AlgorithmsComponent } from './pages/algorithms/algorithms.component';
 import { HomeComponent } from './pages/home/home.component';
-import { OverviewComponent } from './pages/overview/overview.component';
 import { PricingComponent } from './pages/pricing/pricing.component';
 import { DateAsQueryParamPipe } from './pipes/date-as-query-param.pipe';
 import { FileSizePipe } from './pipes/file-size.pipe';
 import { SafePipe } from './pipes/safe.pipe';
 import { VscodeService } from './services/vscode.service';
 import { UploadProgressComponent } from './upload-progress/upload-progress.component';
-import { AuthService } from './auth/auth.service';
 
 declare let process: any;
 if (process.env.NODE_ENV === 'production') {
@@ -147,10 +142,7 @@ export class SentryErrorHandler implements ErrorHandler {
     AgentsComponent,
     AgentDetailComponent,
     MachinesComponent,
-    AlgorithmsComponent,
     NavbarTitleComponent,
-    LogoComponent,
-    OverviewComponent,
     HomeComponent,
     NavbarAccountComponent,
     ToolbarComponent,
@@ -160,8 +152,6 @@ export class SentryErrorHandler implements ErrorHandler {
     NewProjectDialogComponent,
     OverviewDashboardComponent,
     SafePipe,
-    AlgorithmTableComponent,
-    AlgorithmBuildsComponent,
     AddItemDialogComponent,
     CreateKeyDialogComponent,
     NavbarVscodeComponent,

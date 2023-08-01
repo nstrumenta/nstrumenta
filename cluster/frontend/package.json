@@ -35,7 +35,6 @@
     "@angular/router": "^15.2.9",
     "@sentry/browser": "^7.10.0",
     "core-js": "^3.24.1",
-    "firebase": "^10.1.0",
     "font-awesome": "^4.7.0",
     "idb-keyval": "^6.2.0",
     "rxjs": "^7.5.6",
