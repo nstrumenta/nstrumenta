@@ -25,4 +25,4 @@ npx firebase use $FIREBASE_PROJECT_ID
 # Project Console: https://console.firebase.google.com/project/firebase-project-id/overview
 # Hosting URL: https://firebase-project-id.web.app
 
-npx firebase deploy --only hosting:main   
+npx firebase deploy --only hosting  
