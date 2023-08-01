@@ -50,12 +50,11 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       }
 
       this.apiKey = apiKey;
-      this.apiUrl = apiUrl;
 
       let token = 'unverified';
       if (verify) {
         try {
-          token = await getToken(this.apiKey.split(':')[0], this.apiUrl);
+          token = await getToken(this.apiKey.split(':')[0], apiUrl);
         } catch (error) {
           console.error((error as Error).message);
           throw error;
