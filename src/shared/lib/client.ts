@@ -42,7 +42,6 @@ export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocketLike;
   wsUrl: string;
   apiKey?: string;
-  apiUrl?: string;
   verify?: boolean;
   id?: string;
 }

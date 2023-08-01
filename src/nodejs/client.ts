@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { resolveApiKey } from '../cli/utils';
+import { apiUrl, resolveApiKey } from '../cli/utils';
 import {
   ClientStatus,
   ConnectOptions,
@@ -18,7 +18,7 @@ export class NstrumentaClient extends NstrumentaClientBase {
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
       console.log('connecting to nstrumenta');
-      const { wsUrl, apiKey, apiUrl, verify = true } = connectOptions;
+      const { wsUrl, apiKey, verify = true } = connectOptions;
       if (this.reconnection.attempts > 100) {
         throw new Error('Too many reconnection attempts, stopping');
       }
