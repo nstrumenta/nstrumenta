@@ -15,7 +15,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist",
-    "build:agent-admin-page": "(cd agent-admin-page ; npm i ; npm run build)",
+    "build:agent-admin-page": "(cd agent-admin-page ; rm -rf node_modules ; npm i ; npm run build)",
     "build:cli": "tsc --project ./src/cli",
     "build:nodejs": "tsc --project ./src/nodejs",
     "build:browser": "tsc --project ./src/browser",
