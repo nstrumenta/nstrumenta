@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.1](https://github.com/nstrumenta/nstrumenta/compare/v3.1.2...v1.7.1) (2023-08-01)
+
+
+### Features
+
+* **frontend:** upgrades to Angular 15, apiUrl in key ([#173](https://github.com/nstrumenta/nstrumenta/issues/173)) ([2d55b41](https://github.com/nstrumenta/nstrumenta/commit/2d55b41e3f490480fc15d832c30ad46ba89cc63c))
+
 ## [1.7.0](https://github.com/nstrumenta/nstrumenta/compare/v3.1.0...v1.7.0) (2023-07-18)
 
 
