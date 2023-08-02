@@ -113,9 +113,7 @@
   <ng-container matColumnDef="downloadURL">
     <mat-header-cell *matHeaderCellDef> Download </mat-header-cell>
     <mat-cell *matCellDef="let recordSource" style="align-content:center">
-      <a mat-button href={{recordSource.downloadURL}} download={{recordSource.name}}>
-        <mat-icon fontSet="fa" fontIcon="fa-download"></mat-icon>
-      </a>
+      <a mat-menu-item [href]="recordSource.downloadURL">{{recordSource.downloadURL}}</a>
     </mat-cell>
   </ng-container>
 
