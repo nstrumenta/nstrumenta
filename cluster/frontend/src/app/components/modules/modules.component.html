@@ -7,7 +7,7 @@
   </ng-container>
 </div>
 
-<mat-table #table [dataSource]="dataSource" matSort matSortActive="createdAt" matSortDirection="desc" class="animate">
+<mat-table #table [dataSource]="dataSource" matSort matSortActive="modified" matSortDirection="desc" class="animate">
 
   <!-- Checkbox Column -->
   <ng-container matColumnDef="select">
@@ -26,20 +26,19 @@
   <ng-container matColumnDef="id">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument">
-      <a mat-button [routerLink]="fileDocument.id">
-        {{ fileDocument.id }}
-      </a>
+      {{ fileDocument.id }}
     </mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="versions">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Versions </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> ?? </mat-cell>
+  <ng-container matColumnDef="url">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
+    <mat-cell *matCellDef="let fileDocument"> 
+      <a mat-menu-item [href]="fileDocument.url">{{ fileDocument.url }}</a></mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="createdAt">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Created </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.createdAt | date : 'medium'}} </mat-cell>
+  <ng-container matColumnDef="modified">
+    <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
+    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
   </ng-container>
 
 

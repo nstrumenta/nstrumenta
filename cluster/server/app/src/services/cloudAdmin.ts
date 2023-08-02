@@ -148,11 +148,10 @@ export const createCloudAdminService = ({
     // get module / untar / upload
     console.log(data)
     const modulePath = data.data.module.filePath
+    const moduleDocumentPath = `projects/${projectId}/modules/${modulePath}`
+    const moduleName = modulePath.replace('.tar.gz', '')
     const workingDirectory = `${__dirname}/temp/modules`
-    const extractFolder = `${workingDirectory}/${modulePath.replace(
-      '.tar.gz',
-      '',
-    )}`
+    const extractFolder = `${workingDirectory}/${moduleName}`
     await mkdir(extractFolder, { recursive: true })
     const tarFilePath = `${workingDirectory}/${modulePath}`
     await storage
@@ -163,6 +162,10 @@ export const createCloudAdminService = ({
     await asyncSpawn('tar', ['-zxvf', tarFilePath], {
       cwd: extractFolder,
     })
+
+    const nstModule = JSON.parse(await readFile(`${extractFolder}/module.json`, 'utf-8'))
+    const entry = nstModule?.entry ?? 'index.html'
+    const url = `https://storage.googleapis.com/${hostingBucket}/${moduleName}/${entry}`
 
     //upload folder to hostingBucket
     // https://github.com/googleapis/nodejs-storage/blob/main/samples/uploadDirectory.js
@@ -200,12 +203,12 @@ export const createCloudAdminService = ({
       }
 
       console.log(
-        `${successfulUploads} files uploaded to ${hostingBucket} successfully.`,
+        `${successfulUploads} files uploaded to ${hostingBucket} successfully.`, url
       )
     }
     await uploadDirectory()
 
-    
+    await firestore.doc(moduleDocumentPath).set({ module: nstModule, url, lastModified: Date.now() }, { merge: true })
 
     //mark action as complete
     await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })

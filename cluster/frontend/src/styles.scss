@@ -38,7 +38,7 @@ $light-theme: mat.define-light-theme(
 @media (prefers-color-scheme: light) {
   // Use the `-color` mixins to only apply color styles without reapplying the same
   // typography and density styles.
-  @include mat.all-component-themes($light-theme);
+  @include mat.all-component-colors($light-theme);
 }
 
 html,

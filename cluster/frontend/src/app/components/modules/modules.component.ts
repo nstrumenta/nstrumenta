@@ -15,7 +15,7 @@ import { AuthService } from 'src/app/auth/auth.service';
   styleUrls: ['./modules.component.scss'],
 })
 export class ModulesComponent implements OnInit {
-  displayedColumns = ['select', 'id', 'createdAt'];
+  displayedColumns = ['select', 'id', 'url', 'modified'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
@@ -28,7 +28,7 @@ export class ModulesComponent implements OnInit {
     private afs: AngularFirestore,
     private authService: AuthService,
     public dialog: MatDialog
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.dataPath = `/projects/${this.route.snapshot.paramMap.get('projectId')}/modules`;
