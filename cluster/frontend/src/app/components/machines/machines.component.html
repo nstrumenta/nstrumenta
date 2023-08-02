@@ -54,9 +54,8 @@
   <ng-container matColumnDef="downloadURL">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument" style="align-content:center">
-      <!-- <a mat-button href={{fileDocument.downloadURL}} download={{fileDocument.name}} matTooltip="Download">
-        <mat-icon fontSet="fa" fontIcon="fa-download"></mat-icon>
-      </a> -->
+      <a mat-menu-item [href]="fileDocument.downloadURL">{{fileDocument.downloadURL}}</a>
+
     </mat-cell>
   </ng-container>
 
