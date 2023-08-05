@@ -122,7 +122,10 @@ export const Host = async function (
 
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
-    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
+    : matches
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .shift();
 
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
   console.log('found moduleId: ', specificModule?.name);
@@ -170,7 +173,10 @@ export const CloudRun = async function (
   console.log(modules, matches);
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
-    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
+    : matches
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .shift();
 
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
   console.log('found moduleId: ', specificModule?.name);
