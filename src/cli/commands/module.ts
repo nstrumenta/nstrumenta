@@ -98,10 +98,6 @@ export const Host = async function (
   },
   { args }: Command
 ): Promise<void> {
-  if (moduleName == undefined) {
-    console.log('no moduleName specified');
-    return;
-  }
   console.log('Finding ', moduleName);
   let modules: string[] = [];
   try {
@@ -116,7 +112,7 @@ export const Host = async function (
   }
 
   const matches = modules
-    .map((nameObjectPairs) => nameObjectPairs[0])
+    .map((nameObjectPair) => nameObjectPair[0])
     .filter((module) => module.startsWith(moduleName))
     .map((module) => {
       return {
@@ -167,6 +163,7 @@ export const CloudRun = async function (
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
   const matches = modules
+    .map((nameObjectPair) => nameObjectPair[0])
     .filter((module) => module.startsWith(moduleName))
     .map((module) => {
       return {

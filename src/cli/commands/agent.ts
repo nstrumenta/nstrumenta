@@ -63,16 +63,19 @@ export const RunModule = async (
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
 
-    response.data.forEach(({ id: path }: { id: string }) => {
-      console.log({ path });
-      const name = path.split('#')[0];
-      serverModules.add(name);
-    });
+    (response.data as [string, Object][])
+      .map((nameObjectPair) => nameObjectPair[0])
+      .forEach((path) => {
+        console.log({ path });
+        const name = path.split('#')[0];
+        serverModules.add(name);
+      });
 
     module = await inquiryForSelectModule(Array.from(serverModules));
 
-    const moduleVersions = response.data
-      .filter(({ id: path }: { id: string }) => path.startsWith(module))
+    const moduleVersions = (response.data as [string, Object][])
+      .map((nameObjectPair: any) => nameObjectPair[0])
+      .filter((path) => path.startsWith(module))
       .map(({ id: path }: { id: string }) => getVersionFromPath(path));
     console.log(moduleVersions);
 

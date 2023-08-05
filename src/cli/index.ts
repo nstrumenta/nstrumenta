@@ -81,7 +81,7 @@ moduleCommand
 
 moduleCommand
   .command('host')
-  .argument('[module]', 'module to host on cloud storage')
+  .argument('<module>', 'module to host on cloud storage')
   .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('host published module on cloud storage')
   .action(Host);

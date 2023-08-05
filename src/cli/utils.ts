@@ -159,8 +159,9 @@ export const getModuleFromStorage = async ({
     headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
   });
 
-  const serverModules = (response.data as string[])
-    .filter((moduleTarName) => moduleTarName.startsWith(name))
+  const serverModules = (response.data as [string, Object][])
+    .map((nameObjectPair) => nameObjectPair[0])
+    .filter((module) => module.startsWith(name))
     .map((match) => {
       return {
         moduleTarName: match,

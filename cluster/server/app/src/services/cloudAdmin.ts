@@ -42,20 +42,27 @@ export const createCloudAdminService = ({
   async function asyncSpawn(
     cmd: string,
     args?: string[],
-    options?: { cwd?: string },
+    options?: { cwd?: string; showOutput?: boolean },
     errCB?: (code: number) => void,
   ) {
     console.log(`spawn [${cmd} ${args?.join(' ')}]`)
     const process = spawn(cmd, args || [], options)
 
     let output = ''
-    for await (const chunk of process.stdout) {
+    process.stdout.on('data', (chunk: Buffer) => {
       output += chunk
-    }
+      if (options?.showOutput) {
+        console.log(chunk.toString())
+      }
+    })
     let error = ''
-    for await (const chunk of process.stderr) {
+    process.stderr.on('data', (chunk: Buffer) => {
       error += chunk
-    }
+      if (options?.showOutput) {
+        console.log(chunk.toString())
+      }
+    })
+
     const code: number = await new Promise((resolve) => {
       process.on('close', resolve)
     })
@@ -180,9 +187,10 @@ export const createCloudAdminService = ({
 
       await asyncSpawn(
         'gsutil',
-        `-m cp -r ${moduleName} gs://${hostingBucket}/${moduleName}`.split(' '),
+        `-m -q cp -r ${moduleName} gs://${hostingBucket}/`.split(' '),
         {
           cwd: workingDirectory,
+          showOutput: true,
         },
       )
 
