@@ -3,7 +3,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
-  DataQueryOptions,
+  QueryOptions,
   Ping,
   RPC,
   StartRecording,
@@ -315,7 +315,7 @@ export class StorageService {
     field,
     comparison,
     compareValue,
-  }: DataQueryOptions): Promise<Array<Record<string, unknown>>> {
+  }: QueryOptions): Promise<Array<Record<string, unknown>>> {
     if (!this.apiKey) {
       throw new Error('apiKey not set');
     }
@@ -333,7 +333,7 @@ export class StorageService {
     };
 
     try {
-      const response = await axios(this.endpoints.QUERY_DATA, config);
+      const response = await axios(this.endpoints.QUERY_COLLECTION, config);
 
       return response.data;
     } catch (error) {

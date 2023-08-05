@@ -42,9 +42,9 @@ describe('web', () => {
 
     // Write a module file
     await writeFile(
-      `${testFolderBase}/web-module/module.json`,
+      `${testFolderBase}/web-module/nstrumentaModule.json`,
       `{
-          "type": "web",
+          "nstrumentaModuleType": "web",
           "version": "${version}",
           "name": "${moduleName}"
         }`,
@@ -81,7 +81,7 @@ describe('web', () => {
       matchString: moduleName,
       interval: 1_000,
       timeout: 5_000,
-      command: 'module list',
+      command: `module list --filter ${moduleName}`,
     });
     expect(result).toEqual(expect.stringMatching(moduleName));
   }, 10_000);

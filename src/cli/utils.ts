@@ -10,7 +10,9 @@ import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
-export const apiUrl = process.env.NSTRUMENTA_API_KEY ? atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!) : undefined;
+export const apiUrl = process.env.NSTRUMENTA_API_KEY
+  ? atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!)
+  : undefined;
 export const endpoints = getEndpoints(apiUrl);
 
 const prompt = Inquirer.createPromptModule();
@@ -180,7 +182,7 @@ export const getModuleFromStorage = async ({
 
   let moduleConfig: Module;
   try {
-    const file = await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' });
+    const file = await fs.readFile(`${folder}/nstrumentaModule.json`, { encoding: 'utf8' });
     moduleConfig = JSON.parse(file);
   } catch (err) {
     console.warn(`Error, can't find or parse the module's config file`);

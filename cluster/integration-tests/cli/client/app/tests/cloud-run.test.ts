@@ -44,10 +44,10 @@ describe('CloudRun', () => {
 
     // Write a module file
     await writeFile(
-      `${testFolderBase}/${testId}/module.json`,
+      `${testFolderBase}/${testId}/nstrumentaModule.json`,
       `{
           "$schema": "https://raw.githubusercontent.com/nstrumenta/nstrumenta/main/module.schema.json",
-          "type": "script",
+          "nstrumentaModuleType": "script",
           "name": "${moduleName}",
           "version": "${version}",
           "entry": "./script.sh"
