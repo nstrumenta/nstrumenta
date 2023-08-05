@@ -10,7 +10,7 @@ import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
-export const apiUrl = atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!);
+export const apiUrl = process.env.NSTRUMENTA_API_KEY ? atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!) : undefined;
 export const endpoints = getEndpoints(apiUrl);
 
 const prompt = Inquirer.createPromptModule();
