@@ -24,3 +24,17 @@ just server:
 ```shell
 docker-compose --env-file=./credentials/local.env up --build server
 ```
+
+### using the developer machine with a local repository
+
+add a volume mount to the developer service in docker-compose.override.yml 
+```yaml
+  developer:
+    build:
+      context: ../
+      dockerfile: ./cluster/developer/Dockerfile
+    privileged: true
+    volumes:
+      - ../:/nstrumenta
+      - ../../../Taner-Y-Banth/capture/:/capture
+```

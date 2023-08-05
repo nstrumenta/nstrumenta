@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "npm run dev",
+      "name": "dev",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",
@@ -16,7 +16,7 @@
       "type": "node"
     },
     {
-      "name": "npm run dev:local.env",
+      "name": "local dev",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",

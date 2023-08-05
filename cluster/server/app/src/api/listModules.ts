@@ -1,5 +1,10 @@
+import { QueryDocumentSnapshot } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
-import { bucketName, storage } from '../authentication/ServiceAccount'
+import {
+  bucketName,
+  firestore,
+  storage,
+} from '../authentication/ServiceAccount'
 import { ListModulesArgs } from './types'
 
 const listModulesBase: APIEndpoint<ListModulesArgs> = async (
@@ -11,10 +16,11 @@ const listModulesBase: APIEndpoint<ListModulesArgs> = async (
   const { projectId } = args
   try {
     const path = `projects/${projectId}/modules/`
-    console.log({ prefix: path })
-
-    const [dir] = await storage.bucket(bucketName).getFiles({ prefix: path })
-    const modules = dir.map(({ name }) => name.replace(path, ''))
+    const moduleCollection = await firestore.collection(path).get()
+    const modules = moduleCollection.docs.map((doc: QueryDocumentSnapshot) => [
+      doc.id,
+      doc.data(),
+    ])
 
     return res.status(200).send(modules)
   } catch (error) {

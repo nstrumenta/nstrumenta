@@ -23,13 +23,14 @@ export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
     SET_DATA_METADATA: `${url}/setDataMetadata`,
     LIST_STORAGE_OBJECTS: `${url}/listStorageObjects`,
     GET_DATA_MOUNT: `${url}/getDataMount`,
-    QUERY_DATA: `${url}/queryData`,
+    QUERY_COLLECTION: `${url}/queryCollection`,
   };
 };
 
 export * from './lib';
 
-export interface DataQueryOptions {
+export interface QueryOptions {
+  collection?: 'data' | 'modules';
   limit?: number;
   field?: string;
   comparison?:
