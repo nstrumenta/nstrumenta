@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.6](https://github.com/nstrumenta/nstrumenta/compare/v3.1.5...v3.1.6) (2023-08-05)
+
+
+### Features
+
+* **modules:** improves module publish, list, query, host  ([#174](https://github.com/nstrumenta/nstrumenta/issues/174)) ([f19e4c3](https://github.com/nstrumenta/nstrumenta/commit/f19e4c3e4cc53fb291e726eb75b3f3b0241acf60))
+
 ### [3.1.5](https://github.com/nstrumenta/nstrumenta/compare/v3.1.4...v3.1.5) (2023-08-02)
 
 ### [3.1.4](https://github.com/nstrumenta/nstrumenta/compare/v3.1.3...v3.1.4) (2023-08-01)
