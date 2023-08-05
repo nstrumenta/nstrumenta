@@ -2,10 +2,10 @@ import { Query } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
 import { firestore } from '../authentication/ServiceAccount'
 
-export interface QueryDataArgs {
+export interface QueryCollectionArgs {
   projectId: string
 }
-export interface QueryDataOptions {
+export interface QueryCollectionOptions {
   field: string
   comparison:
     | '<'
@@ -19,18 +19,24 @@ export interface QueryDataOptions {
     | 'in'
     | 'not-in'
   compareValue: string
+  collection?: 'data' | 'modules'
   limit?: number
 }
 
-const queryDataBase: APIEndpoint<QueryDataArgs> = async (req, res, args) => {
+const queryCollectionBase: APIEndpoint<QueryCollectionArgs> = async (
+  req,
+  res,
+  args,
+) => {
   const { projectId } = args
 
   const {
     field,
     comparison,
     compareValue,
+    collection = 'data',
     limit = 100,
-  }: QueryDataOptions = req.body
+  }: QueryCollectionOptions = req.body
 
   console.log(
     'query:',
@@ -38,11 +44,12 @@ const queryDataBase: APIEndpoint<QueryDataArgs> = async (req, res, args) => {
       field,
       comparison,
       compareValue,
+      collection,
       limit,
     }),
   )
   try {
-    const path = `projects/${projectId}/data`
+    const path = `projects/${projectId}/${collection}`
     const collectionRef = firestore.collection(path)
 
     const query: Query = collectionRef.where(field, comparison, compareValue)
@@ -55,4 +62,4 @@ const queryDataBase: APIEndpoint<QueryDataArgs> = async (req, res, args) => {
   }
 }
 
-export const queryData = withAuth(queryDataBase)
+export const queryCollection = withAuth(queryCollectionBase)

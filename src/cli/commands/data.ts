@@ -3,7 +3,7 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { DataQueryOptions } from '../../shared';
+import { QueryOptions } from '../../shared';
 import { asyncSpawn, endpoints, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -189,17 +189,18 @@ export const query = async ({
   comparison,
   compareValue,
   limit,
-}: DataQueryOptions): Promise<Array<Record<string, unknown>>> => {
+  collection,
+}: QueryOptions): Promise<Array<Record<string, unknown>>> => {
   const apiKey = resolveApiKey();
 
   const config: AxiosRequestConfig = {
     method: 'post',
     headers: { 'x-api-key': apiKey },
-    data: { field, comparison, compareValue, limit },
+    data: { field, comparison, compareValue, limit, collection },
   };
 
   try {
-    const response = await axios(endpoints.QUERY_DATA, config);
+    const response = await axios(endpoints.QUERY_COLLECTION, config);
 
     return response.data;
   } catch (error) {
@@ -209,12 +210,18 @@ export const query = async ({
   }
 };
 
-export const Query = async (options: DataQueryOptions) => {
-  const data = await query(options);
-  console.log(JSON.stringify(data, undefined, 2));
+export const QueryData = async (options: QueryOptions) => {
+  const results = await query({ collection: 'data', ...options });
+  console.log(results);
 };
 
-export const Get = async (options: DataQueryOptions & { output?: string }) => {
+export const QueryModules = async (options: QueryOptions) => {
+  console.log('QueryModules', options);
+  const results = await query({ collection: 'modules', ...options });
+  console.log(results);
+};
+
+export const Get = async (options: QueryOptions & { output?: string }) => {
   const { output } = options;
   const data = await query(options);
   const downloads = data.map(async (value) => {

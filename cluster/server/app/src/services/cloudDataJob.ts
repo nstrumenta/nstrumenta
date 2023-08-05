@@ -159,19 +159,6 @@ export const createCloudDataJobService = ({
               resolve()
             }
           }, 500)
-          setTimeout(async () => {
-            clearInterval(interval)
-            await asyncSpawn('gcloud', [
-              'run',
-              'jobs',
-              'executions',
-              'delete',
-              executionId,
-              '--region=us-west1',
-              '-q',
-            ])
-            reject(new Error(`timeout on ${workflowId} ${executionId}`))
-          }, 60 * 60_000)
         })
       }
     }

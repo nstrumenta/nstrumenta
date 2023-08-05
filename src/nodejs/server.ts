@@ -219,7 +219,7 @@ export class NstrumentaServer {
             if (!this.allowUnverifiedConnection) {
               console.log('attempting to verify token');
               // first message from a connected websocket must be a token
-              await verifyToken({ token: busMessage.toString(), apiKey, apiUrl });
+              await verifyToken({ token: busMessage.toString(), apiKey, apiUrl: apiUrl! });
             }
             console.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',

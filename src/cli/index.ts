@@ -11,7 +11,8 @@ import {
   Get as GetData,
   List as ListData,
   Mount as MountData,
-  Query as QueryData,
+  QueryData,
+  QueryModules,
   Unmount as UnmountData,
   Upload as UploadData,
 } from './commands/data';
@@ -20,10 +21,10 @@ import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
 
-const version = require('../../package.json').version;
+export const nstrumentaVersion = require('../../package.json').version;
 
 const program = new Command()
-  .version(version, '-v, --version', 'output the current version')
+  .version(nstrumentaVersion, '-v, --version', 'output the current version')
   .option('-d, --debug', 'output extra debugging');
 
 const machineCommand = program.command('machines');
@@ -80,13 +81,27 @@ moduleCommand
 
 moduleCommand
   .command('host')
-  .argument('[module]', 'module to host on cloud storage')
+  .argument('<module>', 'module to host on cloud storage')
   .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('host published module on cloud storage')
   .action(Host);
 
-moduleCommand.command('list').description('list modules published in current project').action(List);
-
+moduleCommand
+  .command('list')
+  .description('list modules published in current project')
+  .option('--filter <filter>', 'filter string to match')
+  .option('--depth <depth>', 'depth of object to print')
+  .action(List);
+moduleCommand
+  .command('query')
+  .description('query modules with field, comparison, compareValue')
+  .option('--field <field>', 'field to query, e.g. name')
+  .option(
+    '--comparison <comparison>',
+    `comparison: one of < <= == > >= != array-contains array-contains-any in not-in`
+  )
+  .option('--compareValue <compareValue>', 'value for compare')
+  .action(QueryModules);
 const agentCommand = program.command('agent');
 agentCommand
   .command('start')
@@ -140,6 +155,12 @@ dataCommand
 dataCommand
   .command('query')
   .description('query data with field, comparison, compareValue')
+  .option('--field <field>', 'field to query, e.g. name')
+  .option(
+    '--comparison <comparison>',
+    `comparison: one of < <= == > >= != array-contains array-contains-any in not-in`
+  )
+  .option('--compareValue <compareValue>', 'value for compare')
   .action(QueryData);
 dataCommand
   .command('get')

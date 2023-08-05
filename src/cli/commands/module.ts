@@ -3,15 +3,15 @@ import { Command } from 'commander';
 import fs from 'fs/promises';
 import semver from 'semver';
 import tar from 'tar';
-import { getEndpoints } from '../../shared';
+import { nstrumentaVersion } from '..';
 import {
   asyncSpawn,
+  endpoints,
   getModuleFromStorage,
   getNearestConfigJson,
   getNstDir,
   getVersionFromPath,
   resolveApiKey,
-  endpoints,
 } from '../utils';
 
 const blue = (text: string) => {
@@ -33,7 +33,7 @@ export const Run = async function (
 
   module = await getModuleFromStorage({ name, version });
 
-  switch (module.type) {
+  switch (module.nstrumentaModuleType) {
     case 'nodejs':
       {
         console.log(`${module.name} in ${module.folder} with args`, args);
@@ -110,7 +110,9 @@ export const Host = async function (
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
+
   const matches = modules
+    .map((nameObjectPair) => nameObjectPair[0])
     .filter((module) => module.startsWith(moduleName))
     .map((module) => {
       return {
@@ -122,7 +124,10 @@ export const Host = async function (
 
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
-    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
+    : matches
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .shift();
 
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
   console.log('found moduleId: ', specificModule?.name);
@@ -158,6 +163,7 @@ export const CloudRun = async function (
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
   const matches = modules
+    .map((nameObjectPair) => nameObjectPair[0])
     .filter((module) => module.startsWith(moduleName))
     .map((module) => {
       return {
@@ -170,7 +176,10 @@ export const CloudRun = async function (
   console.log(modules, matches);
   const specificModule = version
     ? matches.find((match) => semver.eq(version, match.version))
-    : matches.sort((a, b) => semver.compare(a.version, b.version))[0];
+    : matches
+        .sort((a, b) => semver.compare(a.version, b.version))
+        .reverse()
+        .shift();
 
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
   console.log('found moduleId: ', specificModule?.name);
@@ -189,7 +198,7 @@ export type ModuleTypes = 'sandbox' | 'web' | 'nodejs' | 'script' | 'algorithm';
 export interface Module {
   name: string;
   version: string;
-  type: ModuleTypes;
+  nstrumentaModuleType: ModuleTypes;
   excludes?: string[];
   includes?: string[];
   entry: string;
@@ -207,13 +216,19 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
   const promises = moduleMetas.map(async (moduleMeta) => {
     const { folder } = moduleMeta;
     let moduleConfig: Module | undefined;
+    const nstrumentaModulePath = `${folder}/nstrumentaModule.json`;
     try {
-      moduleConfig = JSON.parse(await fs.readFile(`${folder}/module.json`, { encoding: 'utf8' }));
+      moduleConfig = JSON.parse(await fs.readFile(nstrumentaModulePath, { encoding: 'utf8' }));
     } catch (err) {
-      console.log(`Couldn't read ${folder}/module.json`);
+      console.log(`Couldn't read ${nstrumentaModulePath}`);
+      console.log({ moduleMeta });
+      console.log({ moduleConfig });
     }
     let packageConfig: Record<string, unknown> | undefined;
-    if (moduleConfig?.type == 'nodejs' || moduleConfig?.type == 'web') {
+    if (
+      moduleConfig?.nstrumentaModuleType == 'nodejs' ||
+      moduleConfig?.nstrumentaModuleType == 'web'
+    ) {
       try {
         packageConfig = JSON.parse(
           await fs.readFile(`${folder}/package.json`, { encoding: 'utf8' })
@@ -222,10 +237,12 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
         console.log(`no ${folder}/package.json`);
       }
     }
-    console.log({ moduleMeta });
-    console.log({ moduleConfig });
-    console.log({ packageConfig });
-    return { ...moduleMeta, ...moduleConfig, ...packageConfig } as ModuleExtended;
+    return {
+      nstrumentaVersion,
+      ...moduleMeta,
+      ...moduleConfig,
+      ...packageConfig,
+    } as ModuleExtended;
   });
   return Promise.all(promises);
 };
@@ -253,10 +270,9 @@ export const Publish = async () => {
   const results = await readModuleConfigs(moduleMetas);
   modules = results.filter((m): m is ModuleExtended => Boolean(m));
 
-  console.log(`publishing ${modules.length} modules:`, modules);
+  console.log(`publishing:`, modules);
 
   try {
-    console.log(modules.map(({ folder }) => folder));
     const promises = modules.map((module) =>
       publishModule({
         ...module,
@@ -273,7 +289,6 @@ export const Publish = async () => {
 export const publishModule = async (module: ModuleExtended) => {
   const { version, folder, name, includes = ['.'], excludes = [], prePublishCommand } = module;
 
-  console.log('publishModule', { module });
   if (!version) {
     throw new Error(`module [${name}] requires version!`);
   }
@@ -305,13 +320,14 @@ export const publishModule = async (module: ModuleExtended) => {
       filter: (path: string) => {
         return (
           // basic filtering of exact string items in the 'exclude' array
-          excludes.findIndex((p) => {
+          // also excludes .nstrumenta folder to avoid leaking credential
+          ['.nstrumenta/', ...excludes].findIndex((p) => {
             return path.includes(p);
           }) === -1
         );
       },
     };
-    await tar.create(options, ['module.json', ...includes]);
+    await tar.create(options, ['nstrumentaModule.json', ...includes]);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
@@ -342,7 +358,7 @@ export const publishModule = async (module: ModuleExtended) => {
     if (axios.isAxiosError(e)) {
       if (e.response?.status === 409) {
         console.log(`Conflict: version ${version} exists, using server version`);
-        return remoteFileLocation;
+        return fileName;
       }
       message = `${message} [${(e as Error).message}]`;
     }
@@ -360,23 +376,23 @@ export const publishModule = async (module: ModuleExtended) => {
       contentLengthRange: `bytes 0-${size - 1}/${size}`,
     },
   });
-  return remoteFileLocation;
+  return fileName;
 };
 
-export interface ModuleListOptions {
-  verbose?: boolean;
-}
-
-export const List = async (_: unknown, options: ModuleListOptions) => {
+export const List = async (options: { filter: string; depth?: number | null }) => {
   const apiKey = resolveApiKey();
+  const { filter, depth = 2 } = options;
 
   try {
     let response = await axios(endpoints.LIST_MODULES, {
       method: 'post',
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     });
-    const modules = response.data;
-    console.log(JSON.stringify(modules));
+    const filteredModules = filter
+      ? response.data.filter((module: any) => JSON.stringify(module).includes(filter))
+      : response.data;
+
+    console.dir(filteredModules, { depth });
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
