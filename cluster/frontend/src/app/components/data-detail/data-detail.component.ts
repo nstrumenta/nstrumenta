@@ -1,9 +1,9 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { Observable, Subscription } from 'rxjs';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-data-detail',
@@ -16,7 +16,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
         <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
         <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
       </mat-list>
-      <div style="overflow-wrap: anywhere; width: 100%" *ngIf="contents">
+      <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap" *ngIf="contents">
         {{ contents }}
       </div>
     </ng-container>
@@ -35,7 +35,7 @@ export class DataDetailComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private afs: AngularFirestore,
     public sanitizer: DomSanitizer
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.dataPath =
@@ -61,9 +61,12 @@ export class DataDetailComponent implements OnInit, OnDestroy {
               this.isVideo = false;
             }
             if (doc.name.toLowerCase().endsWith('.json')) {
-              this.contents = JSON.stringify(await (await fetch(url)).json());
+              this.contents = JSON.stringify(await (await fetch(url)).json(), undefined, 4);
             }
-            if (doc.name.toLowerCase().endsWith('.txt') || doc.name.toLowerCase().endsWith('.log')) {
+            if (
+              doc.name.toLowerCase().endsWith('.txt') ||
+              doc.name.toLowerCase().endsWith('.log')
+            ) {
               this.contents = await (await fetch(url)).text();
             }
             this.url = this.sanitizer.bypassSecurityTrustResourceUrl(url);
