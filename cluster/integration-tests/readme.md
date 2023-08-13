@@ -15,7 +15,7 @@ nodejs-client % TEST_ID=`uuidgen` NSTRUMENTA_API_KEY=[apikey] docker-compose up 
 ## running with environment file
 
 ```shell
-ENVFILE=../credentials/.env ./ci.sh
+ENVFILE=../credentials/local.env ./ci.sh
 ```
 
 with dotenv for running dev
