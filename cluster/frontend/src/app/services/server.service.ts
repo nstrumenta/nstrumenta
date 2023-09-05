@@ -12,6 +12,7 @@ export type ServerTasks =
   | 'deployCloudAgent'
   | 'deleteDeployedCloudAgent'
   | 'createServiceAccount'
+  | 'deployStorageTriggerFunctions'
   | 'buildFromGithub'
   | 'buildFromFolder'
   | 'gitToken';

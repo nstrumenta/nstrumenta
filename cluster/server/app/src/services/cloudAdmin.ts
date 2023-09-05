@@ -16,6 +16,11 @@ export interface CloudAdminService {
     projectId: string,
     data: ActionData,
   ): Promise<void>
+  deployStorageTriggerFunctions(
+    actionPath: string,
+    projectId: string,
+    data: ActionData,
+  ): Promise<void>
   hostModule(
     actionPath: string,
     projectId: string,
@@ -213,6 +218,54 @@ export const createCloudAdminService = ({
     }
   }
 
+  async function deployStorageTriggerFunctions(
+    actionPath: string,
+    projectId: string,
+  ) {
+    const functionName = uniqueName(projectId)
+    const bucketName = `${GCP_PROJECT}.appspot.com`
+    // mark action as started
+    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    const adminKeyFilePath = './credentials.json'
+    process.env['GOOGLE_APPLICATION_CREDENTIALS'] = adminKeyFilePath
+    await writeFile(adminKeyFilePath, JSON.stringify(serviceAccount), 'utf-8')
+    await asyncSpawn(
+      'gcloud',
+      `auth activate-service-account --key-file ${adminKeyFilePath}`.split(' '),
+    )
+
+    await asyncSpawn(
+      'gcloud',
+      `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(
+        ' ',
+      ),
+    )
+
+    // deploy cloud function
+    const adminCredentialsForCloudFunction = btoa(
+      JSON.stringify({
+        project_id: adminServiceAccount.project_id,
+        client_email: adminServiceAccount.client_email,
+        private_key: adminServiceAccount.private_key,
+      }),
+    )
+    await asyncSpawn(
+      'gcloud',
+      `functions deploy ${functionName}-finalize --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
+        ' ',
+      ),
+    )
+    await asyncSpawn(
+      'gcloud',
+      `functions deploy ${functionName}-delete --entry-point storageObjectDelete --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.delete --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
+        ' ',
+      ),
+    )
+
+    //mark action as complete
+    await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
+  }
+
   async function createServiceAccount(actionPath: string, projectId: string) {
     console.log({ projectId })
 
@@ -257,30 +310,6 @@ export const createCloudAdminService = ({
         .doc(`/projects/${projectId}`)
         .set({ keyFile }, { merge: true })
 
-      // TODO cloud function should only be deployed once per bucket
-      // upload cloud function zip (built in nstrumenta/cluster/functions)
-      await asyncSpawn(
-        'gcloud',
-        `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(
-          ' ',
-        ),
-      )
-
-      // deploy cloud function
-      const adminCredentialsForCloudFunction = btoa(
-        JSON.stringify({
-          project_id: adminServiceAccount.project_id,
-          client_email: adminServiceAccount.client_email,
-          private_key: adminServiceAccount.private_key,
-        }),
-      )
-      await asyncSpawn(
-        'gcloud',
-        `functions deploy ${nonAdminServiceAccount} --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
-          ' ',
-        ),
-      )
-
       //set cors on the bucket
       await asyncSpawn(
         'gcloud',
@@ -303,6 +332,7 @@ export const createCloudAdminService = ({
 
   return {
     createServiceAccount,
+    deployStorageTriggerFunctions,
     hostModule,
   }
 }
