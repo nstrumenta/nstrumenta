@@ -14,7 +14,10 @@ export const pollNstrumenta = async ({
   const response = await new Promise<string>(async function poll(resolve, reject) {
     await process.nextTick(() => {});
     const result = await asyncSpawn('nst', command.split(' '), { quiet: true });
-    const isMatch = result.match(matchString);
+    function escapeRegex(string) {
+      return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+    const isMatch = result.match(escapeRegex(matchString));
     const shouldResolve = inverseMatch ? !isMatch : isMatch;
     if (shouldResolve) {
       resolve(result);
