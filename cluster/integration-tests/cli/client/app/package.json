@@ -7,7 +7,8 @@
     "test-from-docker-compose": "npx wait-on $NSTRUMENTA_WAIT_ON && echo 'wait-on $NSTRUMENTA_WAIT_ON complete' && jest --verbose=true --detectOpenHandles",
     "test": "jest --detectOpenHandles",
     "test-from-launch-with-dotenv": "dotenv -e $ENVFILE -- bash -c 'npm run test'",
-    "test-from-launch-with-dotenv:web": "dotenv -e $ENVFILE -- bash -c 'npm run test -- -t web'"
+    "test-from-launch-with-dotenv:web": "dotenv -e $ENVFILE -- bash -c 'npm run test -- -t web'",
+    "test-from-launch-with-dotenv:cloud-run": "dotenv -e $ENVFILE -- bash -c 'npm run test -- -t CloudRun'"
   },
   "author": "Tyler Bryant",
   "license": "UNLICENSED",

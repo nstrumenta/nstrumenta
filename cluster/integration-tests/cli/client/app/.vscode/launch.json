@@ -29,6 +29,19 @@
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
       "type": "node"
+    },
+    {
+      "name": "test:cloud-run",
+      "request": "launch",
+      "runtimeArgs": ["run-script", "test-from-launch-with-dotenv:cloud-run"],
+      "env": {
+        "ENVFILE": "../../../../credentials/local.env",
+        "NSTRUMENTA_WS_URL": "ws://localhost:8088"
+      },
+      "console": "integratedTerminal",
+      "runtimeExecutable": "npm",
+      "skipFiles": ["<node_internals>/**"],
+      "type": "node"
     }
   ]
 }

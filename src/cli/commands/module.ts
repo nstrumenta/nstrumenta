@@ -22,12 +22,14 @@ export const Run = async function (
   name: string,
   {
     version,
+    commandArgs,
   }: {
     version?: string;
-  },
-  { args }: Command
+    commandArgs?: string[];
+  }
 ): Promise<void> {
   let module: ModuleExtended;
+  const args: string[] = commandArgs ?? [];
 
   console.log('Running module', name, 'version', version ?? 'not specified, using latest');
 

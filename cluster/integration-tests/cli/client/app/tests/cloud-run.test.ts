@@ -59,10 +59,27 @@ describe('CloudRun', () => {
     await writeFile(
       `${testFolderBase}/${testId}/script.sh`,
       `#!/bin/bash -xe
-nst -v
-nst data mount
-echo "Hello World!" > ${projectId}/data/$2
-nst data unmount
+case $1 in
+create)
+    echo creating $2
+    nst -v
+    nst data mount
+    echo "Hello World!" > ${projectId}/data/$2
+    nst data unmount
+    ;;
+delete)
+    echo deleting $2
+    nst -v
+    nst data mount
+    rm ${projectId}/data/$2
+    nst data unmount
+    ;;
+*)
+    echo 'usage: ./script.sh [create|delete] filename'
+    ;;
+esac
+    
+
       `,
       { encoding: 'utf8' }
     );
@@ -101,7 +118,7 @@ nst data unmount
     console.log(`nst module cloud-run ${moduleName} -- ${uploadFileName}`);
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} -- ${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} -- create ${uploadFileName}`.split(' '),
       { cwd: testFolderBase, quiet: true }
     );
 
@@ -111,5 +128,19 @@ nst data unmount
       timeout: 120_000,
     });
     await expect(result).toBeTruthy();
+
+    await asyncSpawn(
+      'nst',
+      `module cloud-run ${moduleName} -- delete ${uploadFileName}`.split(' '),
+      { cwd: testFolderBase, quiet: true }
+    );
+
+    const deleteResult = await pollNstrumenta({
+      matchString: uploadFileName,
+      interval: 5_000,
+      timeout: 30_000,
+      inverseMatch: true,
+    });
+    await expect(deleteResult).toBeTruthy();
   }, 120_000);
 });

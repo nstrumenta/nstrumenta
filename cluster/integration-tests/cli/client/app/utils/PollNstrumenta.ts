@@ -5,6 +5,7 @@ export const pollNstrumenta = async ({
   interval = 1000,
   timeout = 10000,
   command = 'data list',
+  inverseMatch = false,
 }): Promise<string> => {
   const start = Date.now();
   let lastPollTime = start;
@@ -13,7 +14,9 @@ export const pollNstrumenta = async ({
   const response = await new Promise<string>(async function poll(resolve, reject) {
     await process.nextTick(() => {});
     const result = await asyncSpawn('nst', command.split(' '), { quiet: true });
-    if (result.match(matchString)) {
+    const isMatch = result.match(matchString);
+    const shouldResolve = inverseMatch ? !isMatch : isMatch;
+    if (shouldResolve) {
       resolve(result);
       return;
     } else {
