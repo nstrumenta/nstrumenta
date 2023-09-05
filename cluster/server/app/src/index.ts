@@ -399,6 +399,13 @@ firestore
                         data as ActionData,
                       )
                       break
+                    case 'deployStorageTriggerFunctions':
+                      cloudAdminService.deployStorageTriggerFunctions(
+                        doc.ref.path,
+                        projectId,
+                        data as ActionData,
+                      )
+                      break
                     case 'createApiKey':
                       apiKeyService.createApiKey(doc.ref.path, projectId)
                       break

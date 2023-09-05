@@ -122,6 +122,12 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     })
   }
 
+  deployStorageTriggerFunctions() {
+    this.serverService.runServerTask('deployStorageTriggerFunctions', this.projectId, {}, (progress) => {
+      console.log('task:' + progress);
+    })
+  }
+
   createApiKey() {
     const dialogRef = this.dialog.open(CreateKeyDialogComponent);
     dialogRef.afterClosed().subscribe((response: CreateKeyDialogResponse) => {
