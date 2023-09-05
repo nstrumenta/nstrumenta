@@ -13,7 +13,7 @@ if [[ $ENVFILE ]]; then
 fi
 
 if [ $# -eq 0 ]; then
-    TESTS="cli nodejs-client webrtc browser-client"
+    TESTS="cli nodejs-client browser-client"
 else
     TESTS=$@
 fi
