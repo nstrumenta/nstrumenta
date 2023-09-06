@@ -71,7 +71,7 @@ export const createCloudDataJobService = ({
   ) {
     console.log('create cloud run job', { projectId, data })
 
-    const actionId = actionPath.split('/').slice(-1)[0]
+    const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
     const workflowId = `workflow-${actionId}`
 
     const imageId = `gcr.io/${serviceAccount.project_id}/data-job-runner:latest`

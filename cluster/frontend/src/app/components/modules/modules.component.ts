@@ -5,6 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -28,7 +29,7 @@ export class ModulesComponent implements OnInit {
     private afs: AngularFirestore,
     private authService: AuthService,
     public dialog: MatDialog
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.dataPath = `/projects/${this.route.snapshot.paramMap.get('projectId')}/modules`;
@@ -73,6 +74,35 @@ export class ModulesComponent implements OnInit {
     const numSelected = this.selection.selected.length;
     const numRows = this.dataSource.data.length;
     return numSelected === numRows;
+  }
+
+  deleteSelected() {
+    const storage = getStorage();
+
+    this.selection.selected.forEach((item) => {
+      console.log('deleting', item);
+      deleteObject(ref(storage, item.filePath));
+      this.afs.doc(this.dataPath + '/' + item.key).delete();
+    });
+    this.selection.clear();
+  }
+
+  downloadSelected() {
+    this.selection.selected.forEach((selectedFile) => {
+      this.download(selectedFile);
+    });
+  }
+
+  download(fileDocument) {
+    console.log('download', fileDocument.name);
+    const storage = getStorage();
+    getDownloadURL(ref(storage, fileDocument.filePath))
+      .then((url) => {
+        window.open(url);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */

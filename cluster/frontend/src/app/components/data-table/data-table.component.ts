@@ -7,6 +7,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { map } from 'rxjs/operators';
+import { ServerService } from 'src/app/services/server.service';
 
 @Component({
   selector: 'app-data-table',
@@ -17,7 +18,7 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
-  moduleActions: { name: string; url: string }[];
+  moduleActions: { name: string; url?: string }[];
   projectId: string;
   dataPath: string;
   filterParam: string;
@@ -28,7 +29,8 @@ export class DataTableComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private afs: AngularFirestore,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    private serverService: ServerService
   ) {}
 
   ngOnInit() {
@@ -47,6 +49,8 @@ export class DataTableComponent implements OnInit {
             const { name, url } = module;
             if (url != undefined) {
               this.moduleActions.push({ name, url });
+            } else {
+              this.moduleActions.push({ name });
             }
           });
         });
@@ -116,7 +120,27 @@ export class DataTableComponent implements OnInit {
 
   async handleModuleAction(moduleAction, fileDocument) {
     console.log(moduleAction, fileDocument);
-    window.open(`${moduleAction.url}?experiment=${fileDocument.filePath}`);
+    if (moduleAction.url) {
+      window.open(`${moduleAction.url}?experiment=${fileDocument.filePath}`);
+    } else {
+      function getVersionFromPath(path: string) {
+        const match = /(\d+)\.(\d+).(\d+)/.exec(path);
+        const version: string = match ? match[0] : '';
+        return version;
+      }
+      const version = getVersionFromPath(moduleAction.name);
+      const name = moduleAction.name.split(`-${version}`)[0];
+
+      this.serverService.runServerTask(
+        'cloudRun',
+        this.projectId,
+        {},
+        (progress) => {
+          console.log('task:' + progress);
+        },
+        { module: { filePath: moduleAction.name, version, name }, args: [fileDocument.filePath] }
+      );
+    }
   }
 
   deleteSelected() {
