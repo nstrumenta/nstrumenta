@@ -76,6 +76,7 @@ moduleCommand
   .command('cloud-run')
   .argument('[module]', 'module to run')
   .option('--module-version <version>', 'optional specific version - otherwise will use latest')
+  .option('--command-args <command-args...>', 'arguments to append to module command')
   .description('run module on cloud')
   .action(CloudRun);
 

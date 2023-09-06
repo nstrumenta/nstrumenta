@@ -147,13 +147,16 @@ export const CloudRun = async function (
   moduleName: string,
   {
     version,
+    commandArgs,
   }: {
     version?: string;
-  },
-  { args }: Command
+    commandArgs?: string[];
+  }
 ): Promise<void> {
   console.log('Finding ', moduleName);
   let modules: string[] = [];
+  const args: string[] = commandArgs ?? [];
+
   try {
     const apiKey = resolveApiKey();
     let response = await axios(endpoints.LIST_MODULES, {

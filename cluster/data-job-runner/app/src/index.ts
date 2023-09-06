@@ -52,7 +52,7 @@ async function createRunModuleTask() {
 
   const moduleName = data.data.module.name;
   const version = data.data.module.version;
-  const args = data.data.args.slice(1);
+  const args = data.data.args;
 
   console.log({ moduleName, version, args });
 

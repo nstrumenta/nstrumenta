@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { deleteObject, getDownloadURL, ref, getStorage } from 'firebase/storage';
+import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { map } from 'rxjs/operators';
 
 @Component({
@@ -17,6 +17,8 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
+  moduleActions: { name: string; url: string }[];
+  projectId: string;
   dataPath: string;
   filterParam: string;
 
@@ -31,7 +33,23 @@ export class DataTableComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe((paramMap) => {
-      this.dataPath = '/projects/' + paramMap.get('projectId') + '/data';
+      this.projectId = paramMap.get('projectId');
+      this.dataPath = '/projects/' + this.projectId + '/data';
+      //gather modules for actions
+      this.moduleActions = [];
+      this.afs
+        .collection<any>('/projects/' + this.projectId + '/modules')
+        .snapshotChanges()
+        .forEach((changes) => {
+          changes.forEach((change) => {
+            const module = change.payload.doc.data();
+            console.log(module);
+            const { name, url } = module;
+            if (url != undefined) {
+              this.moduleActions.push({ name, url });
+            }
+          });
+        });
       this.afs
         .collection<any>(this.dataPath)
         .snapshotChanges()
@@ -94,6 +112,11 @@ export class DataTableComponent implements OnInit {
       .catch((error) => {
         console.error(error);
       });
+  }
+
+  async handleModuleAction(moduleAction, fileDocument) {
+    console.log(moduleAction, fileDocument);
+    window.open(`${moduleAction.url}?experiment=${fileDocument.filePath}`);
   }
 
   deleteSelected() {

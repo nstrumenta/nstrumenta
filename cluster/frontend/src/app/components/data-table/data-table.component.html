@@ -53,9 +53,18 @@
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument" style="align-content: center">
-      <button mat-icon-button matTooltip="Download Selected" (click)="download(fileDocument)">
-        <mat-icon color="accent">cloud_download</mat-icon>
+      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+        <mat-icon>more_vert</mat-icon>
       </button>
+      <mat-menu #menu="matMenu">
+        <button mat-menu-item (click)="download(fileDocument)">
+          <span>Download</span>
+        </button>
+        <button *ngFor="let moduleAction of moduleActions" mat-menu-item (click)="handleModuleAction(moduleAction,fileDocument)">
+          <span>{{moduleAction.name}}</span>
+        </button>
+      </mat-menu>
+
     </mat-cell>
   </ng-container>
 
