@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.4](https://github.com/nstrumenta/nstrumenta/compare/v3.1.6...v1.7.4) (2023-09-06)
+
+
+### Features
+
+* **cli:** fixes process.stdout in asyncSpawn ([18d4d38](https://github.com/nstrumenta/nstrumenta/commit/18d4d38425ac4556df8a0360e796badf683aa955))
+* **data-detail:** adds json spacing ([589e9a0](https://github.com/nstrumenta/nstrumenta/commit/589e9a0e8f0914e4a9d50cd54724e5d134f2fd13))
+* **modules:** adds cloud-run action ; module delete ([b440beb](https://github.com/nstrumenta/nstrumenta/commit/b440beb5c886fc5adce31d719fc0a493c2516022))
+* **run-module:** explicit command-args ([#175](https://github.com/nstrumenta/nstrumenta/issues/175)) ([9cd235b](https://github.com/nstrumenta/nstrumenta/commit/9cd235b8e1af1150bd8b32afa303afbdc342cb07))
+* **storage:** adds delete trigger for storage objects ([9b213ca](https://github.com/nstrumenta/nstrumenta/commit/9b213ca5c74a1ea3c8a73e796bd4e0e756512989))
+* **test:** increases timeout on delete test ([63a90f1](https://github.com/nstrumenta/nstrumenta/commit/63a90f1e78a4496a121d36041d5b529c736f88ba))
+* **tests:** exit on spawn error ([3aa0738](https://github.com/nstrumenta/nstrumenta/commit/3aa0738cfec4f3f00b0a10ed8f976e9348d6eaa6))
+
+
+### Bug Fixes
+
+* **cloud-run:** fixes args ([f454c42](https://github.com/nstrumenta/nstrumenta/commit/f454c4239bf30e637c564b919d7ed0d1131a3794))
+
 ### [1.7.3](https://github.com/nstrumenta/nstrumenta/compare/v3.1.6...v1.7.3) (2023-09-06)
 
 
