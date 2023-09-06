@@ -54,13 +54,14 @@ export async function asyncSpawn(
 
   let output = '';
   let error = '';
-  process.stdout.on('data', (chunk: Buffer) => {
-    output += chunk;
-    console.log(chunk.toString());
-  });
-  process.stderr.on('data', (chunk: Buffer) => {
-    error += chunk;
-  });
+  if (childProcess.stdout && childProcess.stderr) {
+    for await (const chunk of childProcess.stdout) {
+      output += chunk;
+    }
+    for await (const chunk of childProcess.stderr) {
+      error += chunk;
+    }
+  }
   const code: number = await new Promise((resolve, reject) => {
     childProcess.on('close', resolve);
     childProcess.on('error', reject);
