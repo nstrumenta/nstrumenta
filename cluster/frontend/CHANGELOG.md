@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.3](https://github.com/nstrumenta/nstrumenta/compare/v3.1.6...v1.7.3) (2023-09-06)
+
+
+### Features
+
+* **data-detail:** adds json spacing ([589e9a0](https://github.com/nstrumenta/nstrumenta/commit/589e9a0e8f0914e4a9d50cd54724e5d134f2fd13))
+* **run-module:** explicit command-args ([#175](https://github.com/nstrumenta/nstrumenta/issues/175)) ([9cd235b](https://github.com/nstrumenta/nstrumenta/commit/9cd235b8e1af1150bd8b32afa303afbdc342cb07))
+* **storage:** adds delete trigger for storage objects ([9b213ca](https://github.com/nstrumenta/nstrumenta/commit/9b213ca5c74a1ea3c8a73e796bd4e0e756512989))
+* **tests:** exit on spawn error ([3aa0738](https://github.com/nstrumenta/nstrumenta/commit/3aa0738cfec4f3f00b0a10ed8f976e9348d6eaa6))
+
 ### [1.7.2](https://github.com/nstrumenta/nstrumenta/compare/v3.1.4...v1.7.2) (2023-08-02)
 
 ### [1.7.1](https://github.com/nstrumenta/nstrumenta/compare/v3.1.2...v1.7.1) (2023-08-01)
