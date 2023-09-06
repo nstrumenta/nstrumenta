@@ -118,7 +118,7 @@ esac
     console.log(`nst module cloud-run ${moduleName} -- ${uploadFileName}`);
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} -- create ${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} --command-args create ${uploadFileName}`.split(' '),
       { cwd: testFolderBase, quiet: true }
     );
 
@@ -131,7 +131,7 @@ esac
 
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} -- delete ${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} --command-args delete ${uploadFileName}`.split(' '),
       { cwd: testFolderBase, quiet: true }
     );
 
