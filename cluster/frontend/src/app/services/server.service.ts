@@ -13,6 +13,7 @@ export type ServerTasks =
   | 'deleteDeployedCloudAgent'
   | 'createServiceAccount'
   | 'deployStorageTriggerFunctions'
+  | 'cloudRun'
   | 'buildFromGithub'
   | 'buildFromFolder'
   | 'gitToken';
@@ -43,7 +44,8 @@ export class ServerService {
     task: ServerTasks,
     projectId: string,
     payload?: any,
-    progress?: (message: string) => void
+    progress?: (message: string) => void,
+    data?: any
   ): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       if (this.uid !== '') {
@@ -54,6 +56,7 @@ export class ServerService {
           lastModified: Date.now(),
           task: task,
           uid: this.uid,
+          data: data ?? {},
           payload: payload ? payload : {},
           version: environment.version,
         };

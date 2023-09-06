@@ -3,7 +3,13 @@
     <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
   </mat-form-field>
   <ng-container *ngIf="selection.hasValue()">
-    {{selection.selected.length}} agents selected:
+    {{selection.selected.length}} modules selected:
+    <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
+      <mat-icon color="accent">delete</mat-icon>
+    </button>
+    <button mat-icon-button matTooltip="Download Selected" (click)="downloadSelected()">
+      <mat-icon color="accent">cloud_download</mat-icon>
+    </button>
   </ng-container>
 </div>
 
