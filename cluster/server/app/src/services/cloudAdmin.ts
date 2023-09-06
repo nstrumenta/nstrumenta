@@ -1,11 +1,10 @@
 import { Firestore } from '@google-cloud/firestore'
+import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { mkdir, readFile, readdir, rm, stat, writeFile } from 'fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'fs/promises'
 import { v4 as uuid } from 'uuid'
 import { bucketName, serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
-import { Storage } from '@google-cloud/storage'
-import path from 'path'
 
 const adminServiceAccount = serviceAccount
 const GCP_PROJECT = adminServiceAccount.project_id
