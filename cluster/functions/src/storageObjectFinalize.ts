@@ -1,6 +1,5 @@
-import { CloudFunctionsContext } from '@google-cloud/functions-framework';
 import { Firestore } from '@google-cloud/firestore';
-import { File } from '@google-cloud/storage';
+import { CloudFunctionsContext } from '@google-cloud/functions-framework';
 import path from 'path';
 
 const serviceAccount = JSON.parse(atob(process.env.SERVICE_ACCOUNT_CREDENTIALS!));
@@ -13,7 +12,10 @@ const firestore = new Firestore({
   },
 });
 
-export const storageObjectFinalize = async (file: File, context: CloudFunctionsContext) => {
+export const storageObjectFinalize = async (
+  file: { name: string },
+  context: CloudFunctionsContext
+) => {
   if (context.eventType === 'google.storage.object.finalize') {
     await firestore.doc(file.name).set({
       name: path.basename(file.name),
