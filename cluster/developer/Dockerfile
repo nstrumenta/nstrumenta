@@ -4,6 +4,9 @@ FROM node:20.3-bullseye-slim
 RUN apt-get -y update; apt-get -y install curl
 RUN apt-get install -y gnupg
 
+# git
+RUN apt-get install git -y
+
 # install gcloud
 WORKDIR /tmp
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
@@ -13,7 +16,6 @@ RUN apt-get install jq -y
 
 # fuse (for gcsfuse)
 RUN apt-get install fuse -y
-
 
 # install go
 RUN curl -OL https://go.dev/dl/go1.20.5.linux-amd64.tar.gz
@@ -25,7 +27,7 @@ ENV GOPATH="/usr/local/go"
 RUN go install github.com/googlecloudplatform/gcsfuse@v1.0.1
 
 #install ffmpeg
-RUN apt-get install -y ffmpeg
+RUN apt-get install ffmpeg -y
 
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/
