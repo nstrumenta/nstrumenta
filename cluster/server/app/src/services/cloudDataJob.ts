@@ -98,7 +98,8 @@ export const createCloudDataJobService = ({
       'jobs',
       'create',
       workflowId,
-      '--memory=4Gi',
+      '--cpu=2',
+      '--memory=8Gi',
       `--image=${imageId}`,
       '--region=us-west1',
       `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
