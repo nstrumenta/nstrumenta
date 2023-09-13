@@ -22,7 +22,7 @@ ENV PATH="$PATH:/usr/local/go/bin"
 ENV GOPATH="/usr/local/go"
 
 #install gcsfuse
-RUN go install github.com/googlecloudplatform/gcsfuse@master
+RUN go install github.com/googlecloudplatform/gcsfuse@v1.0.1
 
 #install docker
 RUN install -m 0755 -d /etc/apt/keyrings
