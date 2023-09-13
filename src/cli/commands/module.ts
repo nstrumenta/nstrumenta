@@ -21,15 +21,16 @@ const blue = (text: string) => {
 export const Run = async function (
   name: string,
   {
-    version,
+    moduleVersion,
     commandArgs,
   }: {
-    version?: string;
+    moduleVersion?: string;
     commandArgs?: string[];
   }
 ): Promise<void> {
   let module: ModuleExtended;
   const args: string[] = commandArgs ?? [];
+  const version = moduleVersion;
 
   console.log('Running module', name, 'version', version ?? 'not specified, using latest');
 
@@ -146,16 +147,17 @@ export const Host = async function (
 export const CloudRun = async function (
   moduleName: string,
   {
-    version,
+    moduleVersion,
     commandArgs,
   }: {
-    version?: string;
+    moduleVersion?: string;
     commandArgs?: string[];
   }
 ): Promise<void> {
   console.log('Finding ', moduleName);
   let modules: string[] = [];
   const args: string[] = commandArgs ?? [];
+  const version = moduleVersion;
 
   try {
     const apiKey = resolveApiKey();

@@ -88,12 +88,8 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
 
   // check for gcsfuse
   await asyncSpawn('gcsfuse', ['-v'], { quiet: true });
-  const keyfilePath = `${projectId}/keyfile.json`;
-  await rm(keyfilePath);
-  await rm(`${projectId}/.gitignore`);
   await asyncSpawn('fusermount', ['-u', `${projectId}/data`], { quiet: true });
-  await rmdir(`${projectId}/data`);
-  await rmdir(`${projectId}`);
+  await rm(`${projectId}`, { recursive: true, force: true });
 };
 
 export const Upload = async (
