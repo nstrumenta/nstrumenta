@@ -61,7 +61,13 @@ export class DataDetailComponent implements OnInit, OnDestroy {
               this.isVideo = false;
             }
             if (doc.name.toLowerCase().endsWith('.json')) {
-              this.contents = JSON.stringify(await (await fetch(url)).json(), undefined, 4);
+              if (doc.size < 1000000) {
+                this.contents = JSON.stringify(await (await fetch(url)).json(), undefined, 4);
+              } else if (doc.size < 100_000_000) {
+                this.contents = await (await fetch(url)).text();
+              } else {
+                this.contents = 'large file, no preview available';
+              }
             }
             if (
               doc.name.toLowerCase().endsWith('.txt') ||
