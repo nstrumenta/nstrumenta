@@ -24,16 +24,8 @@ ENV GOPATH="/usr/local/go"
 #install gcsfuse
 RUN go install github.com/googlecloudplatform/gcsfuse@v1.0.1
 
-#install docker
-RUN install -m 0755 -d /etc/apt/keyrings
-RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-RUN chmod a+r /etc/apt/keyrings/docker.gpg
-RUN echo \
-  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
-  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
-  tee /etc/apt/sources.list.d/docker.list > /dev/null
-RUN apt-get update
-RUN apt-get install -y docker-ce=5:24.0.0-1~debian.11~bullseye  docker-ce-cli=5:24.0.0-1~debian.11~bullseye containerd.io docker-buildx-plugin docker-compose-plugin
+#install ffmpeg
+RUN apt-get install -y ffmpeg
 
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/

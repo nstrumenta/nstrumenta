@@ -18,7 +18,7 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
-  moduleActions: { name: string; url?: string }[];
+  moduleActions: Set<{ name: string; url?: string }>;
   projectId: string;
   dataPath: string;
   filterParam: string;
@@ -38,7 +38,7 @@ export class DataTableComponent implements OnInit {
       this.projectId = paramMap.get('projectId');
       this.dataPath = '/projects/' + this.projectId + '/data';
       //gather modules for actions
-      this.moduleActions = [];
+      this.moduleActions = new Set();
       this.afs
         .collection<any>('/projects/' + this.projectId + '/modules')
         .snapshotChanges()
@@ -48,9 +48,9 @@ export class DataTableComponent implements OnInit {
             console.log(module);
             const { name, url } = module;
             if (url != undefined) {
-              this.moduleActions.push({ name, url });
+              this.moduleActions.add({ name, url });
             } else {
-              this.moduleActions.push({ name });
+              this.moduleActions.add({ name });
             }
           });
         });
