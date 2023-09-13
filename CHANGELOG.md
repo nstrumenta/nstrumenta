@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.8](https://github.com/nstrumenta/nstrumenta/compare/v3.1.7...v3.1.8) (2023-09-13)
+
+
+### Features
+
+* **cloud-run:** adds ffmpeg to data-job-runner ([b24b6f3](https://github.com/nstrumenta/nstrumenta/commit/b24b6f3e0c4515ce9a188f25f1f6f589155db832))
+* **cloudData:** increases cloudDataJob memory size ([9f578a6](https://github.com/nstrumenta/nstrumenta/commit/9f578a6ba21fcd20759cb4327c91626ac109efc5))
+* **data-detail:** prevents parsing large json ([a1e10b8](https://github.com/nstrumenta/nstrumenta/commit/a1e10b8a0936517268a700eabf8878d869062eea))
+
+
+### Bug Fixes
+
+* **data-job-build:** pins version of go in data-job-runner ([c3bd165](https://github.com/nstrumenta/nstrumenta/commit/c3bd1655c939426134399672ea1ff61680b83a26))
+* **developer:** pins gcsfuse version ([1be1a4e](https://github.com/nstrumenta/nstrumenta/commit/1be1a4ebddc075d301dd5674ff3d9a1a4884f949))
+* **module:** properly cleans up data mount, fixes moduleVersion for run module ([a3239ca](https://github.com/nstrumenta/nstrumenta/commit/a3239ca925509767757ba5657f3a60191fcf1ed3))
+
 ### [3.1.7](https://github.com/nstrumenta/nstrumenta/compare/v3.1.6...v3.1.7) (2023-09-06)
 
 
