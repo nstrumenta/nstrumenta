@@ -18,7 +18,7 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
-  moduleActions: Set<{ name: string; url?: string }>;
+  moduleActions: Map<string, { name: string, url?: string }>;
   projectId: string;
   dataPath: string;
   filterParam: string;
@@ -31,14 +31,14 @@ export class DataTableComponent implements OnInit {
     private afs: AngularFirestore,
     public dialog: MatDialog,
     private serverService: ServerService
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.route.paramMap.subscribe((paramMap) => {
       this.projectId = paramMap.get('projectId');
       this.dataPath = '/projects/' + this.projectId + '/data';
       //gather modules for actions
-      this.moduleActions = new Set();
+      this.moduleActions = new Map();
       this.afs
         .collection<any>('/projects/' + this.projectId + '/modules')
         .snapshotChanges()
@@ -48,9 +48,9 @@ export class DataTableComponent implements OnInit {
             console.log(module);
             const { name, url } = module;
             if (url != undefined) {
-              this.moduleActions.add({ name, url });
+              this.moduleActions.set(name, { name, url });
             } else {
-              this.moduleActions.add({ name });
+              this.moduleActions.set(name, { name, });
             }
           });
         });
