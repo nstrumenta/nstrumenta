@@ -1,4 +1,4 @@
-FROM node:20.3-bullseye-slim
+FROM node:20.8-bullseye-slim
 
 # curl
 RUN apt-get -y update; apt-get -y install curl
