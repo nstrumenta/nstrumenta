@@ -1,0 +1,28 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  	match /users/{user} {
+      allow read: if request.auth.uid == user
+      allow create: if exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project))
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project)).data.admin == true
+    	
+      match /{document=**} {
+      	allow read, write: if true;
+    	}    
+    }
+    match /keys/{key} {
+    	allow read, write, delete: if false;
+    }
+    match /projects/{project} {
+      allow read: if resource.data.members[request.auth.uid] != null
+      allow create: if exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project))
+      allow update: if resource.data.members[request.auth.uid] == "admin" || resource.data.members[request.auth.uid] == "owner"
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project)).data.admin == true
+    	
+      match /{document=**} {
+      	allow read, write: if true;
+    	}   
+    }
+  }
+}
