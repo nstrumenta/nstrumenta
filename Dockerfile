@@ -156,22 +156,23 @@ RUN apt-get install python3 python3-pip -y
 # Add gcloud to PATH
 ENV PATH=/usr/local/src/google-cloud-sdk/bin:$PATH
 
+# https://cloud.google.com/sdk/docs/install#linux for latest version and sha
 # Install gcloud + components
 # NOTE 1: the __pycache__ cleanup is done to reduce image size (if needed, they will be regenerated at runtime)
 # NOTE 2: the .backup directory is also removed to significantly reduce image size
 RUN set -eux; \
-    GCLOUD_VERSION=413.0.0; \
+    GCLOUD_VERSION=451.0.1; \
     dpkgArch="$(dpkg --print-architecture)"; \
     	dir=/usr/local/src; \
     	url=; \
     	case "${dpkgArch##*-}" in \
     		'amd64') \
     			url="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-$GCLOUD_VERSION-linux-x86_64.tar.gz"; \
-    			sha256='f5e6e3f08371287e00ae38f804cb02579869f70d88e6bb9dfc1f339d3261e04e'; \
+    			sha256='8446f6d837168d7d66dd192c2221c1081c16a2b93cb54642a6bfb7078cd3dd53'; \
     			;; \
     		'arm64') \
     			url="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-$GCLOUD_VERSION-linux-arm.tar.gz"; \
-    			sha256='3bd79dcceac169b21d2379380116db69312d80ac2e910288e11c64fb20835c5b'; \
+    			sha256='e472eec1f755b65b4805bfe465e54a37cc3b78d261b81fa9c92fe268da56d72e'; \
     			;; \
     		*) echo >&2 "error: unsupported architecture '$dpkgArch' (likely packaging update needed)"; exit 1 ;; \
     	esac; \
