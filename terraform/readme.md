@@ -1,4 +1,6 @@
+# terraform for nstrumenta project setup
 use terraform to create new client deployment
+based on https://firebase.google.com/docs/projects/terraform/get-started
 
 
 ### gcloud auth with service account

@@ -7,17 +7,17 @@ variable "org_id" {
 }
 
 variable "location_id" {
-  type = string
+  type    = string
   default = "us-west1"
 }
 
 
 # Creates a new Google Cloud project.
-resource "google_project" "fs" {  # fs = Firestore + Storage
-  provider   = google-beta.no_user_project_override
-  name       = "${terraform.workspace}"
-  project_id = "${terraform.workspace}"
-  org_id = var.org_id
+resource "google_project" "fs" { # fs = Firestore + Storage
+  provider        = google-beta.no_user_project_override
+  name            = terraform.workspace
+  project_id      = terraform.workspace
+  org_id          = var.org_id
   billing_account = var.billing_account
 
   # Required for the project to display in a list of Firebase projects.
@@ -56,11 +56,11 @@ resource "google_firebase_project" "fs" {
 
 # Provisions the Firestore database instance.
 resource "google_firestore_database" "firestore-fs" {
-  provider         = google-beta
-  project          = google_project.fs.project_id
-  name             = "(default)"
+  provider = google-beta
+  project  = google_project.fs.project_id
+  name     = "(default)"
   # See available locations: https://firebase.google.com/docs/projects/locations#default-cloud-location
-  location_id      = var.location_id
+  location_id = var.location_id
   # "FIRESTORE_NATIVE" is required to use Firestore with Firebase SDKs, authentication, and Firebase Security Rules.
   type             = "FIRESTORE_NATIVE"
   concurrency_mode = "OPTIMISTIC"
@@ -79,7 +79,7 @@ resource "google_firebaserules_ruleset" "firestore-fs" {
     files {
       # Write security rules in a local file named "firestore.rules".
       # Learn more: https://firebase.google.com/docs/firestore/security/get-started
-      name = "firestore.rules"
+      name    = "firestore.rules"
       content = file("firestore.rules")
     }
   }
@@ -107,11 +107,11 @@ resource "google_firebaserules_release" "firestore-fs" {
 
 # Provisions the default Cloud Storage bucket for the project via Google App Engine.
 resource "google_app_engine_application" "default-bucket-fs" {
-  provider    = google-beta
-  project     = google_project.fs.project_id
+  provider = google-beta
+  project  = google_project.fs.project_id
   # See available locations: https://firebase.google.com/docs/projects/locations#default-cloud-location
   # This will set the location for the default Storage bucket and the App Engine App.
-  location_id = var.location_id  # Must be in the same location as Firestore (above)
+  location_id = var.location_id # Must be in the same location as Firestore (above)
 
   # Wait for Firestore to be provisioned first.
   # Otherwise, the Firestore instance will be provisioned in Datastore mode (unusable by Firebase).
@@ -152,4 +152,17 @@ resource "google_firebaserules_release" "default-bucket-fs" {
   name         = "firebase.storage/${google_app_engine_application.default-bucket-fs.default_bucket}"
   ruleset_name = "projects/${google_project.fs.project_id}/rulesets/${google_firebaserules_ruleset.default-bucket-fs.name}"
   project      = google_project.fs.project_id
+}
+
+# web app
+resource "google_firebase_web_app" "basic" {
+  provider     = google-beta
+  display_name = "Frontend"
+  project      = google_project.fs.project_id
+}
+
+data "google_firebase_web_app_config" "basic" {
+  provider   = google-beta
+  web_app_id = google_firebase_web_app.basic.app_id
+  project    = google_project.fs.project_id
 }
