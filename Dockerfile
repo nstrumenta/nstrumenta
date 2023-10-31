@@ -7,6 +7,9 @@ RUN apt-get install -y gnupg
 # git
 RUN apt-get install git -y
 
+#tmux
+RUN  apt-get install -y tmux
+
 # jq
 RUN apt-get install jq -y
 
@@ -205,3 +208,14 @@ RUN apt-get install gcsfuse -y
 # mcap cli
 RUN wget https://github.com/foxglove/mcap/releases/download/releases%2Fmcap-cli%2Fv0.0.34/mcap-linux-amd64 -O /usr/local/bin/mcap
 RUN chmod +x /usr/local/bin/mcap
+
+#install docker
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+RUN apt-get install -y docker-ce=5:24.0.0-1~debian.11~bullseye  docker-ce-cli=5:24.0.0-1~debian.11~bullseye containerd.io docker-buildx-plugin docker-compose-plugin
