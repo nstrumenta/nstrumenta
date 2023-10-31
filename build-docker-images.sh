@@ -6,7 +6,7 @@ if [ -n "$BUILDX_ARGS" ]; then
     echo "building with BUILDX_ARGS $BUILDX_ARGS"
 fi
 
-exit
+docker buildx create --use
 
 # base
 docker buildx build \
