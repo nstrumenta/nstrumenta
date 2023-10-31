@@ -6,7 +6,13 @@ if [ -n "$BUILDX_ARGS" ]; then
     echo "building with BUILDX_ARGS $BUILDX_ARGS"
 fi
 
-docker buildx create --use
+BUILDX_CONTAINER_NAME=buildx-$PACKAGE_VERSION
+if $(docker buildx inspect $BUILDX_CONTAINER_NAME); then
+    echo "using existing $BUILDX_CONTAINER_NAME"
+else
+    echo "creating $BUILDX_CONTAINER_NAME"
+    docker buildx create --name $BUILDX_CONTAINER_NAME --platform linux/arm64,linux/amd64 --driver docker-container --use
+fi
 
 # base
 docker buildx build \
