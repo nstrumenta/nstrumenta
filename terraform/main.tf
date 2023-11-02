@@ -33,6 +33,8 @@ resource "google_project_service" "fs" {
   for_each = toset([
     "serviceusage.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "run.googleapis.com",
+    "secretmanager.googleapis.com",
     "firebaserules.googleapis.com",
     "firebasestorage.googleapis.com",
     "storage.googleapis.com",
@@ -165,4 +167,68 @@ data "google_firebase_web_app_config" "basic" {
   provider   = google-beta
   web_app_id = google_firebase_web_app.basic.app_id
   project    = google_project.fs.project_id
+}
+
+data "google_app_engine_default_service_account" "default" {
+  project = google_project.fs.project_id
+}
+
+
+resource "google_service_account_key" "server" {
+  service_account_id = data.google_app_engine_default_service_account.default.id
+}
+
+resource "google_secret_manager_secret_iam_member" "member" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.server_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# secret so we can reference the key when starting the cloud service
+resource "google_secret_manager_secret" "server_key" {
+  secret_id = "GCLOUD_SERVICE_KEY"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+# secret versions hold the actual secret
+resource "google_secret_manager_secret_version" "server_key" {
+  provider = google-beta
+
+  secret      = google_secret_manager_secret.server_key.id
+  secret_data = base64decode(google_service_account_key.server.private_key)
+}
+
+# server in service
+resource "google_cloud_run_v2_service" "default" {
+  name     = "cloudrun-service"
+  location = var.location_id
+  project  = google_project.fs.project_id
+
+  template {
+    service_account = data.google_app_engine_default_service_account.default.email
+    containers {
+      ports {
+        container_port = 5999
+      }
+      image = "nstrumenta/server:3.1.8-test2"
+
+      env {
+        name = "GCLOUD_SERVICE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = "GCLOUD_SERVICE_KEY"
+            version = "latest"
+          }
+        }
+      }
+    }
+    scaling {
+      min_instance_count = 1
+      max_instance_count = 1
+    }
+  }
 }
