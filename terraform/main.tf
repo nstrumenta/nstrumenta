@@ -39,7 +39,8 @@ resource "google_project_service" "fs" {
     "firebasestorage.googleapis.com",
     "storage.googleapis.com",
     "firestore.googleapis.com",
-    "firebase.googleapis.com"
+    "firebase.googleapis.com",
+    "dns.googleapis.com"
   ])
   service = each.key
 
@@ -108,7 +109,7 @@ resource "google_firebaserules_release" "firestore-fs" {
 #### Set up default Cloud Storage default bucket after Firestore ####
 
 # Provisions the default Cloud Storage bucket for the project via Google App Engine.
-resource "google_app_engine_application" "default-bucket-fs" {
+resource "google_app_engine_application" "fb_app" {
   provider = google-beta
   project  = google_project.fs.project_id
   # See available locations: https://firebase.google.com/docs/projects/locations#default-cloud-location
@@ -123,14 +124,14 @@ resource "google_app_engine_application" "default-bucket-fs" {
 }
 
 # Makes the default Storage bucket accessible for Firebase SDKs, authentication, and Firebase Security Rules.
-resource "google_firebase_storage_bucket" "default-bucket-fs" {
+resource "google_firebase_storage_bucket" "fb_app" {
   provider  = google-beta
   project   = google_project.fs.project_id
-  bucket_id = google_app_engine_application.default-bucket-fs.default_bucket
+  bucket_id = google_app_engine_application.fb_app.default_bucket
 }
 
 # Creates a ruleset of Cloud Storage Security Rules from a local file.
-resource "google_firebaserules_ruleset" "default-bucket-fs" {
+resource "google_firebaserules_ruleset" "fb_app" {
   provider = google-beta
   project  = google_project.fs.project_id
   source {
@@ -149,28 +150,56 @@ resource "google_firebaserules_ruleset" "default-bucket-fs" {
 }
 
 # Releases the ruleset to the default Storage bucket.
-resource "google_firebaserules_release" "default-bucket-fs" {
+resource "google_firebaserules_release" "fb_app" {
   provider     = google-beta
-  name         = "firebase.storage/${google_app_engine_application.default-bucket-fs.default_bucket}"
-  ruleset_name = "projects/${google_project.fs.project_id}/rulesets/${google_firebaserules_ruleset.default-bucket-fs.name}"
+  name         = "firebase.storage/${google_app_engine_application.fb_app.default_bucket}"
+  ruleset_name = "projects/${google_project.fs.project_id}/rulesets/${google_firebaserules_ruleset.fb_app.name}"
   project      = google_project.fs.project_id
 }
 
 # web app
-resource "google_firebase_web_app" "basic" {
+resource "google_firebase_web_app" "web_app" {
+  depends_on   = [google_app_engine_application.fb_app]
   provider     = google-beta
   display_name = "Frontend"
   project      = google_project.fs.project_id
 }
 
-data "google_firebase_web_app_config" "basic" {
+data "google_firebase_web_app_config" "web_app" {
   provider   = google-beta
-  web_app_id = google_firebase_web_app.basic.app_id
+  web_app_id = google_firebase_web_app.web_app.app_id
   project    = google_project.fs.project_id
 }
 
+resource "google_firebase_hosting_site" "web_app" {
+  provider = google-beta
+  project  = google_project.fs.project_id
+  site_id  = "${terraform.workspace}-frontend"
+  app_id   = google_firebase_web_app.web_app.app_id
+}
+
 data "google_app_engine_default_service_account" "default" {
-  project = google_project.fs.project_id
+  depends_on = [google_app_engine_application.fb_app]
+  project    = google_project.fs.project_id
+}
+
+# Create a Cloud DNS managed zone
+resource "google_dns_managed_zone" "managed_zone" {
+  project     = google_project.fs.project_id
+  name        = terraform.workspace
+  dns_name    = "${terraform.workspace}.nstrumenta.com."
+  description = "Managed DNS Zone for Firebase"
+}
+
+# Create a DNS record set for Firebase Hosting
+resource "google_dns_record_set" "firebase_dns" {
+  depends_on   = [google_firebase_web_app.web_app]
+  project      = google_project.fs.project_id
+  managed_zone = google_dns_managed_zone.managed_zone.name
+  name         = "www.${terraform.workspace}.nstrumenta.com."
+  type         = "CNAME"
+  ttl          = 300
+  rrdatas      = ["${replace(google_firebase_hosting_site.web_app.default_url, "https://", "")}."]
 }
 
 

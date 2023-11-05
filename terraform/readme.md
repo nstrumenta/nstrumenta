@@ -3,15 +3,15 @@ use terraform to create new client deployment
 based on https://firebase.google.com/docs/projects/terraform/get-started
 
 
-### gcloud auth with service account
-```
-gcloud auth activate-service-account --key-file [path to key-file]
-```
-
-
 ### gcloud auth with user account
 ```
 gcloud auth application-default login
+```
+
+
+### gcloud auth with service account WIP
+```
+gcloud auth activate-service-account --key-file [path to key-file]
 ```
 
 

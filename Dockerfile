@@ -192,7 +192,7 @@ RUN set -eux; \
 
 
 #install terraform
-RUN git clone --branch v1.6.2 --depth 1 git@github.com:hashicorp/terraform.git ; \
+RUN git clone --branch v1.6.2 --depth 1 https://github.com/hashicorp/terraform.git ; \
 	cd terraform ; \
 	go install ; \
 	cd ~
