@@ -183,6 +183,20 @@ data "google_app_engine_default_service_account" "default" {
   project    = google_project.fs.project_id
 }
 
+resource "local_file" "firebase_web_app_config_json" {
+  filename = "firebaseConfig.json"
+
+  content = jsonencode({
+    appId             = google_firebase_web_app.web_app.app_id
+    apiKey            = data.google_firebase_web_app_config.web_app.api_key
+    authDomain        = data.google_firebase_web_app_config.web_app.auth_domain
+    databaseURL       = lookup(data.google_firebase_web_app_config.web_app, "database_url", "")
+    storageBucket     = lookup(data.google_firebase_web_app_config.web_app, "storage_bucket", "")
+    messagingSenderId = lookup(data.google_firebase_web_app_config.web_app, "messaging_sender_id", "")
+    measurementId     = lookup(data.google_firebase_web_app_config.web_app, "measurement_id", "")
+  })
+}
+
 # Create a Cloud DNS managed zone
 resource "google_dns_managed_zone" "managed_zone" {
   project     = google_project.fs.project_id

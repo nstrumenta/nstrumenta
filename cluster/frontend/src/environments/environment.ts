@@ -1,4 +1,4 @@
-import { firebaseConfig } from "../../../credentials/firebaseConfig"
+const firebaseConfig = require("../../../../terraform/firebaseConfig.json")
 
 export const environment = {
   production: false,
