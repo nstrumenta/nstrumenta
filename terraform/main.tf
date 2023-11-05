@@ -187,6 +187,7 @@ resource "local_file" "firebase_web_app_config_json" {
   filename = "firebaseConfig.json"
 
   content = jsonencode({
+    projectId         = google_project.fs.project_id
     appId             = google_firebase_web_app.web_app.app_id
     apiKey            = data.google_firebase_web_app_config.web_app.api_key
     authDomain        = data.google_firebase_web_app_config.web_app.auth_domain
