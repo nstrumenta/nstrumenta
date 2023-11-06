@@ -16,6 +16,13 @@ gcloud auth activate-service-account --key-file [path to key-file]
 
 
 ## terraform 
+
+### terraform init
+```
+terraform init
+```
+
+
 ### set workspace
 ```
 terraform workspace new [project name]
