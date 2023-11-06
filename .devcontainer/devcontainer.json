@@ -2,5 +2,13 @@
   "build": {
     "dockerfile": "../Dockerfile"
   },
-  "runArgs": ["--privileged"]
+  "customizations": {
+    // Add the IDs of extensions you want installed when the container is created.
+    "extensions": [
+      "hashicorp.terraform"
+    ]
+  },
+  "runArgs": [
+    "--privileged"
+  ]
 }

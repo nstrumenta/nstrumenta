@@ -7,6 +7,9 @@ RUN apt-get install -y gnupg
 # git
 RUN apt-get install git -y
 
+#tmux
+RUN  apt-get install -y tmux
+
 # jq
 RUN apt-get install jq -y
 
@@ -156,22 +159,23 @@ RUN apt-get install python3 python3-pip -y
 # Add gcloud to PATH
 ENV PATH=/usr/local/src/google-cloud-sdk/bin:$PATH
 
+# https://cloud.google.com/sdk/docs/install#linux for latest version and sha
 # Install gcloud + components
 # NOTE 1: the __pycache__ cleanup is done to reduce image size (if needed, they will be regenerated at runtime)
 # NOTE 2: the .backup directory is also removed to significantly reduce image size
 RUN set -eux; \
-    GCLOUD_VERSION=413.0.0; \
+    GCLOUD_VERSION=451.0.1; \
     dpkgArch="$(dpkg --print-architecture)"; \
     	dir=/usr/local/src; \
     	url=; \
     	case "${dpkgArch##*-}" in \
     		'amd64') \
     			url="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-$GCLOUD_VERSION-linux-x86_64.tar.gz"; \
-    			sha256='f5e6e3f08371287e00ae38f804cb02579869f70d88e6bb9dfc1f339d3261e04e'; \
+    			sha256='8446f6d837168d7d66dd192c2221c1081c16a2b93cb54642a6bfb7078cd3dd53'; \
     			;; \
     		'arm64') \
     			url="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-$GCLOUD_VERSION-linux-arm.tar.gz"; \
-    			sha256='3bd79dcceac169b21d2379380116db69312d80ac2e910288e11c64fb20835c5b'; \
+    			sha256='e472eec1f755b65b4805bfe465e54a37cc3b78d261b81fa9c92fe268da56d72e'; \
     			;; \
     		*) echo >&2 "error: unsupported architecture '$dpkgArch' (likely packaging update needed)"; exit 1 ;; \
     	esac; \
@@ -204,3 +208,14 @@ RUN apt-get install gcsfuse -y
 # mcap cli
 RUN wget https://github.com/foxglove/mcap/releases/download/releases%2Fmcap-cli%2Fv0.0.34/mcap-linux-amd64 -O /usr/local/bin/mcap
 RUN chmod +x /usr/local/bin/mcap
+
+#install docker
+RUN install -m 0755 -d /etc/apt/keyrings
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+RUN echo \
+    "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+    tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+RUN apt-get install -y docker-ce=5:24.0.0-1~debian.11~bullseye  docker-ce-cli=5:24.0.0-1~debian.11~bullseye containerd.io docker-buildx-plugin docker-compose-plugin
