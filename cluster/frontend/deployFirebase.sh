@@ -3,6 +3,9 @@
 # frontend % npx firebase target:apply hosting main firebase-project-id
 # ✔  Applied hosting target main to firebase-project-id
 
+#make firebase.json with site
+node makeFirebaseConfig.js
+
 # Updated: main (firebase-project-id)
 npx firebase use $FIREBASE_PROJECT_ID
 
@@ -26,3 +29,6 @@ npx firebase use $FIREBASE_PROJECT_ID
 # Hosting URL: https://firebase-project-id.web.app
 
 npx firebase deploy --only hosting  
+
+# clean up 
+rm firebase.json
