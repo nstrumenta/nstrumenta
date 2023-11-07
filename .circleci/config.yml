@@ -23,7 +23,6 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/frontend/dist'
-            
   build-images:
     machine: true
     working_directory: ~/project
@@ -35,7 +34,6 @@ jobs:
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run: ./build-docker-images.sh
-
   build-functions:
     docker:
       - image: circleci/node:16.13.1
@@ -58,7 +56,7 @@ jobs:
           key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/functions/dist'
-    run-tests:
+  run-tests:
     resource_class: large
     machine: true
     working_directory: ~/project/cluster/integration-tests/
