@@ -23,6 +23,7 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/frontend/dist'
+            
   build-images:
     machine: true
     working_directory: ~/project
