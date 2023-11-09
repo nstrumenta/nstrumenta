@@ -21,23 +21,23 @@ docker buildx build \
     --tag nstrumenta/base:$PACKAGE_VERSION \
     .
 
-# agent
-docker buildx build \
-    $BUILDX_ARGS \
-    --platform linux/arm64,linux/amd64 \
-    --tag nstrumenta/agent:$PACKAGE_VERSION \
-    -f ./cluster/agent/Dockerfile \
-    .
+# # agent
+# docker buildx build \
+#     $BUILDX_ARGS \
+#     --platform linux/arm64,linux/amd64 \
+#     --tag nstrumenta/agent:$PACKAGE_VERSION \
+#     -f ./cluster/agent/Dockerfile \
+#     .
 
-# server
-pushd cluster/server
-docker buildx build \
-    $BUILDX_ARGS \
-    --platform linux/arm64,linux/amd64 \
-    --build-arg BASE_TAG=$PACKAGE_VERSION \
-    --tag nstrumenta/server:$PACKAGE_VERSION \
-    .
-popd
+# # server
+# pushd cluster/server
+# docker buildx build \
+#     $BUILDX_ARGS \
+#     --platform linux/arm64,linux/amd64 \
+#     --build-arg BASE_TAG=$PACKAGE_VERSION \
+#     --tag nstrumenta/server:$PACKAGE_VERSION \
+#     .
+# popd
 
 # data-job-runner
 docker buildx build \
@@ -48,11 +48,11 @@ docker buildx build \
     -f ./cluster/data-job-runner/Dockerfile \
     .
 
-# developer
-docker buildx build \
-    $BUILDX_ARGS \
-    --platform linux/arm64,linux/amd64 \
-    --build-arg BASE_TAG=$PACKAGE_VERSION \
-    --tag nstrumenta/developer:$PACKAGE_VERSION \
-    -f ./cluster/developer/Dockerfile \
-    .
+# # developer
+# docker buildx build \
+#     $BUILDX_ARGS \
+#     --platform linux/arm64,linux/amd64 \
+#     --build-arg BASE_TAG=$PACKAGE_VERSION \
+#     --tag nstrumenta/developer:$PACKAGE_VERSION \
+#     -f ./cluster/developer/Dockerfile \
+#     .
