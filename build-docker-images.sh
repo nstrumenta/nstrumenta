@@ -1,7 +1,15 @@
-#!/bin/bash
+#!/bin/bash -x
 PACKAGE_VERSION=$(cat package.json | jq -r '.version')
 echo "package version $PACKAGE_VERSION"
 
+
+# login to docker
+if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+    echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+fi
+
+
+# in ci use BUILDX_ARGS="--push --quiet"
 if [ -n "$BUILDX_ARGS" ]; then
     echo "building with BUILDX_ARGS $BUILDX_ARGS"
 fi

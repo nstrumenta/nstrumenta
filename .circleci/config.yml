@@ -29,10 +29,6 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/agent -f ./cluster/agent/Dockerfile .
-      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run: ./build-docker-images.sh
   build-functions:
     docker:
