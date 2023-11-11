@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.12](https://github.com/nstrumenta/nstrumenta/compare/v3.1.11...v3.1.12) (2023-11-11)
+
+
+### Features
+
+* **docker:** switches to bullseye-slim from alpine ([3af856e](https://github.com/nstrumenta/nstrumenta/commit/3af856e85ea056dd259088d0d20166b6ffb3e67d))
+
 ### [3.1.11](https://github.com/nstrumenta/nstrumenta/compare/v3.1.10...v3.1.11) (2023-11-11)
 
 ### [3.1.10](https://github.com/nstrumenta/nstrumenta/compare/v3.1.9...v3.1.10) (2023-11-11)
