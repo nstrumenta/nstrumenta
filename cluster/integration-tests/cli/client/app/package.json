@@ -13,7 +13,7 @@
   "author": "Tyler Bryant",
   "license": "UNLICENSED",
   "dependencies": {
-    "wait-on": "^6.0.1",
+    "wait-on": "^7.1.0",
     "zx": "^6.1.0"
   },
   "devDependencies": {

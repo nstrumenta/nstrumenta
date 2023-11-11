@@ -1,9 +1,7 @@
-FROM node:16.13.2-alpine3.15
+FROM node:20.3-bullseye-slim
 
 #install nstrumenta
 RUN npm i -g nstrumenta
-
-
 
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/

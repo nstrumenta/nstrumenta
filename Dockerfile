@@ -7,6 +7,9 @@ RUN apt-get install -y gnupg
 # git
 RUN apt-get install git -y
 
+# uuid-runtime for uuidgen
+RUN apt-get install uuid-runtime -y
+
 #tmux
 RUN  apt-get install -y tmux
 
@@ -192,8 +195,9 @@ RUN set -eux; \
 
 
 #install terraform
-RUN git clone --branch v1.6.2 --depth 1 https://github.com/hashicorp/terraform.git ; \
-	cd terraform ; \
+RUN git clone --branch v1.6.2 --depth 1 https://github.com/hashicorp/terraform.git
+
+RUN	cd terraform ; \
 	go install ; \
 	cd ~
 

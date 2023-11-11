@@ -1,4 +1,4 @@
-FROM node:16.13.2-alpine3.15
+FROM node:20.3-bullseye-slim
 
 # context is top level of nstrumenta repo
 COPY . /app/

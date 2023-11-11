@@ -1,0 +1,6 @@
+{
+	"name": "nstrumenta",
+	"image": "nstrumenta/agent",
+	"privileged": true,
+	"runArgs": ["--env-file",".nstrumenta/credentials/.env"]
+}
