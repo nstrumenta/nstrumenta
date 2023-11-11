@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.10](https://github.com/nstrumenta/nstrumenta/compare/v3.1.9...v3.1.10) (2023-11-11)
+
+
+### Bug Fixes
+
+* **ci:** fixes yml ([a9e2bdf](https://github.com/nstrumenta/nstrumenta/commit/a9e2bdf0ad396152aa5e014a35eaa06c2c8992a0))
+
 ### [3.1.9](https://github.com/nstrumenta/nstrumenta/compare/v3.1.8...v3.1.9) (2023-11-11)
 
 
