@@ -1,17 +1,17 @@
 ARG BASE_TAG=latest
 FROM nstrumenta/base:${BASE_TAG}
 
-#install ffmpeg
-RUN apt-get install -y ffmpeg
+# #install ffmpeg
+# RUN apt-get install -y ffmpeg
 
-#install nstrumenta
-RUN npm i -g nstrumenta
-# context is top level of nstrumenta repo
-COPY . /nstrumenta/
-WORKDIR /nstrumenta
-RUN npm install
-RUN npm run build:cli
-RUN npm link
+# #install nstrumenta
+# RUN npm i -g nstrumenta
+# # context is top level of nstrumenta repo
+# COPY . /nstrumenta/
+# WORKDIR /nstrumenta
+# RUN npm install
+# RUN npm run build:cli
+# RUN npm link
 
 COPY ./cluster/data-job-runner/app /app
 WORKDIR /app

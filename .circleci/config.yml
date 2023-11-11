@@ -12,7 +12,7 @@ jobs:
             - frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           command: ./use_cache_or_npm_install.sh
-      - run: echo $FIREBASE_CONFIG > ~/project/cluster/credentials/firebaseConfig.js
+      - run: echo $FIREBASE_CONFIG > ~/project/terraform/firebaseConfig.json
       - run:
           command: ./build.sh ${CIRCLE_BRANCH}
       - save_cache:
@@ -23,28 +23,13 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/frontend/dist'
-  build-agent:
+  build-and-push-images:
     machine: true
     working_directory: ~/project
     steps:
       - checkout:
           path: ~/project
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/agent -f ./cluster/agent/Dockerfile .
-      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/agent
-  build-data-job-runner:
-    machine: true
-    working_directory: ~/project
-    steps:
-      - checkout:
-          path: ~/project
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: docker build -t gcr.io/${GOOGLE_PROJECT_ID}/data-job-runner -f ./cluster/data-job-runner/Dockerfile .
-      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/data-job-runner
+      - run: ./build-docker-images.sh
   build-functions:
     docker:
       - image: circleci/node:16.13.1
@@ -67,17 +52,6 @@ jobs:
           key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/functions/dist'
-  build-server:
-    machine: true
-    working_directory: ~/project/cluster/server
-    steps:
-      - checkout:
-          path: ~/project
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: docker build --rm=false -t gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
-      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}
   run-tests:
     resource_class: large
     machine: true
@@ -97,8 +71,12 @@ workflows:
   -ci:
     jobs:
       - build-frontend
-      - build-server
-      - build-agent
-      - build-data-job-runner
       - build-functions
       - run-tests
+      - build-and-push-images
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only:
+                - main
