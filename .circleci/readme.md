@@ -4,5 +4,5 @@ https://github.com/CircleCI-Public/circleci-cli#docker
 
 from the top level dir:
 ```shell
-docker run --rm -v $(pwd):/data -w /data circleci/circleci-cli:alpine config validate /data/.circleci/config.yml --token $TOKEN
+docker run --rm -v $(pwd):/data -w /data circleci/circleci-cli:alpine config validate /data/.circleci/config.yml
 ```

@@ -23,13 +23,6 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/frontend/dist'
-  build-and-push-images:
-    machine: true
-    working_directory: ~/project
-    steps:
-      - checkout:
-          path: ~/project
-      - run: ./build-docker-images.sh
   build-functions:
     docker:
       - image: circleci/node:16.13.1
@@ -64,6 +57,14 @@ jobs:
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client
+  build-and-push-images:
+    resource_class: arm.large
+    machine: true
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: ./build-docker-images.sh
 
 workflows:
   version: 2
