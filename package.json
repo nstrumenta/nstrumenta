@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "3.1.12",
+  "version": "3.1.13",
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/nodejs/index.js",
   "types": "dist/nodejs/nodejs/index.d.ts",

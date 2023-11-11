@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.13](https://github.com/nstrumenta/nstrumenta/compare/v3.1.12...v3.1.13) (2023-11-11)
+
+
+### Features
+
+* **ci:** use arm.large resource ([c19835e](https://github.com/nstrumenta/nstrumenta/commit/c19835e3996c51c4cc1a9243f94b69e18167438b))
+
 ### [3.1.12](https://github.com/nstrumenta/nstrumenta/compare/v3.1.11...v3.1.12) (2023-11-11)
 
 
