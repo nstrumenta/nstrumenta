@@ -23,7 +23,7 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/frontend/dist'
-  build-images:
+  build-and-push-images:
     machine: true
     working_directory: ~/project
     steps:
@@ -71,6 +71,12 @@ workflows:
   -ci:
     jobs:
       - build-frontend
-      - build-images
       - build-functions
       - run-tests
+      - build-and-push-images
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only:
+                - main
