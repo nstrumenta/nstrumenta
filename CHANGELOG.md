@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.9](https://github.com/nstrumenta/nstrumenta/compare/v3.1.8...v3.1.9) (2023-11-11)
+
+
+### Features
+
+* **ci:** updates for docker hub ([#179](https://github.com/nstrumenta/nstrumenta/issues/179)) ([0d48d39](https://github.com/nstrumenta/nstrumenta/commit/0d48d39f3913a2bf6ca6b9fc44de7c795128dc28))
+* **deploy:** adds terraform for creating new project ([#178](https://github.com/nstrumenta/nstrumenta/issues/178)) ([7644863](https://github.com/nstrumenta/nstrumenta/commit/764486331c979eae0978ce95c6e0081195771503))
+
+
+### Bug Fixes
+
+* **ci:** removes failing dependency canvas ([#177](https://github.com/nstrumenta/nstrumenta/issues/177)) ([5cf7394](https://github.com/nstrumenta/nstrumenta/commit/5cf739463c5cbe486bfc7e6175b27146e5dfcbd7))
+* **data:** fixes duplicate module actions ([27a5fb3](https://github.com/nstrumenta/nstrumenta/commit/27a5fb3023c421788452e9c23cc47eb9006e45ea))
+* **version:** restores version ([3eb90ab](https://github.com/nstrumenta/nstrumenta/commit/3eb90ab937eba21620218971c21063957f5d28a6))
+
 ### [3.1.8](https://github.com/nstrumenta/nstrumenta/compare/v3.1.7...v3.1.8) (2023-09-13)
 
 
