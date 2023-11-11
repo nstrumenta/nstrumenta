@@ -73,7 +73,7 @@ workflows:
       - build-frontend
       - build-functions
       - run-tests
-      - build-and-push-images
+      - build-and-push-images:
           filters:
             tags:
               only: /^v.*/
