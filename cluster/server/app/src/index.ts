@@ -392,20 +392,6 @@ firestore
                         console.error(err)
                       }
                       break
-                    case 'createServiceAccount':
-                      cloudAdminService.createServiceAccount(
-                        doc.ref.path,
-                        projectId,
-                        data as ActionData,
-                      )
-                      break
-                    case 'deployStorageTriggerFunctions':
-                      cloudAdminService.deployStorageTriggerFunctions(
-                        doc.ref.path,
-                        projectId,
-                        data as ActionData,
-                      )
-                      break
                     case 'createApiKey':
                       apiKeyService.createApiKey(doc.ref.path, projectId)
                       break
