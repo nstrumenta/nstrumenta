@@ -2,7 +2,9 @@ import { Firestore } from '@google-cloud/firestore';
 import { Storage } from '@google-cloud/storage';
 import { CloudFunctionsContext } from '@google-cloud/functions-framework';
 
-const serviceAccount = JSON.parse(atob(process.env.SERVICE_ACCOUNT_CREDENTIALS!));
+const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY
+if (serviceKeyJson == undefined) throw new Error('GCLOUD_SERVICE_KEY undefined')
+const serviceAccount = JSON.parse(serviceKeyJson)
 
 const firestore = new Firestore({
   projectId: serviceAccount.project_id,

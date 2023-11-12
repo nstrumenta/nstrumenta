@@ -7,11 +7,7 @@
     {
       "name": "test",
       "request": "launch",
-      "runtimeArgs": ["run-script", "test-from-launch-with-dotenv"],
-      "env": {
-        "ENVFILE": "../../../../credentials/local.env",
-        "NSTRUMENTA_WS_URL": "ws://localhost:8088"
-      },
+      "runtimeArgs": ["run-script", "test-from-launch"],
       "console": "integratedTerminal",
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
@@ -20,11 +16,7 @@
     {
       "name": "test:web",
       "request": "launch",
-      "runtimeArgs": ["run-script", "test-from-launch-with-dotenv:web"],
-      "env": {
-        "ENVFILE": "../../../../credentials/local.env",
-        "NSTRUMENTA_WS_URL": "ws://localhost:8088"
-      },
+      "runtimeArgs": ["run-script", "test-from-launch", "--", "-t web"],
       "console": "integratedTerminal",
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],
@@ -33,11 +25,7 @@
     {
       "name": "test:cloud-run",
       "request": "launch",
-      "runtimeArgs": ["run-script", "test-from-launch-with-dotenv:cloud-run"],
-      "env": {
-        "ENVFILE": "../../../../credentials/local.env",
-        "NSTRUMENTA_WS_URL": "ws://localhost:8088"
-      },
+      "runtimeArgs": ["run-script", "test-from-launch", "--", "-t cloud-run"],
       "console": "integratedTerminal",
       "runtimeExecutable": "npm",
       "skipFiles": ["<node_internals>/**"],

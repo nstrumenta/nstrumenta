@@ -40,7 +40,11 @@ resource "google_project_service" "fs" {
     "storage.googleapis.com",
     "firestore.googleapis.com",
     "firebase.googleapis.com",
-    "dns.googleapis.com"
+    "cloudfunctions.googleapis.com",
+    "dns.googleapis.com",
+    "cloudbuild.googleapis.com",
+    "eventarc.googleapis.com",
+    "pubsub.googleapis.com"
   ])
   service = each.key
 
@@ -246,7 +250,7 @@ resource "google_secret_manager_secret_version" "server_key" {
   secret_data = base64decode(google_service_account_key.server.private_key)
 }
 
-# server in service
+# server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
   name     = "cloudrun-service"
   location = var.location_id
@@ -258,7 +262,11 @@ resource "google_cloud_run_v2_service" "default" {
       ports {
         container_port = 5999
       }
-      image = "nstrumenta/server:3.1.8-test2"
+      image = "nstrumenta/server"
+
+      resources {
+        cpu_idle = false
+      }
 
       env {
         name = "GCLOUD_SERVICE_KEY"
@@ -273,6 +281,95 @@ resource "google_cloud_run_v2_service" "default" {
     scaling {
       min_instance_count = 1
       max_instance_count = 1
+    }
+  }
+}
+
+resource "google_storage_bucket_object" "function_zip" {
+  name   = "functionZip/storageObjectFunctions.zip"
+  bucket = split("/", google_firebase_storage_bucket.fb_app.id)[3]
+  source = "./storageObjectFunctions.zip"
+}
+
+# To use GCS CloudEvent triggers, the GCS service account requires the Pub/Sub Publisher(roles/pubsub.publisher) IAM role in the specified project.
+# (See https://cloud.google.com/eventarc/docs/run/quickstart-storage#before-you-begin)
+data "google_storage_project_service_account" "default" {
+  project = google_project.fs.project_id
+}
+resource "google_project_iam_member" "gcs_pubsub_publishing" {
+  project = google_project.fs.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${data.google_storage_project_service_account.default.email_address}"
+}
+
+#cloud functions for storage triggers
+resource "google_cloudfunctions2_function" "finalize" {
+  name     = "storageObjectFinalize"
+  location = var.location_id
+  project  = google_project.fs.project_id
+
+  build_config {
+    runtime     = "nodejs20"
+    entry_point = "storageObjectFinalize"
+
+    source {
+      storage_source {
+        bucket = split("/", google_firebase_storage_bucket.fb_app.id)[3]
+        object = google_storage_bucket_object.function_zip.name
+      }
+    }
+  }
+
+  service_config {
+    service_account_email = data.google_app_engine_default_service_account.default.email
+    secret_environment_variables {
+      key        = "GCLOUD_SERVICE_KEY"
+      project_id = google_project.fs.project_id
+      secret     = "GCLOUD_SERVICE_KEY"
+      version    = "latest"
+    }
+  }
+  event_trigger {
+    event_type = "google.cloud.storage.object.v1.finalized"
+    event_filters {
+      attribute = "bucket"
+      value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
+    }
+  }
+}
+
+#cloud functions for storage triggers
+resource "google_cloudfunctions2_function" "delete" {
+  name     = "storageObjectDelete"
+  location = var.location_id
+  project  = google_project.fs.project_id
+
+  build_config {
+    runtime     = "nodejs20"
+    entry_point = "storageObjectDelete"
+
+    source {
+      storage_source {
+        bucket = split("/", google_firebase_storage_bucket.fb_app.id)[3]
+        object = google_storage_bucket_object.function_zip.name
+      }
+    }
+  }
+
+  service_config {
+    service_account_email = data.google_app_engine_default_service_account.default.email
+    secret_environment_variables {
+      key        = "GCLOUD_SERVICE_KEY"
+      project_id = google_project.fs.project_id
+      secret     = "GCLOUD_SERVICE_KEY"
+      version    = "latest"
+    }
+  }
+  event_trigger {
+    event_type = "google.cloud.storage.object.v1.finalized"
+    event_filters {
+      attribute = "bucket"
+      value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
     }
   }
 }
