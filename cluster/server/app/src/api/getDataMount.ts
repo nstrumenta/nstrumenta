@@ -1,5 +1,5 @@
 import { APIEndpoint, withAuth } from '../authentication'
-import { firestore } from '../authentication/ServiceAccount'
+import { bucketName } from '../authentication/ServiceAccount'
 
 
 
@@ -18,11 +18,8 @@ const getDataMountBase: APIEndpoint<GetDataMountArgs> = async (
 
   try {
     console.log('getDataMount', { projectId })
-    const projectPath = `projects/${projectId}`
-    const project = await (await firestore.doc(projectPath).get()).data()
 
-    const bucket = project?.bucket
-    return res.status(200).send({ bucket, projectId })
+    return res.status(200).send({ bucket: bucketName, projectId })
   } catch (error) {
     res.status(500).send(`Something went wrong`)
   }
