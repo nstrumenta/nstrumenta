@@ -116,18 +116,6 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  createServiceAccount() {
-    this.serverService.runServerTask('createServiceAccount', this.projectId, {}, (progress) => {
-      console.log('task:' + progress);
-    })
-  }
-
-  deployStorageTriggerFunctions() {
-    this.serverService.runServerTask('deployStorageTriggerFunctions', this.projectId, {}, (progress) => {
-      console.log('task:' + progress);
-    })
-  }
-
   createApiKey() {
     const dialogRef = this.dialog.open(CreateKeyDialogComponent);
     dialogRef.afterClosed().subscribe((response: CreateKeyDialogResponse) => {

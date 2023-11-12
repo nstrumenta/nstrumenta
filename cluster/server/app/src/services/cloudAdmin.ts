@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { mkdir, readFile, rm, writeFile } from 'fs/promises'
+import { mkdir, readFile, writeFile } from 'fs/promises'
 import { v4 as uuid } from 'uuid'
 import { bucketName, serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
@@ -10,16 +10,6 @@ const adminServiceAccount = serviceAccount
 const GCP_PROJECT = adminServiceAccount.project_id
 
 export interface CloudAdminService {
-  createServiceAccount(
-    actionPath: string,
-    projectId: string,
-    data: ActionData,
-  ): Promise<void>
-  deployStorageTriggerFunctions(
-    actionPath: string,
-    projectId: string,
-    data: ActionData,
-  ): Promise<void>
   hostModule(
     actionPath: string,
     projectId: string,
@@ -217,121 +207,7 @@ export const createCloudAdminService = ({
     }
   }
 
-  async function deployStorageTriggerFunctions(
-    actionPath: string,
-    projectId: string,
-  ) {
-    const functionName = uniqueName(projectId)
-    const bucketName = `${GCP_PROJECT}.appspot.com`
-    // mark action as started
-    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
-    const adminKeyFilePath = './credentials.json'
-    process.env['GOOGLE_APPLICATION_CREDENTIALS'] = adminKeyFilePath
-    await writeFile(adminKeyFilePath, JSON.stringify(serviceAccount), 'utf-8')
-    await asyncSpawn(
-      'gcloud',
-      `auth activate-service-account --key-file ${adminKeyFilePath}`.split(' '),
-    )
-
-    await asyncSpawn(
-      'gcloud',
-      `storage cp /app/functionZip/storageObjectFinalizeFunction.zip gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip`.split(
-        ' ',
-      ),
-    )
-
-    // deploy cloud function
-    const adminCredentialsForCloudFunction = btoa(
-      JSON.stringify({
-        project_id: adminServiceAccount.project_id,
-        client_email: adminServiceAccount.client_email,
-        private_key: adminServiceAccount.private_key,
-      }),
-    )
-    await asyncSpawn(
-      'gcloud',
-      `functions deploy ${functionName}-finalize --entry-point storageObjectFinalize --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.finalize --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
-        ' ',
-      ),
-    )
-    await asyncSpawn(
-      'gcloud',
-      `functions deploy ${functionName}-delete --entry-point storageObjectDelete --runtime nodejs16 --trigger-resource gs://${bucketName} --trigger-event google.storage.object.delete --project=${GCP_PROJECT} --source gs://${bucketName}/functionZip/storageObjectFinalizeFunction.zip --set-env-vars SERVICE_ACCOUNT_CREDENTIALS=${adminCredentialsForCloudFunction}`.split(
-        ' ',
-      ),
-    )
-
-    //mark action as complete
-    await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
-  }
-
-  async function createServiceAccount(actionPath: string, projectId: string) {
-    console.log({ projectId })
-
-    if (
-      (await firestore.doc(`/projects/${projectId}`).get()).data()?.keyFile !=
-      undefined
-    ) {
-      console.log(`keyFile already exists on ${projectId}`)
-    } else {
-      const nonAdminServiceAccount = uniqueName(projectId)
-      const keyfileName = `${nonAdminServiceAccount}.json`
-      const bucketName = `${GCP_PROJECT}.appspot.com`
-      // mark action as started
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'started' }, { merge: true })
-      const adminKeyFilePath = './credentials.json'
-      process.env['GOOGLE_APPLICATION_CREDENTIALS'] = adminKeyFilePath
-      await writeFile(adminKeyFilePath, JSON.stringify(serviceAccount), 'utf-8')
-      await asyncSpawn(
-        'gcloud',
-        `auth activate-service-account --key-file ${adminKeyFilePath}`.split(
-          ' ',
-        ),
-      )
-      await asyncSpawn(
-        'gcloud',
-        `iam service-accounts create ${nonAdminServiceAccount} --project ${GCP_PROJECT}`.split(
-          ' ',
-        ),
-      )
-
-      await asyncSpawn(
-        'gcloud',
-        `iam service-accounts keys create ${keyfileName} --iam-account ${nonAdminServiceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com --project ${GCP_PROJECT}`.split(
-          ' ',
-        ),
-      )
-      const keyFile = await readFile(keyfileName, 'utf-8')
-      await rm(keyfileName)
-      await firestore
-        .doc(`/projects/${projectId}`)
-        .set({ keyFile }, { merge: true })
-
-      //set cors on the bucket
-      await asyncSpawn(
-        'gcloud',
-        `storage buckets update gs://${bucketName} --cors-file=./src/cors.json`.split(
-          ' ',
-        ),
-      )
-
-      // set access to the bucket for the new serviceAccount
-      await asyncSpawn(
-        'gsutil',
-        `iam ch serviceAccount:${nonAdminServiceAccount}@${GCP_PROJECT}.iam.gserviceaccount.com:legacyBucketWriter gs://${bucketName}`.split(
-          ' ',
-        ),
-      )
-    }
-    //mark action as complete
-    await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
-  }
-
   return {
-    createServiceAccount,
-    deployStorageTriggerFunctions,
     hostModule,
   }
 }

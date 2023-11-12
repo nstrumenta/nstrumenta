@@ -43,11 +43,14 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { keyFile, bucket, projectId } = response.data;
+  const { bucket, projectId } = response.data;
 
-  if (keyFile === undefined || bucket === undefined) {
-    throw new Error('keyFile or bucket undefined in response from getDataMount');
+  if (bucket === undefined) {
+    throw new Error('bucket undefined in response from getDataMount');
   }
+
+  const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY;
+  if (serviceKeyJson == undefined) throw new Error('GCLOUD_SERVICE_KEY undefined');
 
   // check for gcsfuse
   await asyncSpawn('gcsfuse', ['-v'], { quiet: true });
@@ -55,7 +58,7 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
   await mkdir(`${projectId}/data`, { recursive: true });
   await writeFile(`${projectId}/.gitignore`, 'keyfile.json\ndata');
   const keyfilePath = `${projectId}/keyfile.json`;
-  await writeFile(keyfilePath, keyFile);
+  await writeFile(keyfilePath, serviceKeyJson);
   await asyncSpawn(
     'gcsfuse',
     [
@@ -80,10 +83,10 @@ export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   };
   let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { keyFile, bucket, projectId } = response.data;
+  const { bucket, projectId } = response.data;
 
-  if (keyFile === undefined || bucket === undefined) {
-    throw new Error('keyFile or bucket undefined in response from getDataMount');
+  if ( bucket === undefined) {
+    throw new Error('bucket undefined in response from getDataMount');
   }
 
   // check for gcsfuse
