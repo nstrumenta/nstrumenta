@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.18](https://github.com/nstrumenta/nstrumenta/compare/v3.1.17...v3.1.18) (2023-11-12)
+
+
+### Features
+
+* **data:** uses project bucket for data mount ([7c852b5](https://github.com/nstrumenta/nstrumenta/commit/7c852b5762b1927a62c876cbdc4c1381a16edaf6))
+
 ### [3.1.17](https://github.com/nstrumenta/nstrumenta/compare/v3.1.16...v3.1.17) (2023-11-12)
 
 ### [3.1.16](https://github.com/nstrumenta/nstrumenta/compare/v3.1.15...v3.1.16) (2023-11-12)
