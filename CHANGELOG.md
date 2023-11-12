@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.14](https://github.com/nstrumenta/nstrumenta/compare/v3.1.13...v3.1.14) (2023-11-12)
+
+
+### Features
+
+* **server:** uses docker.io images for cloud run and agent ([7aed74a](https://github.com/nstrumenta/nstrumenta/commit/7aed74a763352fc9a86dc66363535ca1fa51e632))
+* **terraform:** storage trigger functions in terraform ([b7afc7d](https://github.com/nstrumenta/nstrumenta/commit/b7afc7d04cd17f0b369528083cf7b6ee40453b86))
+
 ### [3.1.13](https://github.com/nstrumenta/nstrumenta/compare/v3.1.12...v3.1.13) (2023-11-11)
 
 
