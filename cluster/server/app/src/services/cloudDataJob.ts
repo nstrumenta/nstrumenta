@@ -74,7 +74,7 @@ export const createCloudDataJobService = ({
     const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
     const workflowId = `workflow-${actionId}`
 
-    const imageId = `gcr.io/${serviceAccount.project_id}/data-job-runner:latest`
+    const imageId = `nstrumenta/data-job-runner:latest`
 
     const apiKeyService = CreateApiKeyService({ firestore })
 

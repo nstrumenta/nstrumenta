@@ -115,7 +115,7 @@ export const createCloudAgentService = ({
 
     const instanceId = buildResourceName(actionPath)
     const gcpProjectId = serviceAccount.project_id
-    const imageId = `gcr.io/${gcpProjectId}/agent:latest`
+    const imageId = `nstrumenta/agent:latest`
 
     //create apiKey specifically for the cloud agent
     console.log({ projectId })
