@@ -259,6 +259,7 @@ resource "google_cloud_run_v2_service" "default" {
   template {
     service_account = data.google_app_engine_default_service_account.default.email
     containers {
+      name = "server"
       ports {
         container_port = 5999
       }
@@ -330,7 +331,9 @@ resource "google_cloudfunctions2_function" "finalize" {
     }
   }
   event_trigger {
-    event_type = "google.cloud.storage.object.v1.finalized"
+    retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
+    trigger_region = var.location_id
+    event_type     = "google.cloud.storage.object.v1.finalized"
     event_filters {
       attribute = "bucket"
       value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
@@ -366,7 +369,9 @@ resource "google_cloudfunctions2_function" "delete" {
     }
   }
   event_trigger {
-    event_type = "google.cloud.storage.object.v1.finalized"
+    retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
+    trigger_region = var.location_id
+    event_type     = "google.cloud.storage.object.v1.finalized"
     event_filters {
       attribute = "bucket"
       value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]

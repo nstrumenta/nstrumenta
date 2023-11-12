@@ -11,8 +11,6 @@ export type ServerTasks =
   | 'revokeApiKey'
   | 'deployCloudAgent'
   | 'deleteDeployedCloudAgent'
-  | 'createServiceAccount'
-  | 'deployStorageTriggerFunctions'
   | 'cloudRun'
   | 'buildFromGithub'
   | 'buildFromFolder'
