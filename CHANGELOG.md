@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.15](https://github.com/nstrumenta/nstrumenta/compare/v3.1.14...v3.1.15) (2023-11-12)
+
+
+### Features
+
+* **key:** removes key from project ([6d4807f](https://github.com/nstrumenta/nstrumenta/commit/6d4807f63e84ce1ebdea5d5ac55759c37bcbeb84))
+
 ### [3.1.14](https://github.com/nstrumenta/nstrumenta/compare/v3.1.13...v3.1.14) (2023-11-12)
 
 
