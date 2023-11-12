@@ -1,6 +1,6 @@
 {
 	"name": "nstrumenta",
-	"image": "nstrumenta/agent",
+	"image": "nstrumenta/data-job-runner",
 	"privileged": true,
 	"runArgs": ["--env-file",".nstrumenta/credentials/.env"]
 }

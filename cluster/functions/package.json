@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --project ./",
-    "makeZip": "npm run build && zip -r ../server/app/functionZip/storageObjectFinalizeFunction.zip .",
+    "makeZip": "npm run build && zip -r ../../terraform/storageObjectFunctions.zip .",
     "format": "prettier -w ./src",
     "dev": "nodemon"
   },
