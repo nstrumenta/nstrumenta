@@ -102,6 +102,7 @@ export const createCloudDataJobService = ({
       '--memory=8Gi',
       `--image=${imageId}`,
       '--region=us-west1',
+      `--update-secrets=ENV_VAR_NAME=GCLOUD_SERVICE_KEY:latest`,
       `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
         JSON.stringify(data),
       )}`,
