@@ -44,7 +44,8 @@ resource "google_project_service" "fs" {
     "dns.googleapis.com",
     "cloudbuild.googleapis.com",
     "eventarc.googleapis.com",
-    "pubsub.googleapis.com"
+    "pubsub.googleapis.com",
+    "compute.googleapis.com"
   ])
   service = each.key
 
@@ -187,6 +188,10 @@ data "google_app_engine_default_service_account" "default" {
   project    = google_project.fs.project_id
 }
 
+data "google_compute_default_service_account" "default" {
+  project = google_project.fs.project_id
+}
+
 resource "local_file" "firebase_web_app_config_json" {
   filename = "firebaseConfig.json"
 
@@ -226,11 +231,18 @@ resource "google_service_account_key" "server" {
   service_account_id = data.google_app_engine_default_service_account.default.id
 }
 
-resource "google_secret_manager_secret_iam_member" "member" {
+resource "google_secret_manager_secret_iam_member" "app_engine" {
   project   = google_project.fs.project_id
   secret_id = google_secret_manager_secret.server_key.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "compute" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.server_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
 }
 
 # secret so we can reference the key when starting the cloud service
@@ -287,7 +299,7 @@ resource "google_cloud_run_v2_service" "default" {
 }
 
 resource "google_storage_bucket_object" "function_zip" {
-  name   = "functionZip/storageObjectFunctions.zip"
+  name   = "functionZip/storageObjectFunctions${filesha256("./storageObjectFunctions.zip")}.zip"
   bucket = split("/", google_firebase_storage_bucket.fb_app.id)[3]
   source = "./storageObjectFunctions.zip"
 }
@@ -371,7 +383,7 @@ resource "google_cloudfunctions2_function" "delete" {
   event_trigger {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
     trigger_region = var.location_id
-    event_type     = "google.cloud.storage.object.v1.finalized"
+    event_type     = "google.cloud.storage.object.v1.deleted"
     event_filters {
       attribute = "bucket"
       value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
