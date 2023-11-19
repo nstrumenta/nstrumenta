@@ -1,4 +1,5 @@
-FROM node:20.3-bullseye-slim
+FROM node:20.3-bullseye-slim AS build-base
+RUN echo "build-base"
 
 # curl
 RUN apt-get -y update; apt-get install curl wget -y
@@ -158,6 +159,20 @@ RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 1777 "$GOPATH"
 
 # install go END 
 
+### build terraform stage
+FROM build-base as build-terraform
+#install terraform
+RUN git clone --branch v1.6.2 --depth 1 https://github.com/hashicorp/terraform.git
+
+RUN	cd terraform ; \
+	go install ; \
+	cd ~
+
+FROM build-base
+COPY --from=build-terraform /go/bin/terraform /go/bin/terraform
+
+### build terraform and copy end
+
 # python
 RUN apt-get install python3 python3-pip -y
 
@@ -195,13 +210,6 @@ RUN set -eux; \
 	rm -rf $(find $dir/google-cloud-sdk/ -name __pycache__ -type d); \
 	rm -rf $dir/google-cloud-sdk/.install/.backup
 
-
-#install terraform
-RUN git clone --branch v1.6.2 --depth 1 https://github.com/hashicorp/terraform.git
-
-RUN	cd terraform ; \
-	go install ; \
-	cd ~
 
 #install gcsfuse
 RUN GCSFUSE_REPO=gcsfuse-bullseye; \
