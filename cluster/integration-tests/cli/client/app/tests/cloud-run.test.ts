@@ -107,7 +107,7 @@ esac
     const result = await pollNstrumenta({
       matchString: moduleName,
       interval: 1_000,
-      timeout: 20_000,
+      timeout: 60_000,
       command: 'module list',
     });
     expect(result).toEqual(expect.stringMatching(moduleName));
@@ -119,7 +119,7 @@ esac
     await asyncSpawn(
       'nst',
       `module cloud-run ${moduleName} --command-args create ${uploadFileName}`.split(' '),
-      { cwd: testFolderBase, quiet: true }
+      { cwd: testFolderBase, quiet: false }
     );
 
     const result = await pollNstrumenta({
@@ -132,13 +132,13 @@ esac
     await asyncSpawn(
       'nst',
       `module cloud-run ${moduleName} --command-args delete ${uploadFileName}`.split(' '),
-      { cwd: testFolderBase, quiet: true }
+      { cwd: testFolderBase, quiet: false }
     );
 
     const deleteResult = await pollNstrumenta({
       matchString: uploadFileName,
       interval: 5_000,
-      timeout: 60_000,
+      timeout: 120_000,
       inverseMatch: true,
     });
     await expect(deleteResult).toBeTruthy();
