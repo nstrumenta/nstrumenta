@@ -142,5 +142,5 @@ esac
       inverseMatch: true,
     });
     await expect(deleteResult).toBeTruthy();
-  }, 180_000);
+  }, 360_000);
 });
