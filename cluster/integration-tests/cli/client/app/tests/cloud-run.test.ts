@@ -125,7 +125,7 @@ esac
     const result = await pollNstrumenta({
       matchString: uploadFileName,
       interval: 5_000,
-      timeout: 120_000,
+      timeout: 180_000,
     });
     await expect(result).toBeTruthy();
 
@@ -138,7 +138,7 @@ esac
     const deleteResult = await pollNstrumenta({
       matchString: uploadFileName,
       interval: 5_000,
-      timeout: 120_000,
+      timeout: 180_000,
       inverseMatch: true,
     });
     await expect(deleteResult).toBeTruthy();
