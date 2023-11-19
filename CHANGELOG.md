@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.21](https://github.com/nstrumenta/nstrumenta/compare/v3.1.20...v3.1.21) (2023-11-19)
+
+
+### Features
+
+* **docker:** adds zip and github cli to base ([2fe0425](https://github.com/nstrumenta/nstrumenta/commit/2fe0425d3d4bb458fabd0d34be8264656924e293))
+
+
+### Bug Fixes
+
+* **cloud-run:** fixes memory usage in status check ([7ca0c28](https://github.com/nstrumenta/nstrumenta/commit/7ca0c28cd88b327760c177b81866f6ffa78dd9f3))
+* **functions:** fixes delete,  fixes compute agent for secret ([5cfe976](https://github.com/nstrumenta/nstrumenta/commit/5cfe97682432b4ee04e8812f353c41a92d8a76db))
+
 ### [3.1.20](https://github.com/nstrumenta/nstrumenta/compare/v3.1.19...v3.1.20) (2023-11-13)
 
 
