@@ -9,11 +9,13 @@
             "request": "launch",
             "runtimeArgs": [
                 "run-script",
-                "dev"
+                "dev-dotenv"
             ],
             "cwd": "${workspaceFolder}/app",
             "runtimeExecutable": "npm",
-            "envFile": "../../credentials/.env",
+            "env": {
+                "ENVFILE": "../../credentials/local.env"
+              },
             "skipFiles": [
                 "<node_internals>/**"
             ],

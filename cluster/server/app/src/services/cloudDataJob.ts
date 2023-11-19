@@ -134,7 +134,8 @@ export const createCloudDataJobService = ({
         const executionId = executionMatch[0]
         // watch for status
         await new Promise<void>((resolve, reject) => {
-          const interval = setInterval(async () => {
+          const checkStatus = async () => {
+            console.log(`checking status for job: ${executionId}`)
             const description = JSON.parse(
               await asyncSpawn(
                 'gcloud',
@@ -157,10 +158,13 @@ export const createCloudDataJobService = ({
                   message ?? JSON.stringify(description.status)
                 }`,
               )
-              clearInterval(interval)
               resolve()
+            } else {
+              console.log(`status ${executionId} : ${message}`)
+              checkStatus()
             }
-          }, 500)
+          }
+          checkStatus()
         })
       }
     }
