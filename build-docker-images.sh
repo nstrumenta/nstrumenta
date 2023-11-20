@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 if [ -n "$DOCKER_TAG" ]; then
     echo "using DOCKER_TAG=$DOCKER_TAG"
@@ -34,9 +34,28 @@ fi
 # base
 docker buildx build \
     $BUILDX_ARGS \
+    --cache-from nstrumenta/base:buildcache-arm64 \
+    --cache-from nstrumenta/base:buildcache-amd64 \
     --platform linux/arm64,linux/amd64 \
     --tag nstrumenta/base:$DOCKER_TAG \
     --tag nstrumenta/base:latest \
+    .
+
+# base caches
+docker buildx build \
+    $BUILDX_ARGS \
+    --cache-from nstrumenta/base:buildcache-arm64 \
+    --cache-to nstrumenta/base:buildcache-arm64 \
+    --platform linux/arm64 \
+    --tag nstrumenta/base:$DOCKER_TAG \
+    .
+
+docker buildx build \
+    $BUILDX_ARGS \
+    --cache-from nstrumenta/base:buildcache-amd64 \
+    --cache-to nstrumenta/base:buildcache-amd64 \
+    --platform linux/amd64 \
+    --tag nstrumenta/base:$DOCKER_TAG \
     .
 
 # agent
