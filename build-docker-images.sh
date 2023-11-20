@@ -47,7 +47,7 @@ docker buildx build \
     --cache-from nstrumenta/base:buildcache-arm64 \
     --cache-to nstrumenta/base:buildcache-arm64 \
     --platform linux/arm64 \
-    --tag nstrumenta/base:$DOCKER_TAG \
+    --tag nstrumenta/base:buildcache-arm64 \
     .
 
 docker buildx build \
@@ -55,7 +55,7 @@ docker buildx build \
     --cache-from nstrumenta/base:buildcache-amd64 \
     --cache-to nstrumenta/base:buildcache-amd64 \
     --platform linux/amd64 \
-    --tag nstrumenta/base:$DOCKER_TAG \
+    --tag nstrumenta/base:buildcache-amd64 \
     .
 
 # agent
