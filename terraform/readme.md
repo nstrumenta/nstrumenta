@@ -40,6 +40,13 @@ terraform plan
 ```
 
 ### apply
+optionally apply target google_project_service.fs to enable apis (they are asynchronous, so this avoids errors during the first apply, but re-running plan again works as well)
+```
+terraform apply -target=google_project_service.fs
+```
+
+then apply as normal:
 ```
 terraform apply
 ```
+
