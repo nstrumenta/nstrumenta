@@ -28,7 +28,7 @@ export const auth: AuthFunction = async (req, res) => {
     return { authenticated: false, message: 'missing key', projectId: '' }
 
   try {
-    const hash = createHash(key)
+    const hash = createHash(key.split(':')[0])
     const docData = await (
       await firestore.collection('keys').doc(hash).get()
     ).data()

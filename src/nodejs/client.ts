@@ -1,5 +1,5 @@
 import { WebSocket } from 'ws';
-import { apiUrl, resolveApiKey } from '../cli/utils';
+import { resolveApiKey } from '../cli/utils';
 import {
   ClientStatus,
   ConnectOptions,
@@ -31,9 +31,9 @@ export class NstrumentaClient extends NstrumentaClientBase {
       let token = 'unverified';
       if (verify) {
         try {
-          token = await getToken(this.apiKey, apiUrl);
+          token = await getToken(this.apiKey);
           // initiate the storage service for file upload/download
-          this.storage = new StorageService({ apiKey: this.apiKey, apiUrl });
+          this.storage = new StorageService({ apiKey: this.apiKey });
         } catch (error) {
           console.error((error as Error).message);
           throw error;

@@ -10,11 +10,6 @@ import { Module, ModuleExtended } from './commands/module';
 
 import { getEndpoints } from '../shared';
 
-export const apiUrl = process.env.NSTRUMENTA_API_KEY
-  ? atob(process.env.NSTRUMENTA_API_KEY?.split(':')[1]!)
-  : undefined;
-export const endpoints = getEndpoints(apiUrl);
-
 const prompt = Inquirer.createPromptModule();
 
 export interface Keys {
@@ -22,16 +17,18 @@ export interface Keys {
 }
 
 export const resolveApiKey = () => {
-  let apiKey = process.env.NSTRUMENTA_API_KEY?.split(':')[0];
+  const apiKey = process.env.NSTRUMENTA_API_KEY;
 
   if (!apiKey) {
     throw new Error(
-      'nstrumenta api key is not set, set the NSTRUMENTA_API_KEY environment variable, get a key from your nstrumenta project settings https://nstrumenta.com/projects/ *your projectId here* /settings'
+      'nstrumenta api key is not set, set the NSTRUMENTA_API_KEY environment variable'
     );
   }
 
   return apiKey;
 };
+
+export const endpoints = getEndpoints(resolveApiKey());
 
 export async function asyncSpawn(
   cmd: string,
