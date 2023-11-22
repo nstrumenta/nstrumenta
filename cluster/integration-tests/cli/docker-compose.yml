@@ -8,3 +8,13 @@ services:
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+  server:
+    build:
+      context: ../../../cluster/server
+      dockerfile: Dockerfile
+    ports:
+      - 5999:5999
+      - 9229:9229
+    environment:
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
