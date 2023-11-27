@@ -3,6 +3,7 @@ export const getEndpoints = (apiKey: string) => {
   return {
     ADMIN_UTILS: `${url}/adminUtils`,
     GET_MACHINES: `${url}/getMachines`,
+    GET_CLOUD_RUN_SERVICES: `${url}/getCloudRunServices`,
     GET_UPLOAD_URL: `${url}/getUploadUrl`,
     GET_UPLOAD_DATA_URL: `${url}/getUploadDataUrl`,
     GET_PROJECT: `${url}/getProject`,

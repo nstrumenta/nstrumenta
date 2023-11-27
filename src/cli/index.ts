@@ -17,6 +17,7 @@ import {
   Upload as UploadData,
 } from './commands/data';
 import { ListMachines } from './commands/machines';
+import { ListServices, StartService } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
@@ -33,6 +34,21 @@ machineCommand
   .alias('ls')
   .description('List host machines for current project')
   .action(ListMachines);
+
+const servicesCommand = program.command('services');
+servicesCommand
+  .command('list')
+  .alias('ls')
+  .description('List cloud run servies for current project')
+  .action(ListServices);
+
+servicesCommand
+  .command('start')
+  .argument('[imageName]', 'docker image for service' , 'nstrumenta/agent')
+  .option('--containerCommand <containerCommand>', 'command used to launch container')
+  .option('--containerPort <containerPort>', 'application port in container')
+  .description('start cloud run service')
+  .action(StartService);
 
 program
   .command('send')

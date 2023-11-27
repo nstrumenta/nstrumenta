@@ -382,6 +382,17 @@ firestore
                         console.error(err)
                       }
                       break
+                      case 'startCloudRunService':
+                        try {
+                          cloudDataJobService.createService(
+                            doc.ref.path,
+                            projectId,
+                            data as ActionData,
+                          )
+                        } catch (err) {
+                          console.error(err)
+                        }
+                        break
                     case 'hostModule':
                       try {
                         cloudAdminService.hostModule(

@@ -12,6 +12,11 @@ export interface CloudDataJobService {
     projectId: string,
     data: ActionData,
   ): Promise<void>
+  createService(
+    actionPath: string,
+    projectId: string,
+    data: ActionData,
+  ): Promise<void>
 }
 
 export interface CloudDataJobServiceDependencies {
@@ -176,7 +181,58 @@ export const createCloudDataJobService = ({
     await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
   }
 
+  async function createService(
+    actionPath: string,
+    projectId: string,
+    data: ActionData,
+  ) {
+    console.log('create cloud run job', { projectId, data })
+
+    const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
+    const serviceId = `service-${Date.now()}-${actionId}`
+
+    const { image, command, port } = data.data
+
+    const apiKeyService = CreateApiKeyService({ firestore })
+
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
+    if (!apiKey) throw new Error('failed to create temporary apiKey')
+    // mark action as started
+    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+    const keyfile = './credentials.json'
+    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
+    await asyncSpawn(
+      'gcloud',
+      `auth activate-service-account --key-file ${keyfile}`.split(' '),
+    )
+    await asyncSpawn(
+      'gcloud',
+      `config set core/project ${serviceAccount.project_id}`.split(' '),
+    )
+    // could use the region for the firebase project
+    await asyncSpawn('gcloud', [
+      'run',
+      'deploy',
+      serviceId,
+      `--image=${image}`,
+      `--command=${command.split(' ').join(',') ?? ''}`,
+      `--port=${port ?? 8080}`,
+      `--allow-unauthenticated`,
+      '--region=us-west1',
+      `--set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest`,
+      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
+        JSON.stringify(data),
+      )}`,
+    ])
+
+    console.log(`started ${serviceId}`)
+
+    //mark action as complete
+    await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
+  }
+
   return {
+    createService,
     createJob,
   }
 }
