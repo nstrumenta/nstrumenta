@@ -407,3 +407,12 @@ resource "google_cloudfunctions2_function" "delete" {
     }
   }
 }
+
+# artifact registry for pushing server containers in CI
+resource "google_artifact_registry_repository" "server" {
+  project       = google_project.fs.project_id
+  location      = "us-west1"
+  repository_id = "server"
+  description   = "repository for CI server images"
+  format        = "DOCKER"
+}
