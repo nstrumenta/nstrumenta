@@ -1,8 +1,9 @@
-export const getEndpoints = (apiUrl: string = 'http://localhost:5999') => {
-  const url = apiUrl.trim();
+export const getEndpoints = (apiKey: string) => {
+  const url = atob(apiKey.split(':')[1] ?? '').trim();
   return {
     ADMIN_UTILS: `${url}/adminUtils`,
     GET_MACHINES: `${url}/getMachines`,
+    GET_CLOUD_RUN_SERVICES: `${url}/getCloudRunServices`,
     GET_UPLOAD_URL: `${url}/getUploadUrl`,
     GET_UPLOAD_DATA_URL: `${url}/getUploadDataUrl`,
     GET_PROJECT: `${url}/getProject`,

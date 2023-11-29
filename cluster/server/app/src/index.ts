@@ -65,6 +65,7 @@ server.listen(port, () => {
 
 const agentType = process.env.NST_AGENT_TYPE || 'main'
 console.log('agentType: ', agentType)
+console.log('project_id: ', serviceAccount.project_id)
 
 const firestore = new Firestore({
   projectId: serviceAccount.project_id,
@@ -381,6 +382,17 @@ firestore
                         console.error(err)
                       }
                       break
+                      case 'startCloudRunService':
+                        try {
+                          cloudDataJobService.createService(
+                            doc.ref.path,
+                            projectId,
+                            data as ActionData,
+                          )
+                        } catch (err) {
+                          console.error(err)
+                        }
+                        break
                     case 'hostModule':
                       try {
                         cloudAdminService.hostModule(

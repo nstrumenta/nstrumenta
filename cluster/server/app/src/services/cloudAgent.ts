@@ -98,7 +98,7 @@ export const createCloudAgentService = ({
       `config set core/project ${serviceAccount.project_id}`.split(' '),
     )
     // TODO pull region from project doc
-    await asyncSpawn('gcloud', `config set run/region europe-west3`.split(' '))
+    await asyncSpawn('gcloud', `config set run/region us-west1`.split(' '))
   }
 
   async function deployCloudAgent(

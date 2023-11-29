@@ -37,7 +37,6 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       if (apiKey) {
         localStorage.setItem('apiKey', apiKey);
       }
-      const apiUrl = atob(apiKey?.split(':')[1] ?? '');
 
       if (this.reconnection.attempts > 100) {
         throw new Error('Too many reconnection attempts, stopping');
@@ -54,7 +53,7 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
       let token = 'unverified';
       if (verify) {
         try {
-          token = await getToken(this.apiKey.split(':')[0], apiUrl);
+          token = await getToken(this.apiKey);
         } catch (error) {
           console.error((error as Error).message);
           throw error;

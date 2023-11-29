@@ -7,7 +7,7 @@ import { createWriteStream } from 'fs';
 import { mkdir, open, readFile, stat } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
-import { apiUrl, endpoints, getNstDir, resolveApiKey } from '../cli/utils';
+import { endpoints, getNstDir, resolveApiKey } from '../cli/utils';
 import {
   LogConfig,
   NstrumentaClientEvent,
@@ -181,10 +181,6 @@ export class NstrumentaServer {
       res.status(200).send('OK');
     });
 
-    app.get('/apiUrl', function (req, res) {
-      res.status(200).send(apiUrl);
-    });
-
     const verifiedConnections: Map<string, WebSocket> = new Map();
     const subscriptions: Map<WebSocket, Map<string, Set<string>>> = new Map();
 
@@ -219,7 +215,7 @@ export class NstrumentaServer {
             if (!this.allowUnverifiedConnection) {
               console.log('attempting to verify token');
               // first message from a connected websocket must be a token
-              await verifyToken({ token: busMessage.toString(), apiKey, apiUrl: apiUrl! });
+              await verifyToken({ token: busMessage.toString(), apiKey });
             }
             console.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
