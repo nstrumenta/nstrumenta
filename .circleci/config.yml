@@ -21,22 +21,10 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - setup_remote_docker
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run:
           command: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`"
-      - run:
-          name: start docker
-          command: sudo dockerd
-          background: true
-      - run:
-          name: Wait for Docker daemon
-          command: |
-            set +e
-            until docker info; do
-              echo "Waiting for Docker daemon to start..."
-              sleep 1
-            done
-            set -e
       - run: docker build --rm=false -t gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
