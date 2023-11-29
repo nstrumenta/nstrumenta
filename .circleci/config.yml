@@ -82,6 +82,7 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - setup_remote_docker
       - run:
           command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
       - run: ./ci.sh cli
