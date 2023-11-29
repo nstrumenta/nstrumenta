@@ -96,7 +96,7 @@ jobs:
             --image=${IMAGE} 
             --port=5999 
             --allow-unauthenticated
-            --region=us-west
+            --region=us-west1
             --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest 
       - run:
           name: get API_URL from test server
