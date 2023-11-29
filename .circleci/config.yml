@@ -21,10 +21,12 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - background:
+          name: Start Docker Daemon
+          command: dockerd
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run:
           command: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`"
-      - run: dockerd &
       - run:
           name: Wait for Docker daemon
           command: |
