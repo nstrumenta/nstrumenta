@@ -1,22 +1,16 @@
 {
-  "build": {
-    "dockerfile": "../Dockerfile"
-  },
+  "image": "nstrumenta/toolchain",
   "customizations": {
-    // Add the IDs of extensions you want installed when the container is created.
-    "extensions": [
-      "hashicorp.terraform"
-	],
-	"vscode": {
-		"extensions": [
-			"CircleCI.circleci",
-			"ms-azuretools.vscode-docker",
-			"eamodio.gitlens",
-			"hashicorp.terraform",
-			"ms-vscode.vscode-typescript-next",
-			"esbenp.prettier-vscode"
-		]
-	}
+    "vscode": {
+      "extensions": [
+        "CircleCI.circleci",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "hashicorp.terraform",
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode"
+      ]
+    }
   },
   "runArgs": [
     "--privileged"

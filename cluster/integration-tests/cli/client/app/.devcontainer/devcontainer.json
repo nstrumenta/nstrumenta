@@ -2,5 +2,5 @@
 	"name": "nstrumenta",
 	"image": "nstrumenta/data-job-runner",
 	"privileged": true,
-	"runArgs": ["--env-file",".nstrumenta/credentials/.env"]
+	"runArgs": ["--env-file","../../../../credentials/local.env"]
 }

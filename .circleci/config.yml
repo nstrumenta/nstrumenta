@@ -1,8 +1,8 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/
     steps:
       - checkout:
@@ -14,9 +14,24 @@ jobs:
           command: npm i
       - run:
           command: npm run build
+  build-server-image:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project/cluster/server
+    steps:
+      - checkout:
+          path: ~/project
+      - setup_remote_docker
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
+      - run: docker build -t us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev
+      - run: docker push us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH}
   build-frontend:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/frontend
     steps:
       - checkout:
@@ -39,7 +54,7 @@ jobs:
             - '~/project/cluster/frontend/dist'
   build-functions:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/functions
     steps:
       - checkout:
@@ -61,19 +76,50 @@ jobs:
             - '~/project/cluster/functions/dist'
   run-tests:
     resource_class: large
-    machine: true
+    docker:
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/integration-tests/
     steps:
       - checkout:
           path: ~/project
+      - setup_remote_docker
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
+      - run: echo "export IMAGE=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
+      - run: echo "export TEST_SERVER=test-server-${CIRCLE_SHA1}" >> $BASH_ENV
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run:
-          command: echo 'export NSTRUMENTA_API_KEY="${NSTRUMENTA_INTEGRATION_TEST_API_KEY}"' >> "$BASH_ENV"
+          name: deploy test-server
+          command: >
+            gcloud run deploy ${TEST_SERVER}
+            --image=${IMAGE} 
+            --port=5999 
+            --allow-unauthenticated
+            --region=us-west1
+            --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest
+      - run:
+          name: get API_URL from test server
+          command: >
+            echo 'export API_URL=`gcloud run services describe --region=us-west1 ${TEST_SERVER} --format=json | jq -r .status.address.url`'
+            >> $BASH_ENV
+      - run:
+          name: make api key with test server url
+          command: >
+            echo 'export NSTRUMENTA_API_KEY=`node changeApiKeyUrl ${NSTRUMENTA_INTEGRATION_TEST_API_KEY} ${API_URL}`' >> "$BASH_ENV"
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client
+      - run:
+          name: delete test-server
+          command: >
+            gcloud run services delete --region=us-west1 ${TEST_SERVER}
+          when: always
+
   build-and-push-images:
     resource_class: arm.large
-    machine: true
+    machine:
+      image: ubuntu-2204:2023.07.2
     working_directory: ~/project
     steps:
       - checkout:
@@ -81,14 +127,15 @@ jobs:
       - run: ./build-docker-images.sh
 
 workflows:
-  version: 2
-
   -ci:
     jobs:
       - build
       - build-frontend
       - build-functions
-      - run-tests
+      - build-server-image
+      - run-tests:
+          requires:
+            - build-server-image
       - build-and-push-images:
           filters:
             tags:

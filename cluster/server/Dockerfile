@@ -1,5 +1,5 @@
 ARG BASE_TAG=latest
-FROM nstrumenta/base:${BASE_TAG}
+FROM nstrumenta/toolchain:${BASE_TAG}
 COPY ./app /app/
 
 WORKDIR /app

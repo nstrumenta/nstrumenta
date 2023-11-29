@@ -65,8 +65,8 @@ export type Reconnection = {
   timeout: ReturnType<typeof setTimeout> | null;
 };
 
-export const getToken = async (apiKey: string, apiUrl?: string): Promise<string> => {
-  console.log('getToken', { apiKey, apiUrl });
+export const getToken = async (apiKey: string): Promise<string> => {
+  console.log('getToken', { apiKey , endpoint: getEndpoints(apiKey).GET_TOKEN});
   const headers = {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
@@ -74,7 +74,7 @@ export const getToken = async (apiKey: string, apiUrl?: string): Promise<string>
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
     if (typeof process !== 'undefined') await process.nextTick(() => {});
-    const { data } = await axios.get<{ token: string }>(getEndpoints(apiUrl).GET_TOKEN, {
+    const { data } = await axios.get<{ token: string }>(getEndpoints(apiKey).GET_TOKEN, {
       headers,
     });
     return data.token;
@@ -100,16 +100,15 @@ export abstract class NstrumentaClientBase {
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey;
-    const apiUrl = atob(apiKey?.split(':')[1] ?? '');
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.datalogs = new Map();
     this.messageBuffer = [];
-    this.endpoints = getEndpoints(apiUrl);
+    this.endpoints = apiKey ? getEndpoints(apiKey) : getEndpoints('http://localhost:5999');
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
-    this.storage = new StorageService({ apiKey, apiUrl });
+    this.storage = new StorageService({ apiKey: apiKey ?? ''});
   }
 
   async shutdown() {
@@ -273,10 +272,10 @@ export class StorageService {
   private apiKeyHeader: string;
   private endpoints;
 
-  constructor(props?: { apiKey?: string; apiUrl?: string }) {
-    this.apiKey = props?.apiKey ? props.apiKey : undefined;
+  constructor(props: { apiKey: string }) {
+    this.apiKey = props.apiKey;
     this.apiKeyHeader = this.apiKey?.split(':')[0]!;
-    this.endpoints = getEndpoints(props?.apiUrl);
+    this.endpoints = getEndpoints(this.apiKey);
   }
 
   async getDownloadUrl(path: string): Promise<string> {

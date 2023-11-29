@@ -298,6 +298,16 @@ resource "google_cloud_run_v2_service" "default" {
   }
 }
 
+resource "google_cloud_run_service_iam_binding" "default" {
+  project  = google_project.fs.project_id
+  location = google_cloud_run_v2_service.default.location
+  service  = google_cloud_run_v2_service.default.name
+  role     = "roles/run.invoker"
+  members = [
+    "allUsers"
+  ]
+}
+
 resource "google_storage_bucket_object" "function_zip" {
   name   = "functionZip/storageObjectFunctions${filesha256("./storageObjectFunctions.zip")}.zip"
   bucket = split("/", google_firebase_storage_bucket.fb_app.id)[3]
@@ -313,6 +323,13 @@ resource "google_project_iam_member" "gcs_pubsub_publishing" {
   project = google_project.fs.project_id
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${data.google_storage_project_service_account.default.email_address}"
+}
+
+# add role for creating agents with --allow-unauthenticated for public access 
+resource "google_project_iam_member" "cloud" {
+  project = google_project.fs.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
 #cloud functions for storage triggers

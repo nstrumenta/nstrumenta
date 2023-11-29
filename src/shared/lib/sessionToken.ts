@@ -4,11 +4,9 @@ import { getEndpoints } from '../index';
 export const verifyToken = async ({
   token,
   apiKey,
-  apiUrl,
 }: {
   token: string;
   apiKey: string;
-  apiUrl: string;
 }): Promise<boolean> => {
   const headers = {
     'x-api-key': apiKey,
@@ -16,7 +14,7 @@ export const verifyToken = async ({
   };
   try {
     await axios.post(
-      getEndpoints(apiUrl).VERIFY_TOKEN,
+      getEndpoints(apiKey).VERIFY_TOKEN,
       { token },
       {
         headers,
