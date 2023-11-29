@@ -2,7 +2,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/
     steps:
       - checkout:
@@ -14,9 +14,23 @@ jobs:
           command: npm i
       - run:
           command: npm run build
+  build-server-image:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project/server
+    steps:
+      - checkout:
+          path: ~/project
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: 
+          command: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`"
+      - run: docker build --rm=false -t gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud docker -- push gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH}
   build-frontend:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/frontend
     steps:
       - checkout:
@@ -39,7 +53,7 @@ jobs:
             - '~/project/cluster/frontend/dist'
   build-functions:
     docker:
-      - image: circleci/node:16.13.1
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/functions
     steps:
       - checkout:
@@ -88,7 +102,10 @@ workflows:
       - build
       - build-frontend
       - build-functions
+      - build-server-image
       - run-tests
+        requires:
+          - build-server-image      
       - build-and-push-images:
           filters:
             tags:
