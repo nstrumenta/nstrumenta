@@ -23,8 +23,7 @@ jobs:
           path: ~/project
       - setup_remote_docker
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run:
-          command: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`"
+      - run: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`" >> $BASH_ENV
       - run: docker build --rm=false -t gcr.io/${GOOGLE_PROJECT_ID}/nst-server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
@@ -76,7 +75,8 @@ jobs:
             - '~/project/cluster/functions/dist'
   run-tests:
     resource_class: large
-    machine: true
+    docker:
+      - image: nstrumenta/toolchain
     working_directory: ~/project/cluster/integration-tests/
     steps:
       - checkout:
@@ -88,7 +88,8 @@ jobs:
       - run: ./ci.sh browser-client
   build-and-push-images:
     resource_class: arm.large
-    machine: true
+    machine:
+      image: ubuntu-2204:2023.07.2
     working_directory: ~/project
     steps:
       - checkout:
@@ -96,8 +97,6 @@ jobs:
       - run: ./build-docker-images.sh
 
 workflows:
-  version: 2
-
   -ci:
     jobs:
       - build
