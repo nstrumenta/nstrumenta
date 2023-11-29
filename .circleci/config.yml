@@ -113,7 +113,7 @@ jobs:
       - run:
           name: delete test-server
           command: >
-            gcloud run services delete ${TEST_SERVER}
+            gcloud run services delete --region=us-west1 ${TEST_SERVER}
           when: always
 
   build-and-push-images:
