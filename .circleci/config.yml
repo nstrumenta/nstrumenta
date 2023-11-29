@@ -26,7 +26,7 @@ jobs:
           command: echo "export GOOGLE_PROJECT_ID=`echo $GCLOUD_SERVICE_KEY | jq -r .project_id`"
       - run:
           name: start docker
-          command: dockerd
+          command: sudo dockerd
           background: true
       - run:
           name: Wait for Docker daemon
