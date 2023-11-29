@@ -103,9 +103,9 @@ workflows:
       - build-frontend
       - build-functions
       - build-server-image
-      - run-tests
-        requires:
-          - build-server-image      
+      - run-tests:
+          requires:
+            - build-server-image      
       - build-and-push-images:
           filters:
             tags:
