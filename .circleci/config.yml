@@ -87,7 +87,6 @@ jobs:
       - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
       - run: echo "export IMAGE=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
       - run: echo "export TEST_SERVER=test-server-${CIRCLE_SHA1}" >> $BASH_ENV
-      - run: docker build -t ${IMAGE} .
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run:  
@@ -111,6 +110,12 @@ jobs:
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client
+      - run:
+          name: delete test-server
+          command: >
+            gcloud run services delete ${TEST_SERVER}
+          when: always
+
   build-and-push-images:
     resource_class: arm.large
     machine:
