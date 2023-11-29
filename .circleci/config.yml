@@ -91,23 +91,23 @@ jobs:
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run:  
-        name: deploy test-server
-        command: >
-        gcloud run deploy ${TEST_SERVER}
-        --image=${IMAGE} 
-        --port=5999 
-        --allow-unauthenticated
-        --region=us-west
-        --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest 
+          name: deploy test-server
+          command: >
+            gcloud run deploy ${TEST_SERVER}
+            --image=${IMAGE} 
+            --port=5999 
+            --allow-unauthenticated
+            --region=us-west
+            --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest 
       - run:
-        name: get API_URL from test server
-        command: >
-        echo 'export API_URL=`gcloud run services describe --region=us-west1 ${TEST_SERVER} --format=json | jq -r .status.address.url`
-        >> $BASH_ENV
+          name: get API_URL from test server
+          command: >
+            echo 'export API_URL=`gcloud run services describe --region=us-west1 ${TEST_SERVER} --format=json | jq -r .status.address.url`
+            >> $BASH_ENV
       - run:
           name: make api key with test server url
           command: > 
-          echo 'export NSTRUMENTA_API_KEY=`node changeApiKeyUrl ${NSTRUMENTA_INTEGRATION_TEST_API_KEY} ${API_URL}`' >> "$BASH_ENV"
+            echo 'export NSTRUMENTA_API_KEY=`node changeApiKeyUrl ${NSTRUMENTA_INTEGRATION_TEST_API_KEY} ${API_URL}`' >> "$BASH_ENV"
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client
