@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.26](https://github.com/nstrumenta/nstrumenta/compare/v3.1.25...v3.1.26) (2023-11-30)
+
+
+### Features
+
+* **npm:** updates axios, fixes audit ([#181](https://github.com/nstrumenta/nstrumenta/issues/181)) ([500d370](https://github.com/nstrumenta/nstrumenta/commit/500d370fea1d25eba26ab997fe2588a44769b0c8))
+
 ### [3.1.25](https://github.com/nstrumenta/nstrumenta/compare/v3.1.24...v3.1.25) (2023-11-20)
 
 ### [3.1.24](https://github.com/nstrumenta/nstrumenta/compare/v3.1.23...v3.1.24) (2023-11-20)
