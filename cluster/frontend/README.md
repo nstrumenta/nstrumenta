@@ -17,7 +17,7 @@ npx firebase login
 ## setting up hosting
 build and deploy with (replace project id with your own): 
 ```shell
-npm run build && FIREBASE_PROJECT_ID=[firebase project id] ./deployFirebase.sh`
+export FIREBASE_PROJECT_ID=[firebase project id] node fetchFirebaseConfigJson.js && npm run build && ./deployFirebase.sh
 ```
 
 for DNS, set A record in dns and add domain to authorized domains in Firebase -> auth -> authorized domains

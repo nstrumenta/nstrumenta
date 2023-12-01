@@ -4,7 +4,7 @@
 # ✔  Applied hosting target main to firebase-project-id
 
 #make firebase.json with site
-node makeFirebaseConfig.js
+node makeFirebaseDeployConfig.js
 
 # Updated: main (firebase-project-id)
 npx firebase use $FIREBASE_PROJECT_ID
