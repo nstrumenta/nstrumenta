@@ -192,9 +192,39 @@ data "google_compute_default_service_account" "default" {
   project = google_project.fs.project_id
 }
 
-resource "local_file" "firebase_web_app_config_json" {
-  filename = "firebaseConfig.json"
+# public bucket to serve configurations to web apps
+resource "google_storage_bucket" "config" {
+  provider      = google-beta
+  project       = google_project.fs.project_id
+  name          = "${google_project.fs.project_id}-config"
+  location      = var.location_id
+  force_destroy = true
+  cors {
+    origin          = ["*"]
+    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
 
+  uniform_bucket_level_access = true
+}
+
+data "google_iam_policy" "viewer" {
+  binding {
+    role = "roles/storage.objectViewer"
+    members = [
+      "allUsers",
+    ]
+  }
+}
+resource "google_storage_bucket_iam_policy" "viewer" {
+  provider    = google-beta
+  bucket      = google_storage_bucket.config.id
+  policy_data = data.google_iam_policy.viewer.policy_data
+}
+
+resource "google_storage_bucket_object" "default" {
+  name = "firebaseConfig.json"
   content = jsonencode({
     projectId         = google_project.fs.project_id
     appId             = google_firebase_web_app.web_app.app_id
@@ -205,6 +235,7 @@ resource "local_file" "firebase_web_app_config_json" {
     messagingSenderId = lookup(data.google_firebase_web_app_config.web_app, "messaging_sender_id", "")
     measurementId     = lookup(data.google_firebase_web_app_config.web_app, "measurement_id", "")
   })
+  bucket = google_storage_bucket.config.id
 }
 
 # Create a Cloud DNS managed zone

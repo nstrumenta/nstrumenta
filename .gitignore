@@ -79,3 +79,4 @@ profile
 **/.vscode/settings.json
 cluster/frontend/.firebaserc
 **/credentials.json
+cluster/frontend/src/environments/firebaseConfig.json

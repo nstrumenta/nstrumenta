@@ -1,5 +1,11 @@
 # Terraform configuration to set up providers by version.
 terraform {
+  cloud {
+    organization = "nstrumenta"
+    workspaces {
+      tags = ["gcloud:backend"]
+    }
+  }
   required_providers {
     google-beta = {
       source  = "hashicorp/google-beta"
