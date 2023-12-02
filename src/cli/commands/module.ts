@@ -12,6 +12,7 @@ import {
   getNstDir,
   getVersionFromPath,
   resolveApiKey,
+  resolveApiUrl,
 } from '../utils';
 
 const blue = (text: string) => {
@@ -194,7 +195,7 @@ export const CloudRun = async function (
   const action = JSON.stringify({
     task: 'cloudRun',
     status: 'pending',
-    data: { module: specificModule, args },
+    data: { module: specificModule, apiUrl: resolveApiUrl(), args },
   });
 
   SetAction({ action });
