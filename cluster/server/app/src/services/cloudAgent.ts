@@ -5,6 +5,8 @@ import { writeFile } from 'fs/promises'
 import { serviceAccount } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 import { ApiKeyService } from './ApiKeyService'
+import axios from 'axios'
+import { resolveApiUrl } from '../shared/utils'
 
 const buildResourceName = (actionPath: string) => {
   const projectId = actionPath.split('/')[1]
@@ -114,12 +116,13 @@ export const createCloudAgentService = ({
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
 
     const instanceId = buildResourceName(actionPath)
-    const gcpProjectId = serviceAccount.project_id
     const imageId = `nstrumenta/agent:latest`
+
+    const apiUrl = await resolveApiUrl()
 
     //create apiKey specifically for the cloud agent
     console.log({ projectId })
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId, apiUrl)
     let description: GCloudDescribeResults | undefined = undefined
     try {
       console.log('[cloudAgent] invoke createCloudAgent')

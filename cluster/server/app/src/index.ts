@@ -405,7 +405,7 @@ firestore
                       }
                       break
                     case 'createApiKey':
-                      apiKeyService.createApiKey(doc.ref.path, projectId)
+                      apiKeyService.createApiKey(doc.ref.path, projectId, data.payload.apiUrl)
                       break
                     case 'revokeApiKey':
                       apiKeyService.revokeApiKey(
