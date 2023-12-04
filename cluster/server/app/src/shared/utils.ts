@@ -1,25 +1,11 @@
 // source: https://github.com/googleapis/nodejs-storage/blob/main/samples/generateV4UploadSignedUrl.js
 import { GetSignedUrlConfig } from '@google-cloud/storage'
 import axios from 'axios'
+import { spawn } from 'child_process'
 import {
   bucketName,
-  serviceAccount,
-  storage,
+  storage
 } from '../authentication/ServiceAccount'
-import { spawn } from 'child_process'
-
-export async function resolveApiUrl() {
-  const response = await axios({
-    method: 'GET',
-    url: `https://storage.googleapis.com/${serviceAccount.project_id}-config/nstrumentaDeployment.json`,
-    headers: {
-      contentType: 'application/json',
-    },
-  })
-
-  const { apiUrl } = response.data
-  return apiUrl
-}
 
 export async function generateV4UploadSignedUrl(
   fileName: string,

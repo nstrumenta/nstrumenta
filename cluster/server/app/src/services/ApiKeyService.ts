@@ -2,7 +2,6 @@ import { Firestore } from '@google-cloud/firestore'
 import { createHash } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
-import { resolveApiUrl } from '../shared/utils'
 
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
@@ -68,7 +67,7 @@ export function CreateApiKeyService({
     createApiKey: async function createApiKey(
       actionPath: string,
       projectId: string,
-      apiUrl?: string,
+      apiUrl: string,
     ) {
       console.log('createApiKey', projectId)
 
@@ -79,7 +78,7 @@ export function CreateApiKeyService({
         const doc = firestore.collection('keys').doc(keyId)
         await doc.set({ projectId, createdAt: Date.now() })
 
-        const keyWithUrl = `${key}:${btoa(apiUrl ?? (await resolveApiUrl()))}`
+        const keyWithUrl = `${key}:${btoa(apiUrl)}`
         await firestore
           .doc(actionPath)
           .set(

@@ -44,7 +44,7 @@ servicesCommand
 
 servicesCommand
   .command('start')
-  .argument('[imageName]', 'docker image for service' , 'nstrumenta/agent')
+  .argument('[imageName]', 'docker image for service', 'nstrumenta/agent')
   .option('--containerCommand <containerCommand>', 'command used to launch container')
   .option('--containerPort <containerPort>', 'application port in container')
   .description('start cloud run service')

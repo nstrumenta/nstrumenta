@@ -1,15 +1,15 @@
 #!/bin/bash -ex
 
 # agent
-docker build -t $REPOSITORY/agent:$VERSION_TAG -f ./cluster/agent/Dockerfile .
-docker push $REPOSITORY/agent:$VERSION_TAG
+docker build -t $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG -f ./cluster/agent/Dockerfile .
+docker push $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG
 
 # data-job-runner
-docker build -t $REPOSITORY/data-job-runner:$VERSION_TAG -f ./cluster/data-job-runner/Dockerfile .
-docker push $REPOSITORY/data-job-runner:$VERSION_TAG
+docker build -t $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG -f ./cluster/data-job-runner/Dockerfile .
+docker push $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG
 
 # server
 pushd cluster/server
-docker build -t $REPOSITORY/server:$VERSION_TAG .
-docker push $REPOSITORY/server:$VERSION_TAG
+docker build -t $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG .
+docker push $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG
 popd
