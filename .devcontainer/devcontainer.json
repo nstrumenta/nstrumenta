@@ -13,6 +13,8 @@
     }
   },
   "runArgs": [
-    "--privileged"
+    "--privileged",
+    "--env-file",
+    "./cluster/credentials/local.env"
   ]
 }
