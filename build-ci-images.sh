@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 # agent
-docker build -t $REPOSITORY/agent:$VERSION_TAG .
+docker build -t $REPOSITORY/agent:$VERSION_TAG -f ./cluster/agent/Dockerfile .
 docker push $REPOSITORY/agent:$VERSION_TAG
 
 # data-job-runner
