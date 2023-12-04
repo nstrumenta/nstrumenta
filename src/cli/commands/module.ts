@@ -12,6 +12,7 @@ import {
   getNstDir,
   getVersionFromPath,
   resolveApiKey,
+  resolveApiUrl,
 } from '../utils';
 
 const blue = (text: string) => {
@@ -191,10 +192,13 @@ export const CloudRun = async function (
   if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
   console.log('found moduleId: ', specificModule?.name);
 
+  const apiUrl = resolveApiUrl();
+  console.log({ apiUrl });
+
   const action = JSON.stringify({
     task: 'cloudRun',
     status: 'pending',
-    data: { module: specificModule, args },
+    data: { module: specificModule, apiUrl, args },
   });
 
   SetAction({ action });

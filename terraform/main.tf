@@ -223,7 +223,19 @@ resource "google_storage_bucket_iam_policy" "viewer" {
   policy_data = data.google_iam_policy.viewer.policy_data
 }
 
-resource "google_storage_bucket_object" "default" {
+data "google_iam_policy" "storage_admin" {
+  binding {
+    role    = "roles/storage.objectAdmin"
+    members = ["allAuthenticatedUsers"]
+  }
+}
+resource "google_storage_bucket_iam_policy" "storage_admin" {
+  provider    = google-beta
+  bucket      = google_storage_bucket.config.id
+  policy_data = data.google_iam_policy.storage_admin.policy_data
+}
+
+resource "google_storage_bucket_object" "firebase_config" {
   name = "firebaseConfig.json"
   content = jsonencode({
     projectId         = google_project.fs.project_id
@@ -237,6 +249,18 @@ resource "google_storage_bucket_object" "default" {
   })
   bucket = google_storage_bucket.config.id
 }
+
+resource "google_storage_bucket_object" "nstrumenta_deployment" {
+  depends_on = [google_cloud_run_v2_service.default]
+  name       = "nstrumentaDeployment.json"
+  content = jsonencode({
+    apiUrl = google_cloud_run_v2_service.default.uri
+    }
+  )
+  bucket = google_storage_bucket.config.id
+  cache_control = "public, max-age=30"
+}
+
 
 # Create a Cloud DNS managed zone
 resource "google_dns_managed_zone" "managed_zone" {

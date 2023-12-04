@@ -41,7 +41,7 @@ export async function asyncSpawn(
 }
 
 async function createRunModuleTask() {
-  console.log(process.env);
+  console.log(process.env.ACTION_DATA);
 
   if (!process.env.ACTION_DATA) {
     console.log('ACTION_DATA not present');

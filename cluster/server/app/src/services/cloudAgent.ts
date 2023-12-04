@@ -3,7 +3,11 @@ import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
 import { writeFile } from 'fs/promises'
 import { serviceAccount } from '../authentication/ServiceAccount'
-import { ActionData } from '../index'
+import {
+  ActionData,
+  nstrumentaImageRepository,
+  nstrumentaImageVersionTag,
+} from '../index'
 import { ApiKeyService } from './ApiKeyService'
 
 const buildResourceName = (actionPath: string) => {
@@ -103,23 +107,23 @@ export const createCloudAgentService = ({
 
   async function deployCloudAgent(
     actionPath: string,
-    data: { payload: { projectId: string } },
+    data: { payload: { projectId: string }; apiUrl: string },
     apiKeyService: ApiKeyService,
   ) {
     const {
       payload: { projectId },
+      apiUrl,
     } = data
 
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
 
     const instanceId = buildResourceName(actionPath)
-    const gcpProjectId = serviceAccount.project_id
-    const imageId = `nstrumenta/agent:latest`
+    const imageId = `${nstrumentaImageRepository}/agent:${nstrumentaImageVersionTag}`
 
     //create apiKey specifically for the cloud agent
     console.log({ projectId })
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId, apiUrl)
     let description: GCloudDescribeResults | undefined = undefined
     try {
       console.log('[cloudAgent] invoke createCloudAgent')
