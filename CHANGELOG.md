@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.27](https://github.com/nstrumenta/nstrumenta/compare/v3.1.26...v3.1.27) (2023-12-04)
+
+
+### Features
+
+* **apiUrl:** google project config files ([#182](https://github.com/nstrumenta/nstrumenta/issues/182)) ([85b3961](https://github.com/nstrumenta/nstrumenta/commit/85b3961df5077d177bb9776e7ba3f4850e451e6a))
+
 ### [3.1.26](https://github.com/nstrumenta/nstrumenta/compare/v3.1.25...v3.1.26) (2023-11-30)
 
 
