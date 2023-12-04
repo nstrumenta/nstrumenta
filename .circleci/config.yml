@@ -85,6 +85,7 @@ jobs:
             --allow-unauthenticated
             --region=us-west1
             --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest
+            --set-env-vars "NST_AGENT_TYPE=ci"
             --set-env-vars "IMAGE_REPOSITORY=${IMAGE_REPOSITORY}"
             --set-env-vars "IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}"
       - run:
