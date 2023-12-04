@@ -14,21 +14,6 @@ jobs:
           command: npm i
       - run:
           command: npm run build
-  build-server-image:
-    docker:
-      - image: nstrumenta/toolchain
-    working_directory: ~/project/cluster/server
-    steps:
-      - checkout:
-          path: ~/project
-      - setup_remote_docker
-      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
-      - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
-      - run: docker build -t us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH} .
-      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
-      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
-      - run: gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev
-      - run: docker push us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server/server:${CIRCLE_SHA1}${CIRCLE_BRANCH}
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
@@ -115,7 +100,22 @@ jobs:
           command: >
             gcloud run services delete --region=us-west1 ${TEST_SERVER}
           when: always
-
+  build-ci-images:
+    resource_class: large
+    machine:
+      image: ubuntu-2204:2023.07.2
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev
+      - run: echo "export REPOSITORY=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server" >> $BASH_ENV
+      - run: echo "export VERSION_TAG=${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
+      - run: ./build-ci-images.sh
   build-and-push-images:
     resource_class: arm.large
     machine:
@@ -132,10 +132,10 @@ workflows:
       - build
       - build-frontend
       - build-functions
-      - build-server-image
+      - build-ci-images
       - run-tests:
           requires:
-            - build-server-image
+            - build-ci-images
       - build-and-push-images:
           filters:
             tags:
