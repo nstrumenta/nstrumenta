@@ -3,7 +3,11 @@ import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
 import { writeFile } from 'fs/promises'
 import { serviceAccount } from '../authentication/ServiceAccount'
-import { ActionData } from '../index'
+import {
+  ActionData,
+  nstrumentaImageRepository,
+  nstrumentaImageVersionTag,
+} from '../index'
 import { CreateApiKeyService } from './ApiKeyService'
 
 export interface CloudDataJobService {
@@ -77,13 +81,14 @@ export const createCloudDataJobService = ({
     console.log('create cloud run job', { projectId, data })
 
     const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
-    const workflowId = `workflow-${actionId}`
+    const jobId = `job-${Date.now()}-${actionId}`
+    const { apiUrl } = data.data
 
-    const imageId = `nstrumenta/data-job-runner:latest`
+    const imageId = `${nstrumentaImageRepository}/data-job-runner:${nstrumentaImageVersionTag}`
 
     const apiKeyService = CreateApiKeyService({ firestore })
 
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId, apiUrl)
     if (!apiKey) throw new Error('failed to create temporary apiKey')
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
@@ -102,7 +107,7 @@ export const createCloudDataJobService = ({
       'run',
       'jobs',
       'create',
-      workflowId,
+      jobId,
       '--cpu=2',
       '--memory=8Gi',
       `--image=${imageId}`,
@@ -116,24 +121,24 @@ export const createCloudDataJobService = ({
       'run',
       'jobs',
       'execute',
-      workflowId,
+      jobId,
       '--region=us-west1',
     ])
 
-    console.log(`started ${workflowId}`)
+    console.log(`started ${jobId}`)
 
     const listExecutionsOutput = await asyncSpawn('gcloud', [
       'run',
       'jobs',
       'executions',
       'list',
-      `--job=${workflowId}`,
+      `--job=${jobId}`,
       '--region=us-west1',
     ])
 
     if (listExecutionsOutput !== null) {
       const executionMatch = listExecutionsOutput.match(
-        new RegExp(`${workflowId}-.....`),
+        new RegExp(`${jobId}-.....`),
       )
       if (executionMatch) {
         const executionId = executionMatch[0]
@@ -191,11 +196,11 @@ export const createCloudDataJobService = ({
     const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
     const serviceId = `service-${Date.now()}-${actionId}`
 
-    const { image, command, port } = data.data
+    const { image, command, port, apiUrl } = data.data
 
     const apiKeyService = CreateApiKeyService({ firestore })
 
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId, apiUrl)
     if (!apiKey) throw new Error('failed to create temporary apiKey')
     // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })

@@ -23,7 +23,16 @@ import {
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
 
-console.log('Starting nst-server')
+const version = require('../package.json').version
+
+export const nstrumentaImageRepository =
+  process.env.IMAGE_REPOSITORY ?? 'nstrumenta'
+export const nstrumentaImageVersionTag =
+  process.env.IMAGE_VERSION_TAG ?? 'latest'
+
+console.log(
+  `Starting server ${version} \nIMAGE_REPOSITORY: ${nstrumentaImageRepository} \nIMAGE_VERSION_TAG: ${nstrumentaImageVersionTag}`,
+)
 const compute = require('@google-cloud/compute')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
@@ -382,17 +391,17 @@ firestore
                         console.error(err)
                       }
                       break
-                      case 'startCloudRunService':
-                        try {
-                          cloudDataJobService.createService(
-                            doc.ref.path,
-                            projectId,
-                            data as ActionData,
-                          )
-                        } catch (err) {
-                          console.error(err)
-                        }
-                        break
+                    case 'startCloudRunService':
+                      try {
+                        cloudDataJobService.createService(
+                          doc.ref.path,
+                          projectId,
+                          data as ActionData,
+                        )
+                      } catch (err) {
+                        console.error(err)
+                      }
+                      break
                     case 'hostModule':
                       try {
                         cloudAdminService.hostModule(
@@ -405,7 +414,11 @@ firestore
                       }
                       break
                     case 'createApiKey':
-                      apiKeyService.createApiKey(doc.ref.path, projectId)
+                      apiKeyService.createApiKey(
+                        doc.ref.path,
+                        projectId,
+                        data.payload.apiUrl,
+                      )
                       break
                     case 'revokeApiKey':
                       apiKeyService.revokeApiKey(
