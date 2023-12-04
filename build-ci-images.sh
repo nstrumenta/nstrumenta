@@ -1,7 +1,6 @@
 #!/bin/bash -ex
 
 # agent
-docker buildx build \
 docker build -t $REPOSITORY/agent:$VERSION_TAG .
 docker push $REPOSITORY/agent:$VERSION_TAG
 
