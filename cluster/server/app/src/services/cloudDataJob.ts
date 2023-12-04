@@ -3,7 +3,11 @@ import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
 import { writeFile } from 'fs/promises'
 import { serviceAccount } from '../authentication/ServiceAccount'
-import { ActionData } from '../index'
+import {
+  ActionData,
+  nstrumentaImageRepository,
+  nstrumentaImageVersionTag,
+} from '../index'
 import { CreateApiKeyService } from './ApiKeyService'
 
 export interface CloudDataJobService {
@@ -80,7 +84,7 @@ export const createCloudDataJobService = ({
     const jobId = `job-${Date.now()}-${actionId}`
     const { apiUrl } = data.data
 
-    const imageId = `nstrumenta/data-job-runner:latest`
+    const imageId = `${nstrumentaImageRepository}/data-job-runner:${nstrumentaImageVersionTag}`
 
     const apiKeyService = CreateApiKeyService({ firestore })
 
