@@ -1,7 +1,25 @@
 [
   {
-    "origin": ["*"],
-    "method": ["GET"],
+    "origin": [
+      "*"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Accept-Ranges",
+      "Content-Range",
+      "Content-Encoding",
+      "Content-Length",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Range"
+    ],
+    "method": [
+      "GET",
+      "HEAD",
+      "PUT",
+      "POST",
+      "OPTIONS"
+    ],
     "maxAgeSeconds": 3600
   }
 ]
