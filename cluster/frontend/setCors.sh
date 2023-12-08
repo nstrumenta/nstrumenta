@@ -1,0 +1,1 @@
+gsutil cors set cors.json gs://${FIREBASE_PROJECT_ID}.appspot.com
