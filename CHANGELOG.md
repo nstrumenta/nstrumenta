@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.28](https://github.com/nstrumenta/nstrumenta/compare/v3.1.27...v3.1.28) (2023-12-09)
+
+
+### Features
+
+* **storage:** updates cors ([e23335f](https://github.com/nstrumenta/nstrumenta/commit/e23335f31b622fad5eb30260a8eccd87c7ada4c6))
+
 ### [3.1.27](https://github.com/nstrumenta/nstrumenta/compare/v3.1.26...v3.1.27) (2023-12-04)
 
 
