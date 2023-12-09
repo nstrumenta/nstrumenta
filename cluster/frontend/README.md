@@ -2,19 +2,34 @@
 
 angular app to manage projects, browse data, etc.
 
-deployed to firebase hosting
-
-## install deps including firebase cli
+## dev
 ```shell
 npm i
 ```
 
-## login
+```shell
+npm run serve
+```
+
+open browser to 0.0.0.0:5000 or use vscode to launch
+firebase project needs 0.0.0.0 added to authorized domains https://console.firebase.google.com/project/[*project id*]/authentication/settings
+
+
+
+
+## deploy to firebase hosting
+
+### install deps including firebase cli
+```shell
+npm i
+```
+
+### login
 ```shell
 npx firebase login
 ```
 
-## setting up hosting
+### setting up hosting
 build and deploy with (replace project id with your own): 
 ```shell
 export FIREBASE_PROJECT_ID=[firebase project id] node fetchFirebaseConfigJson.js && npm run build && ./deployFirebase.sh

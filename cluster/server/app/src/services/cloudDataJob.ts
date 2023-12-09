@@ -82,7 +82,24 @@ export const createCloudDataJobService = ({
 
     const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
     const jobId = `job-${Date.now()}-${actionId}`
-    const { apiUrl } = data.data
+
+    const projectData = (
+      await firestore.doc(`/projects/${projectId}`).get()
+    ).data()
+
+    // apiUrl: payload > projectData > nstrumentaDeployment
+    const apiUrl =
+      data.data.apiUrl ??
+      projectData?.apiUrl ??
+      (
+        (await (
+          await fetch(
+            `https://storage.googleapis.com/${serviceAccount.project_id}-config/nstrumentaDeployment.json`,
+          )
+        ).json()) as { apiUrl: string }
+      ).apiUrl
+
+    console.log({ apiUrl })
 
     const imageId = `${nstrumentaImageRepository}/data-job-runner:${nstrumentaImageVersionTag}`
 
