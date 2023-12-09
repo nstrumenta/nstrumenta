@@ -3,32 +3,20 @@ use terraform to create new client deployment
 based on https://firebase.google.com/docs/projects/terraform/get-started
 
 
-### gcloud auth with user account
-```
-gcloud auth application-default login
-```
-
-
-### gcloud auth with service account WIP
-```
-gcloud auth activate-service-account --key-file [path to key-file]
-```
-
-
 ## terraform 
 
 ### terraform init
 ```
 terraform init
 ```
-
+this will connect to the terraform cloud backend, which stores the state of all workspaces and gcloud
 
 ### set workspace
 ```
 terraform workspace new [project name]
 ```
 
-### add variables to terraform.tfvar
+### set terraform vars in terraform cloud
 ```
 billing_account =  [find or create in https://console.cloud.google.com/billing]
 org_id          = [find in https://console.cloud.google.com/ ]
@@ -49,4 +37,37 @@ then apply as normal:
 ```
 terraform apply
 ```
+
+
+## extra steps
+
+### deploy frontend
+
+### set cors on firebase bucket
+### gcloud auth with user account
+```
+gcloud auth application-default login
+```
+
+
+### gcloud auth with service account WIP
+```
+gcloud auth activate-service-account --key-file [path to key-file]
+```
+
+
+
+
+## if not using terraform cloud
+### gcloud auth with user account
+```
+gcloud auth application-default login
+```
+
+
+### gcloud auth with service account
+```
+gcloud auth activate-service-account --key-file [path to key-file]
+```
+
 
