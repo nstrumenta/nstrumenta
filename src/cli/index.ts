@@ -123,7 +123,7 @@ const agentCommand = program.command('agent');
 agentCommand
   .command('start')
   .option('-p,--port <port>', 'websocket port', '8088')
-  .option('-d, --debug <debug>', 'output extra debugging', 'false')
+  .option('-d, --debug', 'output extra debugging', false)
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
   .description('start agent')
   .action(Start);

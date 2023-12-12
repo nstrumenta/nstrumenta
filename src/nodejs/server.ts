@@ -18,6 +18,7 @@ import {
   Unsubscribe,
 } from '../shared';
 
+import { Run } from '../cli/commands/module';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -71,6 +72,8 @@ export interface NstrumentaServerOptions {
   port?: string;
   tag?: string;
   debug?: boolean;
+  connectToBackplane?: boolean;
+  allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection?: boolean;
 }
 
@@ -97,6 +100,7 @@ type TrackRecording = {
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
+  allowCrossProjectApiKey: boolean;
   allowUnverifiedConnection: boolean;
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
@@ -111,7 +115,11 @@ export class NstrumentaServer {
     this.listeners = new Map();
     console.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
-
+    if (options.connectToBackplane != false) {
+      this.backplaneClient = new NstrumentaClient();
+    }
+    this.allowCrossProjectApiKey =
+      options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
     this.allowUnverifiedConnection =
       options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
     this.status = {
@@ -138,6 +146,74 @@ export class NstrumentaServer {
   public async run() {
     const { apiKey, debug } = this.options;
     const port = this.options.port ?? 8088;
+    // server makes a local .nst folder at the cwd
+    // this allows multiple servers and working directories on the same machine
+    const cwdNstDir = `${this.cwd}/.nst`;
+    await mkdir(cwdNstDir, { recursive: true });
+
+    console.log(`nstrumenta working directory: ${cwdNstDir}`);
+    if (this.backplaneClient) {
+      try {
+        //get backplane url
+        const data = this.options.tag ? { tag: this.options.tag } : undefined;
+        console.log(endpoints.REGISTER_AGENT, data);
+        let response = await fetch(endpoints.REGISTER_AGENT, {
+          method: 'post',
+          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const { backplaneUrl, agentId, actionsCollectionPath } = (await response.json()) as {
+          backplaneUrl: string;
+          agentId: string;
+          actionsCollectionPath: string;
+        };
+
+        this.status.agentId = agentId;
+        if (backplaneUrl) {
+          this.backplaneClient.addListener('open', () => {
+            console.log(`Connected to backplane ${backplaneUrl}`);
+            this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
+              if (debug) {
+                console.log(message);
+              }
+              const { task, actionId } = message;
+              switch (task) {
+                case 'runModule':
+                  if (!message.data || !message.data.module) {
+                    console.log('Aborting: runModule command needs to specify data.module');
+                    return;
+                  }
+                  const {
+                    data: { module: moduleName, args, version },
+                  } = message;
+
+                  console.log('running module', moduleName, version);
+                  Run(moduleName, { moduleVersion: version, commandArgs: args });
+
+                  break;
+                default:
+                  console.log('message from backplane', message);
+              }
+            });
+            this.backplaneClient?.send('_nstrumenta', {
+              command: 'registerAgent',
+              agentId,
+              actionsCollectionPath,
+              tag: this.options.tag,
+            });
+          });
+
+          await this.backplaneClient.connect({
+            apiKey,
+            nodeWebSocket: WebSocket as any,
+            wsUrl: backplaneUrl,
+          });
+        }
+      } catch (err) {
+        console.warn('failed to connect to backplane', err);
+      }
+    }
+
     const app = express();
     app.set('views', __dirname + '/../..');
 
