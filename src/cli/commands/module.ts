@@ -3,7 +3,6 @@ import { Command } from 'commander';
 import fs from 'fs/promises';
 import semver from 'semver';
 import tar from 'tar';
-import { nstrumentaVersion } from '..';
 import {
   asyncSpawn,
   endpoints,
@@ -249,7 +248,6 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
       }
     }
     return {
-      nstrumentaVersion,
       ...moduleMeta,
       ...moduleConfig,
       ...packageConfig,
