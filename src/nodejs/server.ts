@@ -100,7 +100,7 @@ type TrackRecording = {
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
   backplaneClient?: NstrumentaClient;
-  allowCrossProjectApiKey: boolean;
+  allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection: boolean;
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
   idIncrement = 0;
@@ -118,8 +118,7 @@ export class NstrumentaServer {
     if (options.connectToBackplane != false) {
       this.backplaneClient = new NstrumentaClient();
     }
-    this.allowCrossProjectApiKey =
-      options.allowCrossProjectApiKey !== undefined ? options.allowCrossProjectApiKey : false;
+    this.allowCrossProjectApiKey = options.allowCrossProjectApiKey;
     this.allowUnverifiedConnection =
       options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
     this.status = {
@@ -291,7 +290,7 @@ export class NstrumentaServer {
             if (!this.allowUnverifiedConnection) {
               console.log('attempting to verify token');
               // first message from a connected websocket must be a token
-              await verifyToken({ token: busMessage.toString(), apiKey });
+              await verifyToken({ token: busMessage.toString(), apiKey, allowCrossProjectApiKey: this.allowCrossProjectApiKey });
             }
             console.log(
               this.allowUnverifiedConnection ? 'allowed unverified' : 'verified',
