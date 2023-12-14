@@ -7,7 +7,7 @@ import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } 
 export const Start = async function (options: {
   port: string;
   tag?: string;
-  debug?: string;
+  debug?: boolean;
 }): Promise<void> {
   const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
@@ -16,7 +16,7 @@ export const Start = async function (options: {
     apiKey,
     port: port ?? 8088,
     tag: tag ? tag : process.env.HOST_INSTANCE_ID,
-    debug: debug === 'true',
+    debug,
   });
 
   await server.run();
