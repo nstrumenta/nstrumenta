@@ -11,6 +11,7 @@ import { Observable, Subject, fromEvent } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
+import { Stream } from 'stream';
 import * as uuid from 'uuid';
 
 interface SensorEventStats {
@@ -41,7 +42,6 @@ export type NstrumentaExperiment = {
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
 
-  events: SensorEvent[] = [];
   eventStats = new Map<string, SensorEventStats>();
   registrations = new Map<string, { schemaId: number; channelId: number }>();
   mcapWriter: McapWriter;
@@ -50,6 +50,7 @@ export class RecordComponent implements OnInit {
   isRecording = false;
   videoStartTime: number | undefined;
   recordingName: string | undefined;
+  mediaStream: MediaStream;
   mediaRecorder: MediaRecorder;
   recordedChunks: Blob[] = [];
   recordButtonText = 'Start Recording';
@@ -243,6 +244,7 @@ export class RecordComponent implements OnInit {
         //start new writer
         this.registrations.clear();
         this.bytesWritten = 0n;
+        this.mcapData = [];
         this.mcapWriter = new McapWriter({
           writable: {
             position: () => this.bytesWritten,
@@ -573,7 +575,6 @@ export class RecordComponent implements OnInit {
     }
 
     console.log('starting device motion events');
-    this.events = [];
     fromEvent(window, 'devicemotion')
       .pipe(takeUntil(this.deviceMotionComplete))
       .subscribe((event) => this.deviceMotionHandler(event));
@@ -674,39 +675,37 @@ export class RecordComponent implements OnInit {
     window.removeEventListener('pointermove', this.handleMouseEvent);
   }
 
-  startVideo() {
+  async startVideo() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({ video: true })
-        .then((stream) => {
-          this.mediaRecorder = new MediaRecorder(stream);
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
-          // Stream video to preview in real-time
-          this.previewVideo.nativeElement.srcObject = stream;
+      this.mediaRecorder = new MediaRecorder(this.mediaStream);
+      this.recordedChunks = [];
 
-          this.mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-              this.recordedChunks.push(event.data);
-            }
-          };
+      // Stream video to preview in real-time
+      this.previewVideo.nativeElement.srcObject = this.mediaStream;
 
-          this.mediaRecorder.onstop = async () => {
-            const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
-            const videoUrl = URL.createObjectURL(recordedBlob);
-            this.previewVideo.nativeElement.src = videoUrl;
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+        }
+      };
 
-            const projectDataPath = '/projects/' + this.projectId + '/data';
-            const filePath = `${projectDataPath}/${this.recordingName}.webm`;
+      this.mediaRecorder.onstop = async () => {
+        const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        const videoUrl = URL.createObjectURL(recordedBlob);
+        this.previewVideo.nativeElement.src = videoUrl;
 
-            await this.storage.upload(filePath, recordedBlob);
-          };
-          // Play the video automatically
-          this.previewVideo.nativeElement.play();
+        const projectDataPath = '/projects/' + this.projectId + '/data';
+        const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
-          this.mediaRecorder.start();
-          this.videoStartTime = Date.now();
-        })
-        .catch((error) => alert(`Error accessing camera: ${error.message}`));
+        await this.storage.upload(filePath, recordedBlob);
+      };
+      // Play the video automatically
+      this.previewVideo.nativeElement.play();
+
+      this.mediaRecorder.start();
+      this.videoStartTime = Date.now();
     } else {
       console.error('getUserMedia is not supported in this browser');
     }
@@ -737,6 +736,7 @@ export class RecordComponent implements OnInit {
 
       console.log('stopping recordDeviceMotion');
       await this.saveEvents();
+      this.mcapWriter = undefined;
     }
   }
 
@@ -829,8 +829,6 @@ export class RecordComponent implements OnInit {
         experimentFilepath,
         new Blob([JSON.stringify(experiment)], { type: 'application/json' })
       );
-    } else {
-      console.log('no events in recording');
     }
   }
 }
