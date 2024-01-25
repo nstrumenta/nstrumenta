@@ -635,7 +635,7 @@ export class RecordComponent implements OnInit {
         };
         this.onSensorEvent({
           timestamp: gamepadState.timestamp,
-          id: 'gamepad',
+          id: '/input/gamepad',
           values: [...gamepad.axes, ...gamepad.buttons.map((button) => button.value)],
         });
       }
@@ -660,7 +660,7 @@ export class RecordComponent implements OnInit {
   handleMouseEvent(event: PointerEvent) {
     this.onSensorEvent({
       timestamp: Date.now(),
-      id: 'mouse',
+      id: '/input/mouse',
       values: [event.clientX, event.clientY, event.buttons],
     });
   }

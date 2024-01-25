@@ -25,7 +25,18 @@
   </mat-form-field>
 </form>
 
-
+<mat-list>
+  <ng-container *ngFor="let stat of eventStats | keyvalue">
+    <mat-list-item>
+      sensor id {{stat.key}}: {{stat.value.timestamp - stat.value.previousTimestamp}}ms
+    </mat-list-item>
+    <mat-list dense>
+      <mat-list-item *ngFor="let value of stat.value.values">
+        {{value}}
+      </mat-list-item>
+    </mat-list>
+  </ng-container>
+</mat-list>
 
 <div style="flex-direction:row">
   <ng-container *ngIf="selection.hasValue()">
@@ -129,15 +140,3 @@
     class="animate"></mat-row>
 </mat-table>
 
-<mat-list>
-  <ng-container *ngFor="let stat of eventStats | keyvalue">
-    <mat-list-item>
-      sensor id {{stat.key}}: {{stat.value.timestamp - stat.value.previousTimestamp}}ms
-    </mat-list-item>
-    <mat-list dense>
-      <mat-list-item *ngFor="let value of stat.value.values">
-        {{value}}
-      </mat-list-item>
-    </mat-list>
-  </ng-container>
-</mat-list>
