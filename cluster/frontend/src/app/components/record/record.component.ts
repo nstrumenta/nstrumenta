@@ -1,15 +1,17 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, OnInit } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { fromEvent, Observable, Subject } from 'rxjs';
-import { finalize, map, takeUntil } from 'rxjs/operators';
+import { McapWriter } from '@mcap/core';
+import { Observable, Subject, fromEvent } from 'rxjs';
+import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
+import { Stream } from 'stream';
 import * as uuid from 'uuid';
 
 interface SensorEventStats {
@@ -19,15 +21,38 @@ interface SensorEventStats {
   values: number[];
 }
 
+export type NstrumentaVideo = {
+  name: string;
+  filePath: string;
+  startTime?: number;
+  offset?: number;
+  rotate?: number;
+};
+
+export type NstrumentaExperiment = {
+  dataFilePath: string;
+  videos?: NstrumentaVideo[];
+};
+
 @Component({
   selector: 'app-record',
   templateUrl: './record.component.html',
   styleUrls: ['./record.component.scss'],
 })
 export class RecordComponent implements OnInit {
-  events: SensorEvent[] = [];
-  eventStats = new Map<number, SensorEventStats>();
+  @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
+
+  eventStats = new Map<string, SensorEventStats>();
+  registrations = new Map<string, { schemaId: number; channelId: number }>();
+  mcapWriter: McapWriter;
+  bytesWritten: bigint;
+  mcapData: Uint8Array[] = [];
   isRecording = false;
+  videoStartTime: number | undefined;
+  recordingName: string | undefined;
+  mediaStream: MediaStream;
+  mediaRecorder: MediaRecorder;
+  recordedChunks: Blob[] = [];
   recordButtonText = 'Start Recording';
   isForwardingToWebsocket = false;
   forwardButtonText = 'Start Forwarding';
@@ -37,6 +62,7 @@ export class RecordComponent implements OnInit {
   deviceMotionListener = false;
   bluetoothDevices: any = {};
   deviceMotionComplete = new Subject<void>();
+  gamepadPollingInterval: NodeJS.Timeout = null;
   uploadPercent: Observable<number>;
   geolocationWatchId: number;
   inputName: string;
@@ -44,6 +70,11 @@ export class RecordComponent implements OnInit {
   dataSource: MatTableDataSource<any>;
   dataPath: any;
   selection = new SelectionModel<any>(true, []);
+  bigintTime(): bigint {
+    const milliseconds = new Date().getTime();
+    return BigInt(milliseconds) * 1000000n;
+  }
+  textEncoder = new TextEncoder();
 
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe(Breakpoints.Handset)
@@ -93,6 +124,14 @@ export class RecordComponent implements OnInit {
             name: 'Geolocation',
           },
           {
+            type: 'mouse',
+            name: 'Mouse',
+          },
+          {
+            type: 'gamepad',
+            name: 'Gamepad',
+          },
+          {
             type: 'bluetooth',
             name: 'Nordic Thingy',
             service: 'ef680400-9b35-4933-9b10-52ffa9740042',
@@ -139,6 +178,12 @@ export class RecordComponent implements OnInit {
           case 'geolocation':
             this.startGeolocation();
             break;
+          case 'gamepad':
+            this.startGamepad();
+            break;
+          case 'mouse':
+            this.startMouse();
+            break;
           case 'bluetooth':
             this.startBluetooth(selected);
             break;
@@ -152,6 +197,12 @@ export class RecordComponent implements OnInit {
             break;
           case 'geolocation':
             this.stopGeolocation();
+            break;
+          case 'gamepad':
+            this.stopGamepad();
+            break;
+          case 'mouse':
+            this.stopMouse();
             break;
           case 'bluetooth':
             this.stopBluetooth(selected);
@@ -170,10 +221,7 @@ export class RecordComponent implements OnInit {
     this.afs.collection<any>(this.dataPath).add({ name: name, lastModified: Date.now() });
   }
 
-  onSensorEvent(event: SensorEvent) {
-    if (this.isRecording) {
-      this.events.push(event);
-    }
+  async onSensorEvent(event: SensorEvent) {
     if (!this.eventStats.has(event.id)) {
       this.eventStats.set(event.id, {
         timestamp: event.timestamp,
@@ -188,6 +236,80 @@ export class RecordComponent implements OnInit {
         previousTimestamp: currentStats.timestamp,
         count: currentStats.count + 1,
         values: event.values,
+      });
+    }
+    if (this.isRecording) {
+      const topic = `${event.id}`;
+      if (!this.mcapWriter) {
+        //start new writer
+        this.registrations.clear();
+        this.bytesWritten = 0n;
+        this.mcapData = [];
+        this.mcapWriter = new McapWriter({
+          writable: {
+            position: () => this.bytesWritten,
+            write: async (buffer: Uint8Array) => {
+              console.log(`writing ${buffer.byteLength} bytes`);
+              this.mcapData.push(buffer);
+              this.bytesWritten += BigInt(buffer.byteLength);
+            },
+          },
+          useChunks: true,
+          useStatistics: true,
+        });
+        await this.mcapWriter.start({
+          library: 'frontend recording',
+          profile: '',
+        });
+      }
+      if (!this.registrations.has(topic)) {
+        console.log(this.mcapWriter.statistics);
+        const schemaId = await this.mcapWriter.registerSchema({
+          name: `${event.id}`,
+          encoding: 'jsonschema',
+          data: this.textEncoder.encode(
+            JSON.stringify({
+              title: 'ACCEL_RAW',
+              type: 'object',
+              properties: {
+                appTs: {
+                  type: 'string',
+                },
+                id: {
+                  type: 'string',
+                },
+                typeId: {
+                  type: 'string',
+                },
+                ts: {
+                  type: 'number',
+                },
+                values: {
+                  type: 'array',
+                  items: {
+                    type: 'number',
+                  },
+                },
+              },
+            })
+          ),
+        });
+        const channelId = await this.mcapWriter.registerChannel({
+          topic,
+          messageEncoding: 'json',
+          schemaId: schemaId,
+          metadata: new Map(),
+        });
+        this.registrations.set(topic, { schemaId, channelId });
+      }
+      const { channelId } = this.registrations.get(topic);
+      const bigintTime = this.bigintTime();
+      await this.mcapWriter.addMessage({
+        sequence: 0,
+        channelId,
+        logTime: bigintTime,
+        publishTime: bigintTime,
+        data: this.textEncoder.encode(JSON.stringify(event)),
       });
     }
   }
@@ -227,12 +349,12 @@ export class RecordComponent implements OnInit {
 
     this.onSensorEvent({
       timestamp: timestamp,
-      id: 1,
+      id: 'accel',
       values: accel,
     });
     this.onSensorEvent({
       timestamp: timestamp,
-      id: 4,
+      id: 'gyro',
       values: gyro,
     });
   }
@@ -240,19 +362,19 @@ export class RecordComponent implements OnInit {
   handleSocketioSensorNotification(message) {
     this.onSensorEvent({
       timestamp: message.data.serialPortTimestamp,
-      id: 1,
+      id: 'accel',
       values: message.data.acc,
     });
 
     this.onSensorEvent({
       timestamp: message.data.serialPortTimestamp,
-      id: 2,
+      id: 'mag',
       values: message.data.mag,
     });
 
     this.onSensorEvent({
       timestamp: message.data.serialPortTimestamp,
-      id: 4,
+      id: 'gyro',
       values: message.data.gyro,
     });
   }
@@ -318,7 +440,7 @@ export class RecordComponent implements OnInit {
             characteristic.addEventListener('characteristicvaluechanged', (bleEvent) => {
               let parser = (input) => {
                 console.log(input);
-                return { id: 0, timestamp: 0, values: [] };
+                return { id: bleEvent.target.value.id, timestamp: 0, values: [] };
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
@@ -353,7 +475,7 @@ export class RecordComponent implements OnInit {
 
     this.onSensorEvent({
       timestamp: timestamp,
-      id: 3001,
+      id: 'thingy',
       values: [accel[0], accel[1], accel[2], gyro[0], gyro[1], gyro[2], mag[0], mag[1], mag[2]],
     });
   }
@@ -369,7 +491,7 @@ export class RecordComponent implements OnInit {
     // console.log(timestamp + "," + accel.toString() + "," + gyro.toString() + "," + mag.toString());
     this.onSensorEvent({
       timestamp: timestamp,
-      id: 3000,
+      id: 'bluecoin',
       values: [
         sensorTimestamp,
         accel[0],
@@ -388,10 +510,10 @@ export class RecordComponent implements OnInit {
   handleLpomSensorNotification(bleEvent) {
     const timestamp = Date.now();
     const buffer = bleEvent.target.value.buffer;
-    const id = new Uint8Array(buffer)[0];
-
+    const sensorId = new Uint8Array(buffer)[0];
+    let id = `lpom-${sensorId}`;
     const values = [];
-    switch (id) {
+    switch (sensorId) {
       case 1: {
         //Raw Mag int24 (why not int?)
         for (var i = 0; i < 3; i++) {
@@ -436,7 +558,7 @@ export class RecordComponent implements OnInit {
 
     this.onSensorEvent({
       timestamp,
-      id: id + 4000,
+      id,
       values,
     });
   }
@@ -453,7 +575,6 @@ export class RecordComponent implements OnInit {
     }
 
     console.log('starting device motion events');
-    this.events = [];
     fromEvent(window, 'devicemotion')
       .pipe(takeUntil(this.deviceMotionComplete))
       .subscribe((event) => this.deviceMotionHandler(event));
@@ -478,7 +599,7 @@ export class RecordComponent implements OnInit {
         console.log(position);
         this.onSensorEvent({
           timestamp: position.timestamp,
-          id: 65666,
+          id: 'geolocation',
           values: [
             position.coords.latitude,
             position.coords.longitude,
@@ -501,16 +622,121 @@ export class RecordComponent implements OnInit {
     window.navigator.geolocation.clearWatch(this.geolocationWatchId);
   }
 
-  toggleRecord() {
+  pollGamepads() {
+    const gamepads = navigator.getGamepads();
+    for (let i = 0; i < gamepads.length; i++) {
+      const gamepad = gamepads[i];
+      if (gamepad) {
+        const gamepadState = {
+          id: gamepad.id,
+          timestamp: gamepad.timestamp,
+          axes: gamepad.axes,
+          buttons: gamepad.buttons,
+        };
+        this.onSensorEvent({
+          timestamp: gamepadState.timestamp,
+          id: '/input/gamepad',
+          values: [...gamepad.axes, ...gamepad.buttons.map((button) => button.value)],
+        });
+      }
+    }
+  }
+
+  startGamepad() {
+    if (!this.gamepadPollingInterval) {
+      this.gamepadPollingInterval = setInterval(() => {
+        this.pollGamepads();
+      }, 8);
+    }
+  }
+
+  stopGamepad() {
+    if (this.gamepadPollingInterval) {
+      clearInterval(this.gamepadPollingInterval);
+      this.gamepadPollingInterval = null;
+    }
+  }
+
+  handleMouseEvent(event: PointerEvent) {
+    this.onSensorEvent({
+      timestamp: Date.now(),
+      id: '/input/mouse',
+      values: [event.clientX, event.clientY, event.buttons],
+    });
+  }
+
+  startMouse() {
+    window.addEventListener('pointerdown', this.handleMouseEvent.bind(this));
+    window.addEventListener('pointermove', this.handleMouseEvent.bind(this));
+  }
+
+  stopMouse() {
+    window.removeEventListener('pointerdown', this.handleMouseEvent);
+    window.removeEventListener('pointermove', this.handleMouseEvent);
+  }
+
+  async startVideo() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+
+      this.mediaRecorder = new MediaRecorder(this.mediaStream);
+      this.recordedChunks = [];
+
+      // Stream video to preview in real-time
+      this.previewVideo.nativeElement.srcObject = this.mediaStream;
+
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+        }
+      };
+
+      this.mediaRecorder.onstop = async () => {
+        const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        const videoUrl = URL.createObjectURL(recordedBlob);
+        this.previewVideo.nativeElement.src = videoUrl;
+
+        const projectDataPath = '/projects/' + this.projectId + '/data';
+        const filePath = `${projectDataPath}/${this.recordingName}.webm`;
+
+        await this.storage.upload(filePath, recordedBlob);
+      };
+      // Play the video automatically
+      this.previewVideo.nativeElement.play();
+
+      this.mediaRecorder.start();
+      this.videoStartTime = Date.now();
+    } else {
+      console.error('getUserMedia is not supported in this browser');
+    }
+  }
+
+  stopVideo() {
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      this.mediaRecorder.stop();
+
+      // Stop the media stream
+      this.previewVideo.nativeElement.srcObject.getTracks().forEach((track) => track.stop());
+
+      // Reset the preview video
+      this.previewVideo.nativeElement.srcObject = null;
+    }
+  }
+
+  async toggleRecord() {
     if (!this.isRecording) {
+      this.startVideo();
       this.isRecording = true;
+      this.recordingName = `recording-${Date.now()}`;
       this.recordButtonText = 'Stop Recording';
     } else {
       this.isRecording = false;
       this.recordButtonText = 'Start Recording';
+      this.stopVideo();
 
-      console.log('stopping recordDeviceMotion, ', this.events.length, ' events recorded');
-      this.saveEvents();
+      console.log('stopping recordDeviceMotion');
+      await this.saveEvents();
+      this.mcapWriter = undefined;
     }
   }
 
@@ -568,40 +794,41 @@ export class RecordComponent implements OnInit {
     this.afs.doc(this.dataPath + '/' + recordSource.key).set(recordSource, { merge: true });
   }
 
-  saveEvents() {
-    const blob = new Blob([JSON.stringify(this.events)]);
-    const fileName = 'recording.nst';
-    const file = new File([blob], fileName, {
-      type: 'application/vnd.nstrumenta',
-    });
-    console.log('uploading recording, blob.size: ', blob.size);
-    const filePathUuid = uuid.v4();
-    const filePath = '/projects/' + this.projectId + '/' + filePathUuid + '.nst';
-    const fileRef = this.storage.ref(filePath);
-    const metadata: UploadMetadata = {
-      contentDisposition: 'attachment; filename=' + fileName,
-    };
-    const task = this.storage.upload(filePath, blob, metadata);
-
-    // observe percentage changes
-    this.uploadPercent = task.percentageChanges();
-    task
-      .snapshotChanges()
-      .pipe(
-        finalize(() => {
-          fileRef.getDownloadURL().subscribe((downloadURL) => {
-            const documentData: any = {
-              lastModified: file.lastModified,
-              name: file.name,
-              size: file.size,
-              fileType: file.type,
-              filePath: filePath,
-              downloadURL: downloadURL,
-            };
-            this.afs.collection('/projects/' + this.projectId + '/data').add(documentData);
-          });
-        })
-      )
-      .subscribe();
+  async saveEvents() {
+    if (this.mcapWriter) {
+      const stats = this.mcapWriter.statistics;
+      await this.mcapWriter.end();
+      const blob = new Blob(this.mcapData);
+      const recording = this.recordingName;
+      const mcapFileName = `${recording}.mcap`;
+      console.log(
+        `uploading recording ${mcapFileName}\n, blob.size: `,
+        stats,
+        this.bytesWritten,
+        blob.size
+      );
+      const projectDataPath = '/projects/' + this.projectId + '/data';
+      const dataFilePath = `${projectDataPath}/${mcapFileName}`;
+      const experimentFilepath = `${projectDataPath}/${recording}.experiment.json`;
+      const metadata: UploadMetadata = {
+        contentDisposition: 'attachment; filename=' + mcapFileName,
+      };
+      await this.storage.upload(dataFilePath, blob, metadata);
+      //create experiment.json
+      const experiment: NstrumentaExperiment = {
+        dataFilePath,
+        videos: [
+          {
+            name: 'web',
+            filePath: `${projectDataPath}/${this.recordingName}.webm`,
+            startTime: this.videoStartTime,
+          },
+        ],
+      };
+      await this.storage.upload(
+        experimentFilepath,
+        new Blob([JSON.stringify(experiment)], { type: 'application/json' })
+      );
+    }
   }
 }
