@@ -9,7 +9,7 @@
     "downlevelIteration": true,
     "experimentalDecorators": true,
     "resolveJsonModule": true,
-    "module": "es2020",
+    "module": "es2022",
     "moduleResolution": "node",
     "importHelpers": true,
     "target": "ES2022",

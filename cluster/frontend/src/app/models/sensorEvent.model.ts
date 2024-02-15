@@ -1,5 +1,5 @@
 export class SensorEvent {
-  id: number;
+  id: string;
   timestamp: number;
   values: number[];
 }

@@ -8,6 +8,7 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { map } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-data-table',
@@ -18,7 +19,7 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
-  moduleActions: Map<string, { name: string, url?: string }>;
+  moduleActions: Map<string, { name: string; url?: string }>;
   projectId: string;
   dataPath: string;
   filterParam: string;
@@ -31,7 +32,7 @@ export class DataTableComponent implements OnInit {
     private afs: AngularFirestore,
     public dialog: MatDialog,
     private serverService: ServerService
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.route.paramMap.subscribe((paramMap) => {
@@ -50,7 +51,7 @@ export class DataTableComponent implements OnInit {
             if (url != undefined) {
               this.moduleActions.set(name, { name, url });
             } else {
-              this.moduleActions.set(name, { name, });
+              this.moduleActions.set(name, { name });
             }
           });
         });
@@ -121,7 +122,9 @@ export class DataTableComponent implements OnInit {
   async handleModuleAction(moduleAction, fileDocument) {
     console.log(moduleAction, fileDocument);
     if (moduleAction.url) {
-      window.open(`${moduleAction.url}?experiment=${fileDocument.filePath}`);
+      window.open(
+        `${moduleAction.url}?org=${environment.firebase.projectId}&experiment=${fileDocument.filePath}`
+      );
     } else {
       function getVersionFromPath(path: string) {
         const match = /(\d+)\.(\d+).(\d+)/.exec(path);
