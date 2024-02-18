@@ -2,7 +2,7 @@ ARG BASE_TAG=latest
 FROM nstrumenta/toolchain:${BASE_TAG}
 
 #install ffmpeg
-RUN apt-get update -y
+RUN apt-get update
 RUN apt-get install -y ffmpeg
 
 #install nstrumenta
