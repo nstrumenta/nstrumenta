@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.29](https://github.com/nstrumenta/nstrumenta/compare/v3.1.28...v3.1.29) (2024-03-07)
+
+
+### Features
+
+* **cli:** fixes projectId ([f4897e6](https://github.com/nstrumenta/nstrumenta/commit/f4897e63da47e50fbf6612a2362f364225b8c6cc))
+* **recording:** recording video along with sensors into mcap + experiment ([#185](https://github.com/nstrumenta/nstrumenta/issues/185)) ([55367d6](https://github.com/nstrumenta/nstrumenta/commit/55367d699f05116812c9e4e3e5e33cd5072b2222))
+
 ### [3.1.28](https://github.com/nstrumenta/nstrumenta/compare/v3.1.27...v3.1.28) (2023-12-09)
 
 
