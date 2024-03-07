@@ -3,5 +3,5 @@
     "src"
   ],
   "ext": "ts",
-  "exec": "node --inspect=0.0.0.0:9230 -r ts-node/register ./src/cli/index.ts"
+  "exec": "ts-node ./src/cli/index.ts"
 }

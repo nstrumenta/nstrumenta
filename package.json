@@ -23,7 +23,7 @@
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
     "watch:link": "nodemon --exec 'npm run build:cli && sudo npm link' --watch ./src",
-    "dev": "nodemon -- -v",
+    "dev": "nodemon -- services list",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",

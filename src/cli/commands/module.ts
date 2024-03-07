@@ -338,6 +338,7 @@ export const publishModule = async (module: ModuleExtended) => {
         );
       },
     };
+    console.log('creating tar', fileName, downloadLocation, `includes.length: ${includes.length}`);
     await tar.create(options, ['nstrumentaModule.json', ...includes]);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
