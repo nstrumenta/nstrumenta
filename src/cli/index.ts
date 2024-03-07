@@ -19,7 +19,7 @@ import {
 import { ListMachines } from './commands/machines';
 import { ListServices, StartService } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
-import { Info as ProjectInfo, Name as ProjectName } from './commands/project';
+import { Info as ProjectInfo, ProjectId } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
 
 export const nstrumentaVersion = require('../../package.json').version;
@@ -58,7 +58,7 @@ program
   .action(Send);
 
 const projectCommand = program.command('project');
-projectCommand.command('id').alias('name').description('print project id').action(ProjectName);
+projectCommand.command('id').alias('name').description('print project id').action(ProjectId);
 projectCommand
   .command('info')
   .alias('describe')

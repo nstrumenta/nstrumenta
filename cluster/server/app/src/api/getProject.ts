@@ -17,7 +17,7 @@ const getProjectBase: APIEndpoint<{
       [key: string]: any
     }
 
-    return res.status(200).send(projectWithoutKeys)
+    return res.status(200).send({ id: projectId, ...projectWithoutKeys })
   } catch (error) {
     res.status(500).send(`Something went wrong`)
   }

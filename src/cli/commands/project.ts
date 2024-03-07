@@ -13,7 +13,7 @@ export const Info = async () => {
   console.log(response.data);
 };
 
-export const Name = async () => {
+export const ProjectId = async () => {
   const apiKey = resolveApiKey();
 
   const config: AxiosRequestConfig = {
@@ -22,5 +22,5 @@ export const Name = async () => {
   };
   let response = await axios(endpoints.GET_PROJECT, config);
 
-  console.log(response.data.name);
+  console.log(response.data.id);
 };
