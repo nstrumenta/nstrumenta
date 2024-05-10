@@ -106,16 +106,6 @@ export class RecordComponent implements OnInit {
       .subscribe((data) => {
         const commonSources = [
           {
-            type: 'bluetooth',
-            name: 'ST Bluecoin',
-            notifications: [
-              {
-                service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
-                characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
-              },
-            ],
-          },
-          {
             type: 'devicemotion',
             name: 'Device Motion',
           },
@@ -150,6 +140,18 @@ export class RecordComponent implements OnInit {
               {
                 service: '00000000-0001-11ea-8d71-362b9e155667',
                 characteristic: '00000001-0001-11ea-8d71-362b9e155667',
+                configCommand: '30,1,15,62',
+              },
+            ],
+          },
+          {
+            type: 'bluetooth',
+            name: 'PEEK',
+            notifications: [
+              {
+                service: '00000000-0001-11ea-8d71-362b9e155667',
+                characteristic: '00000001-0001-11ea-8d71-362b9e155667',
+                configCommand: '100,242',
               },
             ],
           },
@@ -158,6 +160,16 @@ export class RecordComponent implements OnInit {
             name: 'canlogger',
             service: '097eb207-a128-49bb-a5e0-d3fe45100000',
             characteristic: '097eb207-a128-49bb-a5e0-d3fe45100001',
+          },
+          {
+            type: 'bluetooth',
+            name: 'ST Bluecoin',
+            notifications: [
+              {
+                service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
+                characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
+              },
+            ],
           },
         ];
         // check if any common source exists
@@ -380,7 +392,7 @@ export class RecordComponent implements OnInit {
   }
 
   startBluetooth(deviceDoc) {
-    (navigator as any).bluetooth
+    navigator.bluetooth
       // TODO enable acceptAllDevices with a user checkbox
       .requestDevice({
         acceptAllDevices: true,
@@ -410,7 +422,17 @@ export class RecordComponent implements OnInit {
         console.log('success getting characteristic ', characteristic);
         return characteristic.startNotifications();
       })
-      .then((characteristic) => {
+      .then(async (characteristic) => {
+        if (deviceDoc.notifications[0].configCommand) {
+          const clearConfigCommand = new Uint8Array([0,0]);
+          console.log('writing clear config command', clearConfigCommand);
+          await characteristic.writeValue(clearConfigCommand);
+          const configCommand = new Uint8Array(
+            deviceDoc.notifications[0].configCommand.split(',').map(Number)
+          );
+          console.log('writing config command', configCommand);
+          await characteristic.writeValue(configCommand);
+        }
         switch (deviceDoc.name) {
           case 'ST Bluecoin':
             characteristic.addEventListener(
@@ -430,17 +452,19 @@ export class RecordComponent implements OnInit {
               this.handleBluecoinRawSensorNotification
             );
             break;
-          case 'LPOM':
+          case 'PEEK':
+          case 'LPOM': {
             characteristic.addEventListener(
               'characteristicvaluechanged',
               this.handleLpomSensorNotification
             );
             break;
+          }
           default:
             characteristic.addEventListener('characteristicvaluechanged', (bleEvent) => {
               let parser = (input) => {
                 console.log(input);
-                return { id: bleEvent.target.value.id, timestamp: 0, values: [] };
+                return { id: (bleEvent.target as any).value.id, timestamp: 0, values: [] };
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
@@ -450,11 +474,11 @@ export class RecordComponent implements OnInit {
                 }
               }
               console.log(
-                bleEvent.target.value.buffer,
+                (bleEvent.target as any).value.buffer,
                 parser,
-                parser(bleEvent.target.value.buffer)
+                parser((bleEvent.target as any).value.buffer)
               );
-              const result = parser(bleEvent.target.value.buffer);
+              const result = parser((bleEvent.target as any).buffer);
               if (result) {
                 this.onSensorEvent(result);
               }
