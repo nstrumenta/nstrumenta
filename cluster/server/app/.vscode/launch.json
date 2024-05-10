@@ -5,16 +5,8 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Attach",
-      "port": 9229,
-      "request": "attach",
-      "skipFiles": ["<node_internals>/**"],
-      "type": "node",
-      "remoteRoot": "/app"
-    },
-    {
       "command": "npm run dev",
-      "name": "npm dev",
+      "name": "dev server",
       "request": "launch",
       "type": "node-terminal"
     }

@@ -31,8 +31,14 @@ npx firebase login
 
 ### setting up hosting
 build and deploy with (replace project id with your own): 
+
+set firebase project env var
 ```shell
-export FIREBASE_PROJECT_ID=[firebase project id] node fetchFirebaseConfigJson.js && npm run build && ./deployFirebase.sh
+export FIREBASE_PROJECT_ID=[firebase project id]
+```
+
+```shell
+node fetchFirebaseConfigJson.js && npm run build && ./deployFirebase.sh
 ```
 
 ## one time setting cors on bucket
