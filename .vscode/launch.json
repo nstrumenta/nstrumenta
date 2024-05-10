@@ -1,7 +1,7 @@
 {
   "configurations": [
     {
-      "name": "dev",
+      "name": "dev cli",
       "request": "launch",
       "console": "internalConsole",
       "outputCapture": "std",

@@ -52,6 +52,7 @@
     "@types/jasminewd2": "~2.0.10",
     "@types/node": "^20.4.5",
     "@types/uuid": "^8.3.4",
+    "@types/web-bluetooth": "^0.0.20",
     "codelyzer": "^6.0.2",
     "firebase-admin": "^11.10.1",
     "firebase-tools": "^12.4.6",
