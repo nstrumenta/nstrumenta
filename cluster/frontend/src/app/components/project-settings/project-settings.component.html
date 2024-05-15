@@ -1,9 +1,12 @@
 <mat-list>
   <mat-list-item>name: {{ projectSettings?.name }}</mat-list-item>
 </mat-list>
-<button mat-raised-button (click)="addProjectMember()">
-  Add User
-</button>
+<mat-list>
+  <mat-list-item>
+    apiUrl: <a [href]="projectSettings?.apiUrl" class="link">{{ projectSettings?.apiUrl }}</a>
+  </mat-list-item>
+</mat-list>
+<button mat-raised-button (click)="addProjectMember()">Add User</button>
 
 <mat-table #table [dataSource]="membersDataSource" class="animate">
   <ng-container matColumnDef="memberId">
@@ -32,9 +35,7 @@
 <mat-list>
   <mat-list-item>Api Keys</mat-list-item>
 </mat-list>
-<button mat-raised-button (click)="createApiKey()">
-  Create Api Key
-</button>
+<button mat-raised-button (click)="createApiKey()">Create Api Key</button>
 
 <mat-table #table [dataSource]="apiKeysDataSource" class="animate">
   <ng-container matColumnDef="keyId">

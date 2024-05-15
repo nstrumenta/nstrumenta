@@ -76,3 +76,12 @@ $indigo: mat.define-palette(mat.$indigo-palette);
   z-index: 1;
   position: fixed !important;
 }
+
+a {
+  color: #007bff; /* Your desired link color */
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
