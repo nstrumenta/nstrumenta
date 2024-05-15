@@ -15,6 +15,7 @@ export class ProjectService {
   projects: Observable<any[]>;
   user: User;
   currentProjectId: string;
+  projectSettings: ProjectSettings;
 
   constructor(
     private authService: AuthService,
@@ -45,23 +46,30 @@ export class ProjectService {
           .get()
           .toPromise()
           .then((results) => {
-            const projectSettings: ProjectSettings = results.data();
+            this.projectSettings = results.data();
             const lastOpened = Date.now();
             this.afs
               .collection<any>('/users/' + this.user.uid + '/projects')
               .doc(id)
-              .set({ name: projectSettings.name, lastOpened });
+              .set({ name: this.projectSettings.name, lastOpened });
             sub.unsubscribe();
           });
       });
 
     this.currentProjectId = id;
     this.currentProject.next(id);
+  
   }
 
   async createApiKey() {
     if (!this.currentProjectId) return;
-    return this.serverService.runServerTask('createApiKey', this.currentProjectId, {}, console.log);
+    console.log(this.projectSettings);
+    return this.serverService.runServerTask(
+      'createApiKey',
+      this.currentProjectId,
+      { apiUrl: this.projectSettings.apiUrl },
+      console.log
+    );
   }
 
   async revokeApiKey(keyId: string) {
