@@ -9,7 +9,7 @@ run docker-compose from a folder containing a docker-compose.yml file. Have TEST
 https://nstrumenta.com/projects/integration-tests/overview
 
 ```shell
-nodejs-client % TEST_ID=`uuidgen` NSTRUMENTA_API_KEY=[apikey] docker-compose up --build
+nodejs-client % TEST_ID=`uuidgen` NSTRUMENTA_API_KEY=[apikey] docker compose up --build
 ```
 
 ## running with environment file
