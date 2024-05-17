@@ -3,15 +3,14 @@ import { createHash } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
 
+import { serviceAccount } from '../authentication/ServiceAccount'
+
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
 }
 
 export interface ApiKeyService {
-  createAndAddApiKey(
-    projectId: string,
-    apiUrl: string,
-  ): Promise<string | undefined>
+  createAndAddApiKey(projectId: string): Promise<string | undefined>
   createApiKey(
     actionPath: string,
     projectId: string,
@@ -29,10 +28,23 @@ export function CreateApiKeyService({
   firestore,
 }: ApiKeyServiceDependencies): ApiKeyService {
   return {
-    createAndAddApiKey: async function createAndAddApiKey(
-      projectId: string,
-      apiUrl: string,
-    ) {
+    createAndAddApiKey: async function createAndAddApiKey(projectId: string) {
+      // apiUrl: payload > projectData > nstrumentaDeployment
+
+      const projectData = (
+        await firestore.doc(`/projects/${projectId}`).get()
+      ).data()
+      const apiUrl =
+        process.env.NSTRUMENTA_API_KEY ??
+        projectData?.apiUrl ??
+        (
+          (await (
+            await fetch(
+              `https://storage.googleapis.com/${serviceAccount.project_id}-config/nstrumentaDeployment.json`,
+            )
+          ).json()) as { apiUrl: string }
+        ).apiUrl
+
       console.log('createAndAddApiKey', projectId, apiUrl)
 
       const key = uuid()

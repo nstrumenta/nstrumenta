@@ -107,12 +107,11 @@ export const createCloudAgentService = ({
 
   async function deployCloudAgent(
     actionPath: string,
-    data: { payload: { projectId: string }; apiUrl: string },
+    data: { payload: { projectId: string }},
     apiKeyService: ApiKeyService,
   ) {
     const {
-      payload: { projectId },
-      apiUrl,
+      payload: { projectId }
     } = data
 
     // mark action as started
@@ -123,7 +122,7 @@ export const createCloudAgentService = ({
 
     //create apiKey specifically for the cloud agent
     console.log({ projectId })
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId, apiUrl)
+    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
     let description: GCloudDescribeResults | undefined = undefined
     try {
       console.log('[cloudAgent] invoke createCloudAgent')
