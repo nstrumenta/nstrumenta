@@ -32,6 +32,21 @@
       "type": "node"
     },
     {
+      "name": "dev:agent",
+      "request": "launch",
+      "console": "internalConsole",
+      "outputCapture": "std",
+      "runtimeArgs": [
+        "run-script",
+        "dev:agent"
+      ],
+      "runtimeExecutable": "npm",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "type": "node"
+    },
+    {
         "name": "Docker: Attach to Node",
         "type": "node",
         "request": "attach",
