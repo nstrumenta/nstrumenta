@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.30](https://github.com/nstrumenta/nstrumenta/compare/v3.1.29...v3.1.30) (2024-05-17)
+
 ### [3.1.29](https://github.com/nstrumenta/nstrumenta/compare/v3.1.28...v3.1.29) (2024-03-07)
 
 
