@@ -22,7 +22,7 @@
     "build:server": "(cd cluster/server/app ; rm -rf node_modules ; npm i ; npm run build)",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
-    "watch:link": "nodemon --exec 'npm run build:cli && sudo npm link' --watch ./src",
+    "watch:link": "nodemon --exec 'npm run build:browser && npm link' --watch ./src",
     "dev": "nodemon -- services list",
     "dev:agent": "nodemon -- agent start",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
