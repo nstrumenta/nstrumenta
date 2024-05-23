@@ -56,7 +56,8 @@ export class NstrumentaBrowserClient extends NstrumentaClientBase {
           token = await getToken(this.apiKey);
         } catch (error) {
           console.error((error as Error).message);
-          throw error;
+          reject(error);
+          return;
         }
       }
       this.ws = new WebSocket(wsUrl) as unknown as WebSocketLike;
