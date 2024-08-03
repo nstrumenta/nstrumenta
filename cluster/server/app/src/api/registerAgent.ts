@@ -1,6 +1,6 @@
 import { QuerySnapshot } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
-import { firestore } from '../authentication/ServiceAccount'
+import { firestore, serviceAccount } from '../authentication/ServiceAccount'
 
 export interface RegisterAgentArgs {
   projectId: string
@@ -46,6 +46,22 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
   const { projectId } = args
   const { tag } = req.body
   try {
+    const projectPath = `/projects/${projectId}`
+    const project = await (await firestore.doc(projectPath).get()).data()
+
+    // apiUrl: payload > projectData > nstrumentaDeployment
+    const backplaneUrl =
+      project?.backplaneUrl ??
+      (
+        (await (
+          await fetch(
+            `https://storage.googleapis.com/${serviceAccount.project_id}-config/nstrumentaDeployment.json`,
+          )
+        ).json()) as { backplaneUrl: string }
+      ).backplaneUrl
+
+    console.log({ backplaneUrl })
+
     const agentDoc = {
       projectId,
       createdAt: Date.now(),
@@ -62,7 +78,9 @@ const registerAgentBase: APIEndpoint<RegisterAgentArgs> = async (
       await tagAgent({ projectId, agentId, tag })
     }
 
-    return res.status(200).send({ agentId, actionsCollectionPath })
+    return res
+      .status(200)
+      .send({ backplaneUrl, agentId, actionsCollectionPath })
   } catch (error) {
     console.error(error)
     res.status(404).send(`Error fetching hosts`)
