@@ -17,7 +17,7 @@ export class NstrumentaClient extends NstrumentaClientBase {
 
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
-      console.log('connecting to nstrumenta');
+      console.log('client connect');
       const { wsUrl, apiKey, verify = true } = connectOptions;
       if (this.reconnection.attempts > 100) {
         throw new Error('Too many reconnection attempts, stopping');
