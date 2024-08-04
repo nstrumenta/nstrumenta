@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
+import { Module } from './module';
 
 export const Start = async function (options: {
   port: string;
@@ -66,10 +67,10 @@ export const RunModule = async (
       headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
     });
 
-    let data = await response.json();
+    const modules = (await response.json()) as Module[];
 
-    (data as [string, Object][])
-      .map((nameObjectPair) => nameObjectPair[0])
+    modules
+      .map((module) => module.name)
       .forEach((path) => {
         console.log({ path });
         const name = path.split('#')[0];
@@ -78,10 +79,10 @@ export const RunModule = async (
 
     module = await inquiryForSelectModule(Array.from(serverModules));
 
-    const moduleVersions = (data as [string, Object][])
-      .map((nameObjectPair: any) => nameObjectPair[0])
+    const moduleVersions = modules
+      .map((module) => module.name)
       .filter((path) => path.startsWith(module))
-      .map(({ id: path }: { id: string }) => getVersionFromPath(path));
+      .map((path) => getVersionFromPath(path));
     console.log(moduleVersions);
 
     version = await inquiryForSelectModule(moduleVersions);

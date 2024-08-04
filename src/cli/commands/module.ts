@@ -104,7 +104,7 @@ export const Host = async function (
   { args }: Command
 ): Promise<void> {
   console.log('Finding ', moduleName);
-  let modules: string[] = [];
+  let modules: Module[] = [];
   try {
     const apiKey = resolveApiKey();
     let response = await fetch(endpoints.LIST_MODULES, {
@@ -119,19 +119,18 @@ export const Host = async function (
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    modules = (await response.json()) as string[];
+    modules = (await response.json()) as Module[];
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
 
   const matches = modules
-    .map((nameObjectPair) => nameObjectPair[0])
-    .filter((module) => module.startsWith(moduleName))
+    .filter((module) => module.name.startsWith(moduleName))
     .map((module) => {
       return {
         name: moduleName,
         filePath: module,
-        version: getVersionFromPath(module),
+        version: getVersionFromPath(module.name),
       };
     });
 
@@ -144,7 +143,9 @@ export const Host = async function (
 
   if (!specificModule)
     throw new Error(
-      `unable to find a matching version for ${moduleName} \n ${JSON.stringify(modules) } \n ${JSON.stringify(matches) }`
+      `unable to find a matching version for ${moduleName} \n ${JSON.stringify(
+        modules
+      )} \n ${JSON.stringify(matches)}`
     );
   console.log('found moduleId: ', specificModule?.name);
 
@@ -168,7 +169,7 @@ export const CloudRun = async function (
   }
 ): Promise<void> {
   console.log('Finding ', moduleName);
-  let modules: string[] = [];
+  let modules: Module[] = [];
   const args: string[] = commandArgs ?? [];
   const version = moduleVersion;
 
@@ -186,18 +187,17 @@ export const CloudRun = async function (
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    modules = (await response.json()) as string[];
+    modules = (await response.json()) as Module[];
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
   const matches = modules
-    .map((nameObjectPair) => nameObjectPair[0])
-    .filter((module) => module.startsWith(moduleName))
+    .filter((module) => module.name.startsWith(moduleName))
     .map((module) => {
       return {
         name: moduleName,
         filePath: module,
-        version: getVersionFromPath(module),
+        version: getVersionFromPath(module.name),
       };
     });
 

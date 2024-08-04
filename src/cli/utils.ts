@@ -172,9 +172,9 @@ export const getModuleFromStorage = async ({
 
   const data = await response.json();
 
-  const serverModules = (data as [string, Object][])
-    .map((nameObjectPair) => nameObjectPair[0])
-    .filter((module) => module.startsWith(name))
+  const serverModules = (data as Module[])
+    .map((module) => module.name)
+    .filter((moduleName) => moduleName.startsWith(name))
     .map((match) => {
       return {
         moduleTarName: match,

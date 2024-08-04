@@ -67,7 +67,7 @@ export async function generateV4UploadSignedUrl(
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const location = response.headers.get('location')
+    location = response.headers.get('location')
   } catch (e) {
     console.log('fetch error', e)
   }
