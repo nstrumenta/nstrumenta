@@ -1,4 +1,3 @@
-import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import fs from 'fs/promises';
 import semver from 'semver';
@@ -76,20 +75,23 @@ export const SetAction = async (options: { action: string; tag?: string }) => {
   const apiKey = resolveApiKey();
 
   try {
-    const response: { data: string } = await axios({
+    const response = await fetch(endpoints.SET_ACTION, {
       method: 'POST',
-      url: endpoints.SET_ACTION,
       headers: {
-        contentType: 'application/json',
+        'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      data: { action },
+      body: JSON.stringify({ action }),
     });
 
-    const actionId = response.data;
-    console.log(`created action: ${actionId} `, action);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`created action: ${data} `, action);
   } catch (err) {
-    console.error('Error:', (err as AxiosError).response?.data);
+    console.error('Error:', (err as Error).message);
   }
 };
 
@@ -106,11 +108,19 @@ export const Host = async function (
   let modules: string[] = [];
   try {
     const apiKey = resolveApiKey();
-    let response = await axios(endpoints.LIST_MODULES, {
-      method: 'post',
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    let response = await fetch(endpoints.LIST_MODULES, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': 'application/json',
+      },
     });
-    modules = response.data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    modules = (await response.json()) as string[];
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
@@ -133,7 +143,10 @@ export const Host = async function (
         .reverse()
         .shift();
 
-  if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
+  if (!specificModule)
+    throw new Error(
+      `unable to find a matching version for ${moduleName} \n ${JSON.stringify(modules) } \n ${JSON.stringify(matches) }`
+    );
   console.log('found moduleId: ', specificModule?.name);
 
   const action = JSON.stringify({
@@ -162,11 +175,19 @@ export const CloudRun = async function (
 
   try {
     const apiKey = resolveApiKey();
-    let response = await axios(endpoints.LIST_MODULES, {
-      method: 'post',
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    let response = await fetch(endpoints.LIST_MODULES, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': 'application/json',
+      },
     });
-    modules = response.data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    modules = (await response.json()) as string[];
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
@@ -349,30 +370,33 @@ export const publishModule = async (module: ModuleExtended) => {
   // then, get an upload url to put the tarball into storage
   try {
     const apiKey = resolveApiKey();
-    const response = await axios.post(
-      endpoints.GET_UPLOAD_URL,
-      {
+    const response = await fetch(endpoints.GET_UPLOAD_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({
         path: remoteFileLocation,
         size,
         meta: module,
-      },
-      {
-        headers: {
-          contentType: 'application/json',
-          'x-api-key': apiKey,
-        },
-      }
-    );
+      }),
+    });
 
-    url = response.data?.uploadUrl;
-  } catch (e) {
-    let message = `can't upload ${name}`;
-    if (axios.isAxiosError(e)) {
-      if (e.response?.status === 409) {
+    if (!response.ok) {
+      if (response.status === 409) {
         console.log(`Conflict: version ${version} exists, using server version`);
         return fileName;
       }
-      message = `${message} [${(e as Error).message}]`;
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as { uploadUrl: string };
+    url = data.uploadUrl;
+  } catch (e) {
+    let message = `can't upload ${name}`;
+    if (e instanceof Error) {
+      message = `${message} [${e.message}]`;
     }
     throw new Error(message);
   }
@@ -380,14 +404,22 @@ export const publishModule = async (module: ModuleExtended) => {
   const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise
-  await axios.put(url, fileBuffer, {
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    headers: {
-      contentLength: `${size}`,
-      contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    },
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Length': `${size}`,
+        'Content-Range': `bytes 0-${size - 1}/${size}`,
+      },
+      body: fileBuffer,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error(`Error uploading file: ${(error as Error).message}`);
+  }
   return fileName;
 };
 
@@ -396,13 +428,22 @@ export const List = async (options: { filter: string; depth?: number | null }) =
   const { filter, depth = 2 } = options;
 
   try {
-    let response = await axios(endpoints.LIST_MODULES, {
-      method: 'post',
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    const response = await fetch(endpoints.LIST_MODULES, {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'content-type': 'application/json',
+      },
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as ModuleExtended[];
     const filteredModules = filter
-      ? response.data.filter((module: any) => JSON.stringify(module).includes(filter))
-      : response.data;
+      ? data.filter((module: any) => JSON.stringify(module).includes(filter))
+      : data;
 
     console.dir(filteredModules, { depth });
   } catch (error) {

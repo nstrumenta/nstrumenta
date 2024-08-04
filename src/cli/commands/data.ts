@@ -1,6 +1,5 @@
-import axios, { AxiosRequestConfig } from 'axios';
 import { createWriteStream } from 'fs';
-import { access, mkdir, readFile, rm, rmdir, stat, writeFile } from 'fs/promises';
+import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
 import { QueryOptions } from '../../shared';
@@ -21,29 +20,51 @@ export interface DataListOptions {}
 export const List = async (_: unknown, options: DataListOptions) => {
   const apiKey = resolveApiKey();
 
-  const config: AxiosRequestConfig = {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    data: { type: 'data' },
+  const config = {
+    method: 'POST',
+    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'data' }),
   };
-  let response = await axios(endpoints.LIST_STORAGE_OBJECTS, config);
 
-  const data = response.data;
+  try {
+    const response = await fetch(endpoints.LIST_STORAGE_OBJECTS, config);
 
-  console.log(JSON.stringify(data, undefined, 2));
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    console.log(JSON.stringify(data, undefined, 2));
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
 };
 
 export interface DataMountOptions {}
 export const Mount = async (_: unknown, options: DataMountOptions) => {
   const apiKey = resolveApiKey();
 
-  const config: AxiosRequestConfig = {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+  const config = {
+    method: 'POST',
+    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
   };
-  let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { bucket, projectId } = response.data;
+  let bucket: string | undefined;
+  let projectId: string | undefined;
+
+  try {
+    const response = await fetch(endpoints.GET_DATA_MOUNT, config);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    ({ bucket, projectId } = data as { bucket: string; projectId: string });
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
 
   if (bucket === undefined) {
     throw new Error('bucket undefined in response from getDataMount');
@@ -76,16 +97,27 @@ export interface DataUnmountOptions {}
 export const Unmount = async (_: unknown, options: DataUnmountOptions) => {
   const apiKey = resolveApiKey();
 
-  const config: AxiosRequestConfig = {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    data: { type: 'data' },
+  const config = {
+    method: 'POST',
+    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
   };
-  let response = await axios(endpoints.GET_DATA_MOUNT, config);
 
-  const { bucket, projectId } = response.data;
+  let bucket: string | undefined;
+  let projectId: string | undefined;
 
-  if ( bucket === undefined) {
+  try {
+    const response = await fetch(endpoints.GET_DATA_MOUNT, config);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    ({ bucket, projectId } = data as { bucket: string; projectId: string });
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
+  if (bucket === undefined) {
     throw new Error('bucket undefined in response from getDataMount');
   }
 
@@ -150,35 +182,51 @@ export const uploadFile = async ({
   let fileBuffer;
   let size;
   let url;
-  let remoteFilePath;
+  let remoteFilePath: string = '';
 
   fileBuffer = await readFile(filename);
   size = fileBuffer.length;
   const name = filename.split('/').pop();
 
-  const config: AxiosRequestConfig = {
-    method: 'post',
-    headers: { 'x-api-key': apiKey },
-    data: {
+  const config = {
+    method: 'POST',
+    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       name,
       size,
       metadata: { tags },
       overwrite,
-    },
+    }),
   };
-  let response = await axios(endpoints.GET_UPLOAD_DATA_URL, config);
 
-  url = response.data?.uploadUrl;
-  remoteFilePath = response.data?.remoteFilePath;
+  try {
+    let response = await fetch(endpoints.GET_UPLOAD_DATA_URL, config);
 
-  await axios.put(url, fileBuffer, {
-    maxBodyLength: Infinity,
-    maxContentLength: Infinity,
-    headers: {
-      contentLength: `${size}`,
-      contentLengthRange: `bytes 0-${size - 1}/${size}`,
-    },
-  });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as { uploadUrl: string; remoteFilePath: string };
+    url = data.uploadUrl;
+    remoteFilePath = data.remoteFilePath;
+
+    const putConfig = {
+      method: 'PUT',
+      headers: {
+        'Content-Length': `${size}`,
+        'Content-Range': `bytes 0-${size - 1}/${size}`,
+      },
+      body: fileBuffer,
+    };
+
+    response = await fetch(url, putConfig);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
 
   return { filename, remoteFilePath };
 };
@@ -192,19 +240,26 @@ export const query = async ({
 }: QueryOptions): Promise<Array<Record<string, unknown>>> => {
   const apiKey = resolveApiKey();
 
-  const config: AxiosRequestConfig = {
-    method: 'post',
-    headers: { 'x-api-key': apiKey },
-    data: { field, comparison, compareValue, limit, collection },
+  const config = {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ field, comparison, compareValue, limit, collection }),
   };
-
+  
   try {
-    const response = await axios(endpoints.QUERY_COLLECTION, config);
-
-    return response.data;
+    const response = await fetch(endpoints.QUERY_COLLECTION, config);
+  
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  
+    const data = await response.json() as Array<Record<string, unknown>>;
+    return data;
   } catch (error) {
     console.log(`Something went wrong: ${(error as Error).message}`);
-
     return [];
   }
 };
@@ -237,6 +292,7 @@ export const Get = async (options: QueryOptions & { output?: string }) => {
     const filename = filePath.split('/').pop();
     const remotePathInProject = filePath.replace(/^projects\/[^/]+\//, '');
     const localFilePath = `${dataIdFolder}/${filename}`;
+    
     try {
       await stat(localFilePath!);
       console.log(`local file already exists: ${localFilePath}`);
@@ -244,21 +300,33 @@ export const Get = async (options: QueryOptions & { output?: string }) => {
     } catch {
       const downloadUrlData = { path: remotePathInProject };
       const downloadUrlConfig = {
+        method: 'POST',
         headers: { 'x-api-key': resolveApiKey(), 'content-type': 'application/json' },
+        body: JSON.stringify(downloadUrlData),
       };
-      const getDownloadUrl = await axios.post(
-        endpoints.GET_PROJECT_DOWNLOAD_URL,
-        downloadUrlData,
-        downloadUrlConfig
-      );
-      const downloadUrl = getDownloadUrl.data.replace(/^\/?projects\/(\w)+\/?/, '');
-
-      const download = await axios.get(downloadUrl, { responseType: 'stream' });
-
-      let writeStream;
-      writeStream = createWriteStream(localFilePath);
-      await pipeline(download.data, writeStream);
-      return localFilePath;
+    
+      try {
+        const getDownloadUrl = await fetch(endpoints.GET_PROJECT_DOWNLOAD_URL, downloadUrlConfig);
+    
+        if (!getDownloadUrl.ok) {
+          throw new Error(`HTTP error! status: ${getDownloadUrl.status}`);
+        }
+    
+        const downloadUrl = ((await getDownloadUrl.json()) as string).replace(/^\/?projects\/(\w)+\/?/, '');
+    
+        const downloadResponse = await fetch(downloadUrl);
+    
+        if (!downloadResponse.ok  || !downloadResponse.body) {
+          throw new Error(`HTTP error! status: ${downloadResponse.status}`);
+        }
+    
+        const writeStream = createWriteStream(localFilePath);
+        await pipeline(downloadResponse.body, writeStream);
+        return localFilePath;
+      } catch (err) {
+        console.error('Error:', (err as Error).message);
+        throw err;
+      }
     }
   });
 

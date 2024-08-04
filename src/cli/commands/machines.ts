@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { endpoints, resolveApiKey } from '../utils';
 
 export interface Machine {
@@ -18,19 +17,32 @@ export const GetMachines = async () => {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
   };
-  return axios.post<Array<Machine>>(
-    endpoints.GET_MACHINES,
-    {},
-    {
-      headers,
+
+  const config = {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({}),
+  };
+
+  try {
+    const response = await fetch(endpoints.GET_MACHINES, config);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  );
+
+    const data: Array<Machine> = (await response.json()) as Array<Machine>;
+    return data;
+  } catch (error) {
+    console.error(`Something went wrong: ${(error as Error).message}`);
+    return [];
+  }
 };
 
 export const ListMachines = async () => {
   try {
     const response = await GetMachines();
-    console.log(response?.data);
+    console.log(response);
   } catch (error) {
     console.error(error);
   }
