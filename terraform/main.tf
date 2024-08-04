@@ -209,30 +209,22 @@ resource "google_storage_bucket" "config" {
   uniform_bucket_level_access = true
 }
 
-data "google_iam_policy" "viewer" {
+data "google_iam_policy" "data_bucket" {
   binding {
     role = "roles/storage.objectViewer"
     members = [
       "allUsers",
     ]
   }
-}
-resource "google_storage_bucket_iam_policy" "viewer" {
-  provider    = google-beta
-  bucket      = google_storage_bucket.config.id
-  policy_data = data.google_iam_policy.viewer.policy_data
-}
-
-data "google_iam_policy" "storage_admin" {
   binding {
     role    = "roles/storage.objectAdmin"
     members = ["allAuthenticatedUsers"]
   }
 }
-resource "google_storage_bucket_iam_policy" "storage_admin" {
+resource "google_storage_bucket_iam_policy" "data_bucket" {
   provider    = google-beta
   bucket      = google_storage_bucket.config.id
-  policy_data = data.google_iam_policy.storage_admin.policy_data
+  policy_data = data.google_iam_policy.data_bucket.policy_data
 }
 
 resource "google_storage_bucket_object" "firebase_config" {
@@ -257,7 +249,7 @@ resource "google_storage_bucket_object" "nstrumenta_deployment" {
     apiUrl = google_cloud_run_v2_service.default.uri
     }
   )
-  bucket = google_storage_bucket.config.id
+  bucket        = google_storage_bucket.config.id
   cache_control = "public, max-age=30"
 }
 
@@ -423,6 +415,12 @@ resource "google_cloudfunctions2_function" "finalize" {
       value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
     }
   }
+  lifecycle {
+    ignore_changes = [
+      build_config[0].docker_repository,
+      service_config[0].environment_variables["LOG_EXECUTION_ID"],
+    ]
+  }
 }
 
 #cloud functions for storage triggers
@@ -460,6 +458,12 @@ resource "google_cloudfunctions2_function" "delete" {
       attribute = "bucket"
       value     = split("/", google_firebase_storage_bucket.fb_app.id)[3]
     }
+  }
+  lifecycle {
+    ignore_changes = [
+      build_config[0].docker_repository,
+      service_config[0].environment_variables["LOG_EXECUTION_ID"],
+    ]
   }
 }
 
