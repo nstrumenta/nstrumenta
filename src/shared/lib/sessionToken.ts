@@ -3,9 +3,11 @@ import { getEndpoints } from '../index';
 export const verifyToken = async ({
   token,
   apiKey,
+  allowCrossProjectApiKey,
 }: {
   token: string;
   apiKey: string;
+  allowCrossProjectApiKey?: boolean;
 }): Promise<boolean> => {
   const headers = {
     'x-api-key': apiKey,
@@ -15,7 +17,7 @@ export const verifyToken = async ({
     const response = await fetch(getEndpoints(apiKey).VERIFY_TOKEN, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, allowCrossProjectApiKey }),
     });
 
     if (!response.ok) {
