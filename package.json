@@ -23,7 +23,7 @@
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
     "watch:link": "nodemon --exec 'npm run build:browser && npm link' --watch ./src",
-    "dev": "nodemon -- module run module-da260ebc-d940-4f4e-badb-839fd660eb68-cli --module-version 0.0.1722821495321 --command-args create cloud-run-module-da260ebc-d940-4f4e-badb-839fd660eb68-cli.txt",
+    "dev": "nodemon -- module list",
     "dev:agent": "nodemon -- agent start",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
