@@ -115,7 +115,7 @@ export const getFolderFromStorage = async (moduleTarName: string, options: { api
         throw new Error(`HTTP error! status: ${downloadUrlResponse.status}`);
       }
 
-      url = ((await downloadUrlResponse.json()) as { url: string }).url;
+      url = await downloadUrlResponse.text();
     } catch (error) {
       throw new Error(error as string);
     }
@@ -171,8 +171,6 @@ export const getModuleFromStorage = async ({
   });
 
   const data = await response.json();
-
-  console.log('getModuleFromStorage', JSON.stringify(data, null, 2));
 
   const serverModules = (data as Module[])
     .map((module) => module.name)
