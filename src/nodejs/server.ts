@@ -598,7 +598,6 @@ export class NstrumentaServer {
       const putResponse = await fetch(url, {
         method: 'PUT',
         headers: {
-          'Content-Length': `${size}`,
           'Content-Range': `bytes 0-${size - 1}/${size}`,
         },
         body: fileBuffer,
