@@ -13,7 +13,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "nstrumenta": "file:../../../../../../nstrumenta",
-    "wait-on": "^6.0.1"
+    "wait-on": "^7.2.0"
   },
   "devDependencies": {
     "@types/jest": "^27.4.1",
