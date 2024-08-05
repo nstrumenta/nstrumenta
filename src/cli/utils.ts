@@ -172,6 +172,8 @@ export const getModuleFromStorage = async ({
 
   const data = await response.json();
 
+  console.log('getModuleFromStorage', JSON.stringify(data, null, 2));
+
   const serverModules = (data as Module[])
     .map((module) => module.name)
     .filter((moduleName) => moduleName.startsWith(name))
