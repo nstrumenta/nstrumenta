@@ -1,10 +1,9 @@
 import { Mcap0Types } from '@mcap/core';
-import axios, { AxiosRequestConfig } from 'axios';
 import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
-  QueryOptions,
   Ping,
+  QueryOptions,
   RPC,
   StartRecording,
   StopRecording,
@@ -66,7 +65,7 @@ export type Reconnection = {
 };
 
 export const getToken = async (apiKey: string): Promise<string> => {
-  console.log('getToken', { apiKey , endpoint: getEndpoints(apiKey).GET_TOKEN});
+  console.log('getToken', { apiKey, endpoint: getEndpoints(apiKey).GET_TOKEN });
   const headers = {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
@@ -74,9 +73,16 @@ export const getToken = async (apiKey: string): Promise<string> => {
   try {
     // https://stackoverflow.com/questions/69169492/async-external-function-leaves-open-handles-jest-supertest-express
     if (typeof process !== 'undefined') await process.nextTick(() => {});
-    const { data } = await axios.get<{ token: string }>(getEndpoints(apiKey).GET_TOKEN, {
+    const response = await fetch(getEndpoints(apiKey).GET_TOKEN, {
+      method: 'GET',
       headers,
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as { token: string };
     return data.token;
   } catch (err) {
     const message = `Problem getting token, check api key, err: ${(err as Error).message}`;
@@ -108,7 +114,7 @@ export abstract class NstrumentaClientBase {
     this.addSubscription = this.addSubscription.bind(this);
     this.addListener = this.addListener.bind(this);
     this.connect = this.connect.bind(this);
-    this.storage = new StorageService({ apiKey: apiKey ?? ''});
+    this.storage = new StorageService({ apiKey: apiKey ?? '' });
   }
 
   async shutdown() {
@@ -188,32 +194,39 @@ export abstract class NstrumentaClientBase {
   public async uploadData(path: string, data: Blob, meta: Record<string, string>) {
     const size = data.size;
     let url;
-    const response = await axios.post(
-      this.endpoints.GET_UPLOAD_URL,
-      {
+
+    const response = await fetch(this.endpoints.GET_UPLOAD_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey?.split(':')[0]!,
+      },
+      body: JSON.stringify({
         path,
         size,
         meta,
-      },
-      {
-        headers: {
-          contentType: 'application/json',
-          'x-api-key': this.apiKey?.split(':')[0]!,
-        },
-      }
-    );
-
-    url = response.data?.uploadUrl;
-
-    await axios.put(url, data, {
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      headers: {
-        contentType: 'application/octet-stream',
-        contentLength: `${size}`,
-        contentLengthRange: `bytes 0-${size - 1}/${size}`,
-      },
+      }),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = (await response.json()) as { uploadUrl: string };
+    url = responseData?.uploadUrl;
+
+    const putResponse = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/octet-stream',
+        'Content-Range': `bytes 0-${size - 1}/${size}`,
+      },
+      body: data,
+    });
+
+    if (!putResponse.ok) {
+      throw new Error(`HTTP error! status: ${putResponse.status}`);
+    }
   }
   public async ping() {
     return this.callRPC<Ping>('ping', {
@@ -282,31 +295,53 @@ export class StorageService {
     if (!this.apiKey) {
       throw new Error('apiKey not set');
     }
-    const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
-      method: 'post',
-      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
-      data: { path },
+    const response = await fetch(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKeyHeader,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ path }),
     });
-    console.log('REQ:', response.request);
-    return response.data;
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log('REQ:', response);
+    const data = (await response.json()) as { url: string };
+    return data.url;
   }
 
   async download(path: string): Promise<Blob> {
     if (!this.apiKey) {
       throw new Error('apiKey not set');
     }
-    const response = await axios(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
-      method: 'post',
-      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
-      data: { path },
+    const response = await fetch(this.endpoints.GET_PROJECT_DOWNLOAD_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKeyHeader,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ path }),
     });
-    console.log('REQ:', response.request);
 
-    const { data: fetched } = await axios(response.data, {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = (await response.json()) as { url: string };
+    console.log('REQ:', response);
+
+    const fetchedResponse = await fetch(responseData.url, {
       method: 'GET',
-      responseType: 'blob',
     });
 
+    if (!fetchedResponse.ok) {
+      throw new Error(`HTTP error! status: ${fetchedResponse.status}`);
+    }
+
+    const fetched = await fetchedResponse.blob();
     return fetched;
   }
 
@@ -325,19 +360,26 @@ export class StorageService {
       compareValue,
     };
 
-    const config: AxiosRequestConfig = {
-      method: 'post',
-      headers: { 'x-api-key': this.apiKeyHeader },
-      data,
+    const config = {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKeyHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     };
 
     try {
-      const response = await axios(this.endpoints.QUERY_COLLECTION, config);
+      const response = await fetch(this.endpoints.QUERY_COLLECTION, config);
 
-      return response.data;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = (await response.json()) as Array<Record<string, unknown>>;
+      return responseData;
     } catch (error) {
       console.log(`Something went wrong: ${(error as Error).message}`);
-
       return [];
     }
   }
@@ -347,57 +389,72 @@ export class StorageService {
       throw new Error('apiKey not set');
     }
 
-    let response = await axios(this.endpoints.LIST_STORAGE_OBJECTS, {
-      method: 'post',
-      headers: { 'x-api-key': this.apiKeyHeader, 'content-type': 'application/json' },
-      data: { type },
+    const response = await fetch(this.endpoints.LIST_STORAGE_OBJECTS, {
+      method: 'POST',
+      headers: {
+        'x-api-key': this.apiKeyHeader,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ type }),
     });
 
-    return response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = (await response.json()) as string[];
+    return data;
   }
 
   public async upload({ filename, data, meta, overwrite }: StorageUploadParameters) {
     const size = data.size;
     let url;
 
-    const config: AxiosRequestConfig = {
-      method: 'post',
+    const config = {
+      method: 'POST',
       headers: {
         'x-api-key': this.apiKeyHeader!,
         'Content-Type': 'application/json',
       },
-      data: {
+      body: JSON.stringify({
         name: filename,
         size,
         metadata: meta,
         overwrite,
-      },
+      }),
     };
 
-    let response = await axios(this.endpoints.GET_UPLOAD_DATA_URL, config);
+    let response = await fetch(this.endpoints.GET_UPLOAD_DATA_URL, config);
 
-    url = response.data?.uploadUrl;
-    if (!url) {
-      console.warn(`no upload url returned, can't upload ${filename}`);
-      console.log(response.data);
+    if (!response.ok) {
+      console.warn(`HTTP error! status: ${response.status}`);
       return;
     }
 
-    const remoteFilePath = response.data?.remoteFilePath;
-    // const buffer = await data.arrayBuffer();
-    const uploadConfig: AxiosRequestConfig = {
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      headers: {
-        contentLength: `${size}`,
-        contentLengthRange: `bytes 0-${size - 1}/${size}`,
-        'content-type': 'application/octet-stream',
-      },
-      url,
+    const responseData = (await response.json()) as { uploadUrl: string; remoteFilePath: string };
+    url = responseData?.uploadUrl;
+    if (!url) {
+      console.warn(`no upload url returned, can't upload ${filename}`);
+      console.log(responseData);
+      return;
+    }
+
+    const remoteFilePath = responseData?.remoteFilePath;
+    const uploadConfig = {
       method: 'PUT',
-      data,
+      headers: {
+        'Content-Range': `bytes 0-${size - 1}/${size}`,
+        'Content-Type': 'application/octet-stream',
+      },
+      body: data,
     };
+
     console.log({ remoteFilePath, uploadConfig });
-    await axios(uploadConfig);
+    const uploadResponse = await fetch(url, uploadConfig);
+
+    if (!uploadResponse.ok) {
+      console.warn(`HTTP error! status: ${uploadResponse.status}`);
+      return;
+    }
   }
 }
