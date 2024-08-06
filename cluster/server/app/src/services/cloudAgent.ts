@@ -141,6 +141,7 @@ export const createCloudAgentService = ({
         `--service-account=${serviceAccount.client_email}`,
         '--min-instances=1',
         '--max-instances=1',
+        '--timeout=3600s',
         '--no-cpu-throttling',
         `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey}`,
       ])
