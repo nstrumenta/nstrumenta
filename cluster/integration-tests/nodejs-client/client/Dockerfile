@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20
 # node canvas doesn't have binaries for other versions at the moment
 # like https://github.com/Automattic/node-canvas/issues/2188
 

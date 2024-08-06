@@ -1,11 +1,7 @@
 // source: https://github.com/googleapis/nodejs-storage/blob/main/samples/generateV4UploadSignedUrl.js
 import { GetSignedUrlConfig } from '@google-cloud/storage'
-import axios from 'axios'
 import { spawn } from 'child_process'
-import {
-  bucketName,
-  storage
-} from '../authentication/ServiceAccount'
+import { bucketName, storage } from '../authentication/ServiceAccount'
 
 export async function generateV4UploadSignedUrl(
   fileName: string,
@@ -62,10 +58,18 @@ export async function generateV4UploadSignedUrl(
   }
 
   try {
-    const resumableSession = await axios({ url, method: 'POST', headers })
-    location = resumableSession.headers.location
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    location = response.headers.get('location')
   } catch (e) {
-    console.log('axios error', e)
+    console.log('fetch error', e)
   }
 
   console.log({ location })

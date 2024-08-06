@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import Inquirer from 'inquirer';
@@ -100,27 +99,36 @@ export const getFolderFromStorage = async (moduleTarName: string, options: { api
     console.log(`get ${moduleTarName} from storage`);
 
     // get the download url
-    let url;
+    let url: string = '';
     const downloadUrlConfig = {
       headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
     };
     const downloadUrlData = { path: `modules/${moduleTarName}` };
     try {
-      const downloadUrlResponse = await axios.post(
-        endpoints.GET_PROJECT_DOWNLOAD_URL,
-        downloadUrlData,
-        downloadUrlConfig
-      );
-      url = downloadUrlResponse.data;
+      const downloadUrlResponse = await fetch(endpoints.GET_PROJECT_DOWNLOAD_URL, {
+        method: 'POST',
+        headers: downloadUrlConfig.headers,
+        body: JSON.stringify(downloadUrlData),
+      });
+
+      if (!downloadUrlResponse.ok) {
+        throw new Error(`HTTP error! status: ${downloadUrlResponse.status}`);
+      }
+
+      url = await downloadUrlResponse.text();
     } catch (error) {
       throw new Error(error as string);
     }
 
     // get the file, write to the nst directory
     console.log('get url', url);
-    const res = await axios.get(url, { responseType: 'arraybuffer' });
-    await fs.writeFile(file, res.data);
 
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const arrayBuffer = await response.arrayBuffer();
+    await fs.writeFile(file, new Uint8Array(arrayBuffer));
     console.log(`file written to ${file}`);
   }
 
@@ -157,14 +165,16 @@ export const getModuleFromStorage = async ({
 }): Promise<ModuleExtended> => {
   const apiKey = resolveApiKey();
 
-  const response = await axios(endpoints.LIST_MODULES, {
-    method: 'post',
-    headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+  const response = await fetch(endpoints.LIST_MODULES, {
+    method: 'POST',
+    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
   });
 
-  const serverModules = (response.data as [string, Object][])
-    .map((nameObjectPair) => nameObjectPair[0])
-    .filter((module) => module.startsWith(name))
+  const data = await response.json();
+
+  const serverModules = (data as Module[])
+    .map((module) => module.name)
+    .filter((moduleName) => moduleName?.startsWith(name))
     .map((match) => {
       return {
         moduleTarName: match,

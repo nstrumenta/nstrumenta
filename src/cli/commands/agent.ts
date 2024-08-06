@@ -1,8 +1,8 @@
-import axios, { AxiosError } from 'axios';
 import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
+import { Module } from './module';
 
 export const Start = async function (options: {
   port: string;
@@ -26,16 +26,20 @@ export const List = async () => {
   const apiKey = resolveApiKey();
 
   try {
-    const response = await axios({
+    const response = await fetch(endpoints.LIST_AGENTS, {
       method: 'GET',
-      url: endpoints.LIST_AGENTS,
       headers: {
-        contentType: 'application/json',
+        'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
     });
 
-    console.log(response.data);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(data);
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
@@ -58,13 +62,15 @@ export const RunModule = async (
   let serverModules = new Set<string>();
 
   if (!module) {
-    let response = await axios(endpoints.LIST_MODULES, {
-      method: 'post',
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
+    let response = await fetch(endpoints.LIST_MODULES, {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
     });
 
-    (response.data as [string, Object][])
-      .map((nameObjectPair) => nameObjectPair[0])
+    const modules = (await response.json()) as Module[];
+
+    modules
+      .map((module) => module.name)
       .forEach((path) => {
         console.log({ path });
         const name = path.split('#')[0];
@@ -73,10 +79,10 @@ export const RunModule = async (
 
     module = await inquiryForSelectModule(Array.from(serverModules));
 
-    const moduleVersions = (response.data as [string, Object][])
-      .map((nameObjectPair: any) => nameObjectPair[0])
+    const moduleVersions = modules
+      .map((module) => module.name)
       .filter((path) => path.startsWith(module))
-      .map(({ id: path }: { id: string }) => getVersionFromPath(path));
+      .map((path) => getVersionFromPath(path));
     console.log(moduleVersions);
 
     version = await inquiryForSelectModule(moduleVersions);
@@ -95,17 +101,21 @@ const getAgentIdByTag = async (apiKey: string, tag: string): Promise<string | un
   let agentId: string | undefined;
 
   try {
-    const response: { data: string } = await axios({
+    const response = await fetch(endpoints.GET_AGENT_ID_BY_TAG, {
       method: 'POST',
-      url: endpoints.GET_AGENT_ID_BY_TAG,
       headers: {
-        contentType: 'application/json',
+        'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      data: { tag },
+      body: JSON.stringify({ tag }),
     });
 
-    agentId = response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    agentId = data as string | undefined;
   } catch (error) {
     console.error((error as Error).message);
   }
@@ -129,20 +139,24 @@ export const SetAction = async (
   }
 
   try {
-    const response: { data: string } = await axios({
+    const response = await fetch(endpoints.SET_AGENT_ACTION, {
       method: 'POST',
-      url: endpoints.SET_AGENT_ACTION,
       headers: {
-        contentType: 'application/json',
+        'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      data: { action, agentId },
+      body: JSON.stringify({ action, agentId }),
     });
 
-    const actionId = response.data;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const actionId = data;
     console.log(`created action: ${actionId} on agent ${agentId}`, action);
   } catch (err) {
-    console.error('Error:', (err as AxiosError).response?.data);
+    console.error('Error:', (err as Error).message);
   }
 };
 
@@ -150,15 +164,20 @@ export const CleanActions = async (agentId: string) => {
   const apiKey = resolveApiKey();
 
   try {
-    await axios({
+    const response = await fetch(endpoints.CLEAN_AGENT_ACTIONS, {
       method: 'POST',
-      url: endpoints.CLEAN_AGENT_ACTIONS,
       headers: {
-        contentType: 'application/json',
+        'Content-Type': 'application/json',
         'x-api-key': apiKey,
       },
-      data: { agentId },
+      body: JSON.stringify({ agentId }),
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    console.log('Agent actions cleaned successfully');
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { getEndpoints } from '../index';
 
 export const verifyToken = async ({
@@ -15,13 +14,16 @@ export const verifyToken = async ({
     'Content-Type': 'application/json',
   };
   try {
-    await axios.post(
-      getEndpoints(apiKey).VERIFY_TOKEN,
-      { token, allowCrossProjectApiKey },
-      {
-        headers,
-      }
-    );
+    const response = await fetch(getEndpoints(apiKey).VERIFY_TOKEN, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ token, allowCrossProjectApiKey }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     return true;
   } catch (err) {
     const message = 'Failed to verify token';

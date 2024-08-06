@@ -1,5 +1,4 @@
 import { Mcap0Writer as McapWriter } from '@mcap/core';
-import axios from 'axios';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
@@ -284,7 +283,7 @@ export class NstrumentaServer {
       const clientId: string = req.headers['sec-websocket-key']!;
 
       console.log('a user connected - clientsCount = ' + wss.clients.size);
-      ws.on('message', async (busMessage: Buffer) => {
+      ws.on('message', async (busMessage: Uint8Array) => {
         if (!verifiedConnections.has(clientId)) {
           try {
             if (!this.allowUnverifiedConnection) {
@@ -453,7 +452,7 @@ export class NstrumentaServer {
                   sequence: 0,
                   publishTime: logTime,
                   logTime: logTime,
-                  data: Buffer.from(JSON.stringify(contents)),
+                  data: new Uint8Array(Buffer.from(JSON.stringify(contents))),
                 });
               }
             }
@@ -505,7 +504,7 @@ export class NstrumentaServer {
           const schemaId = await mcapWriter.registerSchema({
             name: c.schema.title,
             encoding: 'jsonschema',
-            data: Buffer.from(JSON.stringify(c.schema)),
+            data: new Uint8Array(Buffer.from(JSON.stringify(c.schema))),
           });
 
           const channelId = await mcapWriter.registerChannel({
@@ -564,22 +563,30 @@ export class NstrumentaServer {
         name,
         size,
       };
-      const response = await axios.post(endpoints.GET_UPLOAD_DATA_URL, data, {
+
+      const response = await fetch(endpoints.GET_UPLOAD_DATA_URL, {
+        method: 'POST',
         headers: {
-          contentType: 'application/json',
+          'Content-Type': 'application/json',
           'x-api-key': apiKey,
         },
+        body: JSON.stringify(data),
       });
 
-      console.log('getUploadDataUrl response.data:', response.data);
-      url = response.data?.uploadUrl;
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const responseData = await response.json() as { uploadUrl: string; remoteFilePath: string };
+      console.log('getUploadDataUrl response.data:', responseData);
+      url = responseData?.uploadUrl;
     } catch (e) {
       let message = `can't upload ${localPath}`;
-      if (axios.isAxiosError(e)) {
-        if (e.response?.status === 409) {
+      if (e instanceof Error) {
+        if (e.message.includes('409')) {
           console.log(`Conflict: file exists`);
         }
-        message = `${message} [${(e as Error).message}]`;
+        message = `${message} [${e.message}]`;
       }
       throw new Error(message);
     }
@@ -587,14 +594,21 @@ export class NstrumentaServer {
     const fileBuffer = await readFile(localPath);
 
     // start the request, return promise
-    await axios.put(url, fileBuffer, {
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      headers: {
-        contentLength: `${size}`,
-        contentLengthRange: `bytes 0-${size - 1}/${size}`,
-      },
-    });
+    try {
+      const putResponse = await fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Range': `bytes 0-${size - 1}/${size}`,
+        },
+        body: fileBuffer,
+      });
+
+      if (!putResponse.ok) {
+        throw new Error(`HTTP error! status: ${putResponse.status}`);
+      }
+    } catch (e) {
+      console.error(`Error uploading file: ${(e as Error).message}`);
+    }
 
     return name;
   }
