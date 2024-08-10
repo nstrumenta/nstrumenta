@@ -87,8 +87,8 @@ export const SetAction = async (options: { action: string; tag?: string }) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    console.log(`created action: ${data} `, action);
+    const actionId = await response.text();
+    console.log(`created action: ${actionId} `, action);
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
@@ -116,28 +116,20 @@ export const Host = async function (
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error! endpoint: ${endpoints.LIST_MODULES} status: ${response.status}`);
     }
 
     modules = (await response.json()) as Module[];
   } catch (error) {
-    console.log(`Problem fetching data ${(error as Error).name}`);
+    console.log(`Problem fetching data endpoint: ${endpoints.LIST_MODULES} error: ${error}`);
   }
 
-  const matches = modules
-    .filter((module) => module.name.startsWith(moduleName))
-    .map((module) => {
-      return {
-        name: moduleName,
-        filePath: module,
-        version: getVersionFromPath(module.name),
-      };
-    });
+  const matches = modules.filter((module) => module.name.startsWith(moduleName));
 
   const specificModule = version
-    ? matches.find((match) => semver.eq(version, match.version))
+    ? matches.find((match) => semver.eq(version, getVersionFromPath(match.name)))
     : matches
-        .sort((a, b) => semver.compare(a.version, b.version))
+        .sort((a, b) => semver.compare(getVersionFromPath(a.name), getVersionFromPath(b.name)))
         .reverse()
         .shift();
 
