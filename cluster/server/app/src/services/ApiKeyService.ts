@@ -35,7 +35,6 @@ export function CreateApiKeyService({
         await firestore.doc(`/projects/${projectId}`).get()
       ).data()
       const apiUrl =
-        process.env.NSTRUMENTA_API_KEY ??
         projectData?.apiUrl ??
         (
           (await (
