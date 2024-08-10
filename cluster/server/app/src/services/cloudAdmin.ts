@@ -157,16 +157,15 @@ export const createCloudAdminService = ({
 
       // get module / untar / upload
       console.log(data)
-      const modulePath = data.data.module.filePath
-      const moduleDocumentPath = `projects/${projectId}/modules/${modulePath}`
-      const moduleName = modulePath.replace('.tar.gz', '')
+      const {name, moduleDocumentPath} = data.data.module
+      const moduleName = name.replace('.tar.gz', '')
       const workingDirectory = `${__dirname}/temp/modules`
       const extractFolder = `${workingDirectory}/${moduleName}`
       await mkdir(extractFolder, { recursive: true })
-      const tarFilePath = `${workingDirectory}/${modulePath}`
+      const tarFilePath = `${workingDirectory}/${name}`
       await storage
         .bucket(bucketName)
-        .file(`projects/${projectId}/modules/${modulePath}`)
+        .file(`projects/${projectId}/modules/${name}`)
         .download({ destination: tarFilePath })
 
       await asyncSpawn('tar', ['-zxvf', tarFilePath], {
