@@ -6,6 +6,12 @@ variable "org_id" {
   type = string
 }
 
+variable "image_version_tag" {
+  description = "The version tag of the image for the server and data-job-runner"
+  type = string
+  default = "latest"
+}
+
 variable "location_id" {
   type    = string
   default = "us-west1"
@@ -322,7 +328,7 @@ resource "google_cloud_run_v2_service" "default" {
       ports {
         container_port = 5999
       }
-      image = "nstrumenta/server"
+      image = "nstrumenta/server:${var.image_version_tag}"
 
       resources {
         cpu_idle = false
@@ -336,6 +342,10 @@ resource "google_cloud_run_v2_service" "default" {
             version = "latest"
           }
         }
+      }
+      env {
+        name  = "IMAGE_VERSION_TAG"
+        value = var.image_version_tag
       }
     }
     scaling {
