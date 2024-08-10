@@ -12,9 +12,10 @@ import { Observable, Subscription } from 'rxjs';
       <video controls *ngIf="isVideo" width="100%" style="max-height: 80%" [src]="url"></video>
       <a mat-button [href]="url">{{ (fileDoc | async)?.name }}</a>
       <mat-list>
-        <mat-list-item>dataId: {{ (fileDoc | async)?.dataId }}</mat-list-item>
-        <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
-        <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
+      <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
+      <mat-list-item>size: {{ (fileDoc | async)?.size | fileSize }}</mat-list-item>
+      <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
+        <mat-list-item>dirname: {{ (fileDoc | async)?.dirname }}</mat-list-item>
       </mat-list>
       <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap" *ngIf="contents">
         {{ contents }}

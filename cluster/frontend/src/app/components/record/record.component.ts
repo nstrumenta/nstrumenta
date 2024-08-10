@@ -48,6 +48,7 @@ export class RecordComponent implements OnInit {
   bytesWritten: bigint;
   mcapData: Uint8Array[] = [];
   isRecording = false;
+  videoToggle = false;
   videoStartTime: number | undefined;
   recordingName: string | undefined;
   mediaStream: MediaStream;
@@ -120,6 +121,10 @@ export class RecordComponent implements OnInit {
           {
             type: 'gamepad',
             name: 'Gamepad',
+          },
+          {
+            type: 'video',
+            name: 'Video',
           },
           {
             type: 'bluetooth',
@@ -196,6 +201,9 @@ export class RecordComponent implements OnInit {
           case 'mouse':
             this.startMouse();
             break;
+          case 'video':
+            this.videoToggle = true;
+            break;
           case 'bluetooth':
             this.startBluetooth(selected);
             break;
@@ -215,6 +223,9 @@ export class RecordComponent implements OnInit {
             break;
           case 'mouse':
             this.stopMouse();
+            break;
+          case 'video':
+            this.videoToggle = false;
             break;
           case 'bluetooth':
             this.stopBluetooth(selected);
@@ -424,7 +435,7 @@ export class RecordComponent implements OnInit {
       })
       .then(async (characteristic) => {
         if (deviceDoc.notifications[0].configCommand) {
-          const clearConfigCommand = new Uint8Array([0,0]);
+          const clearConfigCommand = new Uint8Array([0, 0]);
           console.log('writing clear config command', clearConfigCommand);
           await characteristic.writeValue(clearConfigCommand);
           const configCommand = new Uint8Array(
@@ -700,7 +711,7 @@ export class RecordComponent implements OnInit {
   }
 
   async startVideo() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (this.videoToggle && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
 
       this.mediaRecorder = new MediaRecorder(this.mediaStream);
@@ -716,14 +727,16 @@ export class RecordComponent implements OnInit {
       };
 
       this.mediaRecorder.onstop = async () => {
-        const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
-        const videoUrl = URL.createObjectURL(recordedBlob);
-        this.previewVideo.nativeElement.src = videoUrl;
+        if (this.videoToggle) {
+          const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+          const videoUrl = URL.createObjectURL(recordedBlob);
+          this.previewVideo.nativeElement.src = videoUrl;
 
-        const projectDataPath = '/projects/' + this.projectId + '/data';
-        const filePath = `${projectDataPath}/${this.recordingName}.webm`;
+          const projectDataPath = '/projects/' + this.projectId + '/data';
+          const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
-        await this.storage.upload(filePath, recordedBlob);
+          await this.storage.upload(filePath, recordedBlob);
+        }
       };
       // Play the video automatically
       this.previewVideo.nativeElement.play();
@@ -839,15 +852,19 @@ export class RecordComponent implements OnInit {
       };
       await this.storage.upload(dataFilePath, blob, metadata);
       //create experiment.json
+      const videos = this.videoToggle
+        ? [
+            {
+              name: 'web',
+              filePath: `${projectDataPath}/${this.recordingName}.webm`,
+              startTime: this.videoStartTime,
+            },
+          ]
+        : undefined;
+
       const experiment: NstrumentaExperiment = {
         dataFilePath,
-        videos: [
-          {
-            name: 'web',
-            filePath: `${projectDataPath}/${this.recordingName}.webm`,
-            startTime: this.videoStartTime,
-          },
-        ],
+        videos,
       };
       await this.storage.upload(
         experimentFilepath,
