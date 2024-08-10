@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.33](https://github.com/nstrumenta/nstrumenta/compare/v3.1.32...v3.1.33) (2024-08-10)
+
+
+### Features
+
+* **cli:** fixes fetch in setAction ([3a6f9d8](https://github.com/nstrumenta/nstrumenta/commit/3a6f9d8ec5ca395e323ef2393ac1f5f1faeb9b66))
+* **frontend:** adds video toggle ([f0d0871](https://github.com/nstrumenta/nstrumenta/commit/f0d087131eb49d2d041c7aa5fd7f5c25f5722f42))
+* **server:** fixes modulePath ([9e4570f](https://github.com/nstrumenta/nstrumenta/commit/9e4570fbd6376938ff8b8ad7d540b91503fdb133))
+* **terraform:** adds image_version_tag for pinning / updating workspaces to new versions of nstrumenta ([9bf8906](https://github.com/nstrumenta/nstrumenta/commit/9bf8906f8b416f3f3343cc3bce72b9137c3ca1a5))
+
 ### [3.1.32](https://github.com/nstrumenta/nstrumenta/compare/v3.1.31...v3.1.32) (2024-08-10)
 
 
