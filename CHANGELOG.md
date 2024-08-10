@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.32](https://github.com/nstrumenta/nstrumenta/compare/v3.1.31...v3.1.32) (2024-08-10)
+
+
+### Features
+
+* **audit:** remove axios ([#189](https://github.com/nstrumenta/nstrumenta/issues/189)) ([9e1b475](https://github.com/nstrumenta/nstrumenta/commit/9e1b475bab920d984e4418be1409321ca21cb478))
+* **backplane:** adds backplane server app ([#184](https://github.com/nstrumenta/nstrumenta/issues/184)) ([94cd7eb](https://github.com/nstrumenta/nstrumenta/commit/94cd7eb6accf6e3ed9275aea86cb90307a2f5fae)), closes [#185](https://github.com/nstrumenta/nstrumenta/issues/185) [#186](https://github.com/nstrumenta/nstrumenta/issues/186) [#187](https://github.com/nstrumenta/nstrumenta/issues/187) [#188](https://github.com/nstrumenta/nstrumenta/issues/188)
+* **cloud:** increase timeout ([#190](https://github.com/nstrumenta/nstrumenta/issues/190)) ([c2b672f](https://github.com/nstrumenta/nstrumenta/commit/c2b672fa862f61da910fa8e8e3323d8c861b1c4d))
+* **data:** adds support for data dirname ([#188](https://github.com/nstrumenta/nstrumenta/issues/188)) ([ef7a041](https://github.com/nstrumenta/nstrumenta/commit/ef7a041f922cd7e483bfe8b5e2fd282fc5009ae8))
+
 ### [3.1.31](https://github.com/nstrumenta/nstrumenta/compare/v3.1.30...v3.1.31) (2024-05-23)
 
 
