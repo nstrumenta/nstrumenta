@@ -115,7 +115,7 @@ esac
 
   test('cloud-run-module', async () => {
     const uploadFileName = `cloud-run-module-${testId}.txt`;
-    console.log(`nst module cloud-run ${moduleName} -- ${uploadFileName}`);
+    console.log(`nst module cloud-run ${moduleName} --command-args create ${uploadFileName}`);
     await asyncSpawn(
       'nst',
       `module cloud-run ${moduleName} --command-args create ${uploadFileName}`.split(' '),
