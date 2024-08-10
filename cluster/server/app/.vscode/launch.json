@@ -9,6 +9,11 @@
       "name": "dev server",
       "request": "launch",
       "type": "node-terminal"
+    },    {
+      "command": "ENVFILE=../../credentials/local.env npm run dev-dotenv",
+      "name": "dev server envfile",
+      "request": "launch",
+      "type": "node-terminal"
     }
   ]
 }

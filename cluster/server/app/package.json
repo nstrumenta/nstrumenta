@@ -6,7 +6,7 @@
     "start": "node dist/index.js",
     "build": "npx tsc -p .",
     "format": "prettier -w ./src",
-    "dev-dotenv": "dotenv -e $ENVFILE -- bash -c 'npm run dev'",
+    "dev-dotenv": "dotenv -e $ENVFILE -- bash -c 'env && npm run dev'",
     "dev": "NST_AGENT_TYPE=dev NODE_ENV=development npx nodemon --watch 'src/**/*.ts' -e ts --exec 'npm run build && node --trace-warnings --inspect=0.0.0.0:9229 dist/index.js'"
   },
   "author": "Tyler Bryant",

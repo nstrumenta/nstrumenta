@@ -17,9 +17,11 @@ const listModulesBase: APIEndpoint<ListModulesArgs> = async (
   try {
     const path = `projects/${projectId}/modules/`
     const moduleCollection = await firestore.collection(path).get()
-    const modules = moduleCollection.docs.map((doc: QueryDocumentSnapshot) =>
-      doc.data(),
-    )
+    const modules = moduleCollection.docs.map((doc: QueryDocumentSnapshot) => {
+      const module = doc.data()
+      module.moduleDocumentPath = doc.ref.path
+      return module
+    })
 
     return res.status(200).send(modules)
   } catch (error) {
