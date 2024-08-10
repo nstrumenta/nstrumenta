@@ -82,7 +82,7 @@ export class ModulesComponent implements OnInit {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
       deleteObject(ref(storage, item.filePath));
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      this.afs.doc(this.dataPath + '/' + item.id).delete();
     });
     this.selection.clear();
   }
