@@ -15,13 +15,13 @@ service cloud.firestore {
     	allow read, write, delete: if false;
     }
     match /projects/{project} {
-      allow read: if resource.data.members[request.auth.uid] != null
+      allow read:  if exists(get(/databases/$(database)/documents/projects/$(project)).data.members[request.auth.uid])
       allow create: if exists(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project))
       allow update: if resource.data.members[request.auth.uid] == "admin" || resource.data.members[request.auth.uid] == "owner"
-      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)/projects/$(project)).data.admin == true
+      allow delete: if resource.data.members[request.auth.uid] == "admin" || resource.data.members[request.auth.uid] == "owner"
     	
       match /{document=**} {
-      	allow read, write: if true;
+      	allow read, write: if exists(get(/databases/$(database)/documents/projects/$(project)).data.members[request.auth.uid])
     	}   
     }
   }
