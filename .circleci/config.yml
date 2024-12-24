@@ -132,7 +132,7 @@ jobs:
   build-ci-images:
     resource_class: large
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2404:24.11.1
     working_directory: ~/project
     steps:
       - checkout:
@@ -148,7 +148,7 @@ jobs:
   build-and-push-images:
     resource_class: arm.large
     machine:
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2404:24.11.1
     working_directory: ~/project
     steps:
       - checkout:
