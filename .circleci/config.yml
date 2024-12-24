@@ -130,7 +130,7 @@ jobs:
             gcloud run services delete --region=us-west1 ${TEST_BACKPLANE}
           when: always
   build-ci-images:
-    resource_class: large
+    resource_class: arm.large
     machine:
       image: ubuntu-2404:24.11.1
     working_directory: ~/project
