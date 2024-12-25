@@ -1,0 +1,2 @@
+# Unignore the specific settings.json file
+!.vscode/settings.json
