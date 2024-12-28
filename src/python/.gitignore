@@ -1,3 +1,6 @@
+#ignore temp files
+tests/temp
+
 # Unignore the specific settings.json file
 !.vscode/settings.json
 
