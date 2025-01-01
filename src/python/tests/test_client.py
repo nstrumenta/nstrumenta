@@ -1,12 +1,9 @@
 import os
 import unittest
 import time
-from client import NstrumentaClient
+from nstrumenta import NstrumentaClient
 
-class TestClient(unittest.TestCase):
-    def test_hello_world(self):
-        self.assertEqual("Hello, World!", "Hello, World!")
-    
+class TestClient(unittest.TestCase):    
     def test_get_project(self):
         client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
         data = client.get_project()

@@ -1,5 +1,6 @@
 .DS_Store
 src/.DS_Store
+*/__pycache__/*
 
 ##start .gitignore defaults for node.js from github
 # Logs
@@ -80,3 +81,5 @@ profile
 cluster/frontend/.firebaserc
 **/credentials.json
 cluster/frontend/src/environments/firebaseConfig.json
+src/python/.pypirc
+src/python/client/__pycache__/client.cpython-39.pyc
