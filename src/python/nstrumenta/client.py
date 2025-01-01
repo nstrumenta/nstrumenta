@@ -87,6 +87,14 @@ class NstrumentaClient:
         else:
             response.raise_for_status()
 
+    def list_modules(self) -> list:
+        url = f"{self.api_url}/listModules"
+        response = requests.post(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            response.raise_for_status()
+
     def download(self, path: str, dest: str):
         url = self.get_project_download_url(f"data/{path}")
         response = requests.get(url)

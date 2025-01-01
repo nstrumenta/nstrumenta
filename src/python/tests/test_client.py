@@ -33,6 +33,12 @@ class TestClient(unittest.TestCase):
         client.download(path, download_path)
         self.assertTrue(os.path.exists(download_path))
         os.remove(download_path)
+    
+    def test_list_modules(self):
+        client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
+        data = client.list_modules()
+        print(data)
+        self.assertTrue(data)
 
 if __name__ == '__main__':
     unittest.main()
