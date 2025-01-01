@@ -1,0 +1,21 @@
+{
+	"name": "nstrumenta",
+	"build": {
+		"dockerfile": "../Dockerfile"
+	},
+	"privileged": true,
+	"runArgs": [
+		"--env-file",
+		"../../cluster/credentials/local.env"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.python",
+				"ms-python.black-formatter",
+				"ms-toolsai.jupyter-keymap",
+				"ms-toolsai.jupyter"
+			]
+		}
+	}
+}
