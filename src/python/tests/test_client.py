@@ -34,6 +34,23 @@ class TestClient(unittest.TestCase):
         self.assertTrue(os.path.exists(download_path))
         os.remove(download_path)
     
+    def test_upload_duplicate(self):
+        client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
+        timestamp = int(time.time())
+        local_file = f"tests/temp/test_{timestamp}.txt"
+        path = f"test_{timestamp}.txt"
+
+        # Create a dynamic file for the test
+        with open(local_file, "w") as file:
+            file.write(f"This is a test file timestamp={timestamp}.")
+
+        client.upload(local_file, path)
+        with self.assertRaises(FileExistsError):
+            client.upload(local_file, path)
+
+        client.upload(local_file, path, overwrite=True)        
+        os.remove(local_file)
+    
     def test_list_modules(self):
         client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
         data = client.list_modules()
