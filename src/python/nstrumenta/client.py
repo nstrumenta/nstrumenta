@@ -60,18 +60,20 @@ class NstrumentaClient:
         else:
             response.raise_for_status()
 
-    def get_upload_data_url(self, path: str) -> str:
+    def get_upload_data_url(self, path: str, overwrite: bool = False) -> str:
         url = f"{self.api_url}/getUploadDataUrl"
-        payload = {"name": path}
+        payload = {"name": path, "overwrite": overwrite}
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 200:
             return response.json()["uploadUrl"]
+        elif response.status_code == 409:
+            raise FileExistsError("The resource already exists.")
         else:
             response.raise_for_status()
 
-    def get_upload_url(self, path: str) -> str:
+    def get_upload_url(self, path: str, overwrite: bool = False) -> str:
         url = f"{self.api_url}/getUploadUrl"
-        payload = {"path": path}
+        payload = {"path": path, "overwrite": overwrite}
         response = requests.post(url, json=payload, headers=self.headers)
         if response.status_code == 200:
             return response.json()["uploadUrl"]
@@ -102,11 +104,13 @@ class NstrumentaClient:
             file.write(response.content)
         return dest
 
-    def upload(self, local_file: str, path: str):
-        url = self.get_upload_data_url(path)
+    def upload(self, local_file: str, path: str, overwrite: bool = False):
+        url = self.get_upload_data_url(path, overwrite)
         with open(local_file, "rb") as file:
             response = requests.put(url, data=file, headers=self.headers)
             if response.status_code == 200:
                 return response.text
+            if response.status_code == 409:
+                raise FileExistsError(response.text)
             else:
                 response.raise_for_status()
