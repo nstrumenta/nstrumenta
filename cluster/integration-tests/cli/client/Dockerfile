@@ -1,4 +1,4 @@
-FROM node:20.3-bullseye-slim
+FROM node:24.1.0-bookworm-slim
 
 #install nstrumenta
 RUN npm i -g nstrumenta

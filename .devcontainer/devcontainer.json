@@ -1,5 +1,5 @@
 {
-  "image": "nstrumenta/toolchain",
+  "image": "nstrumenta/toolchain:24.1.0",
   "customizations": {
     "vscode": {
       "extensions": [
