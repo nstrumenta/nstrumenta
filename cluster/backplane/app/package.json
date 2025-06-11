@@ -13,6 +13,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@google-cloud/firestore": "^7.1.0",
+    "@google-cloud/storage": "7.16.0",
     "nstrumenta": "../../.."
   },
   "devDependencies": {
