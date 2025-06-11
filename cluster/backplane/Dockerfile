@@ -1,4 +1,4 @@
-FROM node:20.3-bullseye-slim
+FROM node:24.1.0-bookworm-slim
 
 # context is top level of nstrumenta repo
 COPY . /nstrumenta
