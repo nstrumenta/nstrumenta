@@ -24,14 +24,14 @@ describe('ProjectListComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ProjectListComponent],
-      imports: [MatDialogModule],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
+    declarations: [ProjectListComponent],
+    imports: [MatDialogModule],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    providers: [
         { provide: AuthService, useValue: authServiceStub },
         { provide: AngularFirestore, useValue: angularFirestoreStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {

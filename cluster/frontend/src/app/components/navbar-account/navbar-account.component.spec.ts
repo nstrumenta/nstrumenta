@@ -17,10 +17,10 @@ describe('NavbarAccountComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [MatMenuModule, MatFormFieldModule, RouterTestingModule],
-      declarations: [NavbarAccountComponent],
-      providers: [{ provide: AuthService, useValue: AuthServiceStub }],
-    }).compileComponents();
+    imports: [MatMenuModule, MatFormFieldModule, RouterTestingModule],
+    declarations: [NavbarAccountComponent],
+    providers: [{ provide: AuthService, useValue: AuthServiceStub }],
+}).compileComponents();
   }));
 
   beforeEach(() => {

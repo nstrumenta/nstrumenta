@@ -26,8 +26,8 @@ describe('NavComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [NavComponent, NavbarTitleComponent, NavbarAccountComponent, LogoComponent],
-      imports: [
+    declarations: [NavComponent, NavbarTitleComponent, NavbarAccountComponent],
+    imports: [
         NoopAnimationsModule,
         LayoutModule,
         MatButtonModule,
@@ -37,9 +37,10 @@ describe('NavComponent', () => {
         MatToolbarModule,
         RouterTestingModule,
         MatMenuModule,
-      ],
-      providers: [{ provide: AuthService, useValue: authServiceStub }],
-    }).compileComponents();
+        LogoComponent,
+    ],
+    providers: [{ provide: AuthService, useValue: authServiceStub }],
+}).compileComponents();
   }));
 
   beforeEach(() => {

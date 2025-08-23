@@ -8,8 +8,8 @@ describe('UploadProgressComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ UploadProgressComponent ]
-    })
+    declarations: [UploadProgressComponent]
+})
     .compileComponents();
 
     fixture = TestBed.createComponent(UploadProgressComponent);

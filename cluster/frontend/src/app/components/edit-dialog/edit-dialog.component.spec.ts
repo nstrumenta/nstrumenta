@@ -23,14 +23,14 @@ describe('EditDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [BrowserAnimationsModule, FormsModule, MatFormFieldModule, MatInputModule],
-      declarations: [EditDialogComponent],
-      providers: [
+    imports: [BrowserAnimationsModule, FormsModule, MatFormFieldModule, MatInputModule],
+    declarations: [EditDialogComponent],
+    providers: [
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialogRef, useValue: {} },
         { provide: AngularFirestore, useValue: angularFirestoreStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {

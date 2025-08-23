@@ -27,8 +27,8 @@ describe('DataTableComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [DataTableComponent, FileSizePipe],
-      imports: [
+    declarations: [DataTableComponent, FileSizePipe],
+    imports: [
         NoopAnimationsModule,
         MatPaginatorModule,
         MatSortModule,
@@ -38,9 +38,9 @@ describe('DataTableComponent', () => {
         MatDialogModule,
         MatInputModule,
         RouterTestingModule,
-      ],
-      providers: [MatDialog, { provide: AngularFirestore, useValue: angularFirestoreStub }],
-    }).compileComponents();
+    ],
+    providers: [MatDialog, { provide: AngularFirestore, useValue: angularFirestoreStub }],
+}).compileComponents();
   }));
 
   beforeEach(() => {

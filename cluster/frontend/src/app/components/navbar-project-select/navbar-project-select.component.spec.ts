@@ -8,8 +8,8 @@ describe('NavbarProjectSelectComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [NavbarProjectSelectComponent],
-    }).compileComponents();
+    declarations: [NavbarProjectSelectComponent],
+}).compileComponents();
   }));
 
   beforeEach(() => {

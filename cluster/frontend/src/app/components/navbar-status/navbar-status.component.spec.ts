@@ -8,8 +8,8 @@ describe('NavbarStatusComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [NavbarStatusComponent],
-    }).compileComponents();
+    declarations: [NavbarStatusComponent],
+}).compileComponents();
   }));
 
   beforeEach(() => {

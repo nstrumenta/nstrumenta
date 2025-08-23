@@ -93,7 +93,8 @@ export class SentryErrorHandler implements ErrorHandler {
   }
 }
 
-@NgModule({
+@NgModule(/* TODO(standalone-migration): clean up removed NgModule class manually.
+{
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
@@ -179,7 +180,7 @@ export class SentryErrorHandler implements ErrorHandler {
     { provide: ErrorHandler, useClass: SentryErrorHandler },
   ],
   bootstrap: [AppComponent],
-})
+} */)
 export class AppModule {
   constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer) {
     matIconRegistry.addSvgIcon(

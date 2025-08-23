@@ -28,20 +28,20 @@ describe('NewProjectDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
+    imports: [
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatDialogModule,
         BrowserAnimationsModule,
-      ],
-      declarations: [NewProjectDialogComponent],
-      providers: [
+    ],
+    declarations: [NewProjectDialogComponent],
+    providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: AuthService, useValue: authServiceStub },
         { provide: AngularFirestore, useValue: angularFirestoreStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {
