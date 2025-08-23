@@ -97,9 +97,6 @@ export class SentryErrorHandler implements ErrorHandler {
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
     HttpClientModule,
     LayoutModule,
     MatToolbarModule,
@@ -171,6 +168,9 @@ export class SentryErrorHandler implements ErrorHandler {
     UploadProgressComponent,
   ],
   providers: [
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore()),
     AuthService,
     { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
     VscodeService,
