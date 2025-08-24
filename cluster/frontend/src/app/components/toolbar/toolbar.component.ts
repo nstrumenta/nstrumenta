@@ -2,11 +2,9 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, firstValueFrom } from 'rxjs';
-import { finalize, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
-
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
+import { StorageAdapter } from '@nstrumenta/data-adapter';
 
 @Component({
   selector: 'app-toolbar',
@@ -25,14 +23,14 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private storage: AngularFireStorage,
+    private storageAdapter: StorageAdapter,
     public authService: AuthService,
     public router: Router,
     private breakpointObserver: BreakpointObserver
   ) {}
 
   isDataRouteOrUploading() {
-    return this.uploads.size > 0 || this.router.url.endsWith('/data');
+    return this.router.url.endsWith('/data');
   }
 
   chooseFiles(event) {
@@ -47,9 +45,9 @@ export class ToolbarComponent implements OnInit {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     files.forEach(async (file) => {
       let filePath = `projects/${this.projectId}/data/${file.name}`;
-      let exists = undefined;
+      let exists = false;
       try {
-        await firstValueFrom(this.storage.ref(filePath).getDownloadURL());
+        await this.storageAdapter.getDownloadURL(filePath);
         exists = true;
       } catch {
         exists = false;
@@ -61,9 +59,13 @@ export class ToolbarComponent implements OnInit {
       }
       console.log(`uploading ${file.name}`);
       console.log(filePath);
-      const fileRef = this.storage.ref(filePath);
-      const metadata: UploadMetadata = {
+      const metadata = {
         contentDisposition: `attachment; filename=${file.name}`,
+        contentType: undefined,
+        customMetadata: {
+          name: file.name,
+          size: `${file.size}`,
+        },
       };
       if (file.name.endsWith('.html')) {
         metadata.contentType = 'text/html';
@@ -89,23 +91,8 @@ export class ToolbarComponent implements OnInit {
       if (file.type) {
         metadata.contentType = file.type;
       }
-      metadata.customMetadata = {
-        name: file.name,
-        size: `${file.size}`,
-      };
-      const task = this.storage.upload(filePath, file, metadata);
-
-      this.uploads.set(filePath, { name: file.name, progress: task.percentageChanges() });
-      task
-        .snapshotChanges()
-        .pipe(
-          finalize(async () => {
-            this.downloadURL = fileRef.getDownloadURL();
-            console.log(`finished upload ${file.name}`);
-            this.uploads.delete(filePath);
-          })
-        )
-        .subscribe();
+      await this.storageAdapter.upload(filePath, file, metadata);
+      console.log(`finished upload ${file.name}`);
     });
   }
 

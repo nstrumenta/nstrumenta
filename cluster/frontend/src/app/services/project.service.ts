@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { User } from '@angular/fire/auth';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { FirestoreAdapter, User } from '@nstrumenta/data-adapter';
+import { BehaviorSubject, Observable, of, switchMap } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
 import { ServerService } from './server.service';
@@ -13,52 +12,48 @@ import { ServerService } from './server.service';
 export class ProjectService {
   currentProject = new BehaviorSubject<string>('');
   projects: Observable<any[]>;
-  user: User;
+  user: User | null;
   currentProjectId: string;
   projectSettings: ProjectSettings;
 
   constructor(
     private authService: AuthService,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     private activatedRoute: ActivatedRoute,
     private serverService: ServerService
   ) {
-    this.authService.user.subscribe((user) => {
-      if (user) {
-        this.user = user;
-        this.projects = this.afs
-          .collection<any>('/users/' + user.uid + '/projects')
-          .valueChanges({ idField: 'key' });
-      }
-    });
+    this.projects = this.authService.user.pipe(
+      switchMap((user) => {
+        if (user) {
+          this.user = user;
+          return this.firestoreAdapter.collection$<any>('/users/' + user.uid + '/projects');
+        } else {
+          this.user = null;
+          return of([]);
+        }
+      })
+    );
     this.activatedRoute.paramMap.subscribe();
   }
 
   setProject(id: string) {
     console.log('setProject', id);
     // only update or add to projects if the user has access to /project/${id}
-    const sub = this.afs
-      .collection<any>('/users/' + this.user.uid + '/projects')
-      .valueChanges({ idField: 'key' })
-      .subscribe((projects) => {
-        this.afs
-          .doc(`/projects/${id}/`)
-          .get()
-          .toPromise()
-          .then((results) => {
-            this.projectSettings = results.data();
-            const lastOpened = Date.now();
-            this.afs
-              .collection<any>('/users/' + this.user.uid + '/projects')
-              .doc(id)
-              .set({ name: this.projectSettings.name, lastOpened });
-            sub.unsubscribe();
+    this.firestoreAdapter.doc$<ProjectSettings>(`/projects/${id}/`).subscribe((projectSettings) => {
+      if (projectSettings) {
+        this.projectSettings = projectSettings;
+        const lastOpened = Date.now();
+        if (this.user) {
+          this.firestoreAdapter.setDoc('/users/' + this.user.uid + '/projects/' + id, {
+            name: this.projectSettings.name,
+            lastOpened,
           });
-      });
+        }
+      }
+    });
 
     this.currentProjectId = id;
     this.currentProject.next(id);
-  
   }
 
   async createApiKey() {

@@ -1,8 +1,6 @@
 import { Injectable } from '@angular/core';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
+import { StorageAdapter } from '@nstrumenta/data-adapter';
 import { Observable, Observer, Subject } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
 
@@ -26,7 +24,7 @@ export class VscodeService {
   buildCount = 0;
 
   constructor(
-    private storage: AngularFireStorage,
+    private storageAdapter: StorageAdapter,
     private projectService: ProjectService,
     private serverService: ServerService
   ) {
@@ -74,8 +72,9 @@ export class VscodeService {
                   new Promise(function (resolve) {
                     const filePath = uploadPath + '/' + filename;
                     console.log('uploading ', filePath);
-                    const metadata: UploadMetadata = {
+                    const metadata = {
                       contentDisposition: 'inline',
+                      contentType: undefined,
                     };
                     if (filePath.endsWith('.html')) {
                       metadata.contentType = 'text/html';
@@ -99,23 +98,14 @@ export class VscodeService {
                       nst_project = JSON.parse(fileTextItem.text);
                     }
 
-                    const task = self.storage.upload(
-                      filePath,
-                      new Blob([fileTextItem.text]),
-                      metadata
-                    );
-
-                    task
-                      .snapshotChanges()
-                      .pipe(
-                        finalize(() => {
-                          resolve({
-                            storagePath: filePath,
-                            path: filename,
-                          });
-                        })
-                      )
-                      .subscribe();
+                    self.storageAdapter
+                      .upload(filePath, new Blob([fileTextItem.text]), metadata)
+                      .then((uploadResult) => {
+                        resolve({
+                          storagePath: uploadResult.storagePath,
+                          path: filename,
+                        });
+                      });
                   })
                 );
               });

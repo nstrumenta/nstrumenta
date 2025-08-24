@@ -1,5 +1,4 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
@@ -13,6 +12,7 @@ import {
   AddProjectMemberDialogResponse,
 } from '../add-project-member-dialog/add-project-member-dialog.component';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import {
   CreateKeyDialogComponent,
   CreateKeyDialogResponse,
@@ -23,10 +23,10 @@ import {
   templateUrl: './project-settings.component.html',
   styles: [
     `
-          .mat-column-keyId {
-            flex: 0 0 60%;
-          }
-        `,
+      .mat-column-keyId {
+        flex: 0 0 60%;
+      }
+    `,
   ],
 })
 export class ProjectSettingsComponent implements OnInit, OnDestroy {
@@ -40,13 +40,13 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
   subscriptions = new Array<Subscription>();
 
   constructor(
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     private route: ActivatedRoute,
     private authService: AuthService,
     public dialog: MatDialog,
     private projectService: ProjectService,
     private serverService: ServerService
-  ) { }
+  ) {}
 
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
@@ -55,10 +55,10 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
       this.authService.user.subscribe((user) => {
         if (user) {
           this.subscriptions.push(
-            this.afs
-              .doc(this.projectPath)
-              .valueChanges()
+            this.firestoreAdapter
+              .doc$<ProjectSettings>(this.projectPath)
               .subscribe((doc: ProjectSettings) => {
+                if (!doc) return;
                 const memberTableData = Object.keys(doc.members).map((key) => {
                   return { memberId: key, role: doc.members[key] };
                 });
@@ -89,7 +89,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
   rename(name) {
     console.log('rename', name);
-    this.afs.doc(this.projectPath).set({ name: name }, { merge: true });
+    this.firestoreAdapter.updateDoc(this.projectPath, { name: name });
   }
 
   removeMember(memberId: string) {
@@ -99,7 +99,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
       if (response) {
         const members = this.projectSettings.members;
         delete members[memberId];
-        this.afs.doc(this.projectPath).update({ members });
+        this.firestoreAdapter.updateDoc(this.projectPath, { members });
       }
     });
   }
@@ -111,7 +111,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
       if (response && response.memberId) {
         const members = this.projectSettings.members;
         members[response.memberId] = response.role;
-        this.afs.doc(this.projectPath).update({ members });
+        this.firestoreAdapter.updateDoc(this.projectPath, { members });
       }
     });
   }
@@ -122,7 +122,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
       if (response && response.keyId) {
         const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
         apiKeys[response.keyId] = { createdAt: response.createdAt };
-        this.afs.doc(this.projectPath).update({ apiKeys });
+        this.firestoreAdapter.updateDoc(this.projectPath, { apiKeys });
       }
     });
   }
@@ -134,7 +134,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
         this.projectService.revokeApiKey(keyId).then((actionResponse) => {
           const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
           delete apiKeys[keyId];
-          this.afs.doc(this.projectPath).update({ apiKeys });
+          this.firestoreAdapter.updateDoc(this.projectPath, { apiKeys });
           console.log('revokeApiKey response', actionResponse);
         });
       }

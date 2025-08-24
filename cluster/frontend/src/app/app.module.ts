@@ -3,10 +3,16 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { LayoutModule } from '@angular/cdk/layout';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, Injectable, NgModule } from '@angular/core';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
-import { FIREBASE_OPTIONS } from '@angular/fire/compat';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { initializeApp, provideFirebaseApp, getApp } from '@angular/fire/app';
+import { Auth, getAuth, provideAuth } from '@angular/fire/auth';
+import { Firestore, getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { Storage, getStorage, provideStorage } from '@angular/fire/storage';
+import { AuthAdapter, FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
+import {
+  FirebaseAuthAdapter,
+  FirebaseFirestoreAdapter,
+  FirebaseStorageAdapter,
+} from '@nstrumenta/data-adapter/firebase';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -100,6 +106,7 @@ export class SentryErrorHandler implements ErrorHandler {
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
+    provideStorage(() => getStorage()),
     HttpClientModule,
     LayoutModule,
     MatToolbarModule,
@@ -172,11 +179,25 @@ export class SentryErrorHandler implements ErrorHandler {
   ],
   providers: [
     AuthService,
-    { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
     VscodeService,
     MatIconRegistry,
     MatSnackBar,
     { provide: ErrorHandler, useClass: SentryErrorHandler },
+    {
+      provide: AuthAdapter,
+      useFactory: (auth: Auth) => new FirebaseAuthAdapter(auth),
+      deps: [Auth],
+    },
+    {
+      provide: FirestoreAdapter,
+      useFactory: (firestore: Firestore) => new FirebaseFirestoreAdapter(firestore),
+      deps: [Firestore],
+    },
+    {
+      provide: StorageAdapter,
+      useFactory: (storage: Storage) => new FirebaseStorageAdapter(storage),
+      deps: [Storage],
+    },
   ],
   bootstrap: [AppComponent],
 })

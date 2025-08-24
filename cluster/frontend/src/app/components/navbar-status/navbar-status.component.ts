@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import { Observable, Subscription } from 'rxjs';
 import { Action } from 'src/app/models/action.model';
 import { ProjectService } from 'src/app/services/project.service';
@@ -14,7 +14,10 @@ export class NavbarStatusComponent implements OnInit, OnDestroy {
   public projectId: string;
   subscriptions = new Array<Subscription>();
 
-  constructor(private afs: AngularFirestore, private projectService: ProjectService) { }
+  constructor(
+    private firestoreAdapter: FirestoreAdapter,
+    private projectService: ProjectService
+  ) {}
 
   ngOnInit() {
     this.subscriptions.push(
@@ -22,9 +25,9 @@ export class NavbarStatusComponent implements OnInit, OnDestroy {
         this.projectId = projectId;
         if (this.projectId) {
           const actionPath = '/projects/' + this.projectId + '/actions';
-          this.actions = this.afs
-            .collection<Action>(actionPath, (ref) => ref.orderBy('created', 'desc'))
-            .valueChanges();
+          this.actions = this.firestoreAdapter.collection$<Action>(actionPath, {
+            orderBy: { field: 'created', directionStr: 'desc' },
+          });
         }
       })
     );

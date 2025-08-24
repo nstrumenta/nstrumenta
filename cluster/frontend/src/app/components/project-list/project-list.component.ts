@@ -1,10 +1,9 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { map } from 'rxjs/operators';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import { AuthService } from '../../auth/auth.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
 
@@ -28,9 +27,9 @@ export class ProjectListComponent implements OnInit {
 
   constructor(
     public dialog: MatDialog,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     public authService: AuthService
-  ) { }
+  ) {}
 
   computeBreakpoint() {
     const ret = Math.max(1, Math.min(4, Math.ceil(window.innerWidth / 400)));
@@ -43,19 +42,10 @@ export class ProjectListComponent implements OnInit {
       if (user) {
         const collection = '/users/' + user.uid + '/projects';
         console.log(collection);
-        this.afs.collection<Item>(collection).snapshotChanges().pipe(
-          map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
-              const id = a.payload.doc.id;
-              return { key: id, id: id, ...data };
-            });
-          })
-        )
-          .subscribe((data) => {
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
-          });
+        this.firestoreAdapter.collection$<Item>(collection).subscribe((data) => {
+          this.dataSource = new MatTableDataSource(data);
+          this.dataSource.sort = this.sort;
+        });
       }
     });
   }

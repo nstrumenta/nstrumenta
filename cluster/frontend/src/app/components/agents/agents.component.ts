@@ -1,12 +1,11 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
@@ -25,7 +24,7 @@ export class AgentsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}
@@ -35,22 +34,10 @@ export class AgentsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
         this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const id = a.payload.doc.id;
-                  return { id, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
+          this.firestoreAdapter.collection$<any>(this.dataPath).subscribe((data) => {
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
+          })
         );
       })
     );

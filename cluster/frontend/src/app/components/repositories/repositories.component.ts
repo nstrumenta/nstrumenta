@@ -4,9 +4,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { ActivatedRoute } from '@angular/router';
-import { AngularFirestore, AngularFirestoreCollection } from '@angular/fire/compat/firestore';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { map } from 'rxjs/operators';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 
@@ -17,7 +15,6 @@ import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.compo
 })
 export class RepositoriesComponent implements OnInit, OnDestroy {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
-  itemsCollection: AngularFirestoreCollection;
   subscription: Subscription;
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
@@ -27,25 +24,15 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
-    private storage: AngularFireStorage,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     public dialog: MatDialog
   ) {}
 
   ngOnInit() {
     this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/repositories';
-    this.itemsCollection = this.afs.collection<any>(this.dataPath);
-    this.subscription = this.itemsCollection
-      .snapshotChanges()
-      .pipe(
-        map((items) => {
-          return items.map((a) => {
-            const data = a.payload.doc.data();
-            const key = a.payload.doc.id;
-            return { key: key, ...data };
-          });
-        })
-      )
+    this.subscription = this.firestoreAdapter
+      .collection$<any>(this.dataPath)
       .subscribe((data) => {
         this.dataSource = new MatTableDataSource(data);
         this.dataSource.sort = this.sort;
@@ -78,10 +65,10 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
 
   renameFile(fileDocument) {
     console.log('renameFile', fileDocument.name);
-    this.afs
-      .doc(this.dataPath + '/' + fileDocument.key)
-      .set({ name: fileDocument.name }, { merge: true });
-    this.storage.ref(fileDocument.filePath).updateMetadata({
+    this.firestoreAdapter.updateDoc(this.dataPath + '/' + fileDocument.id, {
+      name: fileDocument.name,
+    });
+    this.storageAdapter.updateMetadata(fileDocument.filePath, {
       contentDisposition: 'attachment; filename=' + fileDocument.name,
     });
   }
@@ -89,7 +76,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      this.firestoreAdapter.deleteDoc(this.dataPath + '/' + item.id);
     });
     this.selection.clear();
   }
@@ -116,7 +103,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
       console.dir(result);
       if (result) {
         result.lastModified = Date.now();
-        this.itemsCollection.add(result);
+        this.firestoreAdapter.addDoc(this.dataPath, result);
       }
     });
   }

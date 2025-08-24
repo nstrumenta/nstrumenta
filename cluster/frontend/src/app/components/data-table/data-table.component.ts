@@ -1,11 +1,10 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { map } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
 import { environment } from 'src/environments/environment';
@@ -29,7 +28,8 @@ export class DataTableComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     public dialog: MatDialog,
     private serverService: ServerService
   ) {}
@@ -40,12 +40,10 @@ export class DataTableComponent implements OnInit {
       this.dataPath = '/projects/' + this.projectId + '/data';
       //gather modules for actions
       this.moduleActions = new Map();
-      this.afs
-        .collection<any>('/projects/' + this.projectId + '/modules')
-        .snapshotChanges()
-        .forEach((changes) => {
-          changes.forEach((change) => {
-            const module = change.payload.doc.data();
+      this.firestoreAdapter
+        .collection$<any>('/projects/' + this.projectId + '/modules')
+        .subscribe((modules) => {
+          modules.forEach((module) => {
             console.log(module);
             const { name, url } = module;
             if (url != undefined) {
@@ -55,18 +53,15 @@ export class DataTableComponent implements OnInit {
             }
           });
         });
-      this.afs
-        .collection<any>(this.dataPath)
-        .snapshotChanges()
+      this.firestoreAdapter
+        .collection$<any>(this.dataPath)
         .pipe(
           map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
+            return items.map((data) => {
               // ensure that data.size is a number
               // uploader puts string into data.size
               data.size = parseInt(data.size);
-              const key = a.payload.doc.id;
-              return { key: key, ...data };
+              return data;
             });
           })
         )
@@ -109,8 +104,8 @@ export class DataTableComponent implements OnInit {
 
   download(fileDocument) {
     console.log('download', fileDocument.name);
-    const storage = getStorage();
-    getDownloadURL(ref(storage, fileDocument.filePath))
+    this.storageAdapter
+      .getDownloadURL(fileDocument.filePath)
       .then((url) => {
         window.open(url);
       })
@@ -147,12 +142,10 @@ export class DataTableComponent implements OnInit {
   }
 
   deleteSelected() {
-    const storage = getStorage();
-
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteObject(ref(storage, item.filePath));
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      this.storageAdapter.deleteObject(item.filePath);
+      this.firestoreAdapter.deleteDoc(this.dataPath + '/' + item.id);
     });
     this.selection.clear();
   }

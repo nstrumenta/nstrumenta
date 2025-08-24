@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
-import { User } from '@angular/fire/auth/firebase';
+import { Injectable } from '@angular/core';
+import { User } from '@nstrumenta/data-adapter';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  user = new BehaviorSubject<User>(null);
+  user = new BehaviorSubject<User | null>(null);
 
-  setUser(user: User) {
+  setUser(user: User | null) {
     this.user.next(user);
   }
 }
