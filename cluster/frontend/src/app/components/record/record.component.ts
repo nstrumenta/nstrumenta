@@ -1,15 +1,13 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
 import { Observable, Subject, fromEvent } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
 import { Stream } from 'stream';
 import * as uuid from 'uuid';
@@ -83,8 +81,8 @@ export class RecordComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
-    private storage: AngularFireStorage,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     private authService: AuthService,
     private breakpointObserver: BreakpointObserver
   ) {}
@@ -92,18 +90,10 @@ export class RecordComponent implements OnInit {
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataPath = '/projects/' + this.projectId + '/record';
-    this.afs
-      .collection<any>(this.dataPath, (ref) => ref.orderBy('lastModified', 'desc'))
-      .snapshotChanges()
-      .pipe(
-        map((items) => {
-          return items.map((a) => {
-            const data = a.payload.doc.data();
-            const key = a.payload.doc.id;
-            return { key: key, ...data };
-          });
-        })
-      )
+    this.firestoreAdapter
+      .collection$<any>(this.dataPath, {
+        orderBy: { field: 'lastModified', directionStr: 'desc' },
+      })
       .subscribe((data) => {
         const commonSources = [
           {
@@ -241,7 +231,7 @@ export class RecordComponent implements OnInit {
 
   addRecordSource(name) {
     console.log('addRecordSource', name);
-    this.afs.collection<any>(this.dataPath).add({ name: name, lastModified: Date.now() });
+    this.firestoreAdapter.addDoc(this.dataPath, { name: name, lastModified: Date.now() });
   }
 
   async onSensorEvent(event: SensorEvent) {
@@ -735,7 +725,7 @@ export class RecordComponent implements OnInit {
           const projectDataPath = '/projects/' + this.projectId + '/data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
-          await this.storage.upload(filePath, recordedBlob);
+          await this.storageAdapter.upload(filePath, recordedBlob);
         }
       };
       // Play the video automatically
@@ -821,14 +811,14 @@ export class RecordComponent implements OnInit {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      this.firestoreAdapter.deleteDoc(this.dataPath + '/' + item.id);
     });
     this.selection.clear();
   }
 
   updateRecordSource(recordSource) {
     console.log('updating', recordSource);
-    this.afs.doc(this.dataPath + '/' + recordSource.key).set(recordSource, { merge: true });
+    this.firestoreAdapter.updateDoc(this.dataPath + '/' + recordSource.id, recordSource);
   }
 
   async saveEvents() {
@@ -847,10 +837,10 @@ export class RecordComponent implements OnInit {
       const projectDataPath = '/projects/' + this.projectId + '/data';
       const dataFilePath = `${projectDataPath}/${mcapFileName}`;
       const experimentFilepath = `${projectDataPath}/${recording}.experiment.json`;
-      const metadata: UploadMetadata = {
+      const metadata = {
         contentDisposition: 'attachment; filename=' + mcapFileName,
       };
-      await this.storage.upload(dataFilePath, blob, metadata);
+      await this.storageAdapter.upload(dataFilePath, blob, metadata);
       //create experiment.json
       const videos = this.videoToggle
         ? [
@@ -866,7 +856,7 @@ export class RecordComponent implements OnInit {
         dataFilePath,
         videos,
       };
-      await this.storage.upload(
+      await this.storageAdapter.upload(
         experimentFilepath,
         new Blob([JSON.stringify(experiment)], { type: 'application/json' })
       );

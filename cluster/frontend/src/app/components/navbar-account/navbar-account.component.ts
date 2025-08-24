@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
-import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
 import { Router } from '@angular/router';
+import { AuthAdapter, User } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 
@@ -11,11 +11,11 @@ import { AuthService } from 'src/app/auth/auth.service';
 })
 export class NavbarAccountComponent {
   subscriptions = new Array<Subscription>();
-  auth: Auth = inject(Auth);
+  private authAdapter = inject(AuthAdapter);
   private authService = inject(AuthService);
   private router = inject(Router);
   loggedIn = false;
-  user$ = user(this.auth);
+  user$ = this.authAdapter.getAuthState();
   userSubscription: Subscription;
 
   constructor() {
@@ -26,12 +26,14 @@ export class NavbarAccountComponent {
   }
 
   async logout() {
-    await this.auth.signOut();
+    await this.authAdapter.signOut();
     this.loggedIn = false;
     this.router.navigate(['/']);
   }
 
   async login() {
-    return await signInWithPopup(this.auth, new GithubAuthProvider());
+    // The provider can be anything, it's up to the adapter to decide how to handle it.
+    // In our case, the FirebaseAuthAdapter is hardcoded to use GithubAuthProvider.
+    return await this.authAdapter.signInWithPopup('github');
   }
 }

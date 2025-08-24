@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialogRef } from '@angular/material/dialog';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import { AuthService } from 'src/app/auth/auth.service';
 import * as uuid from 'uuid';
 import { Subscription, firstValueFrom } from 'rxjs';
@@ -17,9 +17,9 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
 
   constructor(
     private authService: AuthService,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     public dialogRef: MatDialogRef<NewProjectDialogComponent>
-  ) { }
+  ) {}
 
   async create(projectIdRaw: string): Promise<void> {
     const projectIdBase = encodeURIComponent(
@@ -31,22 +31,24 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
     const { uid } = this.authService.user.value;
 
     //append random suffix string if project exists
-    let confirmedUnique = false
+    let confirmedUnique = false;
     let suffix = '';
     while (!confirmedUnique) {
-      await firstValueFrom(this.afs.collection('projects').doc(`${projectIdBase}${suffix}`).get()).then(async (ref) => {
-        const doc = await ref.data();
-        if (doc !== undefined) {
-          console.log(ref.id, 'exists');
-          suffix = uuid.v4().substring(8, 13);
-        } else {
-          confirmedUnique = true;
-        }
-      });
+      const doc = await firstValueFrom(
+        this.firestoreAdapter.doc$(`projects/${projectIdBase}${suffix}`)
+      );
+      if (doc !== undefined) {
+        console.log(`${projectIdBase}${suffix}`, 'exists');
+        suffix = uuid.v4().substring(8, 13);
+      } else {
+        confirmedUnique = true;
+      }
     }
-    const projectId = `${projectIdBase}${suffix}`
+    const projectId = `${projectIdBase}${suffix}`;
 
-    this.afs.collection(`users/${uid}/projects`).doc(projectId).set({ name: this.projectName })
+    this.firestoreAdapter.setDoc(`users/${uid}/projects/${projectId}`, {
+      name: this.projectName,
+    });
     console.log('writing new project: ' + projectId);
     const newProjectDocument: any = {};
     newProjectDocument.members = {};
@@ -54,10 +56,8 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
     newProjectDocument.members[uid] = 'owner';
     newProjectDocument.name = this.projectName;
 
-    this.afs.collection('projects').doc(projectId).set(newProjectDocument);
+    this.firestoreAdapter.setDoc(`projects/${projectId}`, newProjectDocument);
     this.dialogRef.close();
-
-
   }
 
   ngOnDestroy() {
@@ -65,5 +65,5 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
       this.subscription.unsubscribe();
     }
   }
-  ngOnInit() { }
+  ngOnInit() {}
 }

@@ -1,13 +1,11 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
@@ -26,7 +24,8 @@ export class ModulesComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}
@@ -36,22 +35,10 @@ export class ModulesComponent implements OnInit {
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
         this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const id = a.payload.doc.id;
-                  return { id, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
+          this.firestoreAdapter.collection$<any>(this.dataPath).subscribe((data) => {
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
+          })
         );
       })
     );
@@ -77,12 +64,10 @@ export class ModulesComponent implements OnInit {
   }
 
   deleteSelected() {
-    const storage = getStorage();
-
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteObject(ref(storage, item.filePath));
-      this.afs.doc(this.dataPath + '/' + item.id).delete();
+      this.storageAdapter.deleteObject(item.filePath);
+      this.firestoreAdapter.deleteDoc(this.dataPath + '/' + item.id);
     });
     this.selection.clear();
   }
@@ -95,8 +80,8 @@ export class ModulesComponent implements OnInit {
 
   download(fileDocument) {
     console.log('download', fileDocument.name);
-    const storage = getStorage();
-    getDownloadURL(ref(storage, fileDocument.filePath))
+    this.storageAdapter
+      .getDownloadURL(fileDocument.filePath)
       .then((url) => {
         window.open(url);
       })

@@ -1,8 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { getDownloadURL, getStorage, ref } from 'firebase/storage';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { Observable, Subscription } from 'rxjs';
 
 @Component({
@@ -12,9 +11,9 @@ import { Observable, Subscription } from 'rxjs';
       <video controls *ngIf="isVideo" width="100%" style="max-height: 80%" [src]="url"></video>
       <a mat-button [href]="url">{{ (fileDoc | async)?.name }}</a>
       <mat-list>
-      <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
-      <mat-list-item>size: {{ (fileDoc | async)?.size | fileSize }}</mat-list-item>
-      <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
+        <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
+        <mat-list-item>size: {{ (fileDoc | async)?.size | fileSize }}</mat-list-item>
+        <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
         <mat-list-item>dirname: {{ (fileDoc | async)?.dirname }}</mat-list-item>
       </mat-list>
       <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap" *ngIf="contents">
@@ -34,7 +33,8 @@ export class DataDetailComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     public sanitizer: DomSanitizer
   ) {}
 
@@ -45,12 +45,13 @@ export class DataDetailComponent implements OnInit, OnDestroy {
       '/data/' +
       this.route.snapshot.paramMap.get('dataId');
 
-    this.fileDoc = this.afs.doc<any>(this.dataPath).valueChanges();
+    this.fileDoc = this.firestoreAdapter.doc$<any>(this.dataPath);
     this.subscriptions.push(
       this.fileDoc.subscribe((doc) => {
+        if (!doc) return;
         console.log(doc);
-        const storage = getStorage();
-        getDownloadURL(ref(storage, doc.filePath))
+        this.storageAdapter
+          .getDownloadURL(doc.filePath)
           .then(async (url) => {
             if (
               doc.name.toLowerCase().endsWith('.mov') ||

@@ -1,16 +1,12 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort, MatSortable } from '@angular/material/sort';
+import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { map } from 'rxjs/operators';
-import { AuthService } from 'src/app/auth/auth.service';
+import { FirestoreAdapter, StorageAdapter } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-actions',
@@ -28,8 +24,8 @@ export class ActionsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
-    private storage: AngularFireStorage,
+    private firestoreAdapter: FirestoreAdapter,
+    private storageAdapter: StorageAdapter,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}
@@ -39,22 +35,10 @@ export class ActionsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
         this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const key = a.payload.doc.id;
-                  return { key: key, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
+          this.firestoreAdapter.collection$<any>(this.dataPath).subscribe((data) => {
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
+          })
         );
       })
     );
@@ -88,10 +72,10 @@ export class ActionsComponent implements OnInit, OnDestroy {
 
   renameFile(fileDocument) {
     console.log('renameFile', fileDocument.name);
-    this.afs
-      .doc(this.dataPath + '/' + fileDocument.key)
-      .set({ name: fileDocument.name }, { merge: true });
-    this.storage.ref(fileDocument.filePath).updateMetadata({
+    this.firestoreAdapter.updateDoc(this.dataPath + '/' + fileDocument.id, {
+      name: fileDocument.name,
+    });
+    this.storageAdapter.updateMetadata(fileDocument.filePath, {
       contentDisposition: 'attachment; filename=' + fileDocument.name,
     });
   }
@@ -99,7 +83,7 @@ export class ActionsComponent implements OnInit, OnDestroy {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      this.firestoreAdapter.deleteDoc(this.dataPath + '/' + item.id);
     });
     this.selection.clear();
   }

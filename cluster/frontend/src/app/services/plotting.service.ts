@@ -1,11 +1,8 @@
 import { Injectable } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { ActivatedRoute } from '@angular/router';
 import { get as idbGet, keys as idbKeys, set as idbSet } from 'idb-keyval';
 import { BehaviorSubject } from 'rxjs';
 import { SensorEvent, sensorEventLabels } from 'src/app/models/sensorEvent.model';
 import { hash } from 'src/app/utils/hash';
-import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -15,11 +12,7 @@ export class PlottingService {
   data = [{ x: [], y: [], name: '' }];
   eventIdMap = {};
 
-  constructor(
-    private authService: AuthService,
-    private afs: AngularFirestore,
-    private activatedRoute: ActivatedRoute
-  ) {}
+  constructor() {}
 
   clearData() {
     this.data = [{ x: [], y: [], name: '' }];

@@ -1,10 +1,10 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
+import { FirestoreAdapter } from '@nstrumenta/data-adapter';
 import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { VmService } from 'src/app/vm.service';
@@ -25,7 +25,7 @@ export class MachinesComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestoreAdapter: FirestoreAdapter,
     public dialog: MatDialog,
     private vmService: VmService
   ) {}
@@ -34,21 +34,19 @@ export class MachinesComponent implements OnInit, OnDestroy {
     this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/machines';
 
     this.subscriptions.push(
-      this.afs
-        .collection<any>(this.dataPath)
-        .snapshotChanges()
+      this.firestoreAdapter
+        .collection$<any>(this.dataPath)
         .pipe(
           map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
-              const { serverStatus, deleted } = data;
-              const name = a.payload.doc.id;
-              const createdAt = data.metadata?.creationTimestamp;
-              const url = data.status?.url;
-              const status = deleted
+            return items.map((item) => {
+              const { serverStatus, deleted, metadata, status } = item;
+              const name = item.id;
+              const createdAt = metadata?.creationTimestamp;
+              const url = status?.url;
+              const currentStatus = deleted
                 ? 'Deleted'
-                : data.status?.conditions && data.status?.conditions[0]?.type;
-              return { name, createdAt, url, status, serverStatus };
+                : status?.conditions && status?.conditions[0]?.type;
+              return { name, createdAt, url, status: currentStatus, serverStatus };
             });
           })
         )
