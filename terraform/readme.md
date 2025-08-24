@@ -4,6 +4,10 @@ based on https://firebase.google.com/docs/projects/terraform/get-started
 
 
 ## terraform 
+the following commands are intended to run in the terraform folder
+```
+cd terraform
+```
 
 ### terraform init
 ```
