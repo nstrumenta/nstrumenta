@@ -35,9 +35,10 @@ export type NstrumentaExperiment = {
 };
 
 @Component({
-  selector: 'app-record',
-  templateUrl: './record.component.html',
-  styleUrls: ['./record.component.scss'],
+    selector: 'app-record',
+    templateUrl: './record.component.html',
+    styleUrls: ['./record.component.scss'],
+    standalone: false
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;

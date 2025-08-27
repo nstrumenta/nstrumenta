@@ -11,9 +11,10 @@ import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-  selector: 'app-modules',
-  templateUrl: './modules.component.html',
-  styleUrls: ['./modules.component.scss'],
+    selector: 'app-modules',
+    templateUrl: './modules.component.html',
+    styleUrls: ['./modules.component.scss'],
+    standalone: false
 })
 export class ModulesComponent implements OnInit {
   displayedColumns = ['select', 'id', 'url', 'modified'];
