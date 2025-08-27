@@ -1,9 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from 'src/app/auth/auth.service';
-import * as uuid from 'uuid';
-import { Subscription, firstValueFrom } from 'rxjs';
+import { ApiService } from 'src/app/services/api.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-new-project-dialog',
@@ -14,50 +13,34 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
   subscription: Subscription;
   projectName: string;
   uid: string;
+  isCreating = false;
+  errorMessage: string;
 
   constructor(
     private authService: AuthService,
-    private afs: AngularFirestore,
+    private apiService: ApiService,
     public dialogRef: MatDialogRef<NewProjectDialogComponent>
   ) { }
 
   async create(projectIdRaw: string): Promise<void> {
-    const projectIdBase = encodeURIComponent(
-      projectIdRaw
-        .toLowerCase()
-        .replace(/ +/g, '-')
-        .replace(/[^a-z0-9 _-]+/gi, '-')
-    );
-    const { uid } = this.authService.user.value;
+    if (this.isCreating) return;
+    
+    this.isCreating = true;
+    this.errorMessage = '';
 
-    //append random suffix string if project exists
-    let confirmedUnique = false
-    let suffix = '';
-    while (!confirmedUnique) {
-      await firstValueFrom(this.afs.collection('projects').doc(`${projectIdBase}${suffix}`).get()).then(async (ref) => {
-        const doc = await ref.data();
-        if (doc !== undefined) {
-          console.log(ref.id, 'exists');
-          suffix = uuid.v4().substring(8, 13);
-        } else {
-          confirmedUnique = true;
-        }
+    try {
+      const response = await this.apiService.createProject({
+        name: this.projectName,
+        projectIdBase: projectIdRaw
       });
+
+      console.log('Project created successfully:', response);
+      this.dialogRef.close(response);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      this.errorMessage = error?.error || 'Failed to create project. Please try again.';
+      this.isCreating = false;
     }
-    const projectId = `${projectIdBase}${suffix}`
-
-    this.afs.collection(`users/${uid}/projects`).doc(projectId).set({ name: this.projectName })
-    console.log('writing new project: ' + projectId);
-    const newProjectDocument: any = {};
-    newProjectDocument.members = {};
-    newProjectDocument.agentType = 'main';
-    newProjectDocument.members[uid] = 'owner';
-    newProjectDocument.name = this.projectName;
-
-    this.afs.collection('projects').doc(projectId).set(newProjectDocument);
-    this.dialogRef.close();
-
-
   }
 
   ngOnDestroy() {
@@ -65,5 +48,6 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
       this.subscription.unsubscribe();
     }
   }
+  
   ngOnInit() { }
 }
