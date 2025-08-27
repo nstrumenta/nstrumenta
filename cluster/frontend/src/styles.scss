@@ -2,16 +2,16 @@
 
 @include mat.core();
 
-$my-typography: mat.define-typography-config(
+$my-typography: mat.m2-define-typography-config(
   $font-family: 'Roboto',
 );
 
 // Define a dark theme
-$dark-theme: mat.define-dark-theme(
+$dark-theme: mat.m2-define-dark-theme(
   (
     color: (
-      primary: mat.define-palette(mat.$pink-palette),
-      accent: mat.define-palette(mat.$blue-grey-palette),
+      primary: mat.m2-define-palette(mat.$m2-pink-palette),
+      accent: mat.m2-define-palette(mat.$m2-blue-grey-palette),
     ),
     // Only include `typography` and `density` in the default dark theme.
     typography: $my-typography,
@@ -20,11 +20,11 @@ $dark-theme: mat.define-dark-theme(
 );
 
 // Define a light theme
-$light-theme: mat.define-light-theme(
+$light-theme: mat.m2-define-light-theme(
   (
     color: (
-      primary: mat.define-palette(mat.$indigo-palette),
-      accent: mat.define-palette(mat.$pink-palette),
+      primary: mat.m2-define-palette(mat.$m2-indigo-palette),
+      accent: mat.m2-define-palette(mat.$m2-pink-palette),
     ),
   )
 );
@@ -49,9 +49,9 @@ body {
   padding: 0;
 }
 
-$indigo: mat.define-palette(mat.$indigo-palette);
+$indigo: mat.m2-define-palette(mat.$m2-indigo-palette);
 .mat-mdc-button:visited {
-  color: mat.get-color-from-palette($indigo, lighter);
+  color: mat.m2-get-color-from-palette($indigo, lighter);
 }
 
 .full-width-table {
