@@ -1,6 +1,7 @@
 import { ClipboardModule } from '@angular/cdk/clipboard';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { LayoutModule } from '@angular/cdk/layout';
+import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { ErrorHandler, Injectable, NgModule } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
@@ -35,6 +36,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { BrowserModule, DomSanitizer } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { RouterModule } from '@angular/router';
 import * as Sentry from '@sentry/browser';
 import { environment } from 'src/environments/environment';
 import { AppRoutingModule } from './app-routing.module';
@@ -96,10 +98,8 @@ export class SentryErrorHandler implements ErrorHandler {
 @NgModule({
   imports: [
     BrowserModule,
+    CommonModule,
     BrowserAnimationsModule,
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
     HttpClientModule,
     LayoutModule,
     MatToolbarModule,
@@ -117,6 +117,7 @@ export class SentryErrorHandler implements ErrorHandler {
     MatMenuModule,
     MatGridListModule,
     AppRoutingModule,
+    RouterModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
@@ -177,6 +178,9 @@ export class SentryErrorHandler implements ErrorHandler {
     MatIconRegistry,
     MatSnackBar,
     { provide: ErrorHandler, useClass: SentryErrorHandler },
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideAuth(() => getAuth()),
+    provideFirestore(() => getFirestore()),
   ],
   bootstrap: [AppComponent],
 })
