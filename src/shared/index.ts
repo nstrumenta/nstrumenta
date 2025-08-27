@@ -2,6 +2,7 @@ export const getEndpoints = (apiKey: string) => {
   const url = atob(apiKey.split(':')[1] ?? '').trim();
   return {
     ADMIN_UTILS: `${url}/adminUtils`,
+    CREATE_PROJECT: `${url}/createProject`,
     GET_MACHINES: `${url}/getMachines`,
     GET_CLOUD_RUN_SERVICES: `${url}/getCloudRunServices`,
     GET_UPLOAD_URL: `${url}/getUploadUrl`,

@@ -1,2 +1,4 @@
 import { readFileSync } from "fs"
-console.log(JSON.stringify(JSON.parse(readFileSync('./nstrumenta-admin.json'))))
+//read filename from argument
+const filename = process.argv[2]
+console.log(JSON.stringify(JSON.parse(readFileSync(filename))))
