@@ -8,9 +8,10 @@ export interface CreateKeyDialogResponse {
 }
 
 @Component({
-  selector: 'app-create-key-dialog',
-  templateUrl: `create-key-dialog.component.html`,
-  styles: [],
+    selector: 'app-create-key-dialog',
+    templateUrl: `create-key-dialog.component.html`,
+    styles: [],
+    standalone: false
 })
 export class CreateKeyDialogComponent implements OnInit {
   response: CreateKeyDialogResponse;

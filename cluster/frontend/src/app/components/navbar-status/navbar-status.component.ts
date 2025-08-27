@@ -5,9 +5,10 @@ import { Action } from 'src/app/models/action.model';
 import { ProjectService } from 'src/app/services/project.service';
 
 @Component({
-  selector: 'app-navbar-status',
-  templateUrl: './navbar-status.component.html',
-  styleUrls: ['./navbar-status.component.scss'],
+    selector: 'app-navbar-status',
+    templateUrl: './navbar-status.component.html',
+    styleUrls: ['./navbar-status.component.scss'],
+    standalone: false
 })
 export class NavbarStatusComponent implements OnInit, OnDestroy {
   public actions: Observable<Action[]>;

@@ -6,8 +6,8 @@ import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { Observable, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-data-detail',
-  template: `
+    selector: 'app-data-detail',
+    template: `
     <ng-container>
       <video controls *ngIf="isVideo" width="100%" style="max-height: 80%" [src]="url"></video>
       <a mat-button [href]="url">{{ (fileDoc | async)?.name }}</a>
@@ -22,7 +22,8 @@ import { Observable, Subscription } from 'rxjs';
       </div>
     </ng-container>
   `,
-  styles: [],
+    styles: [],
+    standalone: false
 })
 export class DataDetailComponent implements OnInit, OnDestroy {
   dataPath: string;

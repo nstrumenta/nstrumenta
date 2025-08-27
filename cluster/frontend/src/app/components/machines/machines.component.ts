@@ -10,9 +10,10 @@ import { map } from 'rxjs/operators';
 import { VmService } from 'src/app/vm.service';
 
 @Component({
-  selector: 'app-machines',
-  templateUrl: './machines.component.html',
-  styleUrls: ['./machines.component.scss'],
+    selector: 'app-machines',
+    templateUrl: './machines.component.html',
+    styleUrls: ['./machines.component.scss'],
+    standalone: false
 })
 export class MachinesComponent implements OnInit, OnDestroy {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
