@@ -3,9 +3,10 @@ import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dial
 import { AngularFirestore } from '@angular/fire/compat/firestore';
 
 @Component({
-  selector: 'app-edit-dialog',
-  templateUrl: './edit-dialog.component.html',
-  styleUrls: ['./edit-dialog.component.scss'],
+    selector: 'app-edit-dialog',
+    templateUrl: './edit-dialog.component.html',
+    styleUrls: ['./edit-dialog.component.scss'],
+    standalone: false
 })
 export class EditDialogComponent {
   newEmail: string;
