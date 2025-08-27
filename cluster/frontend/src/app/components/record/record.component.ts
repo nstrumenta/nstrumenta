@@ -480,7 +480,7 @@ export class RecordComponent implements OnInit {
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
-                  eval('parser = ' + deviceDoc.notifications[0].parser);
+                  parser = new Function('return ' + deviceDoc.notifications[0].parser)();
                 } catch (e) {
                   console.log(e);
                 }
