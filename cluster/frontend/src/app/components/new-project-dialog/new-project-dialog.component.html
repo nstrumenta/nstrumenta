@@ -1,7 +1,19 @@
 <section class="mat-typography">
     <h2>Add New Project</h2>
     <mat-form-field class="project-name-input">
-        <input matInput [(ngModel)]="projectName" placeholder="Project Name">
+        <input matInput [(ngModel)]="projectName" placeholder="Project Name" [disabled]="isCreating">
     </mat-form-field>
-    <button mat-raised-button (click)="create(projectName)">Create</button>
+    
+    <div *ngIf="errorMessage" class="error-message">
+        <mat-error>{{ errorMessage }}</mat-error>
+    </div>
+    
+    <button 
+        mat-raised-button 
+        (click)="create(projectName)" 
+        [disabled]="!projectName || isCreating"
+        color="primary">
+        <span *ngIf="!isCreating">Create</span>
+        <span *ngIf="isCreating">Creating...</span>
+    </button>
 </section>

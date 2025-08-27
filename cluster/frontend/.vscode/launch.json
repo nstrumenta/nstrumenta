@@ -4,12 +4,19 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    
     {
       "type": "chrome",
       "request": "launch",
       "name": "frontend",
-      "url": "http://0.0.0.0:5008",
+      "url": "http://localhost:5008",
+      "webRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "frontend dev apiUrl",
+      "url": "http://localhost:5008?apiUrl=http://localhost:5999",
       "webRoot": "${workspaceFolder}",
       "sourceMaps": true,
     }

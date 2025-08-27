@@ -6,6 +6,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
 import { ServerService } from './server.service';
+import { ApiService } from './api.service';
 
 @Injectable({
   providedIn: 'root',
@@ -21,7 +22,8 @@ export class ProjectService {
     private authService: AuthService,
     private afs: AngularFirestore,
     private activatedRoute: ActivatedRoute,
-    private serverService: ServerService
+    private serverService: ServerService,
+    private apiService: ApiService
   ) {
     this.authService.user.subscribe((user) => {
       if (user) {
@@ -63,11 +65,13 @@ export class ProjectService {
 
   async createApiKey() {
     if (!this.currentProjectId) return;
-    console.log(this.projectSettings);
+    //getApiUrl from api.service
+    const apiUrl = await this.apiService.getApiUrl();
+
     return this.serverService.runServerTask(
       'createApiKey',
       this.currentProjectId,
-      { apiUrl: this.projectSettings.apiUrl },
+      { apiUrl },
       console.log
     );
   }
