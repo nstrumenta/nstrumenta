@@ -1,21 +1,20 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-
+import { Firestore, collection, collectionData, query, orderBy } from '@angular/fire/firestore';
+import { Storage } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-actions',
-  templateUrl: './actions.component.html',
-  styleUrls: ['./actions.component.scss'],
+    selector: 'app-actions',
+    templateUrl: './actions.component.html',
+    styleUrls: ['./actions.component.scss'],
+    standalone: false
 })
 export class ActionsComponent implements OnInit, OnDestroy {
   displayedColumns = ['task', 'status', 'lastModified', 'error'];
@@ -28,8 +27,8 @@ export class ActionsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
-    private storage: AngularFireStorage,
+    private firestore: Firestore,
+    private storage: Storage,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}

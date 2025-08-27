@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -10,9 +10,10 @@ import { map } from 'rxjs/operators';
 import { VmService } from 'src/app/vm.service';
 
 @Component({
-  selector: 'app-machines',
-  templateUrl: './machines.component.html',
-  styleUrls: ['./machines.component.scss'],
+    selector: 'app-machines',
+    templateUrl: './machines.component.html',
+    styleUrls: ['./machines.component.scss'],
+    standalone: false
 })
 export class MachinesComponent implements OnInit, OnDestroy {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
@@ -25,7 +26,7 @@ export class MachinesComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     public dialog: MatDialog,
     private vmService: VmService
   ) {}
@@ -34,15 +35,13 @@ export class MachinesComponent implements OnInit, OnDestroy {
     this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/machines';
 
     this.subscriptions.push(
-      this.afs
-        .collection<any>(this.dataPath)
-        .snapshotChanges()
-        .pipe(
-          map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
+      (() => {
+        const machinesCollection = collection(this.firestore, this.dataPath);
+        return collectionData(machinesCollection, { idField: 'name' }).pipe(
+          map((items: any[]) => {
+            return items.map((data) => {
               const { serverStatus, deleted } = data;
-              const name = a.payload.doc.id;
+              const name = data.name || data.id;
               const createdAt = data.metadata?.creationTimestamp;
               const url = data.status?.url;
               const status = deleted
@@ -51,17 +50,17 @@ export class MachinesComponent implements OnInit, OnDestroy {
               return { name, createdAt, url, status, serverStatus };
             });
           })
-        )
-        .subscribe((dataSource) => {
-          this.dataSource = new MatTableDataSource(dataSource);
-          this.dataSource.sort = this.sort;
-          this.dataSource.sortingDataAccessor = (item, property) => {
-            switch (property) {
-              case 'date': {
-                let newDate = new Date(item.date);
-                return newDate;
-              }
-              default: {
+        );
+      })().subscribe((dataSource) => {
+        this.dataSource = new MatTableDataSource(dataSource);
+        this.dataSource.sort = this.sort;
+        this.dataSource.sortingDataAccessor = (item, property) => {
+          switch (property) {
+            case 'date': {
+              let newDate = new Date(item.date);
+              return newDate;
+            }
+            default: {
                 return item[property];
               }
             }

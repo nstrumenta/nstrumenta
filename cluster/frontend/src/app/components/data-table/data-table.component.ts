@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,9 +11,10 @@ import { ServerService } from 'src/app/services/server.service';
 import { environment } from 'src/environments/environment';
 
 @Component({
-  selector: 'app-data-table',
-  templateUrl: './data-table.component.html',
-  styleUrls: ['./data-table.component.scss'],
+    selector: 'app-data-table',
+    templateUrl: './data-table.component.html',
+    styleUrls: ['./data-table.component.scss'],
+    standalone: false
 })
 export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
@@ -29,7 +30,7 @@ export class DataTableComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     public dialog: MatDialog,
     private serverService: ServerService
   ) {}
@@ -40,42 +41,37 @@ export class DataTableComponent implements OnInit {
       this.dataPath = '/projects/' + this.projectId + '/data';
       //gather modules for actions
       this.moduleActions = new Map();
-      this.afs
-        .collection<any>('/projects/' + this.projectId + '/modules')
-        .snapshotChanges()
-        .forEach((changes) => {
-          changes.forEach((change) => {
-            const module = change.payload.doc.data();
-            console.log(module);
-            const { name, url } = module;
-            if (url != undefined) {
-              this.moduleActions.set(name, { name, url });
-            } else {
-              this.moduleActions.set(name, { name });
-            }
-          });
+      
+      // Get modules using modern API
+      const modulesCollection = collection(this.firestore, '/projects/' + this.projectId + '/modules');
+      collectionData(modulesCollection, { idField: 'id' }).subscribe((modules: any[]) => {
+        modules.forEach((module) => {
+          console.log(module);
+          const { name, url } = module;
+          if (url != undefined) {
+            this.moduleActions.set(name, { name, url });
+          } else {
+            this.moduleActions.set(name, { name });
+          }
         });
-      this.afs
-        .collection<any>(this.dataPath)
-        .snapshotChanges()
-        .pipe(
-          map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
-              // ensure that data.size is a number
-              // uploader puts string into data.size
-              data.size = parseInt(data.size);
-              const key = a.payload.doc.id;
-              return { key: key, ...data };
-            });
-          })
-        )
-        .subscribe(async (dataSource) => {
-          this.dataSource = new MatTableDataSource(dataSource);
-          this.dataSource.sort = this.sort;
-          this.dataSource.filter = this.filterParam;
-          return;
+      });
+
+      // Get data using modern API
+      const dataCollection = collection(this.firestore, this.dataPath);
+      collectionData(dataCollection, { idField: 'key' }).subscribe(async (dataSource: any[]) => {
+        const processedData = dataSource.map((item) => {
+          // ensure that item.size is a number
+          // uploader puts string into item.size
+          if (item.size) {
+            item.size = parseInt(item.size);
+          }
+          return item;
         });
+        this.dataSource = new MatTableDataSource(processedData);
+        this.dataSource.sort = this.sort;
+        this.dataSource.filter = this.filterParam;
+        return;
+      });
     });
     this.route.queryParamMap.subscribe((params: ParamMap) => {
       this.filterParam = params.get('filter');
@@ -152,7 +148,8 @@ export class DataTableComponent implements OnInit {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
       deleteObject(ref(storage, item.filePath));
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      const docRef = doc(this.firestore, this.dataPath + '/' + item.key);
+      deleteDoc(docRef);
     });
     this.selection.clear();
   }
