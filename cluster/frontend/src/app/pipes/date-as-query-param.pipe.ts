@@ -1,8 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-    name: 'dateAsQueryParam',
-    standalone: false
+  name: 'dateAsQueryParam',
 })
 export class DateAsQueryParamPipe implements PipeTransform {
   transform(url): unknown {

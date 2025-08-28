@@ -11,10 +11,9 @@ import { ServerService } from 'src/app/services/server.service';
 import { environment } from 'src/environments/environment';
 
 @Component({
-    selector: 'app-data-table',
-    templateUrl: './data-table.component.html',
-    styleUrls: ['./data-table.component.scss'],
-    standalone: false
+  selector: 'app-data-table',
+  templateUrl: './data-table.component.html',
+  styleUrls: ['./data-table.component.scss'],
 })
 export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];

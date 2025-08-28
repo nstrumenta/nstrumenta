@@ -10,10 +10,9 @@ import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-    selector: 'app-agents',
-    templateUrl: './agents.component.html',
-    styleUrls: ['./agents.component.scss'],
-    standalone: false
+  selector: 'app-agents',
+  templateUrl: './agents.component.html',
+  styleUrls: ['./agents.component.scss'],
 })
 export class AgentsComponent implements OnInit, OnDestroy {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];

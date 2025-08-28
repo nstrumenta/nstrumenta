@@ -3,10 +3,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { VscodeService } from 'src/app/services/vscode.service';
 
 @Component({
-    selector: 'app-navbar-vscode',
-    templateUrl: './navbar-vscode.component.html',
-    styleUrls: ['./navbar-vscode.component.scss'],
-    standalone: false
+  selector: 'app-navbar-vscode',
+  templateUrl: './navbar-vscode.component.html',
+  styleUrls: ['./navbar-vscode.component.scss'],
 })
 export class NavbarVscodeComponent {
   constructor(public vscodeService: VscodeService, public snackbar: MatSnackBar) {}

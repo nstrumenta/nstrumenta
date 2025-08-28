@@ -19,16 +19,15 @@ import {
 } from '../create-key-dialog/create-key-dialog.component';
 
 @Component({
-    selector: 'app-project-settings',
-    templateUrl: './project-settings.component.html',
-    styles: [
-        `
+  selector: 'app-project-settings',
+  templateUrl: './project-settings.component.html',
+  styles: [
+    `
           .mat-column-keyId {
             flex: 0 0 60%;
           }
         `,
-    ],
-    standalone: false
+  ],
 })
 export class ProjectSettingsComponent implements OnInit, OnDestroy {
   membersDisplayedColumns = ['memberId', 'role', 'action'];

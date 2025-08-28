@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-    selector: 'app-account',
-    template: `<mat-toolbar>User</mat-toolbar>
+  selector: 'app-account',
+  template: `<mat-toolbar>User</mat-toolbar>
     <div class="content">
       <div class="nav">
         <mat-nav-list>
@@ -22,8 +22,7 @@ import { Component, OnInit } from '@angular/core';
         <router-outlet></router-outlet>
       </div>
     </div>`,
-    styleUrls: ['./account.component.scss'],
-    standalone: false
+  styleUrls: ['./account.component.scss'],
 })
 export class AccountComponent implements OnInit {
   constructor() {}

@@ -4,10 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-    selector: 'app-navbar-project-select',
-    templateUrl: './navbar-project-select.component.html',
-    styleUrls: ['./navbar-project-select.component.scss'],
-    standalone: false
+  selector: 'app-navbar-project-select',
+  templateUrl: './navbar-project-select.component.html',
+  styleUrls: ['./navbar-project-select.component.scss'],
 })
 export class NavbarProjectSelectComponent implements OnInit {
   constructor(

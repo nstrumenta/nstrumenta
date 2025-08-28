@@ -5,10 +5,9 @@ import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-    selector: 'app-navbar-account',
-    templateUrl: './navbar-account.component.html',
-    styleUrls: ['./navbar-account.component.scss'],
-    standalone: false
+  selector: 'app-navbar-account',
+  templateUrl: './navbar-account.component.html',
+  styleUrls: ['./navbar-account.component.scss'],
 })
 export class NavbarAccountComponent {
   subscriptions = new Array<Subscription>();

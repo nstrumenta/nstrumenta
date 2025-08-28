@@ -35,10 +35,9 @@ export type NstrumentaExperiment = {
 };
 
 @Component({
-    selector: 'app-record',
-    templateUrl: './record.component.html',
-    styleUrls: ['./record.component.scss'],
-    standalone: false
+  selector: 'app-record',
+  templateUrl: './record.component.html',
+  styleUrls: ['./record.component.scss'],
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
@@ -480,7 +479,7 @@ export class RecordComponent implements OnInit {
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
-                  parser = new Function('return ' + deviceDoc.notifications[0].parser)();
+                  eval('parser = ' + deviceDoc.notifications[0].parser);
                 } catch (e) {
                   console.log(e);
                 }
