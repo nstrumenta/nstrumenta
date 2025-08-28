@@ -4,10 +4,9 @@ import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Inject } from '@angular/core';
 
 @Component({
-    selector: 'app-add-item-dialog',
-    templateUrl: './add-item-dialog.component.html',
-    styleUrls: ['./add-item-dialog.component.css'],
-    standalone: false
+  selector: 'app-add-item-dialog',
+  templateUrl: './add-item-dialog.component.html',
+  styleUrls: ['./add-item-dialog.component.css'],
 })
 export class AddItemDialogComponent implements OnInit {
   response: any = {};

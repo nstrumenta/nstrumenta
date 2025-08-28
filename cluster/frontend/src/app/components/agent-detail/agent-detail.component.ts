@@ -10,10 +10,9 @@ import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-    selector: 'app-agents',
-    templateUrl: './agent-detail.component.html',
-    styleUrls: ['./agent-detail.component.scss'],
-    standalone: false
+  selector: 'app-agents',
+  templateUrl: './agent-detail.component.html',
+  styleUrls: ['./agent-detail.component.scss'],
 })
 export class AgentDetailComponent implements OnInit, OnDestroy {
   displayedColumns = ['id', 'task', 'status', 'createdAt', 'data'];

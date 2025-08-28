@@ -9,10 +9,9 @@ import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
 
 @Component({
-    selector: 'app-toolbar',
-    templateUrl: './toolbar.component.html',
-    styleUrls: ['./toolbar.component.scss'],
-    standalone: false
+  selector: 'app-toolbar',
+  templateUrl: './toolbar.component.html',
+  styleUrls: ['./toolbar.component.scss'],
 })
 export class ToolbarComponent implements OnInit {
   @Output() drawerToggleClick = new EventEmitter();

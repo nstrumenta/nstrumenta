@@ -11,10 +11,9 @@ import { Subscription } from 'rxjs';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 
 @Component({
-    selector: 'app-repositories',
-    templateUrl: './repositories.component.html',
-    styleUrls: ['./repositories.component.scss'],
-    standalone: false
+  selector: 'app-repositories',
+  templateUrl: './repositories.component.html',
+  styleUrls: ['./repositories.component.scss'],
 })
 export class RepositoriesComponent implements OnInit, OnDestroy {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];

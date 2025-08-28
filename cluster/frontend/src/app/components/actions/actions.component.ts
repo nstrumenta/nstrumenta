@@ -13,10 +13,9 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-    selector: 'app-actions',
-    templateUrl: './actions.component.html',
-    styleUrls: ['./actions.component.scss'],
-    standalone: false
+  selector: 'app-actions',
+  templateUrl: './actions.component.html',
+  styleUrls: ['./actions.component.scss'],
 })
 export class ActionsComponent implements OnInit, OnDestroy {
   displayedColumns = ['task', 'status', 'lastModified', 'error'];
