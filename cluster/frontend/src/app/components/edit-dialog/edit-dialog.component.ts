@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore } from '@angular/fire/firestore';
 
 @Component({
     selector: 'app-edit-dialog',
@@ -12,7 +12,7 @@ export class EditDialogComponent {
   newEmail: string;
 
   constructor(
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     public dialogRef: MatDialogRef<EditDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {}
@@ -22,7 +22,6 @@ export class EditDialogComponent {
   }
 
   updateEmail(): void {
-    // this.afs.collection('hackers').doc(this.data.uid).update({ email: this.newEmail });
     this.dialogRef.close();
   }
 }

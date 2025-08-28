@@ -1,6 +1,6 @@
 import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { Firestore, collection, collectionData, query, orderBy } from '@angular/fire/firestore';
-import { Storage } from '@angular/fire/storage';
+import { Firestore, collection, collectionData, query, orderBy, doc, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Storage, ref, updateMetadata } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortable } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -38,21 +38,13 @@ export class ActionsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
         this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const key = a.payload.doc.id;
-                  return { key: key, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
+          (() => {
+            const actionsCollection = collection(this.firestore, this.dataPath);
+            const orderedQuery = query(actionsCollection, orderBy('lastModified', 'desc'));
+            return collectionData(orderedQuery, { idField: 'key' });
+          })().subscribe((data: any[]) => {
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
             })
         );
       })
@@ -87,10 +79,10 @@ export class ActionsComponent implements OnInit, OnDestroy {
 
   renameFile(fileDocument) {
     console.log('renameFile', fileDocument.name);
-    this.afs
-      .doc(this.dataPath + '/' + fileDocument.key)
-      .set({ name: fileDocument.name }, { merge: true });
-    this.storage.ref(fileDocument.filePath).updateMetadata({
+    const docRef = doc(this.firestore, this.dataPath + '/' + fileDocument.key);
+    setDoc(docRef, { name: fileDocument.name }, { merge: true });
+    const storageRef = ref(this.storage, fileDocument.filePath);
+    updateMetadata(storageRef, {
       contentDisposition: 'attachment; filename=' + fileDocument.name,
     });
   }
@@ -98,7 +90,8 @@ export class ActionsComponent implements OnInit, OnDestroy {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      const docRef = doc(this.firestore, this.dataPath + '/' + item.key);
+      deleteDoc(docRef);
     });
     this.selection.clear();
   }

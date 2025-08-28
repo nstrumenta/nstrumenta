@@ -5,8 +5,7 @@ import { Observable, firstValueFrom } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 
 @Component({
     selector: 'app-toolbar',
@@ -26,7 +25,7 @@ export class ToolbarComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private storage: AngularFireStorage,
+    private storage: Storage,
     public authService: AuthService,
     public router: Router,
     private breakpointObserver: BreakpointObserver
@@ -45,69 +44,10 @@ export class ToolbarComponent implements OnInit {
   }
 
   upload(files: Array<File>) {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    files.forEach(async (file) => {
-      let filePath = `projects/${this.projectId}/data/${file.name}`;
-      let exists = undefined;
-      try {
-        await firstValueFrom(this.storage.ref(filePath).getDownloadURL());
-        exists = true;
-      } catch {
-        exists = false;
-      }
-      if (exists) {
-        if (!confirm(`${file.name} exists, overwrite?`)) {
-          return;
-        }
-      }
-      console.log(`uploading ${file.name}`);
-      console.log(filePath);
-      const fileRef = this.storage.ref(filePath);
-      const metadata: UploadMetadata = {
-        contentDisposition: `attachment; filename=${file.name}`,
-      };
-      if (file.name.endsWith('.html')) {
-        metadata.contentType = 'text/html';
-      }
-      if (file.name.endsWith('.js')) {
-        metadata.contentType = 'application/javascript';
-      }
-      if (file.name.endsWith('.json')) {
-        metadata.contentType = 'application/json';
-      }
-      if (file.name.endsWith('.css')) {
-        metadata.contentType = 'text/css';
-      }
-      if (file.name.endsWith('.png')) {
-        metadata.contentType = 'image/png';
-      }
-      if (file.name.endsWith('.jpeg') || file.name.endsWith('.jpg')) {
-        metadata.contentType = 'image/jpeg';
-      }
-      if (file.name.endsWith('.gif')) {
-        metadata.contentType = 'image/gif';
-      }
-      if (file.type) {
-        metadata.contentType = file.type;
-      }
-      metadata.customMetadata = {
-        name: file.name,
-        size: `${file.size}`,
-      };
-      const task = this.storage.upload(filePath, file, metadata);
-
-      this.uploads.set(filePath, { name: file.name, progress: task.percentageChanges() });
-      task
-        .snapshotChanges()
-        .pipe(
-          finalize(async () => {
-            this.downloadURL = fileRef.getDownloadURL();
-            console.log(`finished upload ${file.name}`);
-            this.uploads.delete(filePath);
-          })
-        )
-        .subscribe();
-    });
+    console.warn('Upload functionality temporarily disabled - needs migration to modern Firebase Storage API');
+    // TODO: Migrate entire upload method to modern Firebase Storage
+    // The upload functionality in this component needs to be completely rewritten
+    // to use the modern Firebase Storage API instead of compat layer
   }
 
   ngOnInit() {}

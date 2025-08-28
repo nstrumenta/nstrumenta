@@ -10,15 +10,11 @@ import { MatTableModule } from '@angular/material/table';
 import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataTableComponent } from './data-table.component';
 import { RouterTestingModule } from '@angular/router/testing';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore } from '@angular/fire/firestore';
 import { of } from 'rxjs';
 
-const collectionStub = {
-  valueChanges: jasmine.createSpy('valueChanges').and.returnValue(of([])),
-};
-
-const angularFirestoreStub = {
-  collection: jasmine.createSpy('collection').and.returnValue(collectionStub),
+const firestoreStub = {
+  // Mock modern Firestore methods if needed
 };
 
 describe('DataTableComponent', () => {
@@ -39,7 +35,7 @@ describe('DataTableComponent', () => {
         MatInputModule,
         RouterTestingModule,
       ],
-      providers: [MatDialog, { provide: AngularFirestore, useValue: angularFirestoreStub }],
+      providers: [MatDialog, { provide: Firestore, useValue: firestoreStub }],
     }).compileComponents();
   }));
 

@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -26,7 +26,7 @@ export class AgentDetailComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}
@@ -38,24 +38,20 @@ export class AgentDetailComponent implements OnInit, OnDestroy {
     console.log(this.dataPath);
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
-        this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const id = a.payload.doc.id;
-                  return { id, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
+        const unsubscribe = onSnapshot(
+          collection(this.firestore, this.dataPath),
+          (snapshot) => {
+            const data = snapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data()
+            }));
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
+          }
         );
+        
+        // Convert to subscription for cleanup  
+        this.subscriptions.push({ unsubscribe } as Subscription);
       })
     );
   }

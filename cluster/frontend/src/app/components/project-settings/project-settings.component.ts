@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, doc, docData, updateDoc, setDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
@@ -41,7 +41,7 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
   subscriptions = new Array<Subscription>();
 
   constructor(
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     private route: ActivatedRoute,
     private authService: AuthService,
     public dialog: MatDialog,
@@ -55,24 +55,22 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
         if (user) {
+          const projectDoc = doc(this.firestore, this.projectPath);
           this.subscriptions.push(
-            this.afs
-              .doc(this.projectPath)
-              .valueChanges()
-              .subscribe((doc: ProjectSettings) => {
-                const memberTableData = Object.keys(doc.members).map((key) => {
-                  return { memberId: key, role: doc.members[key] };
-                });
-                this.membersDataSource = new MatTableDataSource(memberTableData);
+            docData(projectDoc).subscribe((doc: ProjectSettings) => {
+              const memberTableData = Object.keys(doc.members || {}).map((key) => {
+                return { memberId: key, role: doc.members[key] };
+              });
+              this.membersDataSource = new MatTableDataSource(memberTableData);
 
-                const apiKeysData = Object.keys(doc.apiKeys ? doc.apiKeys : {})
-                  .map((key) => {
-                    return { keyId: key, createdAt: doc.apiKeys[key].createdAt };
-                  })
-                  .sort((a, b) => {
-                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                  });
-                this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
+              const apiKeysData = Object.keys(doc.apiKeys ? doc.apiKeys : {})
+                .map((key) => {
+                  return { keyId: key, createdAt: doc.apiKeys[key].createdAt };
+                })
+                .sort((a, b) => {
+                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+              this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
 
                 this.projectSettings = doc;
               })
@@ -88,19 +86,24 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     });
   }
 
-  rename(name) {
-    console.log('rename', name);
-    this.afs.doc(this.projectPath).set({ name: name }, { merge: true });
+  async updateProjectName(name: string) {
+    try {
+      const projectDoc = doc(this.firestore, this.projectPath);
+      await updateDoc(projectDoc, { name });
+    } catch (error) {
+      console.error('Error updating project name:', error);
+    }
   }
 
   removeMember(memberId: string) {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent);
 
-    dialogRef.afterClosed().subscribe((response) => {
+    dialogRef.afterClosed().subscribe(async (response) => {
       if (response) {
         const members = this.projectSettings.members;
         delete members[memberId];
-        this.afs.doc(this.projectPath).update({ members });
+        const projectDoc = doc(this.firestore, this.projectPath);
+        await updateDoc(projectDoc, { members });
       }
     });
   }
@@ -108,22 +111,24 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
   addProjectMember() {
     const dialogRef = this.dialog.open(AddProjectMemberDialogComponent);
 
-    dialogRef.afterClosed().subscribe((response: AddProjectMemberDialogResponse) => {
+    dialogRef.afterClosed().subscribe(async (response: AddProjectMemberDialogResponse) => {
       if (response && response.memberId) {
         const members = this.projectSettings.members;
         members[response.memberId] = response.role;
-        this.afs.doc(this.projectPath).update({ members });
+        const projectDoc = doc(this.firestore, this.projectPath);
+        await updateDoc(projectDoc, { members });
       }
     });
   }
 
   createApiKey() {
     const dialogRef = this.dialog.open(CreateKeyDialogComponent);
-    dialogRef.afterClosed().subscribe((response: CreateKeyDialogResponse) => {
+    dialogRef.afterClosed().subscribe(async (response: CreateKeyDialogResponse) => {
       if (response && response.keyId) {
         const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
         apiKeys[response.keyId] = { createdAt: response.createdAt };
-        this.afs.doc(this.projectPath).update({ apiKeys });
+        const projectDoc = doc(this.firestore, this.projectPath);
+        await updateDoc(projectDoc, { apiKeys });
       }
     });
   }
@@ -132,10 +137,11 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe((response) => {
       if (response) {
-        this.projectService.revokeApiKey(keyId).then((actionResponse) => {
+        this.projectService.revokeApiKey(keyId).then(async (actionResponse) => {
           const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
           delete apiKeys[keyId];
-          this.afs.doc(this.projectPath).update({ apiKeys });
+          const projectDoc = doc(this.firestore, this.projectPath);
+          await updateDoc(projectDoc, { apiKeys });
           console.log('revokeApiKey response', actionResponse);
         });
       }
