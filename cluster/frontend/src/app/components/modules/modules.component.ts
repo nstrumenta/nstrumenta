@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -11,9 +11,10 @@ import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-  selector: 'app-modules',
-  templateUrl: './modules.component.html',
-  styleUrls: ['./modules.component.scss'],
+    selector: 'app-modules',
+    templateUrl: './modules.component.html',
+    styleUrls: ['./modules.component.scss'],
+    standalone: false
 })
 export class ModulesComponent implements OnInit {
   displayedColumns = ['select', 'id', 'url', 'modified'];
@@ -26,7 +27,7 @@ export class ModulesComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     private authService: AuthService,
     public dialog: MatDialog
   ) {}
@@ -35,23 +36,12 @@ export class ModulesComponent implements OnInit {
     this.dataPath = `/projects/${this.route.snapshot.paramMap.get('projectId')}/modules`;
     this.subscriptions.push(
       this.authService.user.subscribe((user) => {
+        const modulesCollection = collection(this.firestore, this.dataPath);
         this.subscriptions.push(
-          this.afs
-            .collection<any>(this.dataPath)
-            .snapshotChanges()
-            .pipe(
-              map((items) => {
-                return items.map((a) => {
-                  const data = a.payload.doc.data();
-                  const id = a.payload.doc.id;
-                  return { id, ...data };
-                });
-              })
-            )
-            .subscribe((data) => {
-              this.dataSource = new MatTableDataSource(data);
-              this.dataSource.sort = this.sort;
-            })
+          collectionData(modulesCollection, { idField: 'id' }).subscribe((data: any[]) => {
+            this.dataSource = new MatTableDataSource(data);
+            this.dataSource.sort = this.sort;
+          })
         );
       })
     );
@@ -82,7 +72,8 @@ export class ModulesComponent implements OnInit {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
       deleteObject(ref(storage, item.filePath));
-      this.afs.doc(this.dataPath + '/' + item.id).delete();
+      const docRef = doc(this.firestore, this.dataPath + '/' + item.id);
+      deleteDoc(docRef);
     });
     this.selection.clear();
   }

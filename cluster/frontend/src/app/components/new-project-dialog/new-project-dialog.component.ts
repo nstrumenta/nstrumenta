@@ -5,9 +5,10 @@ import { ApiService } from 'src/app/services/api.service';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-new-project-dialog',
-  templateUrl: './new-project-dialog.component.html',
-  styleUrls: ['./new-project-dialog.component.scss'],
+    selector: 'app-new-project-dialog',
+    templateUrl: './new-project-dialog.component.html',
+    styleUrls: ['./new-project-dialog.component.scss'],
+    standalone: false
 })
 export class NewProjectDialogComponent implements OnInit, OnDestroy {
   subscription: Subscription;

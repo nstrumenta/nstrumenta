@@ -1,9 +1,8 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
+import { Firestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, deleteDoc } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
@@ -35,9 +34,10 @@ export type NstrumentaExperiment = {
 };
 
 @Component({
-  selector: 'app-record',
-  templateUrl: './record.component.html',
-  styleUrls: ['./record.component.scss'],
+    selector: 'app-record',
+    templateUrl: './record.component.html',
+    styleUrls: ['./record.component.scss'],
+    standalone: false
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
@@ -83,8 +83,8 @@ export class RecordComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
-    private storage: AngularFireStorage,
+    private firestore: Firestore,
+    private storage: Storage,
     private authService: AuthService,
     private breakpointObserver: BreakpointObserver
   ) {}
@@ -92,19 +92,16 @@ export class RecordComponent implements OnInit {
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataPath = '/projects/' + this.projectId + '/record';
-    this.afs
-      .collection<any>(this.dataPath, (ref) => ref.orderBy('lastModified', 'desc'))
-      .snapshotChanges()
-      .pipe(
-        map((items) => {
-          return items.map((a) => {
-            const data = a.payload.doc.data();
-            const key = a.payload.doc.id;
-            return { key: key, ...data };
-          });
-        })
-      )
-      .subscribe((data) => {
+    const recordsQuery = query(
+      collection(this.firestore, this.dataPath),
+      orderBy('lastModified', 'desc')
+    );
+
+    onSnapshot(recordsQuery, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        key: doc.id,
+        ...doc.data()
+      }));
         const commonSources = [
           {
             type: 'devicemotion',
@@ -181,7 +178,7 @@ export class RecordComponent implements OnInit {
         // and add if it doesn't
         commonSources.forEach((device) => {});
 
-        this.dataSource = new MatTableDataSource(commonSources.concat(data));
+        this.dataSource = new MatTableDataSource(commonSources.concat(data as any));
       });
 
     this.selection.changed.subscribe((change) => {
@@ -241,7 +238,7 @@ export class RecordComponent implements OnInit {
 
   addRecordSource(name) {
     console.log('addRecordSource', name);
-    this.afs.collection<any>(this.dataPath).add({ name: name, lastModified: Date.now() });
+    addDoc(collection(this.firestore, this.dataPath), { name: name, lastModified: Date.now() });
   }
 
   async onSensorEvent(event: SensorEvent) {
@@ -479,7 +476,7 @@ export class RecordComponent implements OnInit {
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
-                  eval('parser = ' + deviceDoc.notifications[0].parser);
+                  parser = new Function('return ' + deviceDoc.notifications[0].parser)();
                 } catch (e) {
                   console.log(e);
                 }
@@ -735,7 +732,8 @@ export class RecordComponent implements OnInit {
           const projectDataPath = '/projects/' + this.projectId + '/data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
-          await this.storage.upload(filePath, recordedBlob);
+          const storageRef = ref(this.storage, filePath);
+          await uploadBytesResumable(storageRef, recordedBlob);
         }
       };
       // Play the video automatically
@@ -821,14 +819,14 @@ export class RecordComponent implements OnInit {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      this.afs.doc(this.dataPath + '/' + item.key).delete();
+      deleteDoc(doc(this.firestore, this.dataPath + '/' + item.key));
     });
     this.selection.clear();
   }
 
   updateRecordSource(recordSource) {
     console.log('updating', recordSource);
-    this.afs.doc(this.dataPath + '/' + recordSource.key).set(recordSource, { merge: true });
+    updateDoc(doc(this.firestore, this.dataPath + '/' + recordSource.key), recordSource);
   }
 
   async saveEvents() {
@@ -850,7 +848,8 @@ export class RecordComponent implements OnInit {
       const metadata: UploadMetadata = {
         contentDisposition: 'attachment; filename=' + mcapFileName,
       };
-      await this.storage.upload(dataFilePath, blob, metadata);
+      const dataFileRef = ref(this.storage, dataFilePath);
+      await uploadBytesResumable(dataFileRef, blob, metadata);
       //create experiment.json
       const videos = this.videoToggle
         ? [
@@ -866,8 +865,9 @@ export class RecordComponent implements OnInit {
         dataFilePath,
         videos,
       };
-      await this.storage.upload(
-        experimentFilepath,
+      const experimentRef = ref(this.storage, experimentFilepath);
+      await uploadBytesResumable(
+        experimentRef,
         new Blob([JSON.stringify(experiment)], { type: 'application/json' })
       );
     }

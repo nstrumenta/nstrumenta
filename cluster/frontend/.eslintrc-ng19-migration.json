@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["@angular/fire/compat/*"],
+            "message": "AngularFire compat layer is deprecated. Use modern @angular/fire APIs instead to avoid NG0203 injection context errors."
+          }
+        ]
+      }
+    ]
+  }
+}

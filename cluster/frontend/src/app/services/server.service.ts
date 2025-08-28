@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, addDoc, doc, onSnapshot, updateDoc } from '@angular/fire/firestore';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import { Action } from '../models/action.model';
@@ -22,7 +22,7 @@ export class ServerService {
   uid: string;
   subscriptionsByTask: { [taskId: string]: () => void } = {};
 
-  constructor(private authService: AuthService, private afs: AngularFirestore) {
+  constructor(private authService: AuthService, private firestore: Firestore) {
     this.authService.user.subscribe((user) => {
       if (user) {
         this.uid = user.uid;
@@ -58,14 +58,13 @@ export class ServerService {
           payload: payload ? payload : {},
           version: environment.version,
         };
-        return this.afs
-          .collection('projects/' + projectId + '/actions')
-          .add(action)
+        const actionsCollection = collection(this.firestore, 'projects/' + projectId + '/actions');
+        return addDoc(actionsCollection, action)
           .then((ref) => {
             return new Promise<any>(() => {
               const key = ref.path;
               console.log('watching for project action to complete ', key);
-              this.subscriptionsByTask[key] = ref.onSnapshot((snapshot) => {
+              this.subscriptionsByTask[key] = onSnapshot(ref, (snapshot) => {
                 const val = snapshot.data() as {
                   status: string;
                   task: string;
@@ -80,7 +79,8 @@ export class ServerService {
                       const responseDeepCopy = JSON.parse(JSON.stringify(val));
                       const { payload } = val;
                       payload.key = 'redacted';
-                      this.afs.doc(key).update({ payload });
+                      const docRef = doc(this.firestore, key);
+                      updateDoc(docRef, { payload });
                       resolve(responseDeepCopy);
                     }
                     resolve(val);

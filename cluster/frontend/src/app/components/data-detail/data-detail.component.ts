@@ -1,13 +1,13 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, doc, docData } from '@angular/fire/firestore';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { Observable, Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-data-detail',
-  template: `
+    selector: 'app-data-detail',
+    template: `
     <ng-container>
       <video controls *ngIf="isVideo" width="100%" style="max-height: 80%" [src]="url"></video>
       <a mat-button [href]="url">{{ (fileDoc | async)?.name }}</a>
@@ -22,7 +22,8 @@ import { Observable, Subscription } from 'rxjs';
       </div>
     </ng-container>
   `,
-  styles: [],
+    styles: [],
+    standalone: false
 })
 export class DataDetailComponent implements OnInit, OnDestroy {
   dataPath: string;
@@ -34,7 +35,7 @@ export class DataDetailComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     public sanitizer: DomSanitizer
   ) {}
 
@@ -45,7 +46,7 @@ export class DataDetailComponent implements OnInit, OnDestroy {
       '/data/' +
       this.route.snapshot.paramMap.get('dataId');
 
-    this.fileDoc = this.afs.doc<any>(this.dataPath).valueChanges();
+    this.fileDoc = docData(doc(this.firestore, this.dataPath));
     this.subscriptions.push(
       this.fileDoc.subscribe((doc) => {
         console.log(doc);

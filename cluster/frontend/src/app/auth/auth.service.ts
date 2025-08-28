@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { User } from '@angular/fire/auth/firebase';
+import { User } from '@angular/fire/auth';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({

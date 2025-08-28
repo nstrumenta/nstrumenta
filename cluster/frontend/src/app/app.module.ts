@@ -6,8 +6,8 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { ErrorHandler, Injectable, NgModule } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
-import { FIREBASE_OPTIONS } from '@angular/fire/compat';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
+import { getStorage, provideStorage } from '@angular/fire/storage';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -166,9 +166,10 @@ export class SentryErrorHandler implements ErrorHandler {
         DragDropModule,
         MatDividerModule,
         MatProgressBarModule,
-        MatChipsModule], providers: [
+        MatChipsModule
+    ], 
+    providers: [
         AuthService,
-        { provide: FIREBASE_OPTIONS, useValue: environment.firebase },
         VscodeService,
         MatIconRegistry,
         MatSnackBar,
@@ -176,6 +177,7 @@ export class SentryErrorHandler implements ErrorHandler {
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideFirestore(() => getFirestore()),
+        provideStorage(() => getStorage()),
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {

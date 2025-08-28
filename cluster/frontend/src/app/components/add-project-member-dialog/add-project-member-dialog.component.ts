@@ -8,8 +8,8 @@ export interface AddProjectMemberDialogResponse {
 }
 
 @Component({
-  selector: 'app-add-project-member-dialog',
-  template: `
+    selector: 'app-add-project-member-dialog',
+    template: `
     <h2 mat-dialog-title>Add Project Member</h2>
     <mat-dialog-content class="mat-typography">
       <mat-form-field style="width: 400px !important">
@@ -28,7 +28,8 @@ export interface AddProjectMemberDialogResponse {
       <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Add</button>
     </div>
   `,
-  styles: [],
+    styles: [],
+    standalone: false
 })
 export class AddProjectMemberDialogComponent implements OnInit {
   response: AddProjectMemberDialogResponse;
