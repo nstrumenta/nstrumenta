@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { AngularFireStorage } from '@angular/fire/compat/storage';
-import { UploadMetadata } from '@angular/fire/compat/storage/interfaces';
+import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Observable, Observer, Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ProjectService } from './project.service';
@@ -26,9 +25,9 @@ export class VscodeService {
   buildCount = 0;
 
   constructor(
-    private storage: AngularFireStorage,
     private projectService: ProjectService,
-    private serverService: ServerService
+    private serverService: ServerService,
+    private storage: Storage
   ) {
     if (localStorage.getItem(INIT_VSCODE_ON_START_KEY) === 'true') {
       this.init();
@@ -74,7 +73,7 @@ export class VscodeService {
                   new Promise(function (resolve) {
                     const filePath = uploadPath + '/' + filename;
                     console.log('uploading ', filePath);
-                    const metadata: UploadMetadata = {
+                    const metadata: any = {
                       contentDisposition: 'inline',
                     };
                     if (filePath.endsWith('.html')) {
@@ -99,23 +98,23 @@ export class VscodeService {
                       nst_project = JSON.parse(fileTextItem.text);
                     }
 
-                    const task = self.storage.upload(
-                      filePath,
+                    const storageRef = ref(self.storage, filePath);
+                    const uploadTask = uploadBytesResumable(
+                      storageRef,
                       new Blob([fileTextItem.text]),
                       metadata
                     );
 
-                    task
-                      .snapshotChanges()
-                      .pipe(
-                        finalize(() => {
-                          resolve({
-                            storagePath: filePath,
-                            path: filename,
-                          });
-                        })
-                      )
-                      .subscribe();
+                    uploadTask.on('state_changed', 
+                      null, // progress callback
+                      null, // error callback
+                      () => { // complete callback
+                        resolve({
+                          storagePath: filePath,
+                          path: filename,
+                        });
+                      }
+                    );
                   })
                 );
               });

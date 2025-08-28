@@ -1,6 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -14,9 +14,10 @@ export interface Item {
 }
 
 @Component({
-  selector: 'app-project-list',
-  templateUrl: './project-list.component.html',
-  styleUrls: ['./project-list.component.scss'],
+    selector: 'app-project-list',
+    templateUrl: './project-list.component.html',
+    styleUrls: ['./project-list.component.scss'],
+    standalone: false
 })
 export class ProjectListComponent implements OnInit {
   displayedColumns = ['id', 'lastOpened'];
@@ -28,7 +29,7 @@ export class ProjectListComponent implements OnInit {
 
   constructor(
     public dialog: MatDialog,
-    private afs: AngularFirestore,
+    private firestore: Firestore,
     public authService: AuthService
   ) { }
 
@@ -41,21 +42,16 @@ export class ProjectListComponent implements OnInit {
     this.breakpoint = this.computeBreakpoint();
     this.authService.user.subscribe((user) => {
       if (user) {
-        const collection = '/users/' + user.uid + '/projects';
-        console.log(collection);
-        this.afs.collection<Item>(collection).snapshotChanges().pipe(
-          map((items) => {
-            return items.map((a) => {
-              const data = a.payload.doc.data();
-              const id = a.payload.doc.id;
-              return { key: id, id: id, ...data };
-            });
-          })
-        )
-          .subscribe((data) => {
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
+        const collectionPath = '/users/' + user.uid + '/projects';
+        console.log(collectionPath);
+        const projectsCollection = collection(this.firestore, collectionPath);
+        collectionData(projectsCollection, { idField: 'id' }).subscribe((data) => {
+          const items = data.map((item: any) => {
+            return { key: item.id, id: item.id, ...item };
           });
+          this.dataSource = new MatTableDataSource(items);
+          this.dataSource.sort = this.sort;
+        });
       }
     });
   }

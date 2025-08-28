@@ -5,16 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { Firestore } from '@angular/fire/firestore';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
-const collectionStub = {
-  valueChanges: jasmine.createSpy('valueChanges').and.returnValue(of([])),
-};
-
-const angularFirestoreStub = {
-  collection: jasmine.createSpy('collection').and.returnValue(collectionStub),
+const firestoreStub = {
+  // Mock modern Firestore methods if needed
 };
 
 describe('EditDialogComponent', () => {
@@ -28,7 +24,7 @@ describe('EditDialogComponent', () => {
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialogRef, useValue: {} },
-        { provide: AngularFirestore, useValue: angularFirestoreStub },
+        { provide: Firestore, useValue: firestoreStub },
       ],
     }).compileComponents();
   }));

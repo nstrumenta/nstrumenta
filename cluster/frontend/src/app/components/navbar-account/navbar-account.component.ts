@@ -1,24 +1,27 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
 import { Router } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
-  selector: 'app-navbar-account',
-  templateUrl: './navbar-account.component.html',
-  styleUrls: ['./navbar-account.component.scss'],
+    selector: 'app-navbar-account',
+    templateUrl: './navbar-account.component.html',
+    styleUrls: ['./navbar-account.component.scss'],
+    standalone: false
 })
 export class NavbarAccountComponent {
   subscriptions = new Array<Subscription>();
-  auth: Auth = inject(Auth);
-  private authService = inject(AuthService);
-  private router = inject(Router);
   loggedIn = false;
-  user$ = user(this.auth);
+  user$: Observable<User | null>;
   userSubscription: Subscription;
 
-  constructor() {
+  constructor(
+    public auth: Auth,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.user$ = user(this.auth);
     this.userSubscription = this.user$.subscribe((aUser: User | null) => {
       this.loggedIn = aUser ? true : false;
       this.authService.setUser(aUser);
