@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.14](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v1.7.14) (2025-08-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* Applications using compat Firebase APIs will need migration
+
+### Features
+
+* Complete migration from Firebase compat to modern APIs ([c08292b](https://github.com/nstrumenta/nstrumenta/commit/c08292b19457e7c329cc00372e07b24df9fdb086))
+
+
+### Bug Fixes
+
+* migrate critical components from Firebase compat to modern APIs ([58de443](https://github.com/nstrumenta/nstrumenta/commit/58de443208b369fcc452186f6b70e5728c3631a9))
+
 ### [1.7.13](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v1.7.13) (2025-08-27)
 
 ### [1.7.12](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v1.7.12) (2025-08-27)
