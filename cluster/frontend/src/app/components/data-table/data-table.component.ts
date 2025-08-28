@@ -1,5 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
@@ -17,26 +18,27 @@ import { environment } from 'src/environments/environment';
     standalone: false
 })
 export class DataTableComponent implements OnInit {
-  displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
-  dataSource: MatTableDataSource<any>;
+  displayedColumns: string[] = ['select', 'name', 'size', 'lastModified', 'actions'];
+  dataSource = new MatTableDataSource();
   selection = new SelectionModel<any>(true, []);
-  moduleActions: Map<string, { name: string; url?: string }>;
   projectId: string;
+  moduleActions = new Map();
   dataPath: string;
   filterParam: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private firestore: Firestore,
-    public dialog: MatDialog,
-    private serverService: ServerService
-  ) {}
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private firestore = inject(Firestore);
+  public dialog = inject(MatDialog);
+  private serverService = inject(ServerService);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.route.paramMap.subscribe((paramMap) => {
+    this.route.paramMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((paramMap) => {
       this.projectId = paramMap.get('projectId');
       this.dataPath = '/projects/' + this.projectId + '/data';
       //gather modules for actions
@@ -44,7 +46,9 @@ export class DataTableComponent implements OnInit {
       
       // Get modules using modern API
       const modulesCollection = collection(this.firestore, '/projects/' + this.projectId + '/modules');
-      collectionData(modulesCollection, { idField: 'id' }).subscribe((modules: any[]) => {
+      collectionData(modulesCollection, { idField: 'id' }).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe((modules: any[]) => {
         modules.forEach((module) => {
           console.log(module);
           const { name, url } = module;
@@ -58,7 +62,9 @@ export class DataTableComponent implements OnInit {
 
       // Get data using modern API
       const dataCollection = collection(this.firestore, this.dataPath);
-      collectionData(dataCollection, { idField: 'key' }).subscribe(async (dataSource: any[]) => {
+      collectionData(dataCollection, { idField: 'key' }).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe(async (dataSource: any[]) => {
         const processedData = dataSource.map((item) => {
           // ensure that item.size is a number
           // uploader puts string into item.size

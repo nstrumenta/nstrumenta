@@ -1,4 +1,5 @@
-import { Component, OnInit, OnChanges } from '@angular/core';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProjectService } from 'src/app/services/project.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -10,14 +11,15 @@ import { AuthService } from 'src/app/auth/auth.service';
     standalone: false
 })
 export class NavbarProjectSelectComponent implements OnInit {
-  constructor(
-    public projectService: ProjectService,
-    public authService: AuthService,
-    private activatedRoute: ActivatedRoute
-  ) {}
+  public projectService = inject(ProjectService);
+  public authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.activatedRoute.paramMap.subscribe((paramMap) => {
+    this.activatedRoute.paramMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((paramMap) => {
       const projectId = paramMap.get('projectId');
       if (projectId) {
         this.projectService.setProject(paramMap.get('projectId'));

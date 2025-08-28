@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { User } from '@angular/fire/auth';
 import { Firestore, collection, collectionData, doc, docData, setDoc, getDoc } from '@angular/fire/firestore';
 import { ActivatedRoute } from '@angular/router';
@@ -12,20 +13,24 @@ import { ApiService } from './api.service';
   providedIn: 'root',
 })
 export class ProjectService {
+  // Inject services using the new Angular 19 pattern
+  private authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
+  private serverService = inject(ServerService);
+  private apiService = inject(ApiService);
+  private firestore = inject(Firestore);
+  private destroyRef = inject(DestroyRef);
+
   currentProject = new BehaviorSubject<string>('');
   projects: Observable<any[]>;
   user: User;
   currentProjectId: string;
   projectSettings: ProjectSettings;
 
-  constructor(
-    private authService: AuthService,
-    private activatedRoute: ActivatedRoute,
-    private serverService: ServerService,
-    private apiService: ApiService,
-    private firestore: Firestore
-  ) {
-    this.authService.user.subscribe((user) => {
+  constructor() {
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
       if (user) {
         this.user = user;
         const projectsCollection = collection(this.firestore, `users/${user.uid}/projects`);
@@ -39,7 +44,9 @@ export class ProjectService {
     console.log('setProject', id);
     // only update or add to projects if the user has access to /project/${id}
     const userProjectsCollection = collection(this.firestore, `users/${this.user.uid}/projects`);
-    const sub = collectionData(userProjectsCollection, { idField: 'key' }).subscribe(async (projects) => {
+    const sub = collectionData(userProjectsCollection, { idField: 'key' }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(async (projects) => {
       try {
         const projectDocRef = doc(this.firestore, `projects/${id}`);
         const projectDoc = await getDoc(projectDocRef);

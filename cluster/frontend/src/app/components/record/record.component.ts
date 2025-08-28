@@ -1,6 +1,7 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, deleteDoc } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { MatTableDataSource } from '@angular/material/table';
@@ -42,6 +43,14 @@ export type NstrumentaExperiment = {
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
 
+  // Inject services using the new Angular 19 pattern
+  private route = inject(ActivatedRoute);
+  private firestore = inject(Firestore);
+  private storage = inject(Storage);
+  private authService = inject(AuthService);
+  private breakpointObserver = inject(BreakpointObserver);
+  private destroyRef = inject(DestroyRef);
+
   eventStats = new Map<string, SensorEventStats>();
   registrations = new Map<string, { schemaId: number; channelId: number }>();
   mcapWriter: McapWriter;
@@ -81,15 +90,35 @@ export class RecordComponent implements OnInit {
     .observe(Breakpoints.Handset)
     .pipe(map((result) => result.matches));
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    private authService: AuthService,
-    private breakpointObserver: BreakpointObserver
-  ) {}
+  checkBrowserCapabilities() {
+    console.log('=== Browser Capabilities Check ===');
+    console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
+    console.log('getUserMedia available:', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+    console.log('MediaRecorder available:', typeof MediaRecorder !== 'undefined');
+    console.log('Secure context:', window.isSecureContext);
+    console.log('Location:', window.location.href);
+    console.log('User agent:', navigator.userAgent);
+    
+    // Check for specific browser issues
+    if (!window.isSecureContext) {
+      console.warn('⚠️ Not in secure context - this may prevent media access');
+    }
+    
+    if (!navigator.mediaDevices) {
+      console.error('❌ navigator.mediaDevices not available');
+    } else if (!navigator.mediaDevices.getUserMedia) {
+      console.error('❌ getUserMedia not available on mediaDevices');
+    } else {
+      console.log('✅ Media APIs appear to be available');
+    }
+    
+    console.log('=== End Browser Capabilities Check ===');
+  }
 
   ngOnInit() {
+    // Check browser capabilities for debugging
+    this.checkBrowserCapabilities();
+    
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataPath = '/projects/' + this.projectId + '/record';
     const recordsQuery = query(
@@ -181,7 +210,9 @@ export class RecordComponent implements OnInit {
         this.dataSource = new MatTableDataSource(commonSources.concat(data as any));
       });
 
-    this.selection.changed.subscribe((change) => {
+    this.selection.changed.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((change) => {
       console.log('selection.onChange', change);
       change.added.forEach((selected) => {
         console.log(selected.name + ' selected');
@@ -200,6 +231,7 @@ export class RecordComponent implements OnInit {
             break;
           case 'video':
             this.videoToggle = true;
+            this.startVideo();
             break;
           case 'bluetooth':
             this.startBluetooth(selected);
@@ -708,42 +740,149 @@ export class RecordComponent implements OnInit {
   }
 
   async startVideo() {
-    if (this.videoToggle && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    console.log('startVideo called, videoToggle:', this.videoToggle);
+    
+    // Check basic browser support
+    if (!navigator.mediaDevices) {
+      console.error('navigator.mediaDevices is not available');
+      alert('Media devices API not available. This might be due to an insecure context or browser restrictions.');
+      return;
+    }
 
-      this.mediaRecorder = new MediaRecorder(this.mediaStream);
-      this.recordedChunks = [];
+    if (!navigator.mediaDevices.getUserMedia) {
+      console.error('getUserMedia is not available on navigator.mediaDevices');
+      alert('getUserMedia is not supported in this browser or context.');
+      return;
+    }
+
+    if (!this.videoToggle) {
+      console.log('Video toggle is false, skipping video start');
+      return;
+    }
+
+    try {
+      console.log('Requesting media stream...');
+      console.log('Browser info:', {
+        userAgent: navigator.userAgent,
+        isSecureContext: window.isSecureContext,
+        location: window.location.href,
+        protocol: window.location.protocol
+      });
+
+      // Check permissions first if available
+      if ('permissions' in navigator) {
+        try {
+          const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          const micPermission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          console.log('Permissions:', {
+            camera: cameraPermission.state,
+            microphone: micPermission.state
+          });
+        } catch (permError) {
+          console.log('Could not check permissions:', permError);
+        }
+      }
+
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: true 
+      });
+
+      console.log('Media stream obtained successfully');
 
       // Stream video to preview in real-time
-      this.previewVideo.nativeElement.srcObject = this.mediaStream;
+      if (this.previewVideo?.nativeElement) {
+        this.previewVideo.nativeElement.srcObject = this.mediaStream;
+        console.log('Video stream connected to preview element');
+      } else {
+        console.warn('Preview video element not available');
+      }
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.recordedChunks.push(event.data);
+      // Play the video automatically for preview
+      if (this.previewVideo?.nativeElement) {
+        try {
+          await this.previewVideo.nativeElement.play();
+          console.log('Video preview started successfully');
+        } catch (playError) {
+          console.warn('Could not auto-play video:', playError);
         }
-      };
+      }
 
-      this.mediaRecorder.onstop = async () => {
-        if (this.videoToggle) {
-          const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
-          const videoUrl = URL.createObjectURL(recordedBlob);
-          this.previewVideo.nativeElement.src = videoUrl;
+      // Only start recording if we're actually recording
+      if (this.isRecording) {
+        this.startVideoRecording();
+      }
 
+    } catch (error) {
+      console.error('Error in startVideo:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: (error as any).code
+      });
+
+      let userMessage = 'Failed to access camera/microphone. ';
+      
+      switch (error.name) {
+        case 'NotAllowedError':
+          userMessage += 'Permission was denied. Please allow camera and microphone access in your browser settings.';
+          break;
+        case 'NotFoundError':
+          userMessage += 'No camera or microphone found on this device.';
+          break;
+        case 'NotSupportedError':
+          userMessage += 'Camera/microphone access is not supported.';
+          break;
+        case 'NotReadableError':
+          userMessage += 'Camera/microphone is already in use by another application.';
+          break;
+        case 'OverconstrainedError':
+          userMessage += 'The requested video/audio constraints cannot be satisfied.';
+          break;
+        default:
+          userMessage += 'An unknown error occurred.';
+          break;
+      }
+      
+      alert(userMessage);
+    }
+  }
+
+  startVideoRecording() {
+    if (!this.mediaStream) {
+      console.error('No media stream available for recording');
+      return;
+    }
+
+    console.log('Starting video recording...');
+    this.mediaRecorder = new MediaRecorder(this.mediaStream);
+    this.recordedChunks = [];
+
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        this.recordedChunks.push(event.data);
+      }
+    };
+
+    this.mediaRecorder.onstop = async () => {
+      if (this.videoToggle && this.recordedChunks.length > 0) {
+        const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        
+        if (this.recordingName) {
+          console.log('Uploading video recording...');
           const projectDataPath = '/projects/' + this.projectId + '/data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
           const storageRef = ref(this.storage, filePath);
           await uploadBytesResumable(storageRef, recordedBlob);
+          console.log('Video upload completed');
         }
-      };
-      // Play the video automatically
-      this.previewVideo.nativeElement.play();
+      }
+    };
 
-      this.mediaRecorder.start();
-      this.videoStartTime = Date.now();
-    } else {
-      console.error('getUserMedia is not supported in this browser');
-    }
+    this.mediaRecorder.start();
+    this.videoStartTime = Date.now();
+    console.log('Video recording started successfully');
   }
 
   stopVideo() {
@@ -760,14 +899,28 @@ export class RecordComponent implements OnInit {
 
   async toggleRecord() {
     if (!this.isRecording) {
-      this.startVideo();
       this.isRecording = true;
       this.recordingName = `recording-${Date.now()}`;
       this.recordButtonText = 'Stop Recording';
+      
+      // Start video recording if video is enabled
+      if (this.videoToggle) {
+        if (!this.mediaStream) {
+          // If video stream isn't already started, start it
+          await this.startVideo();
+        } else {
+          // If stream is already running, just start recording
+          this.startVideoRecording();
+        }
+      }
     } else {
       this.isRecording = false;
       this.recordButtonText = 'Start Recording';
-      this.stopVideo();
+      
+      // Stop video recording
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+      }
 
       console.log('stopping recordDeviceMotion');
       await this.saveEvents();
@@ -833,7 +986,7 @@ export class RecordComponent implements OnInit {
     if (this.mcapWriter) {
       const stats = this.mcapWriter.statistics;
       await this.mcapWriter.end();
-      const blob = new Blob(this.mcapData);
+      const blob = new Blob(this.mcapData as BlobPart[]);
       const recording = this.recordingName;
       const mcapFileName = `${recording}.mcap`;
       console.log(
