@@ -44,18 +44,15 @@ export class ProjectService {
     console.log('setProject', id);
     // only update or add to projects if the user has access to /project/${id}
     const userProjectsCollection = collection(this.firestore, `users/${this.user.uid}/projects`);
+    const projectDocRef = doc(this.firestore, `projects/${id}`);
     
-    // Use AngularFire's collectionData observable - no injection context needed
-    collectionData(userProjectsCollection, { idField: 'key' }).pipe(
+    // Use AngularFire's docData observable instead of getDoc to avoid injection context issues
+    docData(projectDocRef).pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe(async (projects) => {
-      try {
-        const projectDocRef = doc(this.firestore, `projects/${id}`);
-        // getDoc can be called directly in AngularFire 20
-        const projectDoc = await getDoc(projectDocRef);
-        
-        if (projectDoc.exists()) {
-          this.projectSettings = projectDoc.data() as ProjectSettings;
+    ).subscribe(async (projectData) => {
+      if (projectData) {
+        try {
+          this.projectSettings = projectData as ProjectSettings;
           const lastOpened = Date.now();
           
           const userProjectDocRef = doc(this.firestore, `users/${this.user.uid}/projects/${id}`);
@@ -63,9 +60,9 @@ export class ProjectService {
             name: this.projectSettings.name, 
             lastOpened 
           });
+        } catch (error) {
+          console.error('Error setting project:', error);
         }
-      } catch (error) {
-        console.error('Error setting project:', error);
       }
     });
 
