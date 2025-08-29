@@ -2,7 +2,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, collection, query, orderBy, doc, updateDoc, addDoc, serverTimestamp, deleteDoc, collectionData } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
@@ -43,7 +43,7 @@ export type NstrumentaExperiment = {
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
 
-  // Inject services using the new Angular 19 pattern
+  // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
   private firestore = inject(Firestore);
   private storage = inject(Storage);
@@ -126,12 +126,11 @@ export class RecordComponent implements OnInit {
       orderBy('lastModified', 'desc')
     );
 
-    onSnapshot(recordsQuery, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        key: doc.id,
-        ...doc.data()
-      }));
-        const commonSources = [
+    // Use AngularFire's collectionData observable instead of onSnapshot
+    collectionData(recordsQuery, { idField: 'key' }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((data) => {
+      const commonSources = [
           {
             type: 'devicemotion',
             name: 'Device Motion',
@@ -208,7 +207,7 @@ export class RecordComponent implements OnInit {
         commonSources.forEach((device) => {});
 
         this.dataSource = new MatTableDataSource(commonSources.concat(data as any));
-      });
+    });
 
     this.selection.changed.pipe(
       takeUntilDestroyed(this.destroyRef)

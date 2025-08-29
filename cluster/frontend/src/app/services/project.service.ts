@@ -13,7 +13,7 @@ import { ApiService } from './api.service';
   providedIn: 'root',
 })
 export class ProjectService {
-  // Inject services using the new Angular 19 pattern
+  // Inject services using the new Angular 20 pattern
   private authService = inject(AuthService);
   private activatedRoute = inject(ActivatedRoute);
   private serverService = inject(ServerService);
@@ -44,11 +44,14 @@ export class ProjectService {
     console.log('setProject', id);
     // only update or add to projects if the user has access to /project/${id}
     const userProjectsCollection = collection(this.firestore, `users/${this.user.uid}/projects`);
-    const sub = collectionData(userProjectsCollection, { idField: 'key' }).pipe(
+    
+    // Use AngularFire's collectionData observable - no injection context needed
+    collectionData(userProjectsCollection, { idField: 'key' }).pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(async (projects) => {
       try {
         const projectDocRef = doc(this.firestore, `projects/${id}`);
+        // getDoc can be called directly in AngularFire 20
         const projectDoc = await getDoc(projectDocRef);
         
         if (projectDoc.exists()) {
@@ -61,10 +64,8 @@ export class ProjectService {
             lastOpened 
           });
         }
-        sub.unsubscribe();
       } catch (error) {
         console.error('Error setting project:', error);
-        sub.unsubscribe();
       }
     });
 
