@@ -1,8 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Firestore, collection, addDoc, doc, onSnapshot } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
-import { Action } from '../models/action.model';
+import { FirebaseDataService } from './firebase-data.service';
 
 export type AgentTask = 'runModule';
 
@@ -11,9 +10,9 @@ export type AgentTask = 'runModule';
 })
 export class AgentService {
   uid: string;
-  subscriptionsByTask: { [taskId: string]: () => void } = {};
+  private firebaseDataService = inject(FirebaseDataService);
 
-  constructor(private authService: AuthService, private firestore: Firestore) {
+  constructor(private authService: AuthService) {
     this.authService.user.subscribe((user) => {
       if (user) {
         this.uid = user.uid;
@@ -23,63 +22,12 @@ export class AgentService {
     });
   }
 
-  unsubscribe(key) {
-    this.subscriptionsByTask[key]();
-    delete this.subscriptionsByTask[key];
-    console.log('unsubscribing. keys remaining: ', Object.keys(this.subscriptionsByTask).length);
-  }
-
   runAgentTask(
     task: AgentTask,
     projectId: string,
     payload?: any,
     progress?: (message: string) => void
   ): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      if (this.uid !== '') {
-        console.log('setting task ' + task + ' action to pending');
-        const action: Action = {
-          status: 'pending',
-          created: Date.now(),
-          lastModified: Date.now(),
-          task: task,
-          uid: this.uid,
-          payload: payload ? payload : {},
-          version: environment.version,
-        };
-        const actionsCollection = collection(this.firestore, 'projects/' + projectId + '/actions');
-        return addDoc(actionsCollection, action)
-          .then((ref) => {
-            return new Promise<any>(() => {
-              const key = ref.path;
-              console.log('watching for project action to complete ', key);
-              this.subscriptionsByTask[key] = onSnapshot(ref, (snapshot) => {
-                const val = snapshot.data() as { status: string; task: string };
-                console.log(val);
-                switch (val.status) {
-                  case 'complete':
-                    this.unsubscribe(key);
-                    resolve(val);
-                    break;
-                  case 'build-error':
-                    this.unsubscribe(key);
-                    reject(val);
-                    break;
-                  case 'error':
-                    this.unsubscribe(key);
-                    reject(val);
-                    break;
-                  default:
-                    if (progress) progress(key + ' ' + val.task + ' ' + val.status);
-                    break;
-                }
-              });
-            });
-          })
-          .catch((reason) => reject(reason));
-      } else {
-        return 'unable to run agent task';
-      }
-    });
+    return this.firebaseDataService.runTask(task, projectId, this.uid, payload, undefined, progress);
   }
 }

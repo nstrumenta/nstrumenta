@@ -1,6 +1,6 @@
 import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
 import { BehaviorSubject, switchMap, of, Observable, combineLatest } from 'rxjs';
 
 @Injectable({
@@ -403,5 +403,84 @@ export class FirebaseDataService {
       lastAccessed: new Date(),
       ...projectData
     }, { merge: true });
+  }
+
+  // Task execution methods (moved from AgentService and ServerService)
+  async runTask(
+    task: string,
+    projectId: string,
+    uid: string,
+    payload?: any,
+    data?: any,
+    progress?: (message: string) => void
+  ): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      if (!uid) {
+        reject(new Error('User not authenticated'));
+        return;
+      }
+
+      console.log('setting task ' + task + ' action to pending');
+      const action = {
+        status: 'pending',
+        created: Date.now(),
+        lastModified: Date.now(),
+        task: task,
+        uid: uid,
+        data: data ?? {},
+        payload: payload ? payload : {},
+        version: '1.0.0' // You may want to import this from environment
+      };
+
+      runInInjectionContext(this.injector, () => {
+        const actionsCollection = collection(this.firestore, `projects/${projectId}/actions`);
+        addDoc(actionsCollection, action)
+          .then((ref) => {
+            const key = ref.path;
+            console.log('watching for project action to complete ', key);
+            
+            const unsubscribe = onSnapshot(ref, (snapshot) => {
+              const val = snapshot.data() as {
+                status: string;
+                task: string;
+                payload?: Record<string, unknown>;
+              };
+              console.log(val);
+              
+              switch (val.status) {
+                case 'complete':
+                  unsubscribe();
+                  // Special handling for createApiKey to redact the key
+                  if (task === 'createApiKey') {
+                    const responseDeepCopy = JSON.parse(JSON.stringify(val));
+                    const payload = val.payload;
+                    if (payload) {
+                      payload.key = 'redacted';
+                      // Update the document to redact the key
+                      runInInjectionContext(this.injector, () => {
+                        updateDoc(ref, { payload });
+                      });
+                    }
+                    resolve(responseDeepCopy);
+                  } else {
+                    resolve(val);
+                  }
+                  break;
+                case 'build-error':
+                case 'error':
+                  unsubscribe();
+                  reject(val);
+                  break;
+                default:
+                  if (progress) {
+                    progress(val.status);
+                  }
+                  break;
+              }
+            });
+          })
+          .catch(reject);
+      });
+    });
   }
 }
