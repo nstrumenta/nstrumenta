@@ -1,14 +1,15 @@
-import { Component, ViewChild, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { ActivatedRoute } from '@angular/router';
-import { Firestore, collection, collectionData, deleteDoc, doc, addDoc } from '@angular/fire/firestore';
+import { Firestore, deleteDoc, doc, addDoc, collection } from '@angular/fire/firestore';
 import { Storage } from '@angular/fire/storage';
 import { map } from 'rxjs/operators';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
 @Component({
     selector: 'app-repositories',
@@ -21,6 +22,7 @@ export class RepositoriesComponent implements OnInit {
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -29,18 +31,26 @@ export class RepositoriesComponent implements OnInit {
   private firestore = inject(Firestore);
   private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/repositories';
-    
-    // Use AngularFire's collectionData observable instead of onSnapshot
-    collectionData(collection(this.firestore, this.dataPath), { idField: 'key' }).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((data) => {
-      this.dataSource = new MatTableDataSource(data);
+  constructor() {
+    // Set up effect to handle repositories data changes
+    effect(() => {
+      const repositories = this.firebaseDataService.repositories();
+      this.dataSource = new MatTableDataSource(repositories);
       this.dataSource.sort = this.sort;
     });
+  }
+
+  ngOnInit() {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/repositories';
+    
+    // Set project in Firebase service to trigger data loading
+    if (this.projectId) {
+      this.firebaseDataService.setProject(this.projectId);
+    }
   }
 
   applyFilter(filterValue: string) {

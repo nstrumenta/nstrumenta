@@ -1,15 +1,15 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
+import { Firestore, doc, deleteDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
-import { map, switchMap, tap } from 'rxjs/operators';
-import { combineLatest, of } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { environment } from 'src/environments/environment';
 
 @Component({
@@ -35,45 +35,13 @@ export class DataTableComponent implements OnInit {
   private firestore = inject(Firestore);
   private serverService = inject(ServerService);
   private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    // Create reactive stream that switches Firebase observables based on route changes
-    // This ensures Firebase calls happen in the outer observable chain, maintaining injection context
-    const projectId$ = this.route.paramMap.pipe(
-      map(paramMap => paramMap.get('projectId')),
-      tap(projectId => {
-        if (projectId) {
-          this.projectId = projectId;
-          this.dataPath = `/projects/${projectId}/data`;
-          this.moduleActions.clear();
-        }
-      }),
-      takeUntilDestroyed(this.destroyRef)
-    );
-
-    // Create modules observable that switches when project changes
-    const modules$ = projectId$.pipe(
-      switchMap(projectId => {
-        if (!projectId) return of([]);
-        // Firebase calls happen here in the main observable chain - injection context maintained
-        const modulesCollection = collection(this.firestore, `/projects/${projectId}/modules`);
-        return collectionData(modulesCollection, { idField: 'id' });
-      })
-    );
-
-    // Create data observable that switches when project changes
-    const data$ = projectId$.pipe(
-      switchMap(projectId => {
-        if (!projectId) return of([]);
-        // Firebase calls happen here in the main observable chain - injection context maintained
-        const dataCollection = collection(this.firestore, `/projects/${projectId}/data`);
-        return collectionData(dataCollection, { idField: 'key' });
-      })
-    );
-
-    // Subscribe to modules changes
-    modules$.subscribe((modules: any[]) => {
+  constructor() {
+    // Set up effect to handle modules changes
+    effect(() => {
+      const modules = this.firebaseDataService.modules();
       modules.forEach((module) => {
         console.log(module);
         const { name, url } = module;
@@ -85,8 +53,9 @@ export class DataTableComponent implements OnInit {
       });
     });
 
-    // Subscribe to data changes
-    data$.subscribe((dataSource: any[]) => {
+    // Set up effect to handle data changes
+    effect(() => {
+      const dataSource = this.firebaseDataService.data();
       const processedData = dataSource.map((item) => {
         if (item.size) {
           item.size = parseInt(item.size);
@@ -97,6 +66,23 @@ export class DataTableComponent implements OnInit {
       this.dataSource.sort = this.sort;
       this.dataSource.filter = this.filterParam;
     });
+  }
+
+  ngOnInit() {
+    // Subscribe to route changes to set project ID in the Firebase service
+    this.route.paramMap.pipe(
+      map(paramMap => paramMap.get('projectId')),
+      tap(projectId => {
+        if (projectId) {
+          this.projectId = projectId;
+          this.dataPath = `/projects/${projectId}/data`;
+          this.moduleActions.clear();
+          // Set project in Firebase service to trigger data loading
+          this.firebaseDataService.setProject(projectId);
+        }
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
 
     // Handle query params for filtering
     this.route.queryParamMap.pipe(

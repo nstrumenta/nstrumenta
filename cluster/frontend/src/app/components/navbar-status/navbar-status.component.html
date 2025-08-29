@@ -1,5 +1,5 @@
 <div *ngIf="actions" class="mat-card">
-  <ng-container *ngFor="let action of actions | async ; index as i; first as isFirst">
+  <ng-container *ngFor="let action of actions() ; index as i; first as isFirst">
     <div style="display: flex">
       <div class="spinner" *ngIf="isFirst && (action.status=='pending' || action.status=='started')">
         <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>
