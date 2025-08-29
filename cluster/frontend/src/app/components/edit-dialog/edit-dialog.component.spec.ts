@@ -5,12 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { Firestore } from '@angular/fire/firestore';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 
-const firestoreStub = {
-  // Mock modern Firestore methods if needed
+const firebaseDataServiceStub = {
+  // Add any methods this component uses
 };
 
 describe('EditDialogComponent', () => {
@@ -24,7 +24,7 @@ describe('EditDialogComponent', () => {
       providers: [
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialogRef, useValue: {} },
-        { provide: Firestore, useValue: firestoreStub },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
       ],
     }).compileComponents();
   }));

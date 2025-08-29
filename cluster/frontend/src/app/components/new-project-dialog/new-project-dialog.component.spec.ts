@@ -6,17 +6,18 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
-import { Firestore } from '@angular/fire/firestore';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { AuthService } from 'src/app/auth/auth.service';
 import { of } from 'rxjs';
+import { signal } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const authServiceStub = {
   user: of({ uid: 'mock' }),
 };
 
-const firestoreStub = {
-  // Mock modern Firestore methods if needed
+const firebaseDataServiceStub = {
+  // Add any methods this component uses
 };
 
 describe('NewProjectDialogComponent', () => {
@@ -36,7 +37,7 @@ describe('NewProjectDialogComponent', () => {
       providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: AuthService, useValue: authServiceStub },
-        { provide: Firestore, useValue: firestoreStub },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
       ],
     }).compileComponents();
   }));

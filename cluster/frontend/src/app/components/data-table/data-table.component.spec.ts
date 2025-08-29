@@ -10,11 +10,14 @@ import { MatTableModule } from '@angular/material/table';
 import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataTableComponent } from './data-table.component';
 import { RouterTestingModule } from '@angular/router/testing';
-import { Firestore } from '@angular/fire/firestore';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { of } from 'rxjs';
+import { signal } from '@angular/core';
 
-const firestoreStub = {
-  // Mock modern Firestore methods if needed
+const firebaseDataServiceStub = {
+  data: signal([]),
+  setProject: jasmine.createSpy('setProject'),
+  deleteRecord: jasmine.createSpy('deleteRecord')
 };
 
 describe('DataTableComponent', () => {
@@ -35,7 +38,7 @@ describe('DataTableComponent', () => {
         MatInputModule,
         RouterTestingModule,
       ],
-      providers: [MatDialog, { provide: Firestore, useValue: firestoreStub }],
+      providers: [MatDialog, { provide: FirebaseDataService, useValue: firebaseDataServiceStub }],
     }).compileComponents();
   }));
 
