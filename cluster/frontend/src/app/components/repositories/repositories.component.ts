@@ -39,7 +39,7 @@ export class RepositoriesComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataPath = '/projects/' + this.projectId + '/repositories';
     

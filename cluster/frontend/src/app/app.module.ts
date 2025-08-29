@@ -78,7 +78,11 @@ import { SafePipe } from './pipes/safe.pipe';
 import { VscodeService } from './services/vscode.service';
 import { UploadProgressComponent } from './upload-progress/upload-progress.component';
 
-declare let process: any;
+declare let process: {
+  env: {
+    NODE_ENV: string;
+  };
+};
 if (process.env.NODE_ENV === 'production') {
   Sentry.init({
     release: environment.version,

@@ -44,7 +44,7 @@ export class ToolbarComponent {
     this.upload(files);
   }
 
-  upload(_files: File[]) {
+  upload(files: File[]): void {
     console.warn('Upload functionality temporarily disabled - needs migration to modern Firebase Storage API');
     // TODO: Migrate entire upload method to modern Firebase Storage
     // The upload functionality in this component needs to be completely rewritten

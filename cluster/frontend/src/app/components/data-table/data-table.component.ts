@@ -66,7 +66,7 @@ export class DataTableComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Subscribe to route changes to set project ID in the Firebase service
     this.route.paramMap.pipe(
       map(paramMap => paramMap.get('projectId')),

@@ -197,7 +197,7 @@ export class RecordComponent implements OnInit {
     console.log('=== End Browser Capabilities Check ===');
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Check browser capabilities for debugging
     this.checkBrowserCapabilities();
     

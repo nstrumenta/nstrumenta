@@ -42,4 +42,3 @@ export class ServerService {
     return this.firebaseDataService.runTask(task, projectId, this.uid, payload, data, progress);
   }
 }
-}

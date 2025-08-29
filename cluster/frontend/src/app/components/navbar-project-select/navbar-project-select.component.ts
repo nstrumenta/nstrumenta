@@ -32,7 +32,7 @@ export class NavbarProjectSelectComponent implements OnInit {
     });
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     // Watch route parameters for project changes
     this.activatedRoute.paramMap.subscribe((paramMap) => {
       const projectId = paramMap.get('projectId');

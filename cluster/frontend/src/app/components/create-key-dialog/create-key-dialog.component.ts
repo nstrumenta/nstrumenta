@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ProjectService } from 'src/app/services/project.service';
 
@@ -13,12 +13,15 @@ export interface CreateKeyDialogResponse {
     styles: [],
     standalone: false
 })
-export class CreateKeyDialogComponent implements OnInit {
+export class CreateKeyDialogComponent {
   response: CreateKeyDialogResponse;
   // key is intentionally local to this dialog and is not stored in the db
   key = '';
 
-  constructor(private dialogRef: MatDialogRef<CreateKeyDialogComponent>, private projectService: ProjectService) {
+  private dialogRef = inject(MatDialogRef<CreateKeyDialogComponent>);
+  private projectService = inject(ProjectService);
+
+  constructor() {
     this.response = {};
 
     this.projectService.createApiKey().then(actionResponse => {
@@ -26,10 +29,8 @@ export class CreateKeyDialogComponent implements OnInit {
       this.response.createdAt = actionResponse.created;
       this.key = actionResponse.payload.key;
       console.log('createApiKey response', actionResponse);
-    })
+    });
   }
-
-  ngOnInit(): void { }
 
   close() {
     this.dialogRef.close();

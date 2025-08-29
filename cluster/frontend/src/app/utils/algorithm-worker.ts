@@ -21,7 +21,9 @@ export class AlgorithmWorker {
     this.nst_project = algorithmDoc.nst_project;
   }
 
-  init() {}
+  init(): void {
+    // Worker initialization
+  }
 
   update() {}
 

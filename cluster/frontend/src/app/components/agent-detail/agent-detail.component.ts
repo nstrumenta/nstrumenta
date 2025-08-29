@@ -35,7 +35,7 @@ export class AgentDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
   public dialog = inject(MatDialog);
 
-  ngOnInit() {
+  ngOnInit(): void {
     const projectId = this.route.snapshot.paramMap.get('projectId');
     const agentId = this.route.snapshot.paramMap.get('agentId');
     this.dataPath = `/projects/${projectId}/agents/${agentId}/actions`;

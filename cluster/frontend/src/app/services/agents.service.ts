@@ -11,8 +11,9 @@ export type AgentTask = 'runModule';
 export class AgentService {
   uid: string;
   private firebaseDataService = inject(FirebaseDataService);
+  private authService = inject(AuthService);
 
-  constructor(private authService: AuthService) {
+  constructor() {
     this.authService.user.subscribe((user) => {
       if (user) {
         this.uid = user.uid;
