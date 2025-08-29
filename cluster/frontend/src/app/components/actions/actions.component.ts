@@ -1,14 +1,13 @@
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { Firestore, collection, collectionData, query, orderBy, doc, setDoc, deleteDoc } from '@angular/fire/firestore';
+import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Storage, ref, updateMetadata } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort, MatSortable } from '@angular/material/sort';
+import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
-import { Subscription } from 'rxjs';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
 @Component({
     selector: 'app-actions',
@@ -16,45 +15,47 @@ import { Subscription } from 'rxjs';
     styleUrls: ['./actions.component.scss'],
     standalone: false
 })
-export class ActionsComponent implements OnInit, OnDestroy {
+export class ActionsComponent implements OnInit {
   displayedColumns = ['task', 'status', 'lastModified', 'error'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    private authService: AuthService,
-    public dialog: MatDialog
-  ) {}
+  private route = inject(ActivatedRoute);
+  private storage = inject(Storage);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
+  public dialog = inject(MatDialog);
+
+  constructor() {
+    // Set up effect to handle actions data changes
+    effect(() => {
+      const actions = this.firebaseDataService.actions();
+      this.dataSource = new MatTableDataSource(actions);
+      this.dataSource.sort = this.sort;
+    });
+  }
 
   ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/actions';
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        this.subscriptions.push(
-          (() => {
-            const actionsCollection = collection(this.firestore, this.dataPath);
-            const orderedQuery = query(actionsCollection, orderBy('lastModified', 'desc'));
-            return collectionData(orderedQuery, { idField: 'key' });
-          })().subscribe((data: any[]) => {
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
-            })
-        );
-      })
-    );
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/actions';
+    
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
+    });
   }
 
   ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
-    });
+    // No manual cleanup needed with signals and takeUntilDestroyed
   }
 
   applyFilter(filterValue: string) {
@@ -77,21 +78,19 @@ export class ActionsComponent implements OnInit, OnDestroy {
       : this.dataSource.data.forEach((row) => this.selection.select(row));
   }
 
-  renameFile(fileDocument) {
-    console.log('renameFile', fileDocument.name);
-    const docRef = doc(this.firestore, this.dataPath + '/' + fileDocument.key);
-    setDoc(docRef, { name: fileDocument.name }, { merge: true });
-    const storageRef = ref(this.storage, fileDocument.filePath);
-    updateMetadata(storageRef, {
-      contentDisposition: 'attachment; filename=' + fileDocument.name,
-    });
+  dropzoneClick() {
+    console.log('dropzone click');
+  }
+
+  onUploadSuccess(fileDocument: any) {
+    // Use Firebase service to update the document
+    this.firebaseDataService.updateAction(this.projectId, fileDocument.key, { name: fileDocument.name });
   }
 
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      const docRef = doc(this.firestore, this.dataPath + '/' + item.key);
-      deleteDoc(docRef);
+      this.firebaseDataService.deleteAction(this.projectId, item.key);
     });
     this.selection.clear();
   }
