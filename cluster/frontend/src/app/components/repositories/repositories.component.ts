@@ -1,13 +1,13 @@
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { ActivatedRoute } from '@angular/router';
-import { Firestore, collection, onSnapshot, deleteDoc, doc, addDoc } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, deleteDoc, doc, addDoc } from '@angular/fire/firestore';
 import { Storage } from '@angular/fire/storage';
 import { map } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 
 @Component({
@@ -16,43 +16,31 @@ import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.compo
     styleUrls: ['./repositories.component.scss'],
     standalone: false
 })
-export class RepositoriesComponent implements OnInit, OnDestroy {
+export class RepositoriesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
-  subscription: Subscription;
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    public dialog: MatDialog
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private firestore = inject(Firestore);
+  private storage = inject(Storage);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
 
   ngOnInit() {
     this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/repositories';
     
-    const unsubscribe = onSnapshot(
-      collection(this.firestore, this.dataPath),
-      (snapshot) => {
-        const data = snapshot.docs.map(doc => ({
-          key: doc.id,
-          ...doc.data()
-        }));
-        this.dataSource = new MatTableDataSource(data);
-        this.dataSource.sort = this.sort;
-      }
-    );
-    
-    // Convert to subscription for cleanup
-    this.subscription = { unsubscribe } as Subscription;
-  }
-
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
+    // Use AngularFire's collectionData observable instead of onSnapshot
+    collectionData(collection(this.firestore, this.dataPath), { idField: 'key' }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((data) => {
+      this.dataSource = new MatTableDataSource(data);
+      this.dataSource.sort = this.sort;
+    });
   }
 
   applyFilter(filterValue: string) {
