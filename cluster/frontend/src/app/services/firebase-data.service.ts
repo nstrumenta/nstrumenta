@@ -13,10 +13,15 @@ export class FirebaseDataService {
   // Use BehaviorSubject for project changes
   private currentProjectId = new BehaviorSubject<string>('');
   
+  // Use BehaviorSubject for agent context
+  private currentAgentId = new BehaviorSubject<string>('');
+  
   // Data signals for different collections
   private modulesSignal = signal<any[]>([]);
   private dataSignal = signal<any[]>([]);
+  private recordSignal = signal<any[]>([]);
   private actionsSignal = signal<any[]>([]);
+  private agentActionsSignal = signal<any[]>([]);
   private repositoriesSignal = signal<any[]>([]);
   private agentsSignal = signal<any[]>([]);
   
@@ -36,11 +41,25 @@ export class FirebaseDataService {
     return collectionData(dataCollection, { idField: 'key' });
   };
 
+  private createRecordObservable = (projectId: string): Observable<any[]> => {
+    if (!projectId) return of([]);
+    const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
+    const orderedRecordQuery = query(recordCollection, orderBy('lastModified', 'desc'));
+    return collectionData(orderedRecordQuery, { idField: 'key' });
+  };
+
   private createActionsObservable = (projectId: string): Observable<any[]> => {
     if (!projectId) return of([]);
     const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
     const orderedActionsQuery = query(actionsCollection, orderBy('created', 'desc'));
     return collectionData(orderedActionsQuery, { idField: 'id' });
+  };
+
+  private createAgentActionsObservable = (projectId: string, agentId: string): Observable<any[]> => {
+    if (!projectId || !agentId) return of([]);
+    const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
+    const orderedAgentActionsQuery = query(agentActionsCollection, orderBy('created', 'desc'));
+    return collectionData(orderedAgentActionsQuery, { idField: 'id' });
   };
 
   private createRepositoriesObservable = (projectId: string): Observable<any[]> => {
@@ -65,15 +84,21 @@ export class FirebaseDataService {
     // Set up reactive subscriptions using pre-created Firebase observable factories
     this.setupModulesSubscription();
     this.setupDataSubscription();
+    this.setupRecordSubscription();
     this.setupActionsSubscription();
+    this.setupAgentActionsSubscription();
     this.setupRepositoriesSubscription();
     this.setupAgentsSubscription();
     this.setupProjectSettingsSubscription();
   }
 
-  // Public methods to set project
+  // Public methods to set project and agent
   setProject(projectId: string) {
     this.currentProjectId.next(projectId);
+  }
+
+  setAgent(agentId: string) {
+    this.currentAgentId.next(agentId);
   }
 
   // Public computed signals for components to use
@@ -85,8 +110,16 @@ export class FirebaseDataService {
     return this.dataSignal.asReadonly();
   }
 
+  get record() {
+    return this.recordSignal.asReadonly();
+  }
+
   get actions() {
     return this.actionsSignal.asReadonly();
+  }
+
+  get agentActions() {
+    return this.agentActionsSignal.asReadonly();
   }
 
   get repositories() {
@@ -123,12 +156,35 @@ export class FirebaseDataService {
     });
   }
 
+  private setupRecordSubscription() {
+    this.currentProjectId.pipe(
+      switchMap(projectId => this.createRecordObservable(projectId)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(record => {
+      this.recordSignal.set(record as any[]);
+    });
+  }
+
   private setupActionsSubscription() {
     this.currentProjectId.pipe(
       switchMap(projectId => this.createActionsObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(actions => {
       this.actionsSignal.set(actions as any[]);
+    });
+  }
+
+  private setupAgentActionsSubscription() {
+    // Combine project and agent IDs to create the agent actions observable
+    this.currentProjectId.pipe(
+      switchMap(projectId => 
+        this.currentAgentId.pipe(
+          switchMap(agentId => this.createAgentActionsObservable(projectId, agentId))
+        )
+      ),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(agentActions => {
+      this.agentActionsSignal.set(agentActions as any[]);
     });
   }
 
@@ -208,6 +264,22 @@ export class FirebaseDataService {
     await updateDoc(docRef, data);
   }
 
+  // Record collection CRUD operations (distinct from data collection)
+  async addRecording(projectId: string, data: any): Promise<void> {
+    const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
+    await addDoc(collectionRef, { ...data, lastModified: Date.now() });
+  }
+
+  async updateRecording(projectId: string, id: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
+    await setDoc(docRef, data, { merge: true });
+  }
+
+  async deleteRecording(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
+    await deleteDoc(docRef);
+  }
+
   async updateAction(projectId: string, id: string, data: any): Promise<void> {
     const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
     await setDoc(docRef, data, { merge: true });
@@ -236,6 +308,22 @@ export class FirebaseDataService {
 
   async deleteAgent(projectId: string, id: string): Promise<void> {
     const docRef = doc(this.firestore, `/projects/${projectId}/agents/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  // Agent actions CRUD operations
+  async addAgentAction(projectId: string, agentId: string, data: any): Promise<void> {
+    const collectionRef = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
+    await addDoc(collectionRef, data);
+  }
+
+  async updateAgentAction(projectId: string, agentId: string, id: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
+    await setDoc(docRef, data, { merge: true });
+  }
+
+  async deleteAgentAction(projectId: string, agentId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
     await deleteDoc(docRef);
   }
 

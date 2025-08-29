@@ -1,13 +1,13 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, collectionData } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
 @Component({
     selector: 'app-agents',
@@ -25,8 +25,8 @@ export class AgentDetailComponent implements OnInit {
 
   // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
-  private firestore = inject(Firestore);
   private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
   private destroyRef = inject(DestroyRef);
   public dialog = inject(MatDialog);
 
@@ -36,17 +36,20 @@ export class AgentDetailComponent implements OnInit {
     this.dataPath = `/projects/${projectId}/agents/${agentId}/actions`;
     console.log(this.dataPath);
     
+    // Set up effect to handle agent actions data changes  
+    effect(() => {
+      const agentActions = this.firebaseDataService.agentActions();
+      this.dataSource = new MatTableDataSource(agentActions);
+      this.dataSource.sort = this.sort;
+    });
+    
+    // Subscribe to user auth state and set project and agent when authenticated
     this.authService.user.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
-      if (user) {
-        // Use AngularFire's collectionData observable instead of onSnapshot
-        collectionData(collection(this.firestore, this.dataPath), { idField: 'id' }).pipe(
-          takeUntilDestroyed(this.destroyRef)
-        ).subscribe((data) => {
-          this.dataSource = new MatTableDataSource(data);
-          this.dataSource.sort = this.sort;
-        });
+      if (user && projectId && agentId) {
+        this.firebaseDataService.setProject(projectId);
+        this.firebaseDataService.setAgent(agentId);
       }
     });
   }
