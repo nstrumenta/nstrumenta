@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { get as idbGet, keys as idbKeys, set as idbSet } from 'idb-keyval';
 import { BehaviorSubject } from 'rxjs';
@@ -10,14 +10,12 @@ import { AuthService } from '../auth/auth.service';
   providedIn: 'root',
 })
 export class PlottingService {
+  private authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
+
   graph = new BehaviorSubject<any>({});
   data = [{ x: [], y: [], name: '' }];
   eventIdMap = {};
-
-  constructor(
-    private authService: AuthService,
-    private activatedRoute: ActivatedRoute
-  ) {}
 
   clearData() {
     this.data = [{ x: [], y: [], name: '' }];

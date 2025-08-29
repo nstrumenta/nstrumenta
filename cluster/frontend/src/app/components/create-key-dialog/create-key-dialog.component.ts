@@ -1,6 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose } from '@angular/material/dialog';
 import { ProjectService } from 'src/app/services/project.service';
+
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatButton } from '@angular/material/button';
+import { CdkCopyToClipboard } from '@angular/cdk/clipboard';
+import { MatIcon } from '@angular/material/icon';
 
 export interface CreateKeyDialogResponse {
   keyId?: string;
@@ -11,7 +17,7 @@ export interface CreateKeyDialogResponse {
     selector: 'app-create-key-dialog',
     templateUrl: `create-key-dialog.component.html`,
     styles: [],
-    standalone: false
+    imports: [MatDialogTitle, MatProgressSpinner, CdkScrollable, MatDialogContent, MatButton, CdkCopyToClipboard, MatIcon, MatDialogActions, MatDialogClose]
 })
 export class CreateKeyDialogComponent {
   response: CreateKeyDialogResponse;

@@ -4,15 +4,17 @@
       <mat-card-title>Upload Progress</mat-card-title>
     </mat-card-header>
     <mat-card-content class='upload-progress-body'>
-      <mat-list *ngFor='let file of uploads | keyvalue' class='upload-progress-item'>
-        <mat-list-item>
-          <mat-label class='upload-progress-label'>{{file.value.name}}</mat-label>
-          <mat-label>{{file.value.progress | async | number : '0.0-0'}}%</mat-label>
-        </mat-list-item>
-        <mat-list-item>
-          <mat-progress-bar [value]='file.value.progress | async'></mat-progress-bar>
-        </mat-list-item>
-      </mat-list>
+      @for (file of uploads | keyvalue; track file) {
+        <mat-list class='upload-progress-item'>
+          <mat-list-item>
+            <mat-label class='upload-progress-label'>{{file.value.name}}</mat-label>
+            <mat-label>{{file.value.progress | async | number : '0.0-0'}}%</mat-label>
+          </mat-list-item>
+          <mat-list-item>
+            <mat-progress-bar [value]='file.value.progress | async'></mat-progress-bar>
+          </mat-list-item>
+        </mat-list>
+      }
     </mat-card-content>
   </mat-card>
 </div>

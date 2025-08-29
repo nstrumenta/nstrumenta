@@ -18,14 +18,13 @@ describe('EditDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [BrowserAnimationsModule, FormsModule, MatFormFieldModule, MatInputModule],
-      declarations: [EditDialogComponent],
-      providers: [
+    imports: [BrowserAnimationsModule, FormsModule, MatFormFieldModule, MatInputModule, EditDialogComponent],
+    providers: [
         { provide: MAT_DIALOG_DATA, useValue: {} },
         { provide: MatDialogRef, useValue: {} },
         { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {

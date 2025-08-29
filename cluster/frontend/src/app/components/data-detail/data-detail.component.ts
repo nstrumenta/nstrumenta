@@ -5,26 +5,34 @@ import { ActivatedRoute } from '@angular/router';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { Observable } from 'rxjs';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { AsyncPipe } from '@angular/common';
+import { MatButton } from '@angular/material/button';
+import { MatList, MatListItem } from '@angular/material/list';
+import { FileSizePipe } from '../../pipes/file-size.pipe';
 
 @Component({
     selector: 'app-data-detail',
     template: `
     <ng-container>
-      <video controls *ngIf="isVideo" width="100%" style="max-height: 80%" [src]="url"></video>
+      @if (isVideo) {
+        <video controls width="100%" style="max-height: 80%" [src]="url"></video>
+      }
       <a mat-button [href]="url">{{ (fileDoc | async)?.name }}</a>
       <mat-list>
-      <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
-      <mat-list-item>size: {{ (fileDoc | async)?.size | fileSize }}</mat-list-item>
-      <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
+        <mat-list-item>filePath: {{ (fileDoc | async)?.filePath }}</mat-list-item>
+        <mat-list-item>size: {{ (fileDoc | async)?.size | fileSize }}</mat-list-item>
+        <mat-list-item>lastModified: {{ (fileDoc | async)?.lastModified }}</mat-list-item>
         <mat-list-item>dirname: {{ (fileDoc | async)?.dirname }}</mat-list-item>
       </mat-list>
-      <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap" *ngIf="contents">
-        {{ contents }}
-      </div>
+      @if (contents) {
+        <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap">
+          {{ contents }}
+        </div>
+      }
     </ng-container>
-  `,
+    `,
     styles: [],
-    standalone: false
+    imports: [MatButton, MatList, MatListItem, AsyncPipe, FileSizePipe]
 })
 export class DataDetailComponent implements OnInit {
   dataPath: string;

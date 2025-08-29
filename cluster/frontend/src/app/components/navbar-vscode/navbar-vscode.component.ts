@@ -1,12 +1,16 @@
 import { Component, inject } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { VscodeService } from 'src/app/services/vscode.service';
+import { AsyncPipe } from '@angular/common';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-navbar-vscode',
     templateUrl: './navbar-vscode.component.html',
     styleUrls: ['./navbar-vscode.component.scss'],
-    standalone: false
+    imports: [MatMenu, MatMenuItem, MatButton, MatMenuTrigger, MatIcon, AsyncPipe]
 })
 export class NavbarVscodeComponent {
   public vscodeService = inject(VscodeService);

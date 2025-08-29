@@ -25,20 +25,20 @@ describe('NewProjectDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      imports: [
+    imports: [
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
         MatDialogModule,
         BrowserAnimationsModule,
-      ],
-      declarations: [NewProjectDialogComponent],
-      providers: [
+        NewProjectDialogComponent,
+    ],
+    providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: AuthService, useValue: authServiceStub },
         { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {

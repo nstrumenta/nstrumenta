@@ -4,7 +4,7 @@
       [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'">
       <app-navbar-title></app-navbar-title>
       <mat-nav-list>
-        <ng-container *ngIf="router.url.startsWith('/projects/')">
+        @if (router.url.startsWith('/projects/')) {
           <a mat-menu-item [routerLink]="['record']">
             <mat-icon>fiber_manual_record</mat-icon> Record
           </a>
@@ -29,7 +29,7 @@
           <a mat-menu-item [routerLink]="['settings']">
             <mat-icon>settings</mat-icon>Settings
           </a>
-        </ng-container>
+        }
         <span class="fill-remaining-space"></span>
       </mat-nav-list>
     </mat-sidenav>

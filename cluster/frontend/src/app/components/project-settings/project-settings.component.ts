@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
@@ -17,6 +17,9 @@ import {
   CreateKeyDialogComponent,
   CreateKeyDialogResponse,
 } from '../create-key-dialog/create-key-dialog.component';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatButton } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
 
 @Component({
     selector: 'app-project-settings',
@@ -28,7 +31,7 @@ import {
           }
         `,
     ],
-    standalone: false
+    imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ProjectSettingsComponent implements OnInit {
   membersDisplayedColumns = ['memberId', 'role', 'action'];

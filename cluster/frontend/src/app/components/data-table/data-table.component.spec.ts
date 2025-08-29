@@ -25,8 +25,7 @@ describe('DataTableComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [DataTableComponent, FileSizePipe],
-      imports: [
+    imports: [
         NoopAnimationsModule,
         MatPaginatorModule,
         MatSortModule,
@@ -36,9 +35,10 @@ describe('DataTableComponent', () => {
         MatDialogModule,
         MatInputModule,
         RouterTestingModule,
-      ],
-      providers: [MatDialog, { provide: FirebaseDataService, useValue: firebaseDataServiceStub }],
-    }).compileComponents();
+        DataTableComponent, FileSizePipe,
+    ],
+    providers: [MatDialog, { provide: FirebaseDataService, useValue: firebaseDataServiceStub }],
+}).compileComponents();
   }));
 
   beforeEach(() => {

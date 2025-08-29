@@ -23,14 +23,13 @@ describe('ProjectListComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ProjectListComponent],
-      imports: [MatDialogModule],
-      schemas: [CUSTOM_ELEMENTS_SCHEMA],
-      providers: [
+    imports: [MatDialogModule, ProjectListComponent],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA],
+    providers: [
         { provide: AuthService, useValue: authServiceStub },
         { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
-      ],
-    }).compileComponents();
+    ],
+}).compileComponents();
   }));
 
   beforeEach(() => {

@@ -3,12 +3,17 @@ import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
 import { Subscription } from 'rxjs';
+import { MatFormField, MatError } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+
+import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-new-project-dialog',
     templateUrl: './new-project-dialog.component.html',
     styleUrls: ['./new-project-dialog.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, FormsModule, MatError, MatButton]
 })
 export class NewProjectDialogComponent implements OnInit, OnDestroy {
   subscription: Subscription;

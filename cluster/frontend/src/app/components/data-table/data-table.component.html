@@ -2,7 +2,7 @@
   <mat-form-field>
     <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
   </mat-form-field>
-  <ng-container *ngIf="selection.hasValue()">
+  @if (selection.hasValue()) {
     {{ selection.selected.length }} files selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
       <mat-icon color="accent">delete</mat-icon>
@@ -10,7 +10,7 @@
     <button mat-icon-button matTooltip="Download Selected" (click)="downloadSelected()">
       <mat-icon color="accent">cloud_download</mat-icon>
     </button>
-  </ng-container>
+  }
 </div>
 
 <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc"
@@ -60,9 +60,11 @@
         <button mat-menu-item (click)="download(fileDocument)">
           <span>Download</span>
         </button>
-        <button *ngFor="let moduleAction of moduleActions | keyvalue" mat-menu-item (click)="handleModuleAction(moduleAction.value,fileDocument)">
-          <span>{{moduleAction.key}}</span>
-        </button>
+        @for (moduleAction of moduleActions | keyvalue; track moduleAction) {
+          <button mat-menu-item (click)="handleModuleAction(moduleAction.value,fileDocument)">
+            <span>{{moduleAction.key}}</span>
+          </button>
+        }
       </mat-menu>
 
     </mat-cell>

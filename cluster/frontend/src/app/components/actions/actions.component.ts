@@ -2,13 +2,20 @@ import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Storage } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { Action } from 'src/app/models/action.model';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe } from '@angular/common';
+import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
 
 // Extend Action to include Firebase document key
 interface ActionWithKey extends Action {
@@ -25,7 +32,7 @@ interface FileDocument {
     selector: 'app-actions',
     templateUrl: './actions.component.html',
     styleUrls: ['./actions.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ActionsComponent implements OnInit {
   displayedColumns = ['task', 'status', 'lastModified', 'error'];

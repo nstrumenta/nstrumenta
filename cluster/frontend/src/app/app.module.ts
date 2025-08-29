@@ -3,7 +3,7 @@ import { DragDropModule } from '@angular/cdk/drag-drop';
 import { LayoutModule } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
-import { ErrorHandler, Injectable, NgModule } from '@angular/core';
+import { ErrorHandler, Injectable, NgModule, inject } from '@angular/core';
 import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
 import { getAuth, provideAuth } from '@angular/fire/auth';
 import { getFirestore, provideFirestore } from '@angular/fire/firestore';
@@ -98,43 +98,7 @@ export class SentryErrorHandler implements ErrorHandler {
   }
 }
 
-@NgModule({ declarations: [
-        AppComponent,
-        NavComponent,
-        DataTableComponent,
-        AgentsComponent,
-        AgentDetailComponent,
-        MachinesComponent,
-        NavbarTitleComponent,
-        HomeComponent,
-        NavbarAccountComponent,
-        ToolbarComponent,
-        ProjectListComponent,
-        EditDialogComponent,
-        FileSizePipe,
-        NewProjectDialogComponent,
-        SafePipe,
-        AddItemDialogComponent,
-        CreateKeyDialogComponent,
-        NavbarVscodeComponent,
-        NavbarProjectSelectComponent,
-        NavbarStatusComponent,
-        RecordComponent,
-        PricingComponent,
-        AccountComponent,
-        UserProfileComponent,
-        RepositoriesComponent,
-        ProjectSettingsComponent,
-        ActionsComponent,
-        DataDetailComponent,
-        AddProjectMemberDialogComponent,
-        ConfirmationDialogComponent,
-        DateAsQueryParamPipe,
-        AddEmailProviderDialogComponent,
-        ModulesComponent,
-        ModuleDetailsComponent,
-        UploadProgressComponent,
-    ],
+@NgModule({ declarations: [AppComponent],
     bootstrap: [AppComponent], imports: [BrowserModule,
         CommonModule,
         BrowserAnimationsModule,
@@ -169,8 +133,40 @@ export class SentryErrorHandler implements ErrorHandler {
         DragDropModule,
         MatDividerModule,
         MatProgressBarModule,
-        MatChipsModule
-    ], 
+        MatChipsModule, NavComponent,
+        DataTableComponent,
+        AgentsComponent,
+        AgentDetailComponent,
+        MachinesComponent,
+        NavbarTitleComponent,
+        HomeComponent,
+        NavbarAccountComponent,
+        ToolbarComponent,
+        ProjectListComponent,
+        EditDialogComponent,
+        FileSizePipe,
+        NewProjectDialogComponent,
+        SafePipe,
+        AddItemDialogComponent,
+        CreateKeyDialogComponent,
+        NavbarVscodeComponent,
+        NavbarProjectSelectComponent,
+        NavbarStatusComponent,
+        RecordComponent,
+        PricingComponent,
+        AccountComponent,
+        UserProfileComponent,
+        RepositoriesComponent,
+        ProjectSettingsComponent,
+        ActionsComponent,
+        DataDetailComponent,
+        AddProjectMemberDialogComponent,
+        ConfirmationDialogComponent,
+        DateAsQueryParamPipe,
+        AddEmailProviderDialogComponent,
+        ModulesComponent,
+        ModuleDetailsComponent,
+        UploadProgressComponent],
     providers: [
         AuthService,
         VscodeService,
@@ -184,7 +180,10 @@ export class SentryErrorHandler implements ErrorHandler {
         provideHttpClient(withInterceptorsFromDi()),
     ] })
 export class AppModule {
-  constructor(matIconRegistry: MatIconRegistry, domSanitizer: DomSanitizer) {
+  constructor() {
+    const matIconRegistry = inject(MatIconRegistry);
+    const domSanitizer = inject(DomSanitizer);
+
     matIconRegistry.addSvgIcon(
       'nstrumenta-logo',
       domSanitizer.bypassSecurityTrustResourceUrl('/assets/images/nstrumenta-logo.svg')

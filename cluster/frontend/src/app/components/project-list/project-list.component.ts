@@ -2,11 +2,17 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatButton, MatFabButton } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
+import { MatIcon } from '@angular/material/icon';
 
 // Interface for project data
 interface Project {
@@ -24,7 +30,7 @@ export interface Item {
     selector: 'app-project-list',
     templateUrl: './project-list.component.html',
     styleUrls: ['./project-list.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, MatIcon, AsyncPipe, DatePipe]
 })
 export class ProjectListComponent implements OnInit {
   displayedColumns = ['id', 'lastOpened'];

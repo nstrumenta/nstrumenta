@@ -1,34 +1,43 @@
 <mat-toolbar class="app-header">
-  <button *ngIf="router.url !== '/'" type="button" aria-label="Toggle sidenav" mat-icon-button
-    (click)="drawerToggleClick.emit()">
-    <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
-  </button>
-  <ng-container *ngIf="router.url === '/'">
+  @if (router.url !== '/') {
+    <button type="button" aria-label="Toggle sidenav" mat-icon-button
+      (click)="drawerToggleClick.emit()">
+      <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
+    </button>
+  }
+  @if (router.url === '/') {
     <app-navbar-title></app-navbar-title>
-  </ng-container>
-  <ng-container *ngIf="authService?.user | async ; else loggedOut ">
+  }
+  @if (authService?.user | async ) {
     <app-navbar-project-select></app-navbar-project-select>
     <span class="fill-remaining-space"></span>
-    <ng-container *ngIf="(isHandset$ | async) === false">
-      <app-navbar-status *ngIf="router.url !== '/'"></app-navbar-status>
+    @if ((isHandset$ | async) === false) {
+      @if (router.url !== '/') {
+        <app-navbar-status></app-navbar-status>
+      }
       <span class="fill-remaining-space"></span>
-    </ng-container>
-    <div *ngIf="router.url === '/'"><button mat-button [routerLink]="['/projects']">Go to Projects</button></div>
-    <app-navbar-vscode *ngIf="router.url !== '/'"></app-navbar-vscode>
-  </ng-container>
+    }
+    @if (router.url === '/') {
+      <div><button mat-button [routerLink]="['/projects']">Go to Projects</button></div>
+    }
+    @if (router.url !== '/') {
+      <app-navbar-vscode></app-navbar-vscode>
+    }
+  } @else {
+    <span class="fill-remaining-space"></span>
+    <!-- <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/']">Use Cases</div>
+    <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/subscribe']">Subscribe</div> -->
+  }
   <div style="border-left: 2px solid lightgrey;height: 30px"></div>
   <app-navbar-account></app-navbar-account>
-  <ng-container *ngIf="isDataRouteOrUploading()">
+  @if (isDataRouteOrUploading()) {
     <button mat-fab id="fab" (click)="uploader.click()" title="add data">
       <mat-icon>add</mat-icon>
     </button>
     <input hidden type="file" multiple #uploader (change)="chooseFiles($event)" />
-    <app-upload-progress *ngIf='uploads && uploads.size > 0' [uploads]="uploads"></app-upload-progress>
-  </ng-container>
+    @if (uploads && uploads.size > 0) {
+      <app-upload-progress [uploads]="uploads"></app-upload-progress>
+    }
+  }
 </mat-toolbar>
 
-<ng-template #loggedOut>
-  <span class="fill-remaining-space"></span>
-  <!-- <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/']">Use Cases</div>
-  <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/subscribe']">Subscribe</div> -->
-</ng-template>

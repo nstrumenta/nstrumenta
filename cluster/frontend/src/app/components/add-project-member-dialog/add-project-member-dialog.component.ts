@@ -1,6 +1,12 @@
 import { Component, inject } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose } from '@angular/material/dialog';
 import { ProjectRoles } from 'src/app/models/projectSettings.model';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatSelect, MatOption } from '@angular/material/select';
+import { MatButton } from '@angular/material/button';
 
 export interface AddProjectMemberDialogResponse {
   memberId?: string;
@@ -28,7 +34,7 @@ export interface AddProjectMemberDialogResponse {
       <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Add</button>
     </div>
   `,
-    standalone: false
+    imports: [MatDialogTitle, CdkScrollable, MatDialogContent, MatFormField, MatInput, FormsModule, MatSelect, MatOption, MatDialogActions, MatButton, MatDialogClose]
 })
 export class AddProjectMemberDialogComponent {
   public dialogRef = inject(MatDialogRef<AddProjectMemberDialogResponse>);

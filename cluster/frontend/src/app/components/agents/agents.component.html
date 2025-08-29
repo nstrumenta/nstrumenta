@@ -2,9 +2,9 @@
   <mat-form-field>
     <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
   </mat-form-field>
-  <ng-container *ngIf="selection.hasValue()">
+  @if (selection.hasValue()) {
     {{selection.selected.length}} agents selected:
-  </ng-container>
+  }
 </div>
 
 <mat-table #table [dataSource]="dataSource" matSort matSortActive="createdAt" matSortDirection="desc" class="animate">

@@ -3,7 +3,7 @@ import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Storage, ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
 import { Observable, Subject, fromEvent } from 'rxjs';
@@ -11,6 +11,17 @@ import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
+import { FormsModule } from '@angular/forms';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem } from '@angular/material/list';
+import { AsyncPipe, DatePipe, KeyValuePipe } from '@angular/common';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuItem } from '@angular/material/menu';
 
 interface SensorEventStats {
   timestamp: number;
@@ -36,7 +47,7 @@ export interface NstrumentaExperiment {
     selector: 'app-record',
     templateUrl: './record.component.html',
     styleUrls: ['./record.component.scss'],
-    standalone: false
+    imports: [FormsModule, MatFormField, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, AsyncPipe, DatePipe, KeyValuePipe]
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;

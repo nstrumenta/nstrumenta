@@ -2,20 +2,29 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
 import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { environment } from 'src/environments/environment';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe, KeyValuePipe } from '@angular/common';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { FileSizePipe } from '../../pipes/file-size.pipe';
 
 @Component({
     selector: 'app-data-table',
     templateUrl: './data-table.component.html',
     styleUrls: ['./data-table.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatMenuTrigger, MatMenu, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, KeyValuePipe, FileSizePipe]
 })
 export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'lastModified', 'size', 'actions'];

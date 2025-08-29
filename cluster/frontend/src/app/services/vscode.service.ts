@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
 import { Observable, Observer, Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -16,6 +16,10 @@ export interface VscodeMessage {
 
 @Injectable()
 export class VscodeService {
+  private projectService = inject(ProjectService);
+  private serverService = inject(ServerService);
+  private storage = inject(Storage);
+
   socket$: Observable<WebSocket>;
   message$: Subject<VscodeMessage>;
   messageObserver: Observer<VscodeMessage>;
@@ -24,11 +28,7 @@ export class VscodeService {
   uid: string;
   buildCount = 0;
 
-  constructor(
-    private projectService: ProjectService,
-    private serverService: ServerService,
-    private storage: Storage
-  ) {
+  constructor() {
     if (localStorage.getItem(INIT_VSCODE_ON_START_KEY) === 'true') {
       this.init();
     }

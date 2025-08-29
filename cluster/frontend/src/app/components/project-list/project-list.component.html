@@ -1,34 +1,29 @@
-<div *ngIf="authService.user | async">
-  <div style="flex-direction:row">
-    <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-    </mat-form-field>
+@if (authService.user | async) {
+  <div>
+    <div style="flex-direction:row">
+      <mat-form-field>
+        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+      </mat-form-field>
+    </div>
+    <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc"
+      class="animate">
+      <ng-container matColumnDef="id">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
+        <mat-cell *matCellDef="let fileDocument">
+          <a mat-button [routerLink]="[fileDocument.id,'overview']">
+            {{ fileDocument.id }}
+          </a>
+        </mat-cell>
+      </ng-container>
+      <ng-container matColumnDef="lastOpened">
+        <mat-header-cell *matHeaderCellDef mat-sort-header> last opened </mat-header-cell>
+        <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastOpened | date : 'medium'}} </mat-cell>
+      </ng-container>
+      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+      <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
+    </mat-table>
   </div>
-
-  <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc"
-    class="animate">
-
-    <ng-container matColumnDef="id">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
-      <mat-cell *matCellDef="let fileDocument">
-        <a mat-button [routerLink]="[fileDocument.id,'overview']">
-          {{ fileDocument.id }}
-        </a>
-      </mat-cell>
-    </ng-container>
-
-
-    <ng-container matColumnDef="lastOpened">
-      <mat-header-cell *matHeaderCellDef mat-sort-header> last opened </mat-header-cell>
-      <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastOpened | date : 'medium'}} </mat-cell>
-    </ng-container>
-
-
-    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
-  </mat-table>
-
-</div>
+}
 
 
 <button mat-fab id="fab" (click)="newProjectDialog()">
