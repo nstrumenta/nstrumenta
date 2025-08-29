@@ -22,7 +22,16 @@ export class NavbarProjectSelectComponent implements OnInit {
     ).subscribe((paramMap) => {
       const projectId = paramMap.get('projectId');
       if (projectId) {
-        this.projectService.setProject(paramMap.get('projectId'));
+        // Set the project first
+        this.projectService.setProject(projectId);
+        
+        // Then load project settings within this component's injection context
+        this.projectService.loadProjectSettings(projectId).subscribe(async (projectData) => {
+          if (projectData) {
+            this.projectService.projectSettings = projectData as any;
+            await this.projectService.updateUserProject(projectId, projectData as any);
+          }
+        });
       }
     });
   }

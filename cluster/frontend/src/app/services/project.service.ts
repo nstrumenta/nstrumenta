@@ -42,32 +42,31 @@ export class ProjectService {
 
   setProject(id: string) {
     console.log('setProject', id);
-    // only update or add to projects if the user has access to /project/${id}
-    const userProjectsCollection = collection(this.firestore, `users/${this.user.uid}/projects`);
-    const projectDocRef = doc(this.firestore, `projects/${id}`);
-    
-    // Use AngularFire's docData observable instead of getDoc to avoid injection context issues
-    docData(projectDocRef).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(async (projectData) => {
-      if (projectData) {
-        try {
-          this.projectSettings = projectData as ProjectSettings;
-          const lastOpened = Date.now();
-          
-          const userProjectDocRef = doc(this.firestore, `users/${this.user.uid}/projects/${id}`);
-          await setDoc(userProjectDocRef, { 
-            name: this.projectSettings.name, 
-            lastOpened 
-          });
-        } catch (error) {
-          console.error('Error setting project:', error);
-        }
-      }
-    });
-
     this.currentProjectId = id;
     this.currentProject.next(id);
+  }
+
+  loadProjectSettings(id: string) {
+    // Return an observable that can be subscribed to from within injection context
+    const projectDocRef = doc(this.firestore, `projects/${id}`);
+    return docData(projectDocRef).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    );
+  }
+
+  async updateUserProject(id: string, projectSettings: ProjectSettings) {
+    if (!this.user) return;
+    
+    try {
+      const lastOpened = Date.now();
+      const userProjectDocRef = doc(this.firestore, `users/${this.user.uid}/projects/${id}`);
+      await setDoc(userProjectDocRef, { 
+        name: projectSettings.name, 
+        lastOpened 
+      });
+    } catch (error) {
+      console.error('Error updating user project:', error);
+    }
   }
 
   async createApiKey() {

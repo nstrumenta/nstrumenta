@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, query, orderBy } from '@angular/fire/firestore';
-import { Observable } from 'rxjs';
+import { Observable, switchMap, of, map, combineLatest } from 'rxjs';
 import { Action } from 'src/app/models/action.model';
 import { ProjectService } from 'src/app/services/project.service';
 
@@ -20,16 +20,30 @@ export class NavbarStatusComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.projectService.currentProject.pipe(
+    // Create observable that filters based on current project without calling Firebase in reactive stream
+    this.actions = this.projectService.currentProject.pipe(
+      takeUntilDestroyed(this.destroyRef),
+      map((projectId) => {
+        this.projectId = projectId;
+        return projectId;
+      }),
+      switchMap((projectId) => {
+        if (projectId) {
+          // Create the Firebase observable here, within the injection context
+          return this.getActionsForProject(projectId);
+        } else {
+          return of([]);
+        }
+      })
+    );
+  }
+
+  private getActionsForProject(projectId: string): Observable<Action[]> {
+    const actionPath = '/projects/' + projectId + '/actions';
+    const actionsCollection = collection(this.firestore, actionPath);
+    const orderedQuery = query(actionsCollection, orderBy('created', 'desc'));
+    return collectionData(orderedQuery, { idField: 'id' }).pipe(
       takeUntilDestroyed(this.destroyRef)
-    ).subscribe((projectId) => {
-      this.projectId = projectId;
-      if (this.projectId) {
-        const actionPath = '/projects/' + this.projectId + '/actions';
-        const actionsCollection = collection(this.firestore, actionPath);
-        const orderedQuery = query(actionsCollection, orderBy('created', 'desc'));
-        this.actions = collectionData(orderedQuery) as Observable<Action[]>;
-      }
-    });
+    ) as Observable<Action[]>;
   }
 }
