@@ -1,7 +1,7 @@
 @if ((authService.user | async)) {
   <div>
     <mat-menu #projectSelectMenu="matMenu">
-      @for (project of userProjects(); track project) {
+      @for (project of userProjects(); track project.key) {
         <a mat-menu-item [routerLink]="'/projects/' + project.key + '/overview'">
           {{ project.name }} <small>{{ project.key }}</small>
         </a>

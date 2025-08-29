@@ -26,12 +26,12 @@
 </form>
 
 <mat-list>
-  @for (stat of eventStats | keyvalue; track stat) {
+  @for (stat of eventStats | keyvalue; track stat.key) {
     <mat-list-item>
       sensor id {{stat.key}}: {{stat.value.timestamp - stat.value.previousTimestamp}}ms
     </mat-list-item>
     <mat-list dense>
-      @for (value of stat.value.values; track value) {
+      @for (value of stat.value.values; track $index) {
         <mat-list-item>
           {{value}}
         </mat-list-item>

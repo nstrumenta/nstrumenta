@@ -1,6 +1,6 @@
 @if (actions) {
   <div class="mat-card">
-    @for (action of actions() ; track action; let i = $index; let isFirst = $first) {
+    @for (action of actions() ; track action.id; let i = $index; let isFirst = $first) {
       <div style="display: flex">
         @if (isFirst && (action.status==='pending' || action.status==='started')) {
           <div class="spinner">

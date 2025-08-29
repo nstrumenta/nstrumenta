@@ -60,7 +60,7 @@
         <button mat-menu-item (click)="download(fileDocument)">
           <span>Download</span>
         </button>
-        @for (moduleAction of moduleActions | keyvalue; track moduleAction) {
+        @for (moduleAction of moduleActions | keyvalue; track moduleAction.key) {
           <button mat-menu-item (click)="handleModuleAction(moduleAction.value,fileDocument)">
             <span>{{moduleAction.key}}</span>
           </button>

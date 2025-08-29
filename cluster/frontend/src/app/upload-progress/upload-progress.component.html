@@ -4,7 +4,7 @@
       <mat-card-title>Upload Progress</mat-card-title>
     </mat-card-header>
     <mat-card-content class='upload-progress-body'>
-      @for (file of uploads | keyvalue; track file) {
+      @for (file of uploads | keyvalue; track file.key) {
         <mat-list class='upload-progress-item'>
           <mat-list-item>
             <mat-label class='upload-progress-label'>{{file.value.name}}</mat-label>
