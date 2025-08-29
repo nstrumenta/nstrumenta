@@ -1,8 +1,7 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, query, orderBy, doc, updateDoc, addDoc, serverTimestamp, deleteDoc, collectionData } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
@@ -10,6 +9,7 @@ import { McapWriter } from '@mcap/core';
 import { Observable, Subject, fromEvent } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
 import { Stream } from 'stream';
 import * as uuid from 'uuid';
@@ -45,9 +45,9 @@ export class RecordComponent implements OnInit {
 
   // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
-  private firestore = inject(Firestore);
   private storage = inject(Storage);
   private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
 
@@ -121,15 +121,10 @@ export class RecordComponent implements OnInit {
     
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataPath = '/projects/' + this.projectId + '/record';
-    const recordsQuery = query(
-      collection(this.firestore, this.dataPath),
-      orderBy('lastModified', 'desc')
-    );
-
-    // Use AngularFire's collectionData observable instead of onSnapshot
-    collectionData(recordsQuery, { idField: 'key' }).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((data) => {
+    
+    // Set up effect to handle record data changes
+    effect(() => {
+      const records = this.firebaseDataService.data();
       const commonSources = [
           {
             type: 'devicemotion',
@@ -206,7 +201,16 @@ export class RecordComponent implements OnInit {
         // and add if it doesn't
         commonSources.forEach((device) => {});
 
-        this.dataSource = new MatTableDataSource(commonSources.concat(data as any));
+        this.dataSource = new MatTableDataSource(commonSources.concat(records as any));
+    });
+
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
 
     this.selection.changed.pipe(
@@ -269,7 +273,7 @@ export class RecordComponent implements OnInit {
 
   addRecordSource(name) {
     console.log('addRecordSource', name);
-    addDoc(collection(this.firestore, this.dataPath), { name: name, lastModified: Date.now() });
+    this.firebaseDataService.addRecord(this.projectId, { name: name, lastModified: Date.now() });
   }
 
   async onSensorEvent(event: SensorEvent) {
@@ -971,14 +975,14 @@ export class RecordComponent implements OnInit {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteDoc(doc(this.firestore, this.dataPath + '/' + item.key));
+      this.firebaseDataService.deleteRecord(this.projectId, item.key);
     });
     this.selection.clear();
   }
 
   updateRecordSource(recordSource) {
     console.log('updating', recordSource);
-    updateDoc(doc(this.firestore, this.dataPath + '/' + recordSource.key), recordSource);
+    this.firebaseDataService.updateRecord(this.projectId, recordSource.key, recordSource);
   }
 
   async saveEvents() {
