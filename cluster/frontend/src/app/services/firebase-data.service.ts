@@ -1,7 +1,7 @@
 import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
-import { BehaviorSubject, switchMap, of, Observable, combineLatest } from 'rxjs';
+import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -97,11 +97,18 @@ export class FirebaseDataService {
     this.agentActionsObservable$ = combineLatest([this.currentProjectId, this.currentAgentId]).pipe(
       switchMap(([projectId, agentId]) => {
         if (!projectId || !agentId) return of([]);
+        console.log('Querying agent actions for project:', projectId, 'agent:', agentId);
         return runInInjectionContext(this.injector, () => {
           const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
           const orderedAgentActionsQuery = query(agentActionsCollection, orderBy('created', 'desc'));
           return collectionData(orderedAgentActionsQuery, { idField: 'id' });
-        });
+        }).pipe(
+          tap(data => console.log('Agent actions loaded:', data?.length || 0, 'actions')),
+          catchError(error => {
+            console.error('Error loading agent actions for project:', projectId, 'agent:', agentId, error);
+            return of([]);
+          })
+        );
       })
     );
 
@@ -135,8 +142,15 @@ export class FirebaseDataService {
     this.userProjectsObservable$ = this.currentUserId.pipe(
       switchMap(userId => {
         if (!userId) return of([]);
+        console.log('Querying user projects for userId:', userId);
         return runInInjectionContext(this.injector, () => 
           collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' })
+        ).pipe(
+          tap(data => console.log('User projects loaded:', data?.length || 0, 'projects')),
+          catchError(error => {
+            console.error('Error loading user projects for user:', userId, error);
+            return of([]);
+          })
         );
       })
     );
