@@ -1,13 +1,10 @@
 import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { ActivatedRoute } from '@angular/router';
-import { Firestore, deleteDoc, doc, addDoc, collection } from '@angular/fire/firestore';
 import { Storage } from '@angular/fire/storage';
-import { map } from 'rxjs/operators';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
@@ -28,7 +25,6 @@ export class RepositoriesComponent implements OnInit {
 
   // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
-  private firestore = inject(Firestore);
   private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
@@ -82,7 +78,7 @@ export class RepositoriesComponent implements OnInit {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteDoc(doc(this.firestore, this.dataPath + '/' + item.key));
+      this.firebaseDataService.deleteRepository(this.projectId, item.key);
     });
     this.selection.clear();
   }
@@ -109,7 +105,7 @@ export class RepositoriesComponent implements OnInit {
       console.dir(result);
       if (result) {
         result.lastModified = Date.now();
-        addDoc(collection(this.firestore, this.dataPath), result);
+        this.firebaseDataService.addRepository(this.projectId, result);
       }
     });
   }

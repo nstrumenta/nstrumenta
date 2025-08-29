@@ -1,7 +1,6 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, doc, deleteDoc } from '@angular/fire/firestore';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -25,7 +24,6 @@ export class AgentsComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   private route = inject(ActivatedRoute);
-  private firestore = inject(Firestore);
   private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);

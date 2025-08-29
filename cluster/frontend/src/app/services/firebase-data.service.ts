@@ -1,6 +1,6 @@
 import { Injectable, inject, DestroyRef, signal, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, collectionData, doc, docData, query, orderBy } from '@angular/fire/firestore';
+import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc } from '@angular/fire/firestore';
 import { BehaviorSubject, switchMap, of, Observable } from 'rxjs';
 
 @Injectable({
@@ -110,7 +110,7 @@ export class FirebaseDataService {
       switchMap(projectId => this.createModulesObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(modules => {
-      this.modulesSignal.set(modules);
+      this.modulesSignal.set(modules as any[]);
     });
   }
 
@@ -119,7 +119,7 @@ export class FirebaseDataService {
       switchMap(projectId => this.createDataObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(data => {
-      this.dataSignal.set(data);
+      this.dataSignal.set(data as any[]);
     });
   }
 
@@ -128,7 +128,7 @@ export class FirebaseDataService {
       switchMap(projectId => this.createActionsObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(actions => {
-      this.actionsSignal.set(actions);
+      this.actionsSignal.set(actions as any[]);
     });
   }
 
@@ -137,7 +137,7 @@ export class FirebaseDataService {
       switchMap(projectId => this.createRepositoriesObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(repositories => {
-      this.repositoriesSignal.set(repositories);
+      this.repositoriesSignal.set(repositories as any[]);
     });
   }
 
@@ -146,7 +146,7 @@ export class FirebaseDataService {
       switchMap(projectId => this.createAgentsObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(agents => {
-      this.agentsSignal.set(agents);
+      this.agentsSignal.set(agents as any[]);
     });
   }
 
@@ -173,9 +173,75 @@ export class FirebaseDataService {
       switchMap(projectId => createAgentActionsObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(actions => {
-      agentActionsSignal.set(actions);
+      agentActionsSignal.set(actions as any[]);
     });
 
     return agentActionsSignal.asReadonly();
+  }
+
+  // CRUD Operations - all centralized here to maintain injection context
+  
+  // Add operations
+  async addRepository(projectId: string, data: any): Promise<void> {
+    const repositoriesCollection = collection(this.firestore, `/projects/${projectId}/repositories`);
+    await addDoc(repositoriesCollection, data);
+  }
+
+  async addRecord(projectId: string, data: any): Promise<void> {
+    const recordsCollection = collection(this.firestore, `/projects/${projectId}/data`);
+    await addDoc(recordsCollection, data);
+  }
+
+  async addAction(projectId: string, data: any): Promise<void> {
+    const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
+    await addDoc(actionsCollection, data);
+  }
+
+  // Update operations
+  async updateRepository(projectId: string, id: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async updateRecord(projectId: string, id: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
+    await updateDoc(docRef, data);
+  }
+
+  async updateAction(projectId: string, id: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
+    await setDoc(docRef, data, { merge: true });
+  }
+
+  // Delete operations
+  async deleteRepository(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  async deleteRecord(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  async deleteAction(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  async deleteModule(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/modules/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  async deleteAgent(projectId: string, id: string): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/agents/${id}`);
+    await deleteDoc(docRef);
+  }
+
+  // Get single document
+  getDocument(projectId: string, collection: string, id: string): Observable<any> {
+    const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
+    return docData(docRef);
   }
 }
