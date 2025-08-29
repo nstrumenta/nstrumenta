@@ -1,11 +1,12 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, collectionData } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { map } from 'rxjs/operators';
 import { AuthService } from '../../auth/auth.service';
+import { FirebaseDataService } from '../../services/firebase-data.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
 
 export interface Item {
@@ -27,11 +28,23 @@ export class ProjectListComponent implements OnInit {
 
   @ViewChild(MatSort, { static: false }) sort: MatSort;
 
-  constructor(
-    public dialog: MatDialog,
-    private firestore: Firestore,
-    public authService: AuthService
-  ) { }
+  // Inject services using the new Angular 20 pattern
+  public dialog = inject(MatDialog);
+  public authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // Set up effect to handle user projects data changes
+    effect(() => {
+      const userProjects = this.firebaseDataService.userProjects();
+      const items = userProjects.map((item: any) => {
+        return { key: item.id, id: item.id, ...item };
+      });
+      this.dataSource = new MatTableDataSource(items);
+      this.dataSource.sort = this.sort;
+    });
+  }
 
   computeBreakpoint() {
     const ret = Math.max(1, Math.min(4, Math.ceil(window.innerWidth / 400)));
@@ -40,18 +53,13 @@ export class ProjectListComponent implements OnInit {
 
   ngOnInit() {
     this.breakpoint = this.computeBreakpoint();
-    this.authService.user.subscribe((user) => {
+    
+    // Subscribe to user auth state and set user when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
       if (user) {
-        const collectionPath = '/users/' + user.uid + '/projects';
-        console.log(collectionPath);
-        const projectsCollection = collection(this.firestore, collectionPath);
-        collectionData(projectsCollection, { idField: 'id' }).subscribe((data) => {
-          const items = data.map((item: any) => {
-            return { key: item.id, id: item.id, ...item };
-          });
-          this.dataSource = new MatTableDataSource(items);
-          this.dataSource.sort = this.sort;
-        });
+        this.firebaseDataService.setUser(user.uid);
       }
     });
   }

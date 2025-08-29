@@ -15,6 +15,9 @@ export class FirebaseDataService {
   
   // Use BehaviorSubject for agent context
   private currentAgentId = new BehaviorSubject<string>('');
+
+  // Use BehaviorSubject for user context
+  private currentUserId = new BehaviorSubject<string>('');
   
   // Data signals for different collections
   private modulesSignal = signal<any[]>([]);
@@ -26,6 +29,7 @@ export class FirebaseDataService {
   private agentsSignal = signal<any[]>([]);
   private machinesSignal = signal<any[]>([]);
   private projectsSignal = signal<any[]>([]);
+  private userProjectsSignal = signal<any[]>([]);
   
   // Project settings signal
   private projectSettingsSignal = signal<any>(null);
@@ -87,6 +91,12 @@ export class FirebaseDataService {
     return collectionData(projectsCollection, { idField: 'id' });
   };
 
+  private createUserProjectsObservable = (userId: string): Observable<any[]> => {
+    if (!userId) return of([]);
+    const userProjectsCollection = collection(this.firestore, `/users/${userId}/projects`);
+    return collectionData(userProjectsCollection, { idField: 'id' });
+  };
+
   private createProjectSettingsObservable = (projectId: string): Observable<any> => {
     if (!projectId) return of(null);
     const projectDoc = doc(this.firestore, `/projects/${projectId}`);
@@ -104,6 +114,7 @@ export class FirebaseDataService {
     this.setupAgentsSubscription();
     this.setupMachinesSubscription();
     this.setupProjectsSubscription();
+    this.setupUserProjectsSubscription();
     this.setupProjectSettingsSubscription();
   }
 
@@ -114,6 +125,10 @@ export class FirebaseDataService {
 
   setAgent(agentId: string) {
     this.currentAgentId.next(agentId);
+  }
+
+  setUser(userId: string) {
+    this.currentUserId.next(userId);
   }
 
   // Public computed signals for components to use
@@ -151,6 +166,10 @@ export class FirebaseDataService {
 
   get projects() {
     return this.projectsSignal.asReadonly();
+  }
+
+  get userProjects() {
+    return this.userProjectsSignal.asReadonly();
   }
 
   get projectSettings() {
@@ -244,6 +263,15 @@ export class FirebaseDataService {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(projects => {
       this.projectsSignal.set(projects as any[]);
+    });
+  }
+
+  private setupUserProjectsSubscription() {
+    this.currentUserId.pipe(
+      switchMap(userId => this.createUserProjectsObservable(userId)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(userProjects => {
+      this.userProjectsSignal.set(userProjects as any[]);
     });
   }
 
@@ -372,5 +400,11 @@ export class FirebaseDataService {
   getDocument(projectId: string, collection: string, id: string): Observable<any> {
     const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
     return docData(docRef);
+  }
+
+  // Project settings operations
+  async updateProjectSettings(projectId: string, data: any): Promise<void> {
+    const docRef = doc(this.firestore, `/projects/${projectId}`);
+    await setDoc(docRef, data, { merge: true });
   }
 }

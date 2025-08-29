@@ -1,11 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Firestore, doc, docData, updateDoc, setDoc } from '@angular/fire/firestore';
+import { Component, OnInit, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { ServerService } from 'src/app/services/server.service';
 import { ProjectService } from 'src/app/services/project.service';
 import {
@@ -30,7 +30,7 @@ import {
     ],
     standalone: false
 })
-export class ProjectSettingsComponent implements OnInit, OnDestroy {
+export class ProjectSettingsComponent implements OnInit {
   membersDisplayedColumns = ['memberId', 'role', 'action'];
   membersDataSource: MatTableDataSource<any>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
@@ -38,16 +38,41 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
   projectId: string;
   projectPath: string;
   projectSettings: ProjectSettings;
-  subscriptions = new Array<Subscription>();
 
-  constructor(
-    private firestore: Firestore,
-    private route: ActivatedRoute,
-    private authService: AuthService,
-    public dialog: MatDialog,
-    private projectService: ProjectService,
-    private serverService: ServerService
-  ) { }
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
+  private serverService = inject(ServerService);
+  private projectService = inject(ProjectService);
+
+  constructor() {
+    // Set up effect to handle project settings changes
+    effect(() => {
+      const settings = this.firebaseDataService.projectSettings();
+      if (settings) {
+        this.projectSettings = settings;
+        
+        // Transform members object to table data
+        const memberTableData = Object.keys(settings.members || {}).map((key) => {
+          return { memberId: key, role: settings.members[key] };
+        });
+        this.membersDataSource = new MatTableDataSource(memberTableData);
+
+        // Transform apiKeys object to table data
+        const apiKeysData = Object.keys(settings.apiKeys ? settings.apiKeys : {})
+          .map((key) => {
+            return { keyId: key, createdAt: settings.apiKeys[key].createdAt };
+          })
+          .sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+        this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
+      }
+    });
+  }
 
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('projectId');

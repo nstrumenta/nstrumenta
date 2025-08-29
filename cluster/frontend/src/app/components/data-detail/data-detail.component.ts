@@ -1,9 +1,10 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Firestore, doc, docData } from '@angular/fire/firestore';
+import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
-import { Observable, Subscription } from 'rxjs';
+import { Observable } from 'rxjs';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
 @Component({
     selector: 'app-data-detail',
@@ -25,30 +26,32 @@ import { Observable, Subscription } from 'rxjs';
     styles: [],
     standalone: false
 })
-export class DataDetailComponent implements OnInit, OnDestroy {
+export class DataDetailComponent implements OnInit {
   dataPath: string;
   fileDoc: Observable<any>;
-  subscriptions = new Array<Subscription>();
   url: SafeResourceUrl;
   contents: string;
   isVideo: boolean;
+  projectId: string;
+  dataId: string;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    public sanitizer: DomSanitizer
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private firebaseDataService = inject(FirebaseDataService);
+  public sanitizer = inject(DomSanitizer);
+  private destroyRef = inject(DestroyRef);
 
   ngOnInit() {
-    this.dataPath =
-      '/projects/' +
-      this.route.snapshot.paramMap.get('projectId') +
-      '/data/' +
-      this.route.snapshot.paramMap.get('dataId');
-
-    this.fileDoc = docData(doc(this.firestore, this.dataPath));
-    this.subscriptions.push(
-      this.fileDoc.subscribe((doc) => {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataId = this.route.snapshot.paramMap.get('dataId');
+    this.dataPath = `/projects/${this.projectId}/data/${this.dataId}`;
+    
+    // Use Firebase service to get the document
+    this.fileDoc = this.firebaseDataService.getDocument(this.projectId, 'data', this.dataId);
+    
+    this.fileDoc.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((doc) => {
         console.log(doc);
         const storage = getStorage();
         getDownloadURL(ref(storage, doc.filePath))
@@ -82,13 +85,6 @@ export class DataDetailComponent implements OnInit, OnDestroy {
           .catch((error) => {
             console.error(error);
           });
-      })
-    );
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
-    });
+      });
   }
 }
