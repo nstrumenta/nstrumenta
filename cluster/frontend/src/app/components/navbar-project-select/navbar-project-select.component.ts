@@ -1,6 +1,5 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ProjectService } from 'src/app/services/project.service';
+import { Component, OnInit, inject, effect, signal } from '@angular/core';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
 
@@ -11,27 +10,35 @@ import { AuthService } from 'src/app/auth/auth.service';
     standalone: false
 })
 export class NavbarProjectSelectComponent implements OnInit {
-  public projectService = inject(ProjectService);
   public authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
   private activatedRoute = inject(ActivatedRoute);
-  private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
+
+  // Expose signals for template
+  userProjects = this.firebaseDataService.userProjects;
+  projectSettings = this.firebaseDataService.projectSettings;
+  currentProjectId = signal<string>('');
+
+  constructor() {
+    // Use effect to watch for project settings changes and update user projects
+    effect(() => {
+      const projectId = this.currentProjectId();
+      const settings = this.projectSettings();
+      
+      if (projectId && settings) {
+        this.firebaseDataService.updateUserProject(projectId, settings);
+      }
+    });
+  }
 
   ngOnInit() {
-    this.activatedRoute.paramMap.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((paramMap) => {
+    // Watch route parameters for project changes
+    this.activatedRoute.paramMap.subscribe((paramMap) => {
       const projectId = paramMap.get('projectId');
       if (projectId) {
-        // Set the project first
-        this.projectService.setProject(projectId);
-        
-        // Then load project settings within this component's injection context
-        this.projectService.loadProjectSettings(projectId).subscribe(async (projectData) => {
-          if (projectData) {
-            this.projectService.projectSettings = projectData as any;
-            await this.projectService.updateUserProject(projectId, projectData as any);
-          }
-        });
+        this.currentProjectId.set(projectId);
+        this.firebaseDataService.setProject(projectId);
       }
     });
   }

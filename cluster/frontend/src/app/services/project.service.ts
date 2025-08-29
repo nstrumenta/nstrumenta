@@ -1,13 +1,13 @@
 import { Injectable, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { User } from '@angular/fire/auth';
-import { Firestore, collection, collectionData, doc, docData, setDoc, getDoc } from '@angular/fire/firestore';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
 import { ServerService } from './server.service';
 import { ApiService } from './api.service';
+import { FirebaseDataService } from './firebase-data.service';
 
 @Injectable({
   providedIn: 'root',
@@ -18,8 +18,8 @@ export class ProjectService {
   private activatedRoute = inject(ActivatedRoute);
   private serverService = inject(ServerService);
   private apiService = inject(ApiService);
-  private firestore = inject(Firestore);
   private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
 
   currentProject = new BehaviorSubject<string>('');
   projects: Observable<any[]>;
@@ -33,8 +33,8 @@ export class ProjectService {
     ).subscribe((user) => {
       if (user) {
         this.user = user;
-        const projectsCollection = collection(this.firestore, `users/${user.uid}/projects`);
-        this.projects = collectionData(projectsCollection, { idField: 'key' });
+        this.firebaseDataService.setUser(user.uid);
+        this.projects = this.firebaseDataService.userProjectsObservable$;
       }
     });
     this.activatedRoute.paramMap.subscribe();
@@ -44,29 +44,7 @@ export class ProjectService {
     console.log('setProject', id);
     this.currentProjectId = id;
     this.currentProject.next(id);
-  }
-
-  loadProjectSettings(id: string) {
-    // Return an observable that can be subscribed to from within injection context
-    const projectDocRef = doc(this.firestore, `projects/${id}`);
-    return docData(projectDocRef).pipe(
-      takeUntilDestroyed(this.destroyRef)
-    );
-  }
-
-  async updateUserProject(id: string, projectSettings: ProjectSettings) {
-    if (!this.user) return;
-    
-    try {
-      const lastOpened = Date.now();
-      const userProjectDocRef = doc(this.firestore, `users/${this.user.uid}/projects/${id}`);
-      await setDoc(userProjectDocRef, { 
-        name: projectSettings.name, 
-        lastOpened 
-      });
-    } catch (error) {
-      console.error('Error updating user project:', error);
-    }
+    this.firebaseDataService.setProject(id);
   }
 
   async createApiKey() {

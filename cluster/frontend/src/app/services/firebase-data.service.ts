@@ -45,7 +45,7 @@ export class FirebaseDataService {
   private agentsObservable$: Observable<any[]>;
   private machinesObservable$: Observable<any[]>;
   private projectsObservable$: Observable<any[]>;
-  private userProjectsObservable$: Observable<any[]>;
+  public userProjectsObservable$: Observable<any[]>; // Made public for ProjectService
   private projectSettingsObservable$: Observable<any>;
 
   constructor() {
@@ -255,6 +255,10 @@ export class FirebaseDataService {
     return this.userProjectsSignal.asReadonly();
   }
 
+  get userProjectsObservable() {
+    return this.userProjectsObservable$;
+  }
+
   get projectSettings() {
     return this.projectSettingsSignal.asReadonly();
   }
@@ -385,5 +389,19 @@ export class FirebaseDataService {
   async updateProjectSettings(projectId: string, data: any): Promise<void> {
     const docRef = doc(this.firestore, `/projects/${projectId}`);
     await setDoc(docRef, data, { merge: true });
+  }
+
+  // User project operations
+  async updateUserProject(projectId: string, projectData: any): Promise<void> {
+    const currentUserId = this.currentUserId.value;
+    if (!currentUserId) return;
+    
+    const userProjectRef = doc(this.firestore, `/users/${currentUserId}/projects/${projectId}`);
+    await setDoc(userProjectRef, {
+      id: projectId,
+      name: projectData.name || 'Untitled Project',
+      lastAccessed: new Date(),
+      ...projectData
+    }, { merge: true });
   }
 }

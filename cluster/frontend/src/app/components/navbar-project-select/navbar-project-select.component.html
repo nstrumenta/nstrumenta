@@ -1,11 +1,11 @@
 <div *ngIf="(authService.user | async)">
   <mat-menu #projectSelectMenu="matMenu">
-    <a mat-menu-item *ngFor="let project of projectService.projects | async" [routerLink]="'/projects/' + project.key + '/overview'">
+    <a mat-menu-item *ngFor="let project of userProjects()" [routerLink]="'/projects/' + project.key + '/overview'">
       {{ project.name }} <small>{{ project.key }}</small>
     </a>
   </mat-menu>
 
   <button mat-button [matMenuTriggerFor]="projectSelectMenu">
-    {{projectService.currentProjectId}}
+    {{currentProjectId()}}
   </button>
 </div>
