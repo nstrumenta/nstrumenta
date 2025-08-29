@@ -1,4 +1,4 @@
-import { Injectable, inject, DestroyRef, signal, computed } from '@angular/core';
+import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc } from '@angular/fire/firestore';
 import { BehaviorSubject, switchMap, of, Observable, combineLatest } from 'rxjs';
@@ -9,6 +9,7 @@ import { BehaviorSubject, switchMap, of, Observable, combineLatest } from 'rxjs'
 export class FirebaseDataService {
   private firestore = inject(Firestore);
   private destroyRef = inject(DestroyRef);
+  private injector = inject(Injector);
   
   // Use BehaviorSubject for project changes
   private currentProjectId = new BehaviorSubject<string>('');
@@ -49,81 +50,103 @@ export class FirebaseDataService {
 
   constructor() {
     // Create all Firebase observables during injection context
-    this.projectsObservable$ = collectionData(collection(this.firestore, '/projects'), { idField: 'id' });
+    this.projectsObservable$ = runInInjectionContext(this.injector, () => 
+      collectionData(collection(this.firestore, '/projects'), { idField: 'id' })
+    );
     
     this.modulesObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        return collectionData(collection(this.firestore, `/projects/${projectId}/modules`), { idField: 'id' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/projects/${projectId}/modules`), { idField: 'id' })
+        );
       })
     );
 
     this.dataObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        return collectionData(collection(this.firestore, `/projects/${projectId}/data`), { idField: 'key' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/projects/${projectId}/data`), { idField: 'key' })
+        );
       })
     );
 
     this.recordObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
-        const orderedRecordQuery = query(recordCollection, orderBy('lastModified', 'desc'));
-        return collectionData(orderedRecordQuery, { idField: 'key' });
+        return runInInjectionContext(this.injector, () => {
+          const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
+          const orderedRecordQuery = query(recordCollection, orderBy('lastModified', 'desc'));
+          return collectionData(orderedRecordQuery, { idField: 'key' });
+        });
       })
     );
 
     this.actionsObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
-        const orderedActionsQuery = query(actionsCollection, orderBy('created', 'desc'));
-        return collectionData(orderedActionsQuery, { idField: 'id' });
+        return runInInjectionContext(this.injector, () => {
+          const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
+          const orderedActionsQuery = query(actionsCollection, orderBy('created', 'desc'));
+          return collectionData(orderedActionsQuery, { idField: 'id' });
+        });
       })
     );
 
     this.agentActionsObservable$ = combineLatest([this.currentProjectId, this.currentAgentId]).pipe(
       switchMap(([projectId, agentId]) => {
         if (!projectId || !agentId) return of([]);
-        const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
-        const orderedAgentActionsQuery = query(agentActionsCollection, orderBy('created', 'desc'));
-        return collectionData(orderedAgentActionsQuery, { idField: 'id' });
+        return runInInjectionContext(this.injector, () => {
+          const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
+          const orderedAgentActionsQuery = query(agentActionsCollection, orderBy('created', 'desc'));
+          return collectionData(orderedAgentActionsQuery, { idField: 'id' });
+        });
       })
     );
 
     this.repositoriesObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        return collectionData(collection(this.firestore, `/projects/${projectId}/repositories`), { idField: 'key' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/projects/${projectId}/repositories`), { idField: 'key' })
+        );
       })
     );
 
     this.agentsObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        return collectionData(collection(this.firestore, `/projects/${projectId}/agents`), { idField: 'id' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/projects/${projectId}/agents`), { idField: 'id' })
+        );
       })
     );
 
     this.machinesObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of([]);
-        return collectionData(collection(this.firestore, `/projects/${projectId}/machines`), { idField: 'name' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/projects/${projectId}/machines`), { idField: 'name' })
+        );
       })
     );
 
     this.userProjectsObservable$ = this.currentUserId.pipe(
       switchMap(userId => {
         if (!userId) return of([]);
-        return collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' });
+        return runInInjectionContext(this.injector, () => 
+          collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' })
+        );
       })
     );
 
     this.projectSettingsObservable$ = this.currentProjectId.pipe(
       switchMap(projectId => {
         if (!projectId) return of(null);
-        return docData(doc(this.firestore, `/projects/${projectId}`));
+        return runInInjectionContext(this.injector, () => 
+          docData(doc(this.firestore, `/projects/${projectId}`))
+        );
       })
     );
 
