@@ -4,6 +4,7 @@ import { Observable, Observer, Subject } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
+import { FirebaseDataService } from './firebase-data.service';
 
 const SERVER_URL = 'ws://localhost:8888';
 const INIT_VSCODE_ON_START_KEY = 'initVscodeOnStart';
@@ -18,7 +19,7 @@ export interface VscodeMessage {
 export class VscodeService {
   private projectService = inject(ProjectService);
   private serverService = inject(ServerService);
-  private storage = inject(Storage);
+  private firebaseDataService = inject(FirebaseDataService);
 
   socket$: Observable<WebSocket>;
   message$: Subject<VscodeMessage>;
@@ -98,7 +99,8 @@ export class VscodeService {
                       nst_project = JSON.parse(fileTextItem.text);
                     }
 
-                    const storageRef = ref(self.storage, filePath);
+                    const storage = self.firebaseDataService.getStorage();
+                    const storageRef = ref(storage, filePath);
                     const uploadTask = uploadBytesResumable(
                       storageRef,
                       new Blob([fileTextItem.text]),

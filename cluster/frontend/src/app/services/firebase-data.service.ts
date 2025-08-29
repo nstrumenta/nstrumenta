@@ -1,6 +1,7 @@
 import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInjectionContext } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
+import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError } from 'rxjs';
 
 @Injectable({
@@ -8,6 +9,7 @@ import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchEr
 })
 export class FirebaseDataService {
   private firestore = inject(Firestore);
+  private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
   private injector = inject(Injector);
   
@@ -534,5 +536,25 @@ export class FirebaseDataService {
           .catch(reject);
       });
     });
+  }
+
+  // Storage methods
+  getStorageRef(path: string) {
+    return ref(this.storage, path);
+  }
+
+  uploadFile(path: string, file: File, metadata?: UploadMetadata) {
+    const storageRef = this.getStorageRef(path);
+    return uploadBytesResumable(storageRef, file, metadata);
+  }
+
+  async getDownloadUrl(path: string): Promise<string> {
+    const storageRef = this.getStorageRef(path);
+    return await getDownloadURL(storageRef);
+  }
+
+  // Helper method to get storage instance (for components that need direct access)
+  getStorage(): Storage {
+    return this.storage;
   }
 }

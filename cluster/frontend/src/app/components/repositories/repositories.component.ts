@@ -4,7 +4,6 @@ import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Storage } from '@angular/fire/storage';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { MatFormField } from '@angular/material/form-field';
@@ -32,7 +31,6 @@ export class RepositoriesComponent implements OnInit {
 
   // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
-  private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);

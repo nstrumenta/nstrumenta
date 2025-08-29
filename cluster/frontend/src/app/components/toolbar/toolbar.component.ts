@@ -4,6 +4,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { MatToolbar } from '@angular/material/toolbar';
 import { AsyncPipe } from '@angular/common';
 import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
@@ -23,7 +24,7 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
 })
 export class ToolbarComponent {
   private route = inject(ActivatedRoute);
-  private storage = inject(Storage);
+  private firebaseDataService = inject(FirebaseDataService);
   authService = inject(AuthService);
   router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);

@@ -1,6 +1,5 @@
 import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Storage } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
@@ -44,7 +43,6 @@ export class ActionsComponent implements OnInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   private route = inject(ActivatedRoute);
-  private storage = inject(Storage);
   private authService = inject(AuthService);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);

@@ -54,10 +54,14 @@ export class RecordComponent implements OnInit {
 
   // Inject services using the new Angular 20 pattern
   private route = inject(ActivatedRoute);
-  private storage = inject(Storage);
   private authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
   private breakpointObserver = inject(BreakpointObserver);
+  
+  // Get storage instance from Firebase service
+  private get storage(): Storage {
+    return this.firebaseDataService.getStorage();
+  }
   private destroyRef = inject(DestroyRef);
 
   constructor() {
