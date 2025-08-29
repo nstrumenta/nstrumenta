@@ -1,12 +1,13 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, collectionData } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { VmService } from 'src/app/vm.service';
 
 @Component({
@@ -15,63 +16,43 @@ import { VmService } from 'src/app/vm.service';
     styleUrls: ['./machines.component.scss'],
     standalone: false
 })
-export class MachinesComponent implements OnInit, OnDestroy {
+export class MachinesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
   dataSource: MatTableDataSource<any>;
   selection = new SelectionModel<any>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    public dialog: MatDialog,
-    private vmService: VmService
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
+  private vmService = inject(VmService);
 
-  ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/machines';
-
-    this.subscriptions.push(
-      (() => {
-        const machinesCollection = collection(this.firestore, this.dataPath);
-        return collectionData(machinesCollection, { idField: 'name' }).pipe(
-          map((items: any[]) => {
-            return items.map((data) => {
-              const { serverStatus, deleted } = data;
-              const name = data.name || data.id;
-              const createdAt = data.metadata?.creationTimestamp;
-              const url = data.status?.url;
-              const status = deleted
-                ? 'Deleted'
-                : data.status?.conditions && data.status?.conditions[0]?.type;
-              return { name, createdAt, url, status, serverStatus };
-            });
-          })
-        );
-      })().subscribe((dataSource) => {
-        this.dataSource = new MatTableDataSource(dataSource);
-        this.dataSource.sort = this.sort;
-        this.dataSource.sortingDataAccessor = (item, property) => {
-          switch (property) {
-            case 'date': {
-              let newDate = new Date(item.date);
-              return newDate;
-            }
-            default: {
-                return item[property];
-              }
-            }
-          };
-        })
-    );
+  constructor() {
+    // Set up effect to handle machines data changes
+    effect(() => {
+      const machines = this.firebaseDataService.machines();
+      this.dataSource = new MatTableDataSource(machines);
+      this.dataSource.sort = this.sort;
+    });
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+  ngOnInit() {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/machines';
+
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
   }
 

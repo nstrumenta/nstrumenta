@@ -24,6 +24,8 @@ export class FirebaseDataService {
   private agentActionsSignal = signal<any[]>([]);
   private repositoriesSignal = signal<any[]>([]);
   private agentsSignal = signal<any[]>([]);
+  private machinesSignal = signal<any[]>([]);
+  private projectsSignal = signal<any[]>([]);
   
   // Project settings signal
   private projectSettingsSignal = signal<any>(null);
@@ -74,6 +76,17 @@ export class FirebaseDataService {
     return collectionData(agentsCollection, { idField: 'id' });
   };
 
+  private createMachinesObservable = (projectId: string): Observable<any[]> => {
+    if (!projectId) return of([]);
+    const machinesCollection = collection(this.firestore, `/projects/${projectId}/machines`);
+    return collectionData(machinesCollection, { idField: 'name' });
+  };
+
+  private createProjectsObservable = (): Observable<any[]> => {
+    const projectsCollection = collection(this.firestore, '/projects');
+    return collectionData(projectsCollection, { idField: 'id' });
+  };
+
   private createProjectSettingsObservable = (projectId: string): Observable<any> => {
     if (!projectId) return of(null);
     const projectDoc = doc(this.firestore, `/projects/${projectId}`);
@@ -89,6 +102,8 @@ export class FirebaseDataService {
     this.setupAgentActionsSubscription();
     this.setupRepositoriesSubscription();
     this.setupAgentsSubscription();
+    this.setupMachinesSubscription();
+    this.setupProjectsSubscription();
     this.setupProjectSettingsSubscription();
   }
 
@@ -128,6 +143,14 @@ export class FirebaseDataService {
 
   get agents() {
     return this.agentsSignal.asReadonly();
+  }
+
+  get machines() {
+    return this.machinesSignal.asReadonly();
+  }
+
+  get projects() {
+    return this.projectsSignal.asReadonly();
   }
 
   get projectSettings() {
@@ -203,6 +226,24 @@ export class FirebaseDataService {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(agents => {
       this.agentsSignal.set(agents as any[]);
+    });
+  }
+
+  private setupMachinesSubscription() {
+    this.currentProjectId.pipe(
+      switchMap(projectId => this.createMachinesObservable(projectId)),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(machines => {
+      this.machinesSignal.set(machines as any[]);
+    });
+  }
+
+  private setupProjectsSubscription() {
+    // Projects don't depend on current project ID
+    this.createProjectsObservable().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(projects => {
+      this.projectsSignal.set(projects as any[]);
     });
   }
 
