@@ -51,80 +51,10 @@ export class RecordComponent implements OnInit {
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
 
-  eventStats = new Map<string, SensorEventStats>();
-  registrations = new Map<string, { schemaId: number; channelId: number }>();
-  mcapWriter: McapWriter;
-  bytesWritten: bigint;
-  mcapData: Uint8Array[] = [];
-  isRecording = false;
-  videoToggle = false;
-  videoStartTime: number | undefined;
-  recordingName: string | undefined;
-  mediaStream: MediaStream;
-  mediaRecorder: MediaRecorder;
-  recordedChunks: Blob[] = [];
-  recordButtonText = 'Start Recording';
-  isForwardingToWebsocket = false;
-  forwardButtonText = 'Start Forwarding';
-  forwardToWebsocketUrl?: string = undefined;
-  forwardToWebsocketChannel?: string = undefined;
-  forwardSocket?: WebSocket;
-  deviceMotionListener = false;
-  bluetoothDevices: any = {};
-  deviceMotionComplete = new Subject<void>();
-  gamepadPollingInterval: NodeJS.Timeout = null;
-  uploadPercent: Observable<number>;
-  geolocationWatchId: number;
-  inputName: string;
-  projectId: string;
-  dataSource: MatTableDataSource<any>;
-  dataPath: any;
-  selection = new SelectionModel<any>(true, []);
-  bigintTime(): bigint {
-    const milliseconds = new Date().getTime();
-    return BigInt(milliseconds) * 1000000n;
-  }
-  textEncoder = new TextEncoder();
-
-  isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe(Breakpoints.Handset)
-    .pipe(map((result) => result.matches));
-
-  checkBrowserCapabilities() {
-    console.log('=== Browser Capabilities Check ===');
-    console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
-    console.log('getUserMedia available:', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
-    console.log('MediaRecorder available:', typeof MediaRecorder !== 'undefined');
-    console.log('Secure context:', window.isSecureContext);
-    console.log('Location:', window.location.href);
-    console.log('User agent:', navigator.userAgent);
-    
-    // Check for specific browser issues
-    if (!window.isSecureContext) {
-      console.warn('⚠️ Not in secure context - this may prevent media access');
-    }
-    
-    if (!navigator.mediaDevices) {
-      console.error('❌ navigator.mediaDevices not available');
-    } else if (!navigator.mediaDevices.getUserMedia) {
-      console.error('❌ getUserMedia not available on mediaDevices');
-    } else {
-      console.log('✅ Media APIs appear to be available');
-    }
-    
-    console.log('=== End Browser Capabilities Check ===');
-  }
-
-  ngOnInit() {
-    // Check browser capabilities for debugging
-    this.checkBrowserCapabilities();
-    
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = '/projects/' + this.projectId + '/record';
-    
+  constructor() {
     // Set up effect to handle record data changes
     effect(() => {
-      const records = this.firebaseDataService.data();
+      const records = this.firebaseDataService.record();
       const commonSources = [
           {
             type: 'devicemotion',
@@ -203,6 +133,78 @@ export class RecordComponent implements OnInit {
 
         this.dataSource = new MatTableDataSource(commonSources.concat(records as any));
     });
+  }
+
+  eventStats = new Map<string, SensorEventStats>();
+  registrations = new Map<string, { schemaId: number; channelId: number }>();
+  mcapWriter: McapWriter;
+  bytesWritten: bigint;
+  mcapData: Uint8Array[] = [];
+  isRecording = false;
+  videoToggle = false;
+  videoStartTime: number | undefined;
+  recordingName: string | undefined;
+  mediaStream: MediaStream;
+  mediaRecorder: MediaRecorder;
+  recordedChunks: Blob[] = [];
+  recordButtonText = 'Start Recording';
+  isForwardingToWebsocket = false;
+  forwardButtonText = 'Start Forwarding';
+  forwardToWebsocketUrl?: string = undefined;
+  forwardToWebsocketChannel?: string = undefined;
+  forwardSocket?: WebSocket;
+  deviceMotionListener = false;
+  bluetoothDevices: any = {};
+  deviceMotionComplete = new Subject<void>();
+  gamepadPollingInterval: NodeJS.Timeout = null;
+  uploadPercent: Observable<number>;
+  geolocationWatchId: number;
+  inputName: string;
+  projectId: string;
+  dataSource: MatTableDataSource<any>;
+  dataPath: any;
+  selection = new SelectionModel<any>(true, []);
+  bigintTime(): bigint {
+    const milliseconds = new Date().getTime();
+    return BigInt(milliseconds) * 1000000n;
+  }
+  textEncoder = new TextEncoder();
+
+  isHandset$: Observable<boolean> = this.breakpointObserver
+    .observe(Breakpoints.Handset)
+    .pipe(map((result) => result.matches));
+
+  checkBrowserCapabilities() {
+    console.log('=== Browser Capabilities Check ===');
+    console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
+    console.log('getUserMedia available:', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+    console.log('MediaRecorder available:', typeof MediaRecorder !== 'undefined');
+    console.log('Secure context:', window.isSecureContext);
+    console.log('Location:', window.location.href);
+    console.log('User agent:', navigator.userAgent);
+    
+    // Check for specific browser issues
+    if (!window.isSecureContext) {
+      console.warn('⚠️ Not in secure context - this may prevent media access');
+    }
+    
+    if (!navigator.mediaDevices) {
+      console.error('❌ navigator.mediaDevices not available');
+    } else if (!navigator.mediaDevices.getUserMedia) {
+      console.error('❌ getUserMedia not available on mediaDevices');
+    } else {
+      console.log('✅ Media APIs appear to be available');
+    }
+    
+    console.log('=== End Browser Capabilities Check ===');
+  }
+
+  ngOnInit() {
+    // Check browser capabilities for debugging
+    this.checkBrowserCapabilities();
+    
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/record';
 
     // Subscribe to user auth state and set project when authenticated
     this.authService.user.pipe(
