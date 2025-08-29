@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
@@ -8,7 +8,9 @@ import { AuthService } from 'src/app/auth/auth.service';
     standalone: false
 })
 export class HomeComponent implements OnInit {
-  constructor(public authService: AuthService) {}
+  public authService = inject(AuthService);
 
-  ngOnInit() {}
+  ngOnInit(): void {
+    // Component initialization
+  }
 }

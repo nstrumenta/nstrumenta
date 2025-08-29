@@ -87,8 +87,7 @@ if (process.env.NODE_ENV === 'production') {
 }
 @Injectable()
 export class SentryErrorHandler implements ErrorHandler {
-  constructor() {}
-  handleError(error) {
+  handleError(error: Error) {
     throw error;
     // const eventId = Sentry.captureException(error.originalError || error);
     // Sentry.showReportDialog({ eventId });

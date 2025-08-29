@@ -16,7 +16,7 @@ export interface CreateKeyDialogResponse {
 export class CreateKeyDialogComponent implements OnInit {
   response: CreateKeyDialogResponse;
   // key is intentionally local to this dialog and is not stored in the db
-  key: string = '';
+  key = '';
 
   constructor(private dialogRef: MatDialogRef<CreateKeyDialogComponent>, private projectService: ProjectService) {
     this.response = {};

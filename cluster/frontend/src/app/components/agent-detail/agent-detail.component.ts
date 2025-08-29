@@ -5,9 +5,14 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { Action } from 'src/app/models/action.model';
+
+// Extend Action to include Firebase document key
+interface ActionWithKey extends Action {
+  key: string;
+}
 
 @Component({
     selector: 'app-agents',
@@ -17,8 +22,8 @@ import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 })
 export class AgentDetailComponent implements OnInit {
   displayedColumns = ['id', 'task', 'status', 'createdAt', 'data'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<ActionWithKey>;
+  selection = new SelectionModel<ActionWithKey>(true, []);
   dataPath: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;

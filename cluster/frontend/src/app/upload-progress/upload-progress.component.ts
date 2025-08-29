@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -7,12 +7,6 @@ import { Observable } from 'rxjs';
     styleUrls: ['./upload-progress.component.scss'],
     standalone: false
 })
-export class UploadProgressComponent implements OnInit {
+export class UploadProgressComponent {
   @Input() uploads: Map<string, { name: string; progress: Observable<number> }>;
-
-  constructor() {}
-
-  ngOnInit(): void {}
-
-  ngOnDestroy(): void {}
 }

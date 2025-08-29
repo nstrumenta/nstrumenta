@@ -8,11 +8,11 @@ import { ServerService } from './server.service';
 const SERVER_URL = 'ws://localhost:8888';
 const INIT_VSCODE_ON_START_KEY = 'initVscodeOnStart';
 
-export type VscodeMessage = {
+export interface VscodeMessage {
   type: string;
   config?: Record<string, unknown>;
   payload?: Record<string, unknown>;
-};
+}
 
 @Injectable()
 export class VscodeService {

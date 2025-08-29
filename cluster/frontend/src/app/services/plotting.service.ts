@@ -177,7 +177,7 @@ export class PlottingService {
                         }
                         break;
                       case 'DOM': {
-                        let values = item.coordinate;
+                        const values = item.coordinate;
                         values.push(item.rssi);
                         values.push(item.domInfo.stepNum);
                         values.push(item.domInfo.length);

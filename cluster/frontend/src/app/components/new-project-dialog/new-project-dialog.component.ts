@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
@@ -17,11 +17,13 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
   isCreating = false;
   errorMessage: string;
 
-  constructor(
-    private authService: AuthService,
-    private apiService: ApiService,
-    public dialogRef: MatDialogRef<NewProjectDialogComponent>
-  ) { }
+  private authService = inject(AuthService);
+  private apiService = inject(ApiService);
+  public dialogRef = inject(MatDialogRef<NewProjectDialogComponent>);
+
+  ngOnInit(): void {
+    // Component initialization
+  }
 
   async create(projectIdRaw: string): Promise<void> {
     if (this.isCreating) return;
@@ -49,6 +51,4 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
       this.subscription.unsubscribe();
     }
   }
-  
-  ngOnInit() { }
 }

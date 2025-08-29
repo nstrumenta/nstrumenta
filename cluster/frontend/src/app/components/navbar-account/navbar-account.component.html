@@ -5,7 +5,7 @@
   </mat-menu>
   <button mat-icon-button [matMenuTriggerFor]="appMenu">
     <img *ngIf="auth.currentUser?.photoURL" class="png-icon" style="width: 24px; height: 24px;"
-      [src]="auth.currentUser?.photoURL" />
+      [src]="auth.currentUser?.photoURL" alt="User profile photo" />
     <mat-icon *ngIf="!auth.currentUser?.photoURL">account_circle</mat-icon>
   </button>
 </div>

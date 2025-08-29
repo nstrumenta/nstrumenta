@@ -5,9 +5,18 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+
+// Interface for machine data
+interface Machine {
+  key: string;
+  name: string;
+  createdAt: number;
+  status: string;
+  serverStatus: string;
+  downloadURL: string;
+}
 import { VmService } from 'src/app/vm.service';
 
 @Component({
@@ -18,8 +27,8 @@ import { VmService } from 'src/app/vm.service';
 })
 export class MachinesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Machine>;
+  selection = new SelectionModel<Machine>(true, []);
   dataPath: string;
   projectId: string;
 
@@ -71,9 +80,11 @@ export class MachinesComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   deleteSelected() {

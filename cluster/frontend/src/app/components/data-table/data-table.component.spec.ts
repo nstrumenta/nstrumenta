@@ -11,7 +11,6 @@ import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataTableComponent } from './data-table.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { of } from 'rxjs';
 import { signal } from '@angular/core';
 
 const firebaseDataServiceStub = {

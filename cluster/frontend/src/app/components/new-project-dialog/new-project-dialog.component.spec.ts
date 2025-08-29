@@ -9,7 +9,6 @@ import { FormsModule } from '@angular/forms';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { AuthService } from 'src/app/auth/auth.service';
 import { of } from 'rxjs';
-import { signal } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const authServiceStub = {

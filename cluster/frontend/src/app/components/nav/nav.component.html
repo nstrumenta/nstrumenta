@@ -1,5 +1,5 @@
 <div class="main-container" [class.is-handset]="isHandset$">
-  <mat-sidenav-container class="main-sandbox-container" [attr.autosize]="!(isHandset$ | async)" flex>
+  <mat-sidenav-container class="main-sandbox-container" [attr.autosize]="(isHandset$ | async) === false" flex>
     <mat-sidenav #drawer class="sidenav" [attr.fixedInViewport]="isHandset$ | async"
       [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'">
       <app-navbar-title></app-navbar-title>

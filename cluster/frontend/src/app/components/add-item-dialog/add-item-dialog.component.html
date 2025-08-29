@@ -4,7 +4,7 @@
   <mat-form-field *ngFor='let field of response | keyvalue ; trackBy: trackByFn' class="add-item-form-field"
     appearance="fill">
     <input matInput [(ngModel)]='response[field.key]' [placeholder]='field.key'
-        [type]='field.key.indexOf("password") > -1 ? "password" : field.key == "email" ? "email" : "text"'>
+        [type]='field.key.indexOf("password") > -1 ? "password" : field.key === "email" ? "email" : "text"'>
   </mat-form-field>
 
 </mat-dialog-content>

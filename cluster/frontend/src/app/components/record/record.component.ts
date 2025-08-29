@@ -2,7 +2,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
+import { Storage, ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
 import { MatTableDataSource } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
@@ -11,8 +11,6 @@ import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { SensorEvent } from 'src/app/models/sensorEvent.model';
-import { Stream } from 'stream';
-import * as uuid from 'uuid';
 
 interface SensorEventStats {
   timestamp: number;
@@ -21,18 +19,18 @@ interface SensorEventStats {
   values: number[];
 }
 
-export type NstrumentaVideo = {
+export interface NstrumentaVideo {
   name: string;
   filePath: string;
   startTime?: number;
   offset?: number;
   rotate?: number;
-};
+}
 
-export type NstrumentaExperiment = {
+export interface NstrumentaExperiment {
   dataFilePath: string;
   videos?: NstrumentaVideo[];
-};
+}
 
 @Component({
     selector: 'app-record',
@@ -127,9 +125,9 @@ export class RecordComponent implements OnInit {
             ],
           },
         ];
-        // check if any common source exists
-        // and add if it doesn't
-        commonSources.forEach((device) => {});
+        // Note: commonSources iteration intentionally has no implementation yet
+        // TODO: Add logic to check if any common source exists and add if it doesn't
+        // commonSources.forEach((device) => { ... });
 
         this.dataSource = new MatTableDataSource(commonSources.concat(records as any));
     });
@@ -580,12 +578,12 @@ export class RecordComponent implements OnInit {
     const timestamp = Date.now();
     const buffer = bleEvent.target.value.buffer;
     const sensorId = new Uint8Array(buffer)[0];
-    let id = `lpom-${sensorId}`;
+    const id = `lpom-${sensorId}`;
     const values = [];
     switch (sensorId) {
       case 1: {
         //Raw Mag int24 (why not int?)
-        for (var i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
           const valUint8Array = new Uint8Array(buffer, 6 + 3 * i);
           const val = (valUint8Array[2] << 16) | (valUint8Array[1] << 8) | valUint8Array[0];
           const negative = val & 0x800000;

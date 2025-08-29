@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ProjectRoles } from 'src/app/models/projectSettings.model';
 
@@ -28,17 +28,12 @@ export interface AddProjectMemberDialogResponse {
       <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Add</button>
     </div>
   `,
-    styles: [],
     standalone: false
 })
-export class AddProjectMemberDialogComponent implements OnInit {
-  response: AddProjectMemberDialogResponse;
+export class AddProjectMemberDialogComponent {
+  public dialogRef = inject(MatDialogRef<AddProjectMemberDialogResponse>);
 
-  constructor(private dialogRef: MatDialogRef<AddProjectMemberDialogComponent>) {
-    this.response = { role: 'admin' };
-  }
-
-  ngOnInit(): void {}
+  response: AddProjectMemberDialogResponse = { role: 'viewer' };
 
   close() {
     this.dialogRef.close();

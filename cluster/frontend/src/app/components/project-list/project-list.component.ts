@@ -4,10 +4,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { map } from 'rxjs/operators';
 import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
+
+// Interface for project data
+interface Project {
+  id: string;
+  lastOpened: number;
+  [key: string]: unknown; // Allow for additional properties
+}
 
 export interface Item {
   id: string;
@@ -22,9 +28,9 @@ export interface Item {
 })
 export class ProjectListComponent implements OnInit {
   displayedColumns = ['id', 'lastOpened'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
-  breakpoint: Number;
+  dataSource: MatTableDataSource<Project>;
+  selection = new SelectionModel<Project>(true, []);
+  breakpoint: number;
 
   @ViewChild(MatSort, { static: false }) sort: MatSort;
 
@@ -38,7 +44,7 @@ export class ProjectListComponent implements OnInit {
     // Set up effect to handle user projects data changes
     effect(() => {
       const userProjects = this.firebaseDataService.userProjects();
-      const items = userProjects.map((item: any) => {
+      const items = userProjects.map((item: Project) => {
         return { key: item.id, id: item.id, ...item };
       });
       this.dataSource = new MatTableDataSource(items);
@@ -51,7 +57,7 @@ export class ProjectListComponent implements OnInit {
     return ret;
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.breakpoint = this.computeBreakpoint();
     
     // Subscribe to user auth state and set user when authenticated
@@ -71,7 +77,7 @@ export class ProjectListComponent implements OnInit {
   }
 
   newProjectDialog() {
-    const dialogRef = this.dialog.open(NewProjectDialogComponent);
+    this.dialog.open(NewProjectDialogComponent);
   }
 
   onResize() {
@@ -87,8 +93,10 @@ export class ProjectListComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 }

@@ -5,7 +5,7 @@ export class Action {
   completed?: number;
   task: string;
   uid: string;
-  data?: any;
-  payload?: any;
+  data?: unknown;
+  payload?: unknown;
   version: string;
 }

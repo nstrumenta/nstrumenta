@@ -1,6 +1,6 @@
 import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Storage, ref, updateMetadata } from '@angular/fire/storage';
+import { Storage } from '@angular/fire/storage';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
@@ -8,6 +8,18 @@ import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { Action } from 'src/app/models/action.model';
+
+// Extend Action to include Firebase document key
+interface ActionWithKey extends Action {
+  key: string;
+}
+
+// Interface for file upload document
+interface FileDocument {
+  key: string;
+  name: string;
+}
 
 @Component({
     selector: 'app-actions',
@@ -17,8 +29,8 @@ import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 })
 export class ActionsComponent implements OnInit {
   displayedColumns = ['task', 'status', 'lastModified', 'error'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<ActionWithKey>;
+  selection = new SelectionModel<ActionWithKey>(true, []);
   dataPath: string;
   projectId: string;
 
@@ -54,10 +66,6 @@ export class ActionsComponent implements OnInit {
     });
   }
 
-  ngOnDestroy() {
-    // No manual cleanup needed with signals and takeUntilDestroyed
-  }
-
   applyFilter(filterValue: string) {
     filterValue = filterValue.trim();
     filterValue = filterValue.toLowerCase();
@@ -73,16 +81,18 @@ export class ActionsComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   dropzoneClick() {
     console.log('dropzone click');
   }
 
-  onUploadSuccess(fileDocument: any) {
+  onUploadSuccess(fileDocument: FileDocument) {
     // Use Firebase service to update the document
     this.firebaseDataService.updateAction(this.projectId, fileDocument.key, { name: fileDocument.name });
   }

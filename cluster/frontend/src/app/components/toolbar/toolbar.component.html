@@ -9,11 +9,11 @@
   <ng-container *ngIf="authService?.user | async ; else loggedOut ">
     <app-navbar-project-select></app-navbar-project-select>
     <span class="fill-remaining-space"></span>
-    <ng-container *ngIf="!(isHandset$ | async)">
+    <ng-container *ngIf="(isHandset$ | async) === false">
       <app-navbar-status *ngIf="router.url !== '/'"></app-navbar-status>
       <span class="fill-remaining-space"></span>
     </ng-container>
-    <div *ngIf="router.url == '/'"><button mat-button [routerLink]="['/projects']">Go to Projects</button></div>
+    <div *ngIf="router.url === '/'"><button mat-button [routerLink]="['/projects']">Go to Projects</button></div>
     <app-navbar-vscode *ngIf="router.url !== '/'"></app-navbar-vscode>
   </ng-container>
   <div style="border-left: 2px solid lightgrey;height: 30px"></div>
@@ -26,7 +26,6 @@
     <app-upload-progress *ngIf='uploads && uploads.size > 0' [uploads]="uploads"></app-upload-progress>
   </ng-container>
 </mat-toolbar>
-
 
 <ng-template #loggedOut>
   <span class="fill-remaining-space"></span>

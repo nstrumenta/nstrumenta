@@ -20,8 +20,9 @@ export type ServerTasks =
 export class ServerService {
   uid: string;
   private firebaseDataService = inject(FirebaseDataService);
+  private authService = inject(AuthService);
 
-  constructor(private authService: AuthService) {
+  constructor() {
     this.authService.user.subscribe((user) => {
       if (user) {
         this.uid = user.uid;
@@ -40,4 +41,5 @@ export class ServerService {
   ): Promise<any> {
     return this.firebaseDataService.runTask(task, projectId, this.uid, payload, data, progress);
   }
+}
 }

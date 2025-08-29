@@ -41,7 +41,7 @@ export class DataDetailComponent implements OnInit {
   public sanitizer = inject(DomSanitizer);
   private destroyRef = inject(DestroyRef);
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataId = this.route.snapshot.paramMap.get('dataId');
     this.dataPath = `/projects/${this.projectId}/data/${this.dataId}`;
