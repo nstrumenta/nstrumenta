@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Firestore, collection, collectionData, doc, getDoc } from '@angular/fire/firestore';
 import { ActivatedRoute } from '@angular/router';
 import { get as idbGet, keys as idbKeys, set as idbSet } from 'idb-keyval';
 import { BehaviorSubject } from 'rxjs';
@@ -17,7 +16,6 @@ export class PlottingService {
 
   constructor(
     private authService: AuthService,
-    private firestore: Firestore,
     private activatedRoute: ActivatedRoute
   ) {}
 
