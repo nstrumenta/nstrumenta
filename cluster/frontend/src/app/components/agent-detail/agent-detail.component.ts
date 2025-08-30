@@ -12,11 +12,6 @@ import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { JsonPipe, DatePipe } from '@angular/common';
 
-// Extend Action to include Firebase document key
-interface ActionWithKey extends Action {
-  key: string;
-}
-
 @Component({
     selector: 'app-agents',
     templateUrl: './agent-detail.component.html',

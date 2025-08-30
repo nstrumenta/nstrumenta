@@ -16,11 +16,6 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 
-// Extend Action to include Firebase document key
-interface ActionWithKey extends Action {
-  key: string;
-}
-
 // Interface for file upload document
 interface FileDocument {
   key: string;

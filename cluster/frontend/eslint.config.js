@@ -30,6 +30,29 @@ module.exports = tseslint.config(
           style: "kebab-case",
         },
       ],
+      // Firebase injection context rules
+      "no-restricted-imports": [
+        "error",
+        {
+          "paths": [
+            {
+              "name": "@angular/fire/firestore",
+              "importNames": ["collectionData", "docData"],
+              "message": "Use Firebase data service methods instead of direct collectionData/docData calls to ensure proper injection context"
+            }
+          ]
+        }
+      ],
+      // Encourage proper type usage
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
+    },
+  },
+  {
+    // Allow firebase-data.service to use Firebase APIs directly
+    files: ["**/firebase-data.service.ts"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
   {
