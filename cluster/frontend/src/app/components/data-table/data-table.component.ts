@@ -59,9 +59,9 @@ export class DataTableComponent implements OnInit {
         console.log(module);
         const { name, url } = module;
         if (url != undefined) {
-          this.moduleActions.set(name, { name, url });
+          this.moduleActions.set(name as string, { name: name as string, url: url as string });
         } else {
-          this.moduleActions.set(name, { name });
+          this.moduleActions.set(name as string, { name: name as string });
         }
       });
     });
@@ -71,7 +71,7 @@ export class DataTableComponent implements OnInit {
       const dataSource = this.firebaseDataService.data();
       const processedData = dataSource.map((item) => {
         if (item.size) {
-          item.size = parseInt(item.size);
+          item.size = typeof item.size === 'string' ? parseInt(item.size) : item.size;
         }
         return item;
       });

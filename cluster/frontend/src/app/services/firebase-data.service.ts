@@ -3,6 +3,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
 import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError } from 'rxjs';
+import { 
+  Agent, 
+  Project, 
+  Machine, 
+  Repository, 
+  Module, 
+  DataRecord, 
+  RecordData 
+} from '../models/firebase.model';
+import { Action } from '../models/action.model';
+import { ProjectSettings } from '../models/projectSettings.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,19 +34,19 @@ export class FirebaseDataService {
   private currentUserId = new BehaviorSubject<string>('');
   
   // Data signals for different collections
-  private modulesSignal = signal<any[]>([]);
-  private dataSignal = signal<any[]>([]);
-  private recordSignal = signal<any[]>([]);
-  private actionsSignal = signal<any[]>([]);
-  private agentActionsSignal = signal<any[]>([]);
-  private repositoriesSignal = signal<any[]>([]);
-  private agentsSignal = signal<any[]>([]);
-  private machinesSignal = signal<any[]>([]);
-  private projectsSignal = signal<any[]>([]);
-  private userProjectsSignal = signal<any[]>([]);
+  private modulesSignal = signal<Module[]>([]);
+  private dataSignal = signal<DataRecord[]>([]);
+  private recordSignal = signal<RecordData[]>([]);
+  private actionsSignal = signal<Action[]>([]);
+  private agentActionsSignal = signal<Action[]>([]);
+  private repositoriesSignal = signal<Repository[]>([]);
+  private agentsSignal = signal<Agent[]>([]);
+  private machinesSignal = signal<Machine[]>([]);
+  private projectsSignal = signal<Project[]>([]);
+  private userProjectsSignal = signal<Project[]>([]);
   
   // Project settings signal
-  private projectSettingsSignal = signal<any>(null);
+  private projectSettingsSignal = signal<ProjectSettings | null>(null);
 
   // Pre-create all Firebase observables during constructor (injection context)
   private modulesObservable$: Observable<any[]>;

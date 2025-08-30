@@ -25,8 +25,8 @@ interface ActionWithKey extends Action {
 })
 export class AgentDetailComponent implements OnInit {
   displayedColumns = ['id', 'task', 'status', 'createdAt', 'data'];
-  dataSource: MatTableDataSource<ActionWithKey>;
-  selection = new SelectionModel<ActionWithKey>(true, []);
+  dataSource: MatTableDataSource<Action>;
+  selection = new SelectionModel<Action>(true, []);
   dataPath: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;

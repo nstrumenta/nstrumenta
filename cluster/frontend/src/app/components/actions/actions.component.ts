@@ -34,9 +34,9 @@ interface FileDocument {
     imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ActionsComponent implements OnInit {
-  displayedColumns = ['task', 'status', 'lastModified', 'error'];
-  dataSource: MatTableDataSource<ActionWithKey>;
-  selection = new SelectionModel<ActionWithKey>(true, []);
+  displayedColumns = ['select', 'task', 'status', 'created', 'completed'];
+  dataSource: MatTableDataSource<Action>;
+  selection = new SelectionModel<Action>(true, []);
   dataPath: string;
   projectId: string;
 

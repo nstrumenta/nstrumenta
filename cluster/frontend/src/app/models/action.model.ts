@@ -1,5 +1,7 @@
 export class Action {
-  status: 'pending' | 'complete' | 'error';
+  key?: string;  // Firebase document key
+  id?: string;   // Firebase document id
+  status: 'pending' | 'started' | 'complete' | 'error';
   created: number;
   lastModified?: number;
   completed?: number;
