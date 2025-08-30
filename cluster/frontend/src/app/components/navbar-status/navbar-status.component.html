@@ -1,12 +1,18 @@
-<div *ngIf="actions" class="mat-card">
-  <ng-container *ngFor="let action of actions | async ; index as i; first as isFirst">
-    <div style="display: flex">
-      <div class="spinner" *ngIf="isFirst && (action.status=='pending' || action.status=='started')">
-        <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>
+@if (actions) {
+  <div class="mat-card">
+    @for (action of actions() ; track action.id; let i = $index; let isFirst = $first) {
+      <div style="display: flex">
+        @if (isFirst && (action.status==='pending' || action.status==='started')) {
+          <div class="spinner">
+            <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>
+          </div>
+        }
+        @if (isFirst) {
+          <div class="status-message">
+            {{projectId}} | {{action.task}} | {{action.status}} | {{(action.completed | date : 'medium')}}
+          </div>
+        }
       </div>
-      <div class="status-message" *ngIf="isFirst">
-        {{projectId}} | {{action.task}} | {{action.status}} | {{(action.completed | date : 'medium')}}
-      </div>
-    </div>
-  </ng-container>
-</div>
+    }
+  </div>
+}

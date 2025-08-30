@@ -1,59 +1,68 @@
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
-import { Firestore, collection, collectionData, query, orderBy, doc, setDoc, deleteDoc } from '@angular/fire/firestore';
-import { Storage, ref, updateMetadata } from '@angular/fire/storage';
+import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort, MatSortable } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { SelectionModel } from '@angular/cdk/collections';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
-import { Subscription } from 'rxjs';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { Action } from 'src/app/models/action.model';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe } from '@angular/common';
+import { MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
+
+// Interface for file upload document
+interface FileDocument {
+  key: string;
+  name: string;
+}
 
 @Component({
     selector: 'app-actions',
     templateUrl: './actions.component.html',
     styleUrls: ['./actions.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class ActionsComponent implements OnInit, OnDestroy {
-  displayedColumns = ['task', 'status', 'lastModified', 'error'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+export class ActionsComponent implements OnInit {
+  displayedColumns = ['select', 'task', 'status', 'created', 'completed'];
+  dataSource: MatTableDataSource<Action>;
+  selection = new SelectionModel<Action>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    private authService: AuthService,
-    public dialog: MatDialog
-  ) {}
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
+  public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/actions';
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        this.subscriptions.push(
-          (() => {
-            const actionsCollection = collection(this.firestore, this.dataPath);
-            const orderedQuery = query(actionsCollection, orderBy('lastModified', 'desc'));
-            return collectionData(orderedQuery, { idField: 'key' });
-          })().subscribe((data: any[]) => {
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
-            })
-        );
-      })
-    );
+  constructor() {
+    // Set up effect to handle actions data changes
+    effect(() => {
+      const actions = this.firebaseDataService.actions();
+      this.dataSource = new MatTableDataSource(actions);
+      this.dataSource.sort = this.sort;
+    });
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+  ngOnInit(): void {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/actions';
+    
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
   }
 
@@ -72,26 +81,26 @@ export class ActionsComponent implements OnInit, OnDestroy {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
-  renameFile(fileDocument) {
-    console.log('renameFile', fileDocument.name);
-    const docRef = doc(this.firestore, this.dataPath + '/' + fileDocument.key);
-    setDoc(docRef, { name: fileDocument.name }, { merge: true });
-    const storageRef = ref(this.storage, fileDocument.filePath);
-    updateMetadata(storageRef, {
-      contentDisposition: 'attachment; filename=' + fileDocument.name,
-    });
+  dropzoneClick() {
+    console.log('dropzone click');
+  }
+
+  onUploadSuccess(fileDocument: FileDocument) {
+    // Use Firebase service to update the document
+    this.firebaseDataService.updateAction(this.projectId, fileDocument.key, { name: fileDocument.name });
   }
 
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      const docRef = doc(this.firestore, this.dataPath + '/' + item.key);
-      deleteDoc(docRef);
+      this.firebaseDataService.deleteAction(this.projectId, item.key);
     });
     this.selection.clear();
   }

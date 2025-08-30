@@ -21,10 +21,9 @@ describe('ToolbarComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ToolbarComponent, NavbarTitleComponent, NavbarAccountComponent, LogoComponent],
-      imports: [MatToolbarModule, RouterTestingModule, MatMenuModule, MatIconModule],
-      providers: [{ provide: AuthService, useValue: authServiceStub }],
-    }).compileComponents();
+    imports: [MatToolbarModule, RouterTestingModule, MatMenuModule, MatIconModule, ToolbarComponent, NavbarTitleComponent, NavbarAccountComponent, LogoComponent],
+    providers: [{ provide: AuthService, useValue: authServiceStub }],
+}).compileComponents();
   }));
 
   beforeEach(() => {

@@ -6,7 +6,7 @@ describe('VscodeService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: VscodeService = TestBed.get(VscodeService);
+    const service: VscodeService = TestBed.inject(VscodeService);
     expect(service).toBeTruthy();
   });
 });

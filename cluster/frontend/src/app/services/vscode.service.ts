@@ -1,21 +1,25 @@
-import { Injectable } from '@angular/core';
-import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
+import { Injectable, inject } from '@angular/core';
+import { ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
 import { Observable, Observer, Subject } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
+import { FirebaseDataService } from './firebase-data.service';
 
 const SERVER_URL = 'ws://localhost:8888';
 const INIT_VSCODE_ON_START_KEY = 'initVscodeOnStart';
 
-export type VscodeMessage = {
+export interface VscodeMessage {
   type: string;
   config?: Record<string, unknown>;
   payload?: Record<string, unknown>;
-};
+}
 
 @Injectable()
 export class VscodeService {
+  private projectService = inject(ProjectService);
+  private serverService = inject(ServerService);
+  private firebaseDataService = inject(FirebaseDataService);
+
   socket$: Observable<WebSocket>;
   message$: Subject<VscodeMessage>;
   messageObserver: Observer<VscodeMessage>;
@@ -24,11 +28,7 @@ export class VscodeService {
   uid: string;
   buildCount = 0;
 
-  constructor(
-    private projectService: ProjectService,
-    private serverService: ServerService,
-    private storage: Storage
-  ) {
+  constructor() {
     if (localStorage.getItem(INIT_VSCODE_ON_START_KEY) === 'true') {
       this.init();
     }
@@ -60,8 +60,6 @@ export class VscodeService {
               const uid = this.projectService.user.uid;
               const uploadPath =
                 'projects/' + this.projectService.currentProjectId + '/live-session/' + uid;
-              const self = this;
-              let nst_project = {};
               message.payload.forEach((fileTextItem) => {
                 // remove leading slash if present
                 let filename = fileTextItem.path;
@@ -70,39 +68,39 @@ export class VscodeService {
                 }
 
                 promises.push(
-                  new Promise(function (resolve) {
+                  new Promise((resolve) => {
                     const filePath = uploadPath + '/' + filename;
                     console.log('uploading ', filePath);
-                    const metadata: any = {
+                    const metadata: unknown = {
                       contentDisposition: 'inline',
                     };
                     if (filePath.endsWith('.html')) {
-                      metadata.contentType = 'text/html';
+                      (metadata as Record<string, string>).contentType = 'text/html';
                     }
                     if (filePath.endsWith('.js')) {
-                      metadata.contentType = 'application/javascript';
+                      (metadata as Record<string, string>).contentType = 'application/javascript';
                     }
                     if (filePath.endsWith('.json')) {
-                      metadata.contentType = 'application/json';
+                      (metadata as Record<string, string>).contentType = 'application/json';
                     }
                     if (filePath.endsWith('.css')) {
-                      metadata.contentType = 'text/css';
+                      (metadata as Record<string, string>).contentType = 'text/css';
                     }
                     if (filePath.endsWith('.png')) {
-                      metadata.contentType = 'image/png';
+                      (metadata as Record<string, string>).contentType = 'image/png';
                     }
                     if (filePath.endsWith('.jpeg')) {
-                      metadata.contentType = 'image/jpeg';
+                      (metadata as Record<string, string>).contentType = 'image/jpeg';
                     }
-                    if (filePath.endsWith('nst_project.json')) {
-                      nst_project = JSON.parse(fileTextItem.text);
-                    }
+                    // Parse project configuration if needed
+                    // const nst_project = filePath.endsWith('nst_project.json') ? JSON.parse(fileTextItem.text) : null;
 
-                    const storageRef = ref(self.storage, filePath);
+                    const storage = this.firebaseDataService.getStorage();
+                    const storageRef = ref(storage, filePath);
                     const uploadTask = uploadBytesResumable(
                       storageRef,
                       new Blob([fileTextItem.text]),
-                      metadata
+                      metadata as UploadMetadata
                     );
 
                     uploadTask.on('state_changed', 

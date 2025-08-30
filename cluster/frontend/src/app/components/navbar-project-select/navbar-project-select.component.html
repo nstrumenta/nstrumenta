@@ -1,11 +1,14 @@
-<div *ngIf="(authService.user | async)">
-  <mat-menu #projectSelectMenu="matMenu">
-    <a mat-menu-item *ngFor="let project of projectService.projects | async" [routerLink]="'/projects/' + project.key + '/overview'">
-      {{ project.name }} <small>{{ project.key }}</small>
-    </a>
-  </mat-menu>
-
-  <button mat-button [matMenuTriggerFor]="projectSelectMenu">
-    {{projectService.currentProjectId}}
-  </button>
-</div>
+@if ((authService.user | async)) {
+  <div>
+    <mat-menu #projectSelectMenu="matMenu">
+      @for (project of userProjects(); track project.id || project.key || $index) {
+        <a mat-menu-item [routerLink]="'/projects/' + project.key + '/overview'">
+          {{ project.name }} <small>{{ project.key }}</small>
+        </a>
+      }
+    </mat-menu>
+    <button mat-button [matMenuTriggerFor]="projectSelectMenu">
+      {{currentProjectId()}}
+    </button>
+  </div>
+}

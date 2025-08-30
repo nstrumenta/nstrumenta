@@ -1,13 +1,20 @@
 import { keys as idbKeys } from 'idb-keyval';
 import { hash } from 'src/app/utils/hash';
 
+interface AlgorithmDocument {
+  url: string;
+  nst_project: unknown;
+}
+
+type NstProject = Record<string, unknown>;
+
 export class AlgorithmWorker {
   worker: Worker;
-  runPromiseResolve: Function;
-  nst_project: any;
+  runPromiseResolve: ((value: unknown) => void) | null = null;
+  nst_project: NstProject;
   algorithmHash: string;
 
-  constructor(algorithmDoc: any) {
+  constructor(algorithmDoc: AlgorithmDocument) {
     this.worker = new Worker('assets/js/algorithmWorker.js');
     this.worker.postMessage({
       type: 'loadAlgorithm',
@@ -18,15 +25,20 @@ export class AlgorithmWorker {
       type: 'setNstProject',
       payload: algorithmDoc.nst_project,
     });
-    this.nst_project = algorithmDoc.nst_project;
+    this.nst_project = algorithmDoc.nst_project as NstProject;
   }
 
-  init() {}
+  init(): void {
+    // Worker initialization
+  }
 
-  update() {}
+  update(): void {
+    // Update method implementation would go here
+  }
 
-  run(ref): Promise<any> {
+  run(ref: string): Promise<unknown> {
     return new Promise((resolve) => {
+      this.runPromiseResolve = resolve;
       this.worker.postMessage({
         type: 'setNstProject',
         payload: this.nst_project,

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ServerService } from './services/server.service';
 import { ProjectService } from './services/project.service';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -7,13 +7,13 @@ import { AuthService } from 'src/app/auth/auth.service';
   providedIn: 'root',
 })
 export class VmService {
+  private serverService = inject(ServerService);
+  private projectService = inject(ProjectService);
+  private authService = inject(AuthService);
+
   userId = '';
 
-  constructor(
-    private serverService: ServerService,
-    private projectService: ProjectService,
-    private authService: AuthService
-  ) {
+  constructor() {
     this.authService.user.subscribe((user) => {
       if (user) {
         this.userId = user.uid;

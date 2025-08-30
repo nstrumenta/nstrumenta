@@ -8,8 +8,8 @@ describe('AddItemDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [AddItemDialogComponent],
-    }).compileComponents();
+    imports: [AddItemDialogComponent],
+}).compileComponents();
   }));
 
   beforeEach(() => {

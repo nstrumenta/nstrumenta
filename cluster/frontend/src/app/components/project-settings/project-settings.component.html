@@ -22,9 +22,11 @@
   <ng-container matColumnDef="action">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
     <mat-cell *matCellDef="let member">
-      <button *ngIf="member.role != 'owner'" mat-button (click)="removeMember(member.memberId)">
-        remove
-      </button>
+      @if (member.role !== 'owner') {
+        <button mat-button (click)="removeMember(member.memberId)">
+          remove
+        </button>
+      }
     </mat-cell>
   </ng-container>
 
@@ -56,9 +58,11 @@
   <ng-container matColumnDef="action">
     <mat-header-cell *matHeaderCellDef></mat-header-cell>
     <mat-cell *matCellDef="let apiKey">
-      <button *ngIf="apiKey.role != 'owner'" mat-button (click)="revokeApiKey(apiKey.keyId)">
-        revoke
-      </button>
+      @if (apiKey.role !== 'owner') {
+        <button mat-button (click)="revokeApiKey(apiKey.keyId)">
+          revoke
+        </button>
+      }
     </mat-cell>
   </ng-container>
 

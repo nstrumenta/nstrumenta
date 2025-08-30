@@ -1,1 +1,1 @@
-declare var stripe: any;
+declare const stripe: unknown;

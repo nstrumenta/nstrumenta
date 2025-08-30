@@ -4,6 +4,6 @@ export interface AlgorithmRecord {
 
 export interface AlgorithmBuildRecord {
   lastModified: string;
-  nst_project: { parameters: any[]; controls: any[] };
+  nst_project: { parameters: unknown[]; controls: unknown[] };
   url: string;
 }

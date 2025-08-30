@@ -1,10 +1,12 @@
 export type ProjectRoles = 'owner' | 'admin' | 'viewer';
-export type ApiKeyInfo = { createdAt: string };
+export interface ApiKeyInfo { 
+  createdAt: string;
+}
 
-export class ProjectSettings {
+export interface ProjectSettings {
   agentType?: 'master';
   name?: string;
-  members?: { [key: string]: ProjectRoles };
-  apiKeys?: { [key: string]: ApiKeyInfo };
+  members?: Record<string, ProjectRoles>;
+  apiKeys?: Record<string, ApiKeyInfo>;
   apiUrl?: string;
 }

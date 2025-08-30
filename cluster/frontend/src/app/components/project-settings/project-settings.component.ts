@@ -1,11 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { Firestore, doc, docData, updateDoc, setDoc } from '@angular/fire/firestore';
+import { Component, OnInit, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { ServerService } from 'src/app/services/server.service';
 import { ProjectService } from 'src/app/services/project.service';
 import {
@@ -17,6 +17,20 @@ import {
   CreateKeyDialogComponent,
   CreateKeyDialogResponse,
 } from '../create-key-dialog/create-key-dialog.component';
+import { MatList, MatListItem } from '@angular/material/list';
+import { MatButton } from '@angular/material/button';
+import { DatePipe } from '@angular/common';
+import { ProjectRoles } from 'src/app/models/projectSettings.model';
+
+interface MemberEntry {
+  memberId: string;
+  role: ProjectRoles;
+}
+
+interface ApiKeyEntry {
+  keyId: string;
+  createdAt: string;
+}
 
 @Component({
     selector: 'app-project-settings',
@@ -28,68 +42,69 @@ import {
           }
         `,
     ],
-    standalone: false
+    imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class ProjectSettingsComponent implements OnInit, OnDestroy {
+export class ProjectSettingsComponent implements OnInit {
   membersDisplayedColumns = ['memberId', 'role', 'action'];
-  membersDataSource: MatTableDataSource<any>;
+  membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
-  apiKeysDataSource: MatTableDataSource<any>;
+  apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
   projectId: string;
   projectPath: string;
   projectSettings: ProjectSettings;
-  subscriptions = new Array<Subscription>();
 
-  constructor(
-    private firestore: Firestore,
-    private route: ActivatedRoute,
-    private authService: AuthService,
-    public dialog: MatDialog,
-    private projectService: ProjectService,
-    private serverService: ServerService
-  ) { }
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
+  private serverService = inject(ServerService);
+  private projectService = inject(ProjectService);
+
+  constructor() {
+    // Set up effect to handle project settings changes
+    effect(() => {
+      const settings = this.firebaseDataService.projectSettings();
+      if (settings) {
+        this.projectSettings = settings;
+        
+        // Transform members object to table data
+        const memberTableData = Object.keys(settings.members || {}).map((key) => {
+          return { memberId: key, role: settings.members[key] };
+        });
+        this.membersDataSource = new MatTableDataSource(memberTableData);
+
+        // Transform apiKeys object to table data
+        const apiKeysData = Object.keys(settings.apiKeys ? settings.apiKeys : {})
+          .map((key) => {
+            return { keyId: key, createdAt: settings.apiKeys[key].createdAt };
+          })
+          .sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
+        this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
+      }
+    });
+  }
 
   ngOnInit() {
     this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.projectPath = '/projects/' + this.route.snapshot.paramMap.get('projectId');
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        if (user) {
-          const projectDoc = doc(this.firestore, this.projectPath);
-          this.subscriptions.push(
-            docData(projectDoc).subscribe((doc: ProjectSettings) => {
-              const memberTableData = Object.keys(doc.members || {}).map((key) => {
-                return { memberId: key, role: doc.members[key] };
-              });
-              this.membersDataSource = new MatTableDataSource(memberTableData);
-
-              const apiKeysData = Object.keys(doc.apiKeys ? doc.apiKeys : {})
-                .map((key) => {
-                  return { keyId: key, createdAt: doc.apiKeys[key].createdAt };
-                })
-                .sort((a, b) => {
-                  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-                });
-              this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
-
-                this.projectSettings = doc;
-              })
-          );
-        }
-      })
-    );
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+    this.projectPath = `/projects/${this.projectId}`;
+    
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
   }
 
   async updateProjectName(name: string) {
     try {
-      const projectDoc = doc(this.firestore, this.projectPath);
-      await updateDoc(projectDoc, { name });
+      await this.firebaseDataService.updateProjectSettings(this.projectId, { name });
     } catch (error) {
       console.error('Error updating project name:', error);
     }
@@ -100,10 +115,9 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(async (response) => {
       if (response) {
-        const members = this.projectSettings.members;
+        const members = { ...this.projectSettings.members };
         delete members[memberId];
-        const projectDoc = doc(this.firestore, this.projectPath);
-        await updateDoc(projectDoc, { members });
+        await this.firebaseDataService.updateProjectSettings(this.projectId, { members });
       }
     });
   }
@@ -113,10 +127,9 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
 
     dialogRef.afterClosed().subscribe(async (response: AddProjectMemberDialogResponse) => {
       if (response && response.memberId) {
-        const members = this.projectSettings.members;
+        const members = { ...this.projectSettings.members };
         members[response.memberId] = response.role;
-        const projectDoc = doc(this.firestore, this.projectPath);
-        await updateDoc(projectDoc, { members });
+        await this.firebaseDataService.updateProjectSettings(this.projectId, { members });
       }
     });
   }
@@ -125,10 +138,9 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(CreateKeyDialogComponent);
     dialogRef.afterClosed().subscribe(async (response: CreateKeyDialogResponse) => {
       if (response && response.keyId) {
-        const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
+        const apiKeys = this.projectSettings.apiKeys ? { ...this.projectSettings.apiKeys } : {};
         apiKeys[response.keyId] = { createdAt: response.createdAt };
-        const projectDoc = doc(this.firestore, this.projectPath);
-        await updateDoc(projectDoc, { apiKeys });
+        await this.firebaseDataService.updateProjectSettings(this.projectId, { apiKeys });
       }
     });
   }
@@ -138,10 +150,9 @@ export class ProjectSettingsComponent implements OnInit, OnDestroy {
     dialogRef.afterClosed().subscribe((response) => {
       if (response) {
         this.projectService.revokeApiKey(keyId).then(async (actionResponse) => {
-          const apiKeys = this.projectSettings.apiKeys ? this.projectSettings.apiKeys : {};
+          const apiKeys = this.projectSettings.apiKeys ? { ...this.projectSettings.apiKeys } : {};
           delete apiKeys[keyId];
-          const projectDoc = doc(this.firestore, this.projectPath);
-          await updateDoc(projectDoc, { apiKeys });
+          await this.firebaseDataService.updateProjectSettings(this.projectId, { apiKeys });
           console.log('revokeApiKey response', actionResponse);
         });
       }

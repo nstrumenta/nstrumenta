@@ -1,79 +1,106 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { environment } from 'src/environments/environment';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe, KeyValuePipe } from '@angular/common';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
+import { DataRecord } from 'src/app/models/firebase.model';
+
+interface ModuleAction {
+  name: string;
+  url?: string;
+}
 
 @Component({
     selector: 'app-data-table',
     templateUrl: './data-table.component.html',
     styleUrls: ['./data-table.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatMenuTrigger, MatMenu, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, KeyValuePipe, FileSizePipe]
 })
 export class DataTableComponent implements OnInit {
-  displayedColumns = ['select', 'name', 'size', 'lastModified', 'actions'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
-  moduleActions: Map<string, { name: string; url?: string }>;
+  displayedColumns = ['select', 'name', 'lastModified', 'size', 'actions'];
+  dataSource: MatTableDataSource<DataRecord>;
+  selection = new SelectionModel<DataRecord>(true, []);
   projectId: string;
   dataPath: string;
   filterParam: string;
 
+  moduleActions = new Map<string, ModuleAction>();
+
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private firestore: Firestore,
-    public dialog: MatDialog,
-    private serverService: ServerService
-  ) {}
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private serverService = inject(ServerService);
+  private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
+  public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    this.route.paramMap.subscribe((paramMap) => {
-      this.projectId = paramMap.get('projectId');
-      this.dataPath = '/projects/' + this.projectId + '/data';
-      //gather modules for actions
-      this.moduleActions = new Map();
-      
-      // Get modules using modern API
-      const modulesCollection = collection(this.firestore, '/projects/' + this.projectId + '/modules');
-      collectionData(modulesCollection, { idField: 'id' }).subscribe((modules: any[]) => {
-        modules.forEach((module) => {
-          console.log(module);
-          const { name, url } = module;
-          if (url != undefined) {
-            this.moduleActions.set(name, { name, url });
-          } else {
-            this.moduleActions.set(name, { name });
-          }
-        });
-      });
-
-      // Get data using modern API
-      const dataCollection = collection(this.firestore, this.dataPath);
-      collectionData(dataCollection, { idField: 'key' }).subscribe(async (dataSource: any[]) => {
-        const processedData = dataSource.map((item) => {
-          // ensure that item.size is a number
-          // uploader puts string into item.size
-          if (item.size) {
-            item.size = parseInt(item.size);
-          }
-          return item;
-        });
-        this.dataSource = new MatTableDataSource(processedData);
-        this.dataSource.sort = this.sort;
-        this.dataSource.filter = this.filterParam;
-        return;
+  constructor() {
+    // Set up effect to handle modules changes
+    effect(() => {
+      const modules = this.firebaseDataService.modules();
+      modules.forEach((module) => {
+        console.log(module);
+        const { name, url } = module;
+        if (url != undefined) {
+          this.moduleActions.set(name as string, { name: name as string, url: url as string });
+        } else {
+          this.moduleActions.set(name as string, { name: name as string });
+        }
       });
     });
-    this.route.queryParamMap.subscribe((params: ParamMap) => {
+
+    // Set up effect to handle data changes
+    effect(() => {
+      const dataSource = this.firebaseDataService.data();
+      const processedData = dataSource.map((item) => {
+        if (item.size) {
+          item.size = typeof item.size === 'string' ? parseInt(item.size) : item.size;
+        }
+        return item;
+      });
+      this.dataSource = new MatTableDataSource(processedData);
+      this.dataSource.sort = this.sort;
+      this.dataSource.filter = this.filterParam;
+    });
+  }
+
+  ngOnInit(): void {
+    // Subscribe to route changes to set project ID in the Firebase service
+    this.route.paramMap.pipe(
+      map(paramMap => paramMap.get('projectId')),
+      tap(projectId => {
+        if (projectId) {
+          this.projectId = projectId;
+          this.dataPath = `/projects/${projectId}/data`;
+          this.moduleActions.clear();
+          // Set project in Firebase service to trigger data loading
+          this.firebaseDataService.setProject(projectId);
+        }
+      }),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe();
+
+    // Handle query params for filtering
+    this.route.queryParamMap.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((params: ParamMap) => {
       this.filterParam = params.get('filter');
       if (this.filterParam && this.dataSource) {
         this.dataSource.filter = this.filterParam;
@@ -98,9 +125,11 @@ export class DataTableComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   download(fileDocument) {
@@ -148,8 +177,7 @@ export class DataTableComponent implements OnInit {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
       deleteObject(ref(storage, item.filePath));
-      const docRef = doc(this.firestore, this.dataPath + '/' + item.key);
-      deleteDoc(docRef);
+      this.firebaseDataService.deleteRecord(this.projectId, item.key);
     });
     this.selection.clear();
   }

@@ -8,8 +8,8 @@ describe('AddEmailProviderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ AddEmailProviderDialogComponent ]
-    })
+    imports: [AddEmailProviderDialogComponent]
+})
     .compileComponents();
   });
 

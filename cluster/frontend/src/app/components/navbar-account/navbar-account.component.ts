@@ -1,26 +1,30 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
+
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatIconButton, MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-navbar-account',
     templateUrl: './navbar-account.component.html',
     styleUrls: ['./navbar-account.component.scss'],
-    standalone: false
+    imports: [MatMenu, MatMenuItem, RouterLink, MatIconButton, MatMenuTrigger, MatIcon, MatButton]
 })
 export class NavbarAccountComponent {
+  auth = inject(Auth);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
   subscriptions = new Array<Subscription>();
   loggedIn = false;
   user$: Observable<User | null>;
   userSubscription: Subscription;
 
-  constructor(
-    public auth: Auth,
-    private authService: AuthService,
-    private router: Router
-  ) {
+  constructor() {
     this.user$ = user(this.auth);
     this.userSubscription = this.user$.subscribe((aUser: User | null) => {
       this.loggedIn = aUser ? true : false;

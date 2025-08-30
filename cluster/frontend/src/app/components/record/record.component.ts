@@ -1,17 +1,27 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, query, orderBy, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, deleteDoc } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
-import { MatTableDataSource } from '@angular/material/table';
+import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Storage, ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
 import { Observable, Subject, fromEvent } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
-import { SensorEvent } from 'src/app/models/sensorEvent.model';
-import { Stream } from 'stream';
-import * as uuid from 'uuid';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { SensorEvent, SensorEventId } from 'src/app/models/sensorEvent.model';
+import { FormsModule } from '@angular/forms';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatList, MatListItem } from '@angular/material/list';
+import { AsyncPipe, DatePipe, KeyValuePipe } from '@angular/common';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuItem } from '@angular/material/menu';
 
 interface SensorEventStats {
   timestamp: number;
@@ -20,89 +30,45 @@ interface SensorEventStats {
   values: number[];
 }
 
-export type NstrumentaVideo = {
+export interface NstrumentaVideo {
   name: string;
   filePath: string;
   startTime?: number;
   offset?: number;
   rotate?: number;
-};
+}
 
-export type NstrumentaExperiment = {
+export interface NstrumentaExperiment {
   dataFilePath: string;
   videos?: NstrumentaVideo[];
-};
+}
 
 @Component({
     selector: 'app-record',
     templateUrl: './record.component.html',
     styleUrls: ['./record.component.scss'],
-    standalone: false
+    imports: [FormsModule, MatFormField, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, AsyncPipe, DatePipe, KeyValuePipe]
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
 
-  eventStats = new Map<string, SensorEventStats>();
-  registrations = new Map<string, { schemaId: number; channelId: number }>();
-  mcapWriter: McapWriter;
-  bytesWritten: bigint;
-  mcapData: Uint8Array[] = [];
-  isRecording = false;
-  videoToggle = false;
-  videoStartTime: number | undefined;
-  recordingName: string | undefined;
-  mediaStream: MediaStream;
-  mediaRecorder: MediaRecorder;
-  recordedChunks: Blob[] = [];
-  recordButtonText = 'Start Recording';
-  isForwardingToWebsocket = false;
-  forwardButtonText = 'Start Forwarding';
-  forwardToWebsocketUrl?: string = undefined;
-  forwardToWebsocketChannel?: string = undefined;
-  forwardSocket?: WebSocket;
-  deviceMotionListener = false;
-  bluetoothDevices: any = {};
-  deviceMotionComplete = new Subject<void>();
-  gamepadPollingInterval: NodeJS.Timeout = null;
-  uploadPercent: Observable<number>;
-  geolocationWatchId: number;
-  inputName: string;
-  projectId: string;
-  dataSource: MatTableDataSource<any>;
-  dataPath: any;
-  selection = new SelectionModel<any>(true, []);
-  bigintTime(): bigint {
-    const milliseconds = new Date().getTime();
-    return BigInt(milliseconds) * 1000000n;
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private breakpointObserver = inject(BreakpointObserver);
+  
+  // Get storage instance from Firebase service
+  private get storage(): Storage {
+    return this.firebaseDataService.getStorage();
   }
-  textEncoder = new TextEncoder();
+  private destroyRef = inject(DestroyRef);
 
-  isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe(Breakpoints.Handset)
-    .pipe(map((result) => result.matches));
-
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    private authService: AuthService,
-    private breakpointObserver: BreakpointObserver
-  ) {}
-
-  ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = '/projects/' + this.projectId + '/record';
-    const recordsQuery = query(
-      collection(this.firestore, this.dataPath),
-      orderBy('lastModified', 'desc')
-    );
-
-    onSnapshot(recordsQuery, (snapshot) => {
-      const data = snapshot.docs.map(doc => ({
-        key: doc.id,
-        ...doc.data()
-      }));
-        const commonSources = [
+  constructor() {
+    // Set up effect to handle record data changes
+    effect(() => {
+      const records = this.firebaseDataService.record();
+      const commonSources = [
           {
             type: 'devicemotion',
             name: 'Device Motion',
@@ -174,14 +140,99 @@ export class RecordComponent implements OnInit {
             ],
           },
         ];
-        // check if any common source exists
-        // and add if it doesn't
-        commonSources.forEach((device) => {});
+        // Note: commonSources iteration intentionally has no implementation yet
+        // TODO: Add logic to check if any common source exists and add if it doesn't
+        // commonSources.forEach((device) => { ... });
 
-        this.dataSource = new MatTableDataSource(commonSources.concat(data as any));
-      });
+        this.dataSource = new MatTableDataSource([...commonSources, ...records] as unknown[]);
+    });
+  }
 
-    this.selection.changed.subscribe((change) => {
+  eventStats = new Map<SensorEventId, SensorEventStats>();
+  registrations = new Map<string, { schemaId: number; channelId: number }>();
+  mcapWriter: McapWriter;
+  bytesWritten: bigint;
+  mcapData: Uint8Array[] = [];
+  isRecording = false;
+  videoToggle = false;
+  videoStartTime: number | undefined;
+  recordingName: string | undefined;
+  mediaStream: MediaStream;
+  mediaRecorder: MediaRecorder;
+  recordedChunks: Blob[] = [];
+  recordButtonText = 'Start Recording';
+  isForwardingToWebsocket = false;
+  forwardButtonText = 'Start Forwarding';
+  forwardToWebsocketUrl?: string = undefined;
+  forwardToWebsocketChannel?: string = undefined;
+  forwardSocket?: WebSocket;
+  deviceMotionListener = false;
+  bluetoothDevices: Record<string, BluetoothDevice> = {};
+  deviceMotionComplete = new Subject<void>();
+  gamepadPollingInterval: NodeJS.Timeout = null;
+  uploadPercent: Observable<number>;
+  geolocationWatchId: number;
+  inputName: string;
+  projectId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dataSource: MatTableDataSource<any>;
+  dataPath: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  selection = new SelectionModel<any>(true, []);
+  bigintTime(): bigint {
+    const milliseconds = new Date().getTime();
+    return BigInt(milliseconds) * 1000000n;
+  }
+  textEncoder = new TextEncoder();
+
+  isHandset$: Observable<boolean> = this.breakpointObserver
+    .observe(Breakpoints.Handset)
+    .pipe(map((result) => result.matches));
+
+  checkBrowserCapabilities() {
+    console.log('=== Browser Capabilities Check ===');
+    console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
+    console.log('getUserMedia available:', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
+    console.log('MediaRecorder available:', typeof MediaRecorder !== 'undefined');
+    console.log('Secure context:', window.isSecureContext);
+    console.log('Location:', window.location.href);
+    console.log('User agent:', navigator.userAgent);
+    
+    // Check for specific browser issues
+    if (!window.isSecureContext) {
+      console.warn('⚠️ Not in secure context - this may prevent media access');
+    }
+    
+    if (!navigator.mediaDevices) {
+      console.error('❌ navigator.mediaDevices not available');
+    } else if (!navigator.mediaDevices.getUserMedia) {
+      console.error('❌ getUserMedia not available on mediaDevices');
+    } else {
+      console.log('✅ Media APIs appear to be available');
+    }
+    
+    console.log('=== End Browser Capabilities Check ===');
+  }
+
+  ngOnInit(): void {
+    // Check browser capabilities for debugging
+    this.checkBrowserCapabilities();
+    
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/record';
+
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
+    });
+
+    this.selection.changed.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((change) => {
       console.log('selection.onChange', change);
       change.added.forEach((selected) => {
         console.log(selected.name + ' selected');
@@ -200,6 +251,7 @@ export class RecordComponent implements OnInit {
             break;
           case 'video':
             this.videoToggle = true;
+            this.startVideo();
             break;
           case 'bluetooth':
             this.startBluetooth(selected);
@@ -238,7 +290,7 @@ export class RecordComponent implements OnInit {
 
   addRecordSource(name) {
     console.log('addRecordSource', name);
-    addDoc(collection(this.firestore, this.dataPath), { name: name, lastModified: Date.now() });
+    this.firebaseDataService.addRecord(this.projectId, { name: name, lastModified: Date.now() });
   }
 
   async onSensorEvent(event: SensorEvent) {
@@ -336,7 +388,7 @@ export class RecordComponent implements OnInit {
 
   async getDeviceMotionPermission() {
     try {
-      //@ts-ignore-next-line
+      //@ts-expect-error - DeviceMotionEvent.requestPermission is iOS Safari only
       if (typeof DeviceMotionEvent.requestPermission !== 'function') {
         // We're in some motion sensor enabled device other than iOS Safari
         return true;
@@ -344,7 +396,7 @@ export class RecordComponent implements OnInit {
 
       // This has to be triggered by a user interaction such as a 'click' or 'touchend'
 
-      //@ts-ignore-next-line
+      //@ts-expect-error - DeviceMotionEvent.requestPermission is iOS Safari only
       const permission = await DeviceMotionEvent.requestPermission();
       return permission === 'granted';
     } catch (err) {
@@ -472,7 +524,7 @@ export class RecordComponent implements OnInit {
             characteristic.addEventListener('characteristicvaluechanged', (bleEvent) => {
               let parser = (input) => {
                 console.log(input);
-                return { id: (bleEvent.target as any).value.id, timestamp: 0, values: [] };
+                return { id: (bleEvent.target as BluetoothRemoteGATTCharacteristic).value?.getUint8(0) || 0, timestamp: 0, values: [] };
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
@@ -481,12 +533,13 @@ export class RecordComponent implements OnInit {
                   console.log(e);
                 }
               }
+              const characteristic = bleEvent.target as BluetoothRemoteGATTCharacteristic;
               console.log(
-                (bleEvent.target as any).value.buffer,
+                characteristic.value?.buffer,
                 parser,
-                parser((bleEvent.target as any).value.buffer)
+                parser(characteristic.value?.buffer)
               );
-              const result = parser((bleEvent.target as any).buffer);
+              const result = parser(characteristic.value?.buffer);
               if (result) {
                 this.onSensorEvent(result);
               }
@@ -543,12 +596,12 @@ export class RecordComponent implements OnInit {
     const timestamp = Date.now();
     const buffer = bleEvent.target.value.buffer;
     const sensorId = new Uint8Array(buffer)[0];
-    let id = `lpom-${sensorId}`;
+    const id = `lpom-${sensorId}`;
     const values = [];
     switch (sensorId) {
       case 1: {
         //Raw Mag int24 (why not int?)
-        for (var i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++) {
           const valUint8Array = new Uint8Array(buffer, 6 + 3 * i);
           const val = (valUint8Array[2] << 16) | (valUint8Array[1] << 8) | valUint8Array[0];
           const negative = val & 0x800000;
@@ -582,10 +635,11 @@ export class RecordComponent implements OnInit {
           values.push(sensorTimestampM);
         }
         break;
-      default:
+      default: {
         const valUint8Array = new Uint8Array(buffer);
         valUint8Array.forEach((value) => values.push(value));
         break;
+      }
     }
 
     this.onSensorEvent({
@@ -656,8 +710,7 @@ export class RecordComponent implements OnInit {
 
   pollGamepads() {
     const gamepads = navigator.getGamepads();
-    for (let i = 0; i < gamepads.length; i++) {
-      const gamepad = gamepads[i];
+    for (const gamepad of gamepads) {
       if (gamepad) {
         const gamepadState = {
           id: gamepad.id,
@@ -708,42 +761,149 @@ export class RecordComponent implements OnInit {
   }
 
   async startVideo() {
-    if (this.videoToggle && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    console.log('startVideo called, videoToggle:', this.videoToggle);
+    
+    // Check basic browser support
+    if (!navigator.mediaDevices) {
+      console.error('navigator.mediaDevices is not available');
+      alert('Media devices API not available. This might be due to an insecure context or browser restrictions.');
+      return;
+    }
 
-      this.mediaRecorder = new MediaRecorder(this.mediaStream);
-      this.recordedChunks = [];
+    if (!navigator.mediaDevices.getUserMedia) {
+      console.error('getUserMedia is not available on navigator.mediaDevices');
+      alert('getUserMedia is not supported in this browser or context.');
+      return;
+    }
+
+    if (!this.videoToggle) {
+      console.log('Video toggle is false, skipping video start');
+      return;
+    }
+
+    try {
+      console.log('Requesting media stream...');
+      console.log('Browser info:', {
+        userAgent: navigator.userAgent,
+        isSecureContext: window.isSecureContext,
+        location: window.location.href,
+        protocol: window.location.protocol
+      });
+
+      // Check permissions first if available
+      if ('permissions' in navigator) {
+        try {
+          const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          const micPermission = await navigator.permissions.query({ name: 'microphone' as PermissionName });
+          console.log('Permissions:', {
+            camera: cameraPermission.state,
+            microphone: micPermission.state
+          });
+        } catch (permError) {
+          console.log('Could not check permissions:', permError);
+        }
+      }
+
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: true, 
+        audio: true 
+      });
+
+      console.log('Media stream obtained successfully');
 
       // Stream video to preview in real-time
-      this.previewVideo.nativeElement.srcObject = this.mediaStream;
+      if (this.previewVideo?.nativeElement) {
+        this.previewVideo.nativeElement.srcObject = this.mediaStream;
+        console.log('Video stream connected to preview element');
+      } else {
+        console.warn('Preview video element not available');
+      }
 
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.recordedChunks.push(event.data);
+      // Play the video automatically for preview
+      if (this.previewVideo?.nativeElement) {
+        try {
+          await this.previewVideo.nativeElement.play();
+          console.log('Video preview started successfully');
+        } catch (playError) {
+          console.warn('Could not auto-play video:', playError);
         }
-      };
+      }
 
-      this.mediaRecorder.onstop = async () => {
-        if (this.videoToggle) {
-          const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
-          const videoUrl = URL.createObjectURL(recordedBlob);
-          this.previewVideo.nativeElement.src = videoUrl;
+      // Only start recording if we're actually recording
+      if (this.isRecording) {
+        this.startVideoRecording();
+      }
 
+    } catch (error) {
+      console.error('Error in startVideo:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        code: error instanceof DOMException ? error.code : 'unknown'
+      });
+
+      let userMessage = 'Failed to access camera/microphone. ';
+      
+      switch (error.name) {
+        case 'NotAllowedError':
+          userMessage += 'Permission was denied. Please allow camera and microphone access in your browser settings.';
+          break;
+        case 'NotFoundError':
+          userMessage += 'No camera or microphone found on this device.';
+          break;
+        case 'NotSupportedError':
+          userMessage += 'Camera/microphone access is not supported.';
+          break;
+        case 'NotReadableError':
+          userMessage += 'Camera/microphone is already in use by another application.';
+          break;
+        case 'OverconstrainedError':
+          userMessage += 'The requested video/audio constraints cannot be satisfied.';
+          break;
+        default:
+          userMessage += 'An unknown error occurred.';
+          break;
+      }
+      
+      alert(userMessage);
+    }
+  }
+
+  startVideoRecording() {
+    if (!this.mediaStream) {
+      console.error('No media stream available for recording');
+      return;
+    }
+
+    console.log('Starting video recording...');
+    this.mediaRecorder = new MediaRecorder(this.mediaStream);
+    this.recordedChunks = [];
+
+    this.mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        this.recordedChunks.push(event.data);
+      }
+    };
+
+    this.mediaRecorder.onstop = async () => {
+      if (this.videoToggle && this.recordedChunks.length > 0) {
+        const recordedBlob = new Blob(this.recordedChunks, { type: 'video/webm' });
+        
+        if (this.recordingName) {
+          console.log('Uploading video recording...');
           const projectDataPath = '/projects/' + this.projectId + '/data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
           const storageRef = ref(this.storage, filePath);
           await uploadBytesResumable(storageRef, recordedBlob);
+          console.log('Video upload completed');
         }
-      };
-      // Play the video automatically
-      this.previewVideo.nativeElement.play();
+      }
+    };
 
-      this.mediaRecorder.start();
-      this.videoStartTime = Date.now();
-    } else {
-      console.error('getUserMedia is not supported in this browser');
-    }
+    this.mediaRecorder.start();
+    this.videoStartTime = Date.now();
+    console.log('Video recording started successfully');
   }
 
   stopVideo() {
@@ -760,14 +920,28 @@ export class RecordComponent implements OnInit {
 
   async toggleRecord() {
     if (!this.isRecording) {
-      this.startVideo();
       this.isRecording = true;
       this.recordingName = `recording-${Date.now()}`;
       this.recordButtonText = 'Stop Recording';
+      
+      // Start video recording if video is enabled
+      if (this.videoToggle) {
+        if (!this.mediaStream) {
+          // If video stream isn't already started, start it
+          await this.startVideo();
+        } else {
+          // If stream is already running, just start recording
+          this.startVideoRecording();
+        }
+      }
     } else {
       this.isRecording = false;
       this.recordButtonText = 'Start Recording';
-      this.stopVideo();
+      
+      // Stop video recording
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+      }
 
       console.log('stopping recordDeviceMotion');
       await this.saveEvents();
@@ -811,29 +985,31 @@ export class RecordComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteDoc(doc(this.firestore, this.dataPath + '/' + item.key));
+      this.firebaseDataService.deleteRecord(this.projectId, item.key);
     });
     this.selection.clear();
   }
 
   updateRecordSource(recordSource) {
     console.log('updating', recordSource);
-    updateDoc(doc(this.firestore, this.dataPath + '/' + recordSource.key), recordSource);
+    this.firebaseDataService.updateRecord(this.projectId, recordSource.key, recordSource);
   }
 
   async saveEvents() {
     if (this.mcapWriter) {
       const stats = this.mcapWriter.statistics;
       await this.mcapWriter.end();
-      const blob = new Blob(this.mcapData);
+      const blob = new Blob(this.mcapData as BlobPart[]);
       const recording = this.recordingName;
       const mcapFileName = `${recording}.mcap`;
       console.log(

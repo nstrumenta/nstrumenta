@@ -1,77 +1,66 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, collectionData } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { Machine } from 'src/app/models/firebase.model';
 import { VmService } from 'src/app/vm.service';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe } from '@angular/common';
+import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatMenuItem } from '@angular/material/menu';
 
 @Component({
     selector: 'app-machines',
     templateUrl: './machines.component.html',
     styleUrls: ['./machines.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
-export class MachinesComponent implements OnInit, OnDestroy {
+export class MachinesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Machine>;
+  selection = new SelectionModel<Machine>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    public dialog: MatDialog,
-    private vmService: VmService
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
+  private vmService = inject(VmService);
 
-  ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/machines';
-
-    this.subscriptions.push(
-      (() => {
-        const machinesCollection = collection(this.firestore, this.dataPath);
-        return collectionData(machinesCollection, { idField: 'name' }).pipe(
-          map((items: any[]) => {
-            return items.map((data) => {
-              const { serverStatus, deleted } = data;
-              const name = data.name || data.id;
-              const createdAt = data.metadata?.creationTimestamp;
-              const url = data.status?.url;
-              const status = deleted
-                ? 'Deleted'
-                : data.status?.conditions && data.status?.conditions[0]?.type;
-              return { name, createdAt, url, status, serverStatus };
-            });
-          })
-        );
-      })().subscribe((dataSource) => {
-        this.dataSource = new MatTableDataSource(dataSource);
-        this.dataSource.sort = this.sort;
-        this.dataSource.sortingDataAccessor = (item, property) => {
-          switch (property) {
-            case 'date': {
-              let newDate = new Date(item.date);
-              return newDate;
-            }
-            default: {
-                return item[property];
-              }
-            }
-          };
-        })
-    );
+  constructor() {
+    // Set up effect to handle machines data changes
+    effect(() => {
+      const machines = this.firebaseDataService.machines();
+      this.dataSource = new MatTableDataSource(machines);
+      this.dataSource.sort = this.sort;
+    });
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+  ngOnInit(): void {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/machines';
+
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
   }
 
@@ -90,9 +79,11 @@ export class MachinesComponent implements OnInit, OnDestroy {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   deleteSelected() {

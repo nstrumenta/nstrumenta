@@ -1,22 +1,16 @@
-import { Component, OnInit } from '@angular/core';
-import { MatDialogRef } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import { MatDialogRef, MatDialogTitle, MatDialogContent, MatDialogActions, MatDialogClose } from '@angular/material/dialog';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-confirmation-dialog',
-    template: `
-    <h2 mat-dialog-title>Are you sure?</h2>
-    <div mat-dialog-actions>
-      <button mat-button (click)="close()">Cancel</button>
-      <button mat-button [mat-dialog-close]="true" cdkFocusInitial>Confirm</button>
-    </div>
-  `,
+    templateUrl: './confirmation-dialog.component.html',
     styles: [],
-    standalone: false
+    imports: [MatDialogTitle, CdkScrollable, MatDialogContent, MatDialogActions, MatButton, MatDialogClose]
 })
-export class ConfirmationDialogComponent implements OnInit {
-  constructor(private dialogRef: MatDialogRef<boolean>) {}
-
-  ngOnInit(): void {}
+export class ConfirmationDialogComponent {
+  private dialogRef = inject(MatDialogRef<boolean>);
 
   close() {
     this.dialogRef.close();
