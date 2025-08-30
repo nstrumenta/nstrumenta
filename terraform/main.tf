@@ -102,6 +102,10 @@ resource "google_firebaserules_ruleset" "firestore-fs" {
   depends_on = [
     google_firestore_database.firestore-fs
   ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Releases the ruleset for the Firestore instance.
@@ -158,6 +162,10 @@ resource "google_firebaserules_ruleset" "fb_app" {
   depends_on = [
     google_firebase_project.fs,
   ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Releases the ruleset to the default Storage bucket.
