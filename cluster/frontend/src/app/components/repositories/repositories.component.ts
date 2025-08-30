@@ -13,6 +13,7 @@ import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
+import { Repository } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-repositories',
@@ -22,8 +23,8 @@ import { MatCheckbox } from '@angular/material/checkbox';
 })
 export class RepositoriesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Repository>;
+  selection = new SelectionModel<Repository>(true, []);
   dataPath: string;
   projectId: string;
 
@@ -69,9 +70,11 @@ export class RepositoriesComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   renameFile(fileDocument) {
@@ -91,7 +94,7 @@ export class RepositoriesComponent implements OnInit {
   downloadSelected() {
     this.selection.selected.forEach((item) => {
       console.log('downloading', item);
-      window.open(item.downloadURL);
+      window.open(item.downloadURL as string);
     });
   }
 

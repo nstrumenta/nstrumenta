@@ -8,6 +8,7 @@ import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { MatList, MatListItem } from '@angular/material/list';
+import { FirebaseDocument } from 'src/app/models/firebase.model';
 import { FileSizePipe } from '../../pipes/file-size.pipe';
 
 @Component({
@@ -36,7 +37,7 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
 })
 export class DataDetailComponent implements OnInit {
   dataPath: string;
-  fileDoc: Observable<any>;
+  fileDoc: Observable<FirebaseDocument>;
   url: SafeResourceUrl;
   contents: string;
   isVideo: boolean;
@@ -62,29 +63,33 @@ export class DataDetailComponent implements OnInit {
     ).subscribe((doc) => {
         console.log(doc);
         const storage = getStorage();
-        getDownloadURL(ref(storage, doc.filePath))
+        const filePath = doc.filePath as string;
+        const fileName = doc.name as string;
+        const fileSize = doc.size as number;
+        
+        getDownloadURL(ref(storage, filePath))
           .then(async (url) => {
             if (
-              doc.name.toLowerCase().endsWith('.mov') ||
-              doc.name.toLowerCase().endsWith('.mp4') ||
-              doc.name.toLowerCase().endsWith('.webm')
+              fileName.toLowerCase().endsWith('.mov') ||
+              fileName.toLowerCase().endsWith('.mp4') ||
+              fileName.toLowerCase().endsWith('.webm')
             ) {
               this.isVideo = true;
             } else {
               this.isVideo = false;
             }
-            if (doc.name.toLowerCase().endsWith('.json')) {
-              if (doc.size < 1000000) {
+            if (fileName.toLowerCase().endsWith('.json')) {
+              if (fileSize < 1000000) {
                 this.contents = JSON.stringify(await (await fetch(url)).json(), undefined, 4);
-              } else if (doc.size < 100_000_000) {
+              } else if (fileSize < 100_000_000) {
                 this.contents = await (await fetch(url)).text();
               } else {
                 this.contents = 'large file, no preview available';
               }
             }
             if (
-              doc.name.toLowerCase().endsWith('.txt') ||
-              doc.name.toLowerCase().endsWith('.log')
+              fileName.toLowerCase().endsWith('.txt') ||
+              fileName.toLowerCase().endsWith('.log')
             ) {
               this.contents = await (await fetch(url)).text();
             }

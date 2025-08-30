@@ -46,9 +46,7 @@ export class ToolbarComponent {
     const target = event.target as HTMLInputElement;
     const files: File[] = [];
     if (target.files) {
-      for (let i = 0; i < target.files.length; i++) {
-        files.push(target.files[i]);
-      }
+      files.push(...Array.from(target.files));
     }
     this.upload(files);
   }

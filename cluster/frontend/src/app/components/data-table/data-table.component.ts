@@ -18,7 +18,13 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
-import { FileSizePipe } from '../../pipes/file-size.pipe';
+import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
+import { DataRecord } from 'src/app/models/firebase.model';
+
+interface ModuleAction {
+  name: string;
+  url?: string;
+}
 
 @Component({
     selector: 'app-data-table',
@@ -28,13 +34,13 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
 })
 export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'lastModified', 'size', 'actions'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<DataRecord>;
+  selection = new SelectionModel<DataRecord>(true, []);
   projectId: string;
   dataPath: string;
   filterParam: string;
 
-  moduleActions = new Map<string, any>();
+  moduleActions = new Map<string, ModuleAction>();
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -119,9 +125,11 @@ export class DataTableComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   download(fileDocument) {

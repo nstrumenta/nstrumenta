@@ -20,6 +20,17 @@ import {
 import { MatList, MatListItem } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
+import { ProjectRoles } from 'src/app/models/projectSettings.model';
+
+interface MemberEntry {
+  memberId: string;
+  role: ProjectRoles;
+}
+
+interface ApiKeyEntry {
+  keyId: string;
+  createdAt: string;
+}
 
 @Component({
     selector: 'app-project-settings',
@@ -35,9 +46,9 @@ import { DatePipe } from '@angular/common';
 })
 export class ProjectSettingsComponent implements OnInit {
   membersDisplayedColumns = ['memberId', 'role', 'action'];
-  membersDataSource: MatTableDataSource<any>;
+  membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
-  apiKeysDataSource: MatTableDataSource<any>;
+  apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
   projectId: string;
   projectPath: string;
   projectSettings: ProjectSettings;

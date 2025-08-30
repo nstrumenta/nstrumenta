@@ -33,7 +33,7 @@ export class PlottingService {
   }
 
   addEvent(event) {
-    if (!this.eventIdMap.hasOwnProperty(event.id)) {
+    if (!Object.prototype.hasOwnProperty.call(this.eventIdMap, event.id)) {
       this.eventIdMap[event.id] = [];
       for (let i = 0; i < event.values.length; i++) {
         this.eventIdMap[event.id].push(this.data.length);
@@ -42,7 +42,7 @@ export class PlottingService {
           x: [],
           y: [],
         };
-        if (sensorEventLabels.hasOwnProperty(event.id)) {
+        if (Object.prototype.hasOwnProperty.call(sensorEventLabels, event.id)) {
           if (sensorEventLabels[event.id].traces[i] != null) {
             newTrace.name = sensorEventLabels[event.id].traces[i];
           }
@@ -150,7 +150,7 @@ export class PlottingService {
                   EOS_FRAME_DIF: 209,
                 };
 
-                if (pniFile.hasOwnProperty('data')) {
+                if (Object.prototype.hasOwnProperty.call(pniFile, 'data')) {
                   pniFile.data.forEach((item) => {
                     switch (item.type) {
                       case 'MAG_RAW':

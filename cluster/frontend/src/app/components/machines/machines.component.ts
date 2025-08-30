@@ -7,16 +7,7 @@ import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeader
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-
-// Interface for machine data
-interface Machine {
-  key: string;
-  name: string;
-  createdAt: number;
-  status: string;
-  serverStatus: string;
-  downloadURL: string;
-}
+import { Machine } from 'src/app/models/firebase.model';
 import { VmService } from 'src/app/vm.service';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';

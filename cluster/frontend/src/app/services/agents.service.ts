@@ -1,5 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import { FirebaseDataService } from './firebase-data.service';
 
@@ -26,9 +25,9 @@ export class AgentService {
   runAgentTask(
     task: AgentTask,
     projectId: string,
-    payload?: any,
+    payload?: unknown,
     progress?: (message: string) => void
-  ): Promise<any> {
+  ): Promise<unknown> {
     return this.firebaseDataService.runTask(task, projectId, this.uid, payload, undefined, progress);
   }
 }

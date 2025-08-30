@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from 'src/app/auth/auth.service';
 import { MatList, MatListItem } from '@angular/material/list';
 import { AsyncPipe } from '@angular/common';
@@ -9,10 +9,6 @@ import { AsyncPipe } from '@angular/common';
     styleUrls: ['./user-profile.component.scss'],
     imports: [MatList, MatListItem, AsyncPipe]
 })
-export class UserProfileComponent implements OnInit {
+export class UserProfileComponent {
   public authService = inject(AuthService);
-
-  ngOnInit(): void {
-    // Component initialization
-  }
 }

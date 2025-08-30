@@ -19,13 +19,13 @@ export class AddItemDialogComponent implements OnInit {
   data = inject(MAT_DIALOG_DATA);
   private dialogRef = inject<MatDialogRef<AddItemDialogComponent>>(MatDialogRef);
 
-  response: Record<string, any> = {};
+  response: Record<string, unknown> = {};
 
   close() {
     this.dialogRef.close();
   }
 
-  trackByFn(index: number, item: KeyValue<string, any>): string {
+  trackByFn(index: number, item: KeyValue<string, unknown>): string {
     return item.key;
   }
 

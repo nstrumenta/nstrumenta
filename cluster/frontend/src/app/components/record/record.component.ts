@@ -144,7 +144,7 @@ export class RecordComponent implements OnInit {
         // TODO: Add logic to check if any common source exists and add if it doesn't
         // commonSources.forEach((device) => { ... });
 
-        this.dataSource = new MatTableDataSource(commonSources.concat(records as any));
+        this.dataSource = new MatTableDataSource([...commonSources, ...records] as unknown[]);
     });
   }
 
@@ -167,15 +167,17 @@ export class RecordComponent implements OnInit {
   forwardToWebsocketChannel?: string = undefined;
   forwardSocket?: WebSocket;
   deviceMotionListener = false;
-  bluetoothDevices: any = {};
+  bluetoothDevices: Record<string, BluetoothDevice> = {};
   deviceMotionComplete = new Subject<void>();
   gamepadPollingInterval: NodeJS.Timeout = null;
   uploadPercent: Observable<number>;
   geolocationWatchId: number;
   inputName: string;
   projectId: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dataSource: MatTableDataSource<any>;
-  dataPath: any;
+  dataPath: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selection = new SelectionModel<any>(true, []);
   bigintTime(): bigint {
     const milliseconds = new Date().getTime();
@@ -386,7 +388,7 @@ export class RecordComponent implements OnInit {
 
   async getDeviceMotionPermission() {
     try {
-      //@ts-ignore-next-line
+      //@ts-expect-error - DeviceMotionEvent.requestPermission is iOS Safari only
       if (typeof DeviceMotionEvent.requestPermission !== 'function') {
         // We're in some motion sensor enabled device other than iOS Safari
         return true;
@@ -394,7 +396,7 @@ export class RecordComponent implements OnInit {
 
       // This has to be triggered by a user interaction such as a 'click' or 'touchend'
 
-      //@ts-ignore-next-line
+      //@ts-expect-error - DeviceMotionEvent.requestPermission is iOS Safari only
       const permission = await DeviceMotionEvent.requestPermission();
       return permission === 'granted';
     } catch (err) {
@@ -522,7 +524,7 @@ export class RecordComponent implements OnInit {
             characteristic.addEventListener('characteristicvaluechanged', (bleEvent) => {
               let parser = (input) => {
                 console.log(input);
-                return { id: (bleEvent.target as any).value.id, timestamp: 0, values: [] };
+                return { id: ((bleEvent.target as BluetoothRemoteGATTCharacteristic).value?.getUint8(0) || 0).toString(), timestamp: 0, values: [] };
               };
               if (deviceDoc.notifications[0].parser) {
                 try {
@@ -531,12 +533,13 @@ export class RecordComponent implements OnInit {
                   console.log(e);
                 }
               }
+              const characteristic = bleEvent.target as BluetoothRemoteGATTCharacteristic;
               console.log(
-                (bleEvent.target as any).value.buffer,
+                characteristic.value?.buffer,
                 parser,
-                parser((bleEvent.target as any).value.buffer)
+                parser(characteristic.value?.buffer)
               );
-              const result = parser((bleEvent.target as any).buffer);
+              const result = parser(characteristic.value?.buffer);
               if (result) {
                 this.onSensorEvent(result);
               }
@@ -632,10 +635,11 @@ export class RecordComponent implements OnInit {
           values.push(sensorTimestampM);
         }
         break;
-      default:
+      default: {
         const valUint8Array = new Uint8Array(buffer);
         valUint8Array.forEach((value) => values.push(value));
         break;
+      }
     }
 
     this.onSensorEvent({
@@ -706,8 +710,7 @@ export class RecordComponent implements OnInit {
 
   pollGamepads() {
     const gamepads = navigator.getGamepads();
-    for (let i = 0; i < gamepads.length; i++) {
-      const gamepad = gamepads[i];
+    for (const gamepad of gamepads) {
       if (gamepad) {
         const gamepadState = {
           id: gamepad.id,
@@ -836,7 +839,7 @@ export class RecordComponent implements OnInit {
       console.error('Error details:', {
         name: error.name,
         message: error.message,
-        code: (error as any).code
+        code: error instanceof DOMException ? error.code : 'unknown'
       });
 
       let userMessage = 'Failed to access camera/microphone. ';
@@ -982,9 +985,11 @@ export class RecordComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   deleteSelected() {

@@ -12,6 +12,7 @@ import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatButton } from '@angular/material/button';
+import { Agent } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-agents',
@@ -21,8 +22,8 @@ import { MatButton } from '@angular/material/button';
 })
 export class AgentsComponent implements OnInit {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Agent>;
+  selection = new SelectionModel<Agent>(true, []);
   dataPath: string;
   projectId: string;
 
@@ -72,8 +73,10 @@ export class AgentsComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 }

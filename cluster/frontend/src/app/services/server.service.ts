@@ -1,5 +1,4 @@
 import { Injectable, inject } from '@angular/core';
-import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 import { FirebaseDataService } from './firebase-data.service';
 

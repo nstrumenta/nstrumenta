@@ -16,6 +16,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuItem } from '@angular/material/menu';
+import { Module } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-modules',
@@ -25,8 +26,8 @@ import { MatMenuItem } from '@angular/material/menu';
 })
 export class ModulesComponent implements OnInit {
   displayedColumns = ['select', 'id', 'url', 'modified'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Module>;
+  selection = new SelectionModel<Module>(true, []);
   dataPath: string;
   projectId: string;
 
@@ -79,8 +80,8 @@ export class ModulesComponent implements OnInit {
 
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteObject(ref(storage, item.filePath));
-      this.firebaseDataService.deleteModule(this.projectId, item.id);
+      deleteObject(ref(storage, item.filePath as string));
+      this.firebaseDataService.deleteModule(this.projectId, item.id as string);
     });
     this.selection.clear();
   }
@@ -105,8 +106,10 @@ export class ModulesComponent implements OnInit {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 }

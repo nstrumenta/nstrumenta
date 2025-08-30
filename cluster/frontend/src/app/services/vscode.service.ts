@@ -1,7 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { Storage, ref, uploadBytesResumable, getDownloadURL } from '@angular/fire/storage';
+import { ref, uploadBytesResumable } from '@angular/fire/storage';
 import { Observable, Observer, Subject } from 'rxjs';
-import { finalize } from 'rxjs/operators';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
 import { FirebaseDataService } from './firebase-data.service';
@@ -62,7 +61,6 @@ export class VscodeService {
               const uploadPath =
                 'projects/' + this.projectService.currentProjectId + '/live-session/' + uid;
               const self = this;
-              let nst_project = {};
               message.payload.forEach((fileTextItem) => {
                 // remove leading slash if present
                 let filename = fileTextItem.path;
@@ -95,9 +93,8 @@ export class VscodeService {
                     if (filePath.endsWith('.jpeg')) {
                       metadata.contentType = 'image/jpeg';
                     }
-                    if (filePath.endsWith('nst_project.json')) {
-                      nst_project = JSON.parse(fileTextItem.text);
-                    }
+                    // Parse project configuration if needed
+                    // const nst_project = filePath.endsWith('nst_project.json') ? JSON.parse(fileTextItem.text) : null;
 
                     const storage = self.firebaseDataService.getStorage();
                     const storageRef = ref(storage, filePath);
