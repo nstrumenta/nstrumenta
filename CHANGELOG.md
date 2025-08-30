@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.42](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v3.1.42) (2025-08-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Applications using compat Firebase APIs will need migration
+
+* chore(release): 1.7.14
+
+* fix/angular 19 injection context (#198) ([2a0eb47](https://github.com/nstrumenta/nstrumenta/commit/2a0eb47f715697420a90da949287bb9d89b09154)), closes [#198](https://github.com/nstrumenta/nstrumenta/issues/198)
+
 ### [3.1.41](https://github.com/nstrumenta/nstrumenta/compare/v3.1.40...v3.1.41) (2025-06-11)
 
 ### [3.1.40](https://github.com/nstrumenta/nstrumenta/compare/v3.1.39...v3.1.40) (2025-06-11)
