@@ -26,25 +26,27 @@
 </form>
 
 <mat-list>
-  <ng-container *ngFor="let stat of eventStats | keyvalue">
+  @for (stat of eventStats | keyvalue; track stat.key) {
     <mat-list-item>
       sensor id {{stat.key}}: {{stat.value.timestamp - stat.value.previousTimestamp}}ms
     </mat-list-item>
     <mat-list dense>
-      <mat-list-item *ngFor="let value of stat.value.values">
-        {{value}}
-      </mat-list-item>
+      @for (value of stat.value.values; track $index) {
+        <mat-list-item>
+          {{value}}
+        </mat-list-item>
+      }
     </mat-list>
-  </ng-container>
+  }
 </mat-list>
 
 <div style="flex-direction:row">
-  <ng-container *ngIf="selection.hasValue()">
+  @if (selection.hasValue()) {
     {{selection.selected.length}} inputs selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
       <mat-icon color="accent">delete</mat-icon>
     </button>
-  </ng-container>
+  }
 </div>
 
 
@@ -86,35 +88,38 @@
   <ng-container matColumnDef="notifications">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Event Subscriptions </mat-header-cell>
     <mat-cell style="flex-direction: column;" *matCellDef="let recordSource">
-      <div *ngFor="let notification of recordSource.notifications; index as i">
-
-        <div style="display: flex;flex-direction: row;">
-          <div style="display: flex;flex-direction: column;">
-            <div>
-              <mat-form-field style="width: 300px;">
-                <input placeholder="Service" matInput (change)="updateRecordSource(recordSource)" type="text"
-                  [(ngModel)]="notification.service" />
-              </mat-form-field>
-            </div>
-            <div>
-              <mat-form-field style="width: 300px;">
-                <input placeholder="Characteristic" matInput (change)="updateRecordSource(recordSource)" type="text"
-                  [(ngModel)]="notification.characteristic" />
-              </mat-form-field>
-            </div>
-            <div>
-              <mat-form-field style="width: 300px;">
-                <input placeholder="config command on start" matInput (change)="updateRecordSource(recordSource)" type="text"
-                  [(ngModel)]="notification.configCommand" />
-              </mat-form-field>
+      @for (notification of recordSource.notifications; track notification; let i = $index) {
+        <div>
+          <div style="display: flex;flex-direction: row;">
+            <div style="display: flex;flex-direction: column;">
+              <div>
+                <mat-form-field style="width: 300px;">
+                  <input placeholder="Service" matInput (change)="updateRecordSource(recordSource)" type="text"
+                    [(ngModel)]="notification.service" />
+                </mat-form-field>
+              </div>
+              <div>
+                <mat-form-field style="width: 300px;">
+                  <input placeholder="Characteristic" matInput (change)="updateRecordSource(recordSource)" type="text"
+                    [(ngModel)]="notification.characteristic" />
+                </mat-form-field>
+              </div>
+              <div>
+                <mat-form-field style="width: 300px;">
+                  <input placeholder="config command on start" matInput (change)="updateRecordSource(recordSource)" type="text"
+                    [(ngModel)]="notification.configCommand" />
+                </mat-form-field>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      <button mat-button *ngIf="!recordSource.notifications"
-        (click)="recordSource.notifications = [{'service':'','characteristic':'','parser':''}]; updateRecordSource(recordSource)">
-        add subscription
-      </button>
+      }
+      @if (!recordSource.notifications) {
+        <button mat-button
+          (click)="recordSource.notifications = [{'service':'','characteristic':'','parser':''}]; updateRecordSource(recordSource)">
+          add subscription
+        </button>
+      }
     </mat-cell>
   </ng-container>
 
@@ -137,6 +142,6 @@
   </mat-header-row>
   <mat-row
     *matRowDef="let row; columns: (isHandset$ | async) ? ['select', 'name'] : ['select','name','type','notifications'];"
-    class="animate"></mat-row>
+  class="animate"></mat-row>
 </mat-table>
 

@@ -1,14 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AuthService } from 'src/app/auth/auth.service';
+import { ToolbarComponent } from '../../components/toolbar/toolbar.component';
 
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.scss'],
-    standalone: false
+    imports: [ToolbarComponent]
 })
-export class HomeComponent implements OnInit {
-  constructor(public authService: AuthService) {}
-
-  ngOnInit() {}
+export class HomeComponent {
+  public authService = inject(AuthService);
 }

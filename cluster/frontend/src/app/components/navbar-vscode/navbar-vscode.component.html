@@ -1,16 +1,17 @@
-<div *ngIf="(vscodeService.socket$ | async)?.readyState == 1 ; else disconnected ">
-  <mat-menu #vscodeConnectedMenu="matMenu">
-    <button mat-menu-item (click)="ping()">ping</button>
-  </mat-menu>
-  <button mat-button [matMenuTriggerFor]="vscodeConnectedMenu">
-    <mat-icon svgIcon="vscode-logo" color="primary"></mat-icon>
-  </button>
-</div>
-<ng-template #disconnected>
+@if ((vscodeService.socket$ | async)?.readyState === 1 ) {
+  <div>
+    <mat-menu #vscodeConnectedMenu="matMenu">
+      <button mat-menu-item (click)="ping()">ping</button>
+    </mat-menu>
+    <button mat-button [matMenuTriggerFor]="vscodeConnectedMenu">
+      <mat-icon svgIcon="vscode-logo" color="primary"></mat-icon>
+    </button>
+  </div>
+} @else {
   <mat-menu #vscodeDisonnectedMenu="matMenu">
     <button mat-menu-item (click)="init()">Init</button>
   </mat-menu>
   <button mat-button [matMenuTriggerFor]="vscodeDisonnectedMenu">
     <mat-icon svgIcon="vscode-logo" style="height: inherit; fill:lightgrey"></mat-icon>
   </button>
-</ng-template>
+}

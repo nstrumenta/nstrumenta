@@ -1,58 +1,58 @@
-import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
+import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
-import { ActivatedRoute } from '@angular/router';
-import { Firestore, collection, onSnapshot, deleteDoc, doc, addDoc } from '@angular/fire/firestore';
-import { Storage } from '@angular/fire/storage';
-import { map } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe } from '@angular/common';
+import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
+import { MatTooltip } from '@angular/material/tooltip';
+import { MatIcon } from '@angular/material/icon';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { Repository } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-repositories',
     templateUrl: './repositories.component.html',
     styleUrls: ['./repositories.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
-export class RepositoriesComponent implements OnInit, OnDestroy {
+export class RepositoriesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
-  subscription: Subscription;
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Repository>;
+  selection = new SelectionModel<Repository>(true, []);
   dataPath: string;
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private storage: Storage,
-    public dialog: MatDialog
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
+  public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    this.dataPath = '/projects/' + this.route.snapshot.paramMap.get('projectId') + '/repositories';
-    
-    const unsubscribe = onSnapshot(
-      collection(this.firestore, this.dataPath),
-      (snapshot) => {
-        const data = snapshot.docs.map(doc => ({
-          key: doc.id,
-          ...doc.data()
-        }));
-        this.dataSource = new MatTableDataSource(data);
-        this.dataSource.sort = this.sort;
-      }
-    );
-    
-    // Convert to subscription for cleanup
-    this.subscription = { unsubscribe } as Subscription;
+  constructor() {
+    // Set up effect to handle repositories data changes
+    effect(() => {
+      const repositories = this.firebaseDataService.repositories();
+      this.dataSource = new MatTableDataSource(repositories);
+      this.dataSource.sort = this.sort;
+    });
   }
 
-  ngOnDestroy() {
-    this.subscription.unsubscribe();
+  ngOnInit(): void {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = '/projects/' + this.projectId + '/repositories';
+    
+    // Set project in Firebase service to trigger data loading
+    if (this.projectId) {
+      this.firebaseDataService.setProject(this.projectId);
+    }
   }
 
   applyFilter(filterValue: string) {
@@ -70,9 +70,11 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 
   renameFile(fileDocument) {
@@ -84,7 +86,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
   deleteSelected() {
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
-      deleteDoc(doc(this.firestore, this.dataPath + '/' + item.key));
+      this.firebaseDataService.deleteRepository(this.projectId, item.key);
     });
     this.selection.clear();
   }
@@ -92,7 +94,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
   downloadSelected() {
     this.selection.selected.forEach((item) => {
       console.log('downloading', item);
-      window.open(item.downloadURL);
+      window.open(item.downloadURL as string);
     });
   }
 
@@ -111,7 +113,7 @@ export class RepositoriesComponent implements OnInit, OnDestroy {
       console.dir(result);
       if (result) {
         result.lastModified = Date.now();
-        addDoc(collection(this.firestore, this.dataPath), result);
+        this.firebaseDataService.addRepository(this.projectId, result);
       }
     });
   }

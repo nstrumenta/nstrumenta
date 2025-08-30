@@ -1,21 +1,21 @@
-import { Component, Inject } from '@angular/core';
-import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Firestore } from '@angular/fire/firestore';
+import { Component, inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { FormsModule } from '@angular/forms';
+import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-edit-dialog',
     templateUrl: './edit-dialog.component.html',
     styleUrls: ['./edit-dialog.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, FormsModule, MatButton]
 })
 export class EditDialogComponent {
-  newEmail: string;
+  dialogRef = inject<MatDialogRef<EditDialogComponent>>(MatDialogRef);
+  data = inject(MAT_DIALOG_DATA);
 
-  constructor(
-    private firestore: Firestore,
-    public dialogRef: MatDialogRef<EditDialogComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: any
-  ) {}
+  newEmail: string;
 
   onNoClick(): void {
     this.dialogRef.close();

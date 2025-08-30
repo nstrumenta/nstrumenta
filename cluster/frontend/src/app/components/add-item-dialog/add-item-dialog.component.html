@@ -1,11 +1,13 @@
 <h2 mat-dialog-title>{{data.title}}</h2>
 <mat-dialog-content style='display: flex; flex-direction: column;' class='mat-typography'>
   {{data.description}}
-  <mat-form-field *ngFor='let field of response | keyvalue ; trackBy: trackByFn' class="add-item-form-field"
-    appearance="fill">
-    <input matInput [(ngModel)]='response[field.key]' [placeholder]='field.key'
-        [type]='field.key.indexOf("password") > -1 ? "password" : field.key == "email" ? "email" : "text"'>
-  </mat-form-field>
+  @for (field of response | keyvalue ; track trackByFn($index, field)) {
+    <mat-form-field class="add-item-form-field"
+      appearance="fill">
+      <input matInput [(ngModel)]='response[field.key]' [placeholder]='field.key'
+        [type]='getFieldType(field.key)'>
+    </mat-form-field>
+  }
 
 </mat-dialog-content>
 <div mat-dialog-actions>

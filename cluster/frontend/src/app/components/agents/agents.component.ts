@@ -1,54 +1,60 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, collectionData, doc, deleteDoc } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { DatePipe } from '@angular/common';
+import { MatCheckbox } from '@angular/material/checkbox';
+import { MatButton } from '@angular/material/button';
+import { Agent } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-agents',
     templateUrl: './agents.component.html',
     styleUrls: ['./agents.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class AgentsComponent implements OnInit, OnDestroy {
+export class AgentsComponent implements OnInit {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Agent>;
+  selection = new SelectionModel<Agent>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
+  projectId: string;
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private authService: AuthService,
-    public dialog: MatDialog
-  ) {}
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
+  private firebaseDataService = inject(FirebaseDataService);
+  public dialog = inject(MatDialog);
 
-  ngOnInit() {
-    this.dataPath = `/projects/${this.route.snapshot.paramMap.get('projectId')}/agents`;
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        const agentsCollection = collection(this.firestore, this.dataPath);
-        this.subscriptions.push(
-          collectionData(agentsCollection, { idField: 'id' }).subscribe((data: any[]) => {
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
-          })
-        );
-      })
-    );
+  constructor() {
+    // Set up effect to handle agents data changes
+    effect(() => {
+      const agents = this.firebaseDataService.agents();
+      this.dataSource = new MatTableDataSource(agents);
+      this.dataSource.sort = this.sort;
+    });
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+  ngOnInit() {
+    this.projectId = this.route.snapshot.paramMap.get('projectId');
+    this.dataPath = `/projects/${this.projectId}/agents`;
+    
+    // Subscribe to user auth state and set project when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && this.projectId) {
+        this.firebaseDataService.setProject(this.projectId);
+      }
     });
   }
 
@@ -67,8 +73,10 @@ export class AgentsComponent implements OnInit, OnDestroy {
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */
   masterToggle() {
-    this.isAllSelected()
-      ? this.selection.clear()
-      : this.dataSource.data.forEach((row) => this.selection.select(row));
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
   }
 }

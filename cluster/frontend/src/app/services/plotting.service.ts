@@ -1,5 +1,4 @@
-import { Injectable } from '@angular/core';
-import { Firestore, collection, collectionData, doc, getDoc } from '@angular/fire/firestore';
+import { Injectable, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { get as idbGet, keys as idbKeys, set as idbSet } from 'idb-keyval';
 import { BehaviorSubject } from 'rxjs';
@@ -11,15 +10,12 @@ import { AuthService } from '../auth/auth.service';
   providedIn: 'root',
 })
 export class PlottingService {
-  graph = new BehaviorSubject<any>({});
-  data = [{ x: [], y: [], name: '' }];
-  eventIdMap = {};
+  private authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
 
-  constructor(
-    private authService: AuthService,
-    private firestore: Firestore,
-    private activatedRoute: ActivatedRoute
-  ) {}
+  graph = new BehaviorSubject<unknown>({});
+  data = [{ x: [], y: [], name: '' }];
+  eventIdMap: Record<string, number[]> = {};
 
   clearData() {
     this.data = [{ x: [], y: [], name: '' }];
@@ -37,7 +33,7 @@ export class PlottingService {
   }
 
   addEvent(event) {
-    if (!this.eventIdMap.hasOwnProperty(event.id)) {
+    if (!Object.prototype.hasOwnProperty.call(this.eventIdMap, event.id)) {
       this.eventIdMap[event.id] = [];
       for (let i = 0; i < event.values.length; i++) {
         this.eventIdMap[event.id].push(this.data.length);
@@ -46,7 +42,7 @@ export class PlottingService {
           x: [],
           y: [],
         };
-        if (sensorEventLabels.hasOwnProperty(event.id)) {
+        if (Object.prototype.hasOwnProperty.call(sensorEventLabels, event.id)) {
           if (sensorEventLabels[event.id].traces[i] != null) {
             newTrace.name = sensorEventLabels[event.id].traces[i];
           }
@@ -60,7 +56,7 @@ export class PlottingService {
     }
   }
 
-  static LoadFileIntoIdb(fileDoc: any): Promise<any> {
+  static LoadFileIntoIdb(fileDoc: { downloadURL: string; name: string }): Promise<unknown> {
     return new Promise((resolve, reject) => {
       console.log('loadFile ', fileDoc);
       const ref = hash(JSON.stringify(fileDoc.downloadURL));
@@ -79,12 +75,12 @@ export class PlottingService {
             // Closure to capture the file information.
             reader.onload = function (e) {
               if (fileDoc.name.endsWith('.nst')) {
-                idbSet(ref, JSON.parse((e.target as any).result));
+                idbSet(ref, JSON.parse((e.target as FileReader).result as string));
               }
               if (fileDoc.name.endsWith('.ldjson')) {
                 // parse line delimited json line by line
                 const events: SensorEvent[] = [];
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 let lastGPSTimestamp = 0;
                 lines.forEach((line) => {
                   if (line) {
@@ -136,7 +132,7 @@ export class PlottingService {
               }
               if (fileDoc.name.endsWith('.json')) {
                 const events: SensorEvent[] = [];
-                const pniFile = JSON.parse((e.target as any).result);
+                const pniFile = JSON.parse((e.target as FileReader).result as string);
                 const pniIds = {
                   MAG_RAW: 1,
                   ACCEL_RAW: 15,
@@ -154,7 +150,7 @@ export class PlottingService {
                   EOS_FRAME_DIF: 209,
                 };
 
-                if (pniFile.hasOwnProperty('data')) {
+                if (Object.prototype.hasOwnProperty.call(pniFile, 'data')) {
                   pniFile.data.forEach((item) => {
                     switch (item.type) {
                       case 'MAG_RAW':
@@ -179,7 +175,7 @@ export class PlottingService {
                         }
                         break;
                       case 'DOM': {
-                        let values = item.coordinate;
+                        const values = item.coordinate;
                         values.push(item.rssi);
                         values.push(item.domInfo.stepNum);
                         values.push(item.domInfo.length);
@@ -198,7 +194,7 @@ export class PlottingService {
               if (fileDoc.name.endsWith('.log')) {
                 // trax2 log (tsv)
                 const events: SensorEvent[] = [];
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 const headerLines = 1;
                 for (let i = headerLines; i < lines.length; i++) {
                   const tsvSplit = lines[i].split('\t');
@@ -223,7 +219,7 @@ export class PlottingService {
               if (fileDoc.name.endsWith('.csv')) {
                 const events: SensorEvent[] = [];
                 // parse csv line by line
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 const headerLines = 1;
                 for (let i = headerLines; i < lines.length; i++) {
                   const csvSplit = lines[i].split(',');

@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 
@@ -20,10 +20,8 @@ export interface CreateProjectResponse {
 export class ApiService {
   private apiUrlCache: string | null = null;
 
-  constructor(
-    private http: HttpClient,
-    private authService: AuthService
-  ) {}
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
   public async getApiUrl(): Promise<string> {
     if (this.apiUrlCache) {

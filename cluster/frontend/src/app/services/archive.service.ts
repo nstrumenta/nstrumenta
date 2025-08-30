@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
 
@@ -6,11 +6,9 @@ import { ServerService } from './server.service';
   providedIn: 'root',
 })
 export class ArchiveService {
-  constructor(
-    private serverService: ServerService,
-    private projectService: ProjectService,
-  ) {
-  }
+  private serverService = inject(ServerService);
+  private projectService = inject(ProjectService);
+
 
   archiveCurrentProject(): void {
     const projectId = this.projectService.currentProjectId;

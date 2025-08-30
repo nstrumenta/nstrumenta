@@ -80,6 +80,9 @@ const userRoutes: Routes = [
   },
 ];
 
+// Export routes for standalone bootstrap
+export { userRoutes as routes };
+
 @NgModule({
   imports: [RouterModule.forRoot(userRoutes, {})],
   exports: [RouterModule],

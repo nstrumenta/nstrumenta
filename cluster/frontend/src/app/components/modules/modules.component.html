@@ -2,7 +2,7 @@
   <mat-form-field>
     <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
   </mat-form-field>
-  <ng-container *ngIf="selection.hasValue()">
+  @if (selection.hasValue()) {
     {{selection.selected.length}} modules selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
       <mat-icon color="accent">delete</mat-icon>
@@ -10,7 +10,7 @@
     <button mat-icon-button matTooltip="Download Selected" (click)="downloadSelected()">
       <mat-icon color="accent">cloud_download</mat-icon>
     </button>
-  </ng-container>
+  }
 </div>
 
 <mat-table #table [dataSource]="dataSource" matSort matSortActive="modified" matSortDirection="desc" class="animate">
@@ -38,16 +38,16 @@
 
   <ng-container matColumnDef="url">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> 
+    <mat-cell *matCellDef="let fileDocument">
       <a mat-menu-item [href]="fileDocument.url">{{ fileDocument.url }}</a></mat-cell>
-  </ng-container>
+    </ng-container>
 
-  <ng-container matColumnDef="modified">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
-  </ng-container>
+    <ng-container matColumnDef="modified">
+      <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
+      <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
+    </ng-container>
 
 
-  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
-</mat-table>
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
+  </mat-table>

@@ -1,5 +1,7 @@
+export type SensorEventId = string | number;
+
 export class SensorEvent {
-  id: string;
+  id: SensorEventId;
   timestamp: number;
   values: number[];
 }

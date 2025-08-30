@@ -19,11 +19,11 @@ export class Sandbox {
   algorithm: string;
   screenshot?: string;
   nstModule: {
-    dataflow?: any;
+    dataflow?: unknown;
   };
   nst_project: {
-    parameters: Array<Parameter>;
-    controls: Array<Parameter>;
+    parameters: Parameter[];
+    controls: Parameter[];
   };
   selectedExperiment?: string;
   selectedExperimentInstance?: string;

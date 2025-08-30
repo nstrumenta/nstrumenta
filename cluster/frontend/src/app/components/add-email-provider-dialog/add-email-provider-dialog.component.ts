@@ -1,17 +1,21 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { Component, inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogContent, MatDialogActions } from '@angular/material/dialog';
+import { CdkScrollable } from '@angular/cdk/scrolling';
+import { MatButton } from '@angular/material/button';
+
+interface DialogData {
+  description: string;
+}
 
 @Component({
-    selector: 'app-add-email-provider',
+    selector: 'app-add-email-provider-dialog',
     templateUrl: './add-email-provider-dialog.component.html',
     styleUrls: ['./add-email-provider-dialog.component.scss'],
-    standalone: false
+    imports: [CdkScrollable, MatDialogContent, MatDialogActions, MatButton]
 })
-export class AddEmailProviderDialogComponent implements OnInit {
-  constructor(private dialogRef: MatDialogRef<boolean>, @Inject(MAT_DIALOG_DATA) public data: any) {}
-
-  ngOnInit(): void {
-  }
+export class AddEmailProviderDialogComponent {
+  private dialogRef = inject(MatDialogRef<boolean>);
+  public data: DialogData = inject(MAT_DIALOG_DATA);
 
   close() {
     this.dialogRef.close()

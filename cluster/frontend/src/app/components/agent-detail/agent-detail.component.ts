@@ -1,64 +1,59 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Firestore, collection, onSnapshot } from '@angular/fire/firestore';
+import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort } from '@angular/material/sort';
-import { MatTableDataSource } from '@angular/material/table';
+import { MatSort, MatSortHeader } from '@angular/material/sort';
+import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { Action } from 'src/app/models/action.model';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { JsonPipe, DatePipe } from '@angular/common';
 
 @Component({
     selector: 'app-agents',
     templateUrl: './agent-detail.component.html',
     styleUrls: ['./agent-detail.component.scss'],
-    standalone: false
+    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, JsonPipe, DatePipe]
 })
-export class AgentDetailComponent implements OnInit, OnDestroy {
+export class AgentDetailComponent implements OnInit {
   displayedColumns = ['id', 'task', 'status', 'createdAt', 'data'];
-  dataSource: MatTableDataSource<any>;
-  selection = new SelectionModel<any>(true, []);
+  dataSource: MatTableDataSource<Action>;
+  selection = new SelectionModel<Action>(true, []);
   dataPath: string;
-  subscriptions = new Array<Subscription>();
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  constructor(
-    private route: ActivatedRoute,
-    private firestore: Firestore,
-    private authService: AuthService,
-    public dialog: MatDialog
-  ) {}
+  // Inject services using the new Angular 20 pattern
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
+  private destroyRef = inject(DestroyRef);
+  public dialog = inject(MatDialog);
 
-  ngOnInit() {
+  ngOnInit(): void {
     const projectId = this.route.snapshot.paramMap.get('projectId');
     const agentId = this.route.snapshot.paramMap.get('agentId');
     this.dataPath = `/projects/${projectId}/agents/${agentId}/actions`;
     console.log(this.dataPath);
-    this.subscriptions.push(
-      this.authService.user.subscribe((user) => {
-        const unsubscribe = onSnapshot(
-          collection(this.firestore, this.dataPath),
-          (snapshot) => {
-            const data = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data()
-            }));
-            this.dataSource = new MatTableDataSource(data);
-            this.dataSource.sort = this.sort;
-          }
-        );
-        
-        // Convert to subscription for cleanup  
-        this.subscriptions.push({ unsubscribe } as Subscription);
-      })
-    );
-  }
-
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => {
-      subscription.unsubscribe();
+    
+    // Set up effect to handle agent actions data changes  
+    effect(() => {
+      const agentActions = this.firebaseDataService.agentActions();
+      this.dataSource = new MatTableDataSource(agentActions);
+      this.dataSource.sort = this.sort;
+    });
+    
+    // Subscribe to user auth state and set project and agent when authenticated
+    this.authService.user.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe((user) => {
+      if (user && projectId && agentId) {
+        this.firebaseDataService.setProject(projectId);
+        this.firebaseDataService.setAgent(agentId);
+      }
     });
   }
 
