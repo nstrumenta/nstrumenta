@@ -34,10 +34,10 @@ export class ServerService {
   runServerTask(
     task: ServerTasks,
     projectId: string,
-    payload?: any,
+    payload?: unknown,
     progress?: (message: string) => void,
-    data?: any
-  ): Promise<any> {
+    data?: unknown
+  ): Promise<unknown> {
     return this.firebaseDataService.runTask(task, projectId, this.uid, payload, data, progress);
   }
 }

@@ -13,9 +13,9 @@ export class PlottingService {
   private authService = inject(AuthService);
   private activatedRoute = inject(ActivatedRoute);
 
-  graph = new BehaviorSubject<any>({});
+  graph = new BehaviorSubject<unknown>({});
   data = [{ x: [], y: [], name: '' }];
-  eventIdMap = {};
+  eventIdMap: Record<string, number[]> = {};
 
   clearData() {
     this.data = [{ x: [], y: [], name: '' }];
@@ -56,7 +56,7 @@ export class PlottingService {
     }
   }
 
-  static LoadFileIntoIdb(fileDoc: any): Promise<any> {
+  static LoadFileIntoIdb(fileDoc: { downloadURL: string; name: string }): Promise<unknown> {
     return new Promise((resolve, reject) => {
       console.log('loadFile ', fileDoc);
       const ref = hash(JSON.stringify(fileDoc.downloadURL));
@@ -75,12 +75,12 @@ export class PlottingService {
             // Closure to capture the file information.
             reader.onload = function (e) {
               if (fileDoc.name.endsWith('.nst')) {
-                idbSet(ref, JSON.parse((e.target as any).result));
+                idbSet(ref, JSON.parse((e.target as FileReader).result as string));
               }
               if (fileDoc.name.endsWith('.ldjson')) {
                 // parse line delimited json line by line
                 const events: SensorEvent[] = [];
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 let lastGPSTimestamp = 0;
                 lines.forEach((line) => {
                   if (line) {
@@ -132,7 +132,7 @@ export class PlottingService {
               }
               if (fileDoc.name.endsWith('.json')) {
                 const events: SensorEvent[] = [];
-                const pniFile = JSON.parse((e.target as any).result);
+                const pniFile = JSON.parse((e.target as FileReader).result as string);
                 const pniIds = {
                   MAG_RAW: 1,
                   ACCEL_RAW: 15,
@@ -194,7 +194,7 @@ export class PlottingService {
               if (fileDoc.name.endsWith('.log')) {
                 // trax2 log (tsv)
                 const events: SensorEvent[] = [];
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 const headerLines = 1;
                 for (let i = headerLines; i < lines.length; i++) {
                   const tsvSplit = lines[i].split('\t');
@@ -219,7 +219,7 @@ export class PlottingService {
               if (fileDoc.name.endsWith('.csv')) {
                 const events: SensorEvent[] = [];
                 // parse csv line by line
-                const lines = (e.target as any).result.split('\n');
+                const lines = ((e.target as FileReader).result as string).split('\n');
                 const headerLines = 1;
                 for (let i = headerLines; i < lines.length; i++) {
                   const csvSplit = lines[i].split(',');

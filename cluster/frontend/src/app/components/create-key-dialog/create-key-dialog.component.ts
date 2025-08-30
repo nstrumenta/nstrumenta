@@ -13,6 +13,14 @@ export interface CreateKeyDialogResponse {
   createdAt?: string;
 }
 
+interface ServerApiKeyResponse {
+  payload: {
+    keyId: string;
+    key: string;
+  };
+  created: string;
+}
+
 @Component({
     selector: 'app-create-key-dialog',
     templateUrl: `create-key-dialog.component.html`,
@@ -31,9 +39,10 @@ export class CreateKeyDialogComponent {
     this.response = {};
 
     this.projectService.createApiKey().then(actionResponse => {
-      this.response.keyId = actionResponse.payload.keyId;
-      this.response.createdAt = actionResponse.created;
-      this.key = actionResponse.payload.key;
+      const typedResponse = actionResponse as ServerApiKeyResponse;
+      this.response.keyId = typedResponse.payload.keyId;
+      this.response.createdAt = typedResponse.created;
+      this.key = typedResponse.payload.key;
       console.log('createApiKey response', actionResponse);
     });
   }

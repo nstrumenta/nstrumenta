@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
+import { Project } from '../models/firebase.model';
 import { ServerService } from './server.service';
 import { ApiService } from './api.service';
 import { FirebaseDataService } from './firebase-data.service';
@@ -22,7 +23,7 @@ export class ProjectService {
   private firebaseDataService = inject(FirebaseDataService);
 
   currentProject = new BehaviorSubject<string>('');
-  projects: Observable<any[]>;
+  projects: Observable<Project[]>;
   user: User;
   currentProjectId: string;
   projectSettings: ProjectSettings;

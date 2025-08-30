@@ -10,7 +10,7 @@ import { Observable, Subject, fromEvent } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { SensorEvent } from 'src/app/models/sensorEvent.model';
+import { SensorEvent, SensorEventId } from 'src/app/models/sensorEvent.model';
 import { FormsModule } from '@angular/forms';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -148,7 +148,7 @@ export class RecordComponent implements OnInit {
     });
   }
 
-  eventStats = new Map<string, SensorEventStats>();
+  eventStats = new Map<SensorEventId, SensorEventStats>();
   registrations = new Map<string, { schemaId: number; channelId: number }>();
   mcapWriter: McapWriter;
   bytesWritten: bigint;
@@ -524,7 +524,7 @@ export class RecordComponent implements OnInit {
             characteristic.addEventListener('characteristicvaluechanged', (bleEvent) => {
               let parser = (input) => {
                 console.log(input);
-                return { id: ((bleEvent.target as BluetoothRemoteGATTCharacteristic).value?.getUint8(0) || 0).toString(), timestamp: 0, values: [] };
+                return { id: (bleEvent.target as BluetoothRemoteGATTCharacteristic).value?.getUint8(0) || 0, timestamp: 0, values: [] };
               };
               if (deviceDoc.notifications[0].parser) {
                 try {

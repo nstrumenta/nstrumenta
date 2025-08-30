@@ -2,7 +2,7 @@ import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInject
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
 import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
-import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError } from 'rxjs';
+import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError, map } from 'rxjs';
 import { 
   Agent, 
   Project, 
@@ -10,7 +10,8 @@ import {
   Repository, 
   Module, 
   DataRecord, 
-  RecordData 
+  RecordData,
+  FirebaseDocument
 } from '../models/firebase.model';
 import { Action } from '../models/action.model';
 import { ProjectSettings } from '../models/projectSettings.model';
@@ -49,17 +50,17 @@ export class FirebaseDataService {
   private projectSettingsSignal = signal<ProjectSettings | null>(null);
 
   // Pre-create all Firebase observables during constructor (injection context)
-  private modulesObservable$: Observable<any[]>;
-  private dataObservable$: Observable<any[]>;
-  private recordObservable$: Observable<any[]>;
-  private actionsObservable$: Observable<any[]>;
-  private agentActionsObservable$: Observable<any[]>;
-  private repositoriesObservable$: Observable<any[]>;
-  private agentsObservable$: Observable<any[]>;
-  private machinesObservable$: Observable<any[]>;
-  private projectsObservable$: Observable<any[]>;
-  public userProjectsObservable$: Observable<any[]>; // Made public for ProjectService
-  private projectSettingsObservable$: Observable<any>;
+  private modulesObservable$: Observable<unknown[]>;
+  private dataObservable$: Observable<unknown[]>;
+  private recordObservable$: Observable<unknown[]>;
+  private actionsObservable$: Observable<unknown[]>;
+  private agentActionsObservable$: Observable<unknown[]>;
+  private repositoriesObservable$: Observable<unknown[]>;
+  private agentsObservable$: Observable<unknown[]>;
+  private machinesObservable$: Observable<unknown[]>;
+  private projectsObservable$: Observable<unknown[]>;
+  public userProjectsObservable$: Observable<Project[]>; // Made public for ProjectService
+  private projectSettingsObservable$: Observable<unknown>;
 
   constructor() {
     // Create all Firebase observables during injection context
@@ -159,6 +160,7 @@ export class FirebaseDataService {
         return runInInjectionContext(this.injector, () => 
           collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' })
         ).pipe(
+          map(data => data as Project[]),
           tap(data => console.log('User projects loaded:', data?.length || 0, 'projects')),
           catchError(error => {
             console.error('Error loading user projects for user:', userId, error);
@@ -184,47 +186,47 @@ export class FirebaseDataService {
   private setupSubscriptions() {
     // Subscribe to all observables and update signals
     this.modulesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.modulesSignal.set(data || [])
+      data => this.modulesSignal.set(data as Module[] || [])
     );
 
     this.dataObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.dataSignal.set(data || [])
+      data => this.dataSignal.set(data as DataRecord[] || [])
     );
 
     this.recordObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.recordSignal.set(data || [])
+      data => this.recordSignal.set(data as RecordData[] || [])
     );
 
     this.actionsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.actionsSignal.set(data || [])
+      data => this.actionsSignal.set(data as Action[] || [])
     );
 
     this.agentActionsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.agentActionsSignal.set(data || [])
+      data => this.agentActionsSignal.set(data as Action[] || [])
     );
 
     this.repositoriesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.repositoriesSignal.set(data || [])
+      data => this.repositoriesSignal.set(data as Repository[] || [])
     );
 
     this.agentsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.agentsSignal.set(data || [])
+      data => this.agentsSignal.set(data as Agent[] || [])
     );
 
     this.machinesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.machinesSignal.set(data || [])
+      data => this.machinesSignal.set(data as Machine[] || [])
     );
 
     this.projectsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.projectsSignal.set(data || [])
+      data => this.projectsSignal.set(data as Project[] || [])
     );
 
     this.userProjectsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.userProjectsSignal.set(data || [])
+      data => this.userProjectsSignal.set(data as Project[] || [])
     );
 
     this.projectSettingsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.projectSettingsSignal.set(data)
+      data => this.projectSettingsSignal.set(data as ProjectSettings | null)
     );
   }
 
@@ -296,9 +298,9 @@ export class FirebaseDataService {
 
   // Method to get agent-specific actions (separate subscription)
   getAgentActionsData(agentId: string) {
-    const agentActionsSignal = signal<any[]>([]);
+    const agentActionsSignal = signal<Action[]>([]);
     
-    const createAgentActionsObservable = (projectId: string): Observable<any[]> => {
+    const createAgentActionsObservable = (projectId: string): Observable<unknown[]> => {
       if (!projectId || !agentId) return of([]);
       const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
       return collectionData(agentActionsCollection, { idField: 'id' });
@@ -308,7 +310,7 @@ export class FirebaseDataService {
       switchMap(projectId => createAgentActionsObservable(projectId)),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(actions => {
-      agentActionsSignal.set(actions as any[]);
+      agentActionsSignal.set(actions as Action[]);
     });
 
     return agentActionsSignal.asReadonly();
@@ -317,21 +319,21 @@ export class FirebaseDataService {
   // CRUD Operations - all centralized here to maintain injection context
   
   // Add operations
-  async addRepository(projectId: string, data: any): Promise<void> {
+  async addRepository(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const repositoriesCollection = collection(this.firestore, `/projects/${projectId}/repositories`);
       await addDoc(repositoriesCollection, data);
     });
   }
 
-  async addRecord(projectId: string, data: any): Promise<void> {
+  async addRecord(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const recordsCollection = collection(this.firestore, `/projects/${projectId}/data`);
       await addDoc(recordsCollection, data);
     });
   }
 
-  async addAction(projectId: string, data: any): Promise<void> {
+  async addAction(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
       await addDoc(actionsCollection, data);
@@ -339,14 +341,14 @@ export class FirebaseDataService {
   }
 
   // Update operations
-  async updateRepository(projectId: string, id: string, data: any): Promise<void> {
+  async updateRepository(projectId: string, id: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
       await updateDoc(docRef, data);
     });
   }
 
-  async updateRecord(projectId: string, id: string, data: any): Promise<void> {
+  async updateRecord(projectId: string, id: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
       await updateDoc(docRef, data);
@@ -354,14 +356,14 @@ export class FirebaseDataService {
   }
 
   // Record collection CRUD operations (distinct from data collection)
-  async addRecording(projectId: string, data: any): Promise<void> {
+  async addRecording(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
-      await addDoc(collectionRef, { ...data, lastModified: Date.now() });
+      await addDoc(collectionRef, { ...data as object, lastModified: Date.now() });
     });
   }
 
-  async updateRecording(projectId: string, id: string, data: any): Promise<void> {
+  async updateRecording(projectId: string, id: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -375,7 +377,7 @@ export class FirebaseDataService {
     });
   }
 
-  async updateAction(projectId: string, id: string, data: any): Promise<void> {
+  async updateAction(projectId: string, id: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -419,14 +421,14 @@ export class FirebaseDataService {
   }
 
   // Agent actions CRUD operations
-  async addAgentAction(projectId: string, agentId: string, data: any): Promise<void> {
+  async addAgentAction(projectId: string, agentId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
       await addDoc(collectionRef, data);
     });
   }
 
-  async updateAgentAction(projectId: string, agentId: string, id: string, data: any): Promise<void> {
+  async updateAgentAction(projectId: string, agentId: string, id: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -441,13 +443,15 @@ export class FirebaseDataService {
   }
 
   // Get single document
-  getDocument(projectId: string, collection: string, id: string): Observable<any> {
+  getDocument(projectId: string, collection: string, id: string): Observable<FirebaseDocument> {
     const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
-    return docData(docRef);
+    return docData(docRef).pipe(
+      map(data => data as FirebaseDocument)
+    );
   }
 
   // Project settings operations
-  async updateProjectSettings(projectId: string, data: any): Promise<void> {
+  async updateProjectSettings(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}`);
       await setDoc(docRef, data, { merge: true });
@@ -455,7 +459,7 @@ export class FirebaseDataService {
   }
 
   // User project operations
-  async updateUserProject(projectId: string, projectData: any): Promise<void> {
+  async updateUserProject(projectId: string, projectData: unknown): Promise<void> {
     const currentUserId = this.currentUserId.value;
     if (!currentUserId) return;
     
@@ -463,9 +467,9 @@ export class FirebaseDataService {
       const userProjectRef = doc(this.firestore, `/users/${currentUserId}/projects/${projectId}`);
       await setDoc(userProjectRef, {
         id: projectId,
-        name: projectData.name || 'Untitled Project',
+        name: (projectData as {name?: string}).name || 'Untitled Project',
         lastAccessed: new Date(),
-        ...projectData
+        ...projectData as object
       }, { merge: true });
     });
   }
@@ -475,11 +479,11 @@ export class FirebaseDataService {
     task: string,
     projectId: string,
     uid: string,
-    payload?: any,
-    data?: any,
+    payload?: unknown,
+    data?: unknown,
     progress?: (message: string) => void
-  ): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
+  ): Promise<unknown> {
+    return new Promise<unknown>((resolve, reject) => {
       if (!uid) {
         reject(new Error('User not authenticated'));
         return;

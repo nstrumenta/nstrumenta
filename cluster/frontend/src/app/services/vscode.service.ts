@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ref, uploadBytesResumable } from '@angular/fire/storage';
+import { ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
 import { Observable, Observer, Subject } from 'rxjs';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
@@ -60,7 +60,6 @@ export class VscodeService {
               const uid = this.projectService.user.uid;
               const uploadPath =
                 'projects/' + this.projectService.currentProjectId + '/live-session/' + uid;
-              const self = this;
               message.payload.forEach((fileTextItem) => {
                 // remove leading slash if present
                 let filename = fileTextItem.path;
@@ -69,39 +68,39 @@ export class VscodeService {
                 }
 
                 promises.push(
-                  new Promise(function (resolve) {
+                  new Promise((resolve) => {
                     const filePath = uploadPath + '/' + filename;
                     console.log('uploading ', filePath);
-                    const metadata: any = {
+                    const metadata: unknown = {
                       contentDisposition: 'inline',
                     };
                     if (filePath.endsWith('.html')) {
-                      metadata.contentType = 'text/html';
+                      (metadata as Record<string, string>).contentType = 'text/html';
                     }
                     if (filePath.endsWith('.js')) {
-                      metadata.contentType = 'application/javascript';
+                      (metadata as Record<string, string>).contentType = 'application/javascript';
                     }
                     if (filePath.endsWith('.json')) {
-                      metadata.contentType = 'application/json';
+                      (metadata as Record<string, string>).contentType = 'application/json';
                     }
                     if (filePath.endsWith('.css')) {
-                      metadata.contentType = 'text/css';
+                      (metadata as Record<string, string>).contentType = 'text/css';
                     }
                     if (filePath.endsWith('.png')) {
-                      metadata.contentType = 'image/png';
+                      (metadata as Record<string, string>).contentType = 'image/png';
                     }
                     if (filePath.endsWith('.jpeg')) {
-                      metadata.contentType = 'image/jpeg';
+                      (metadata as Record<string, string>).contentType = 'image/jpeg';
                     }
                     // Parse project configuration if needed
                     // const nst_project = filePath.endsWith('nst_project.json') ? JSON.parse(fileTextItem.text) : null;
 
-                    const storage = self.firebaseDataService.getStorage();
+                    const storage = this.firebaseDataService.getStorage();
                     const storageRef = ref(storage, filePath);
                     const uploadTask = uploadBytesResumable(
                       storageRef,
                       new Blob([fileTextItem.text]),
-                      metadata
+                      metadata as UploadMetadata
                     );
 
                     uploadTask.on('state_changed', 

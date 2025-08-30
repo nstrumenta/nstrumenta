@@ -21,7 +21,7 @@ import * as Sentry from '@sentry/browser';
 
 // Sentry Error Handler
 class SentryErrorHandler implements ErrorHandler {
-  handleError(error: any): void {
+  handleError(error: unknown): void {
     Sentry.captureException(error);
     console.error(error);
   }
