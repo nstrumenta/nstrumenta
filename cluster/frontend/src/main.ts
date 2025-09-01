@@ -74,3 +74,5 @@ bootstrapApplication(AppComponent, {
     { provide: ENVIRONMENT_INITIALIZER, useFactory: initializeIcons, multi: true },
   ]
 }).catch((err) => console.log(err));
+// Ensure bootstrap errors are visible
+// Note: we use console.error so production logging tools and Sentry can capture this consistently

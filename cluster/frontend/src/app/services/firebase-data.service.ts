@@ -1,39 +1,74 @@
-import { Injectable, inject, DestroyRef, signal, computed, Injector, runInInjectionContext } from '@angular/core';
+import {
+  DestroyRef,
+  Injectable,
+  Injector,
+  computed,
+  inject,
+  runInInjectionContext,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Firestore, collection, collectionData, doc, docData, query, orderBy, addDoc, updateDoc, deleteDoc, setDoc, onSnapshot } from '@angular/fire/firestore';
-import { Storage, ref, uploadBytesResumable, getDownloadURL, UploadMetadata } from '@angular/fire/storage';
-import { BehaviorSubject, switchMap, of, Observable, combineLatest, tap, catchError, map } from 'rxjs';
-import { 
-  Agent, 
-  Project, 
-  Machine, 
-  Repository, 
-  Module, 
-  DataRecord, 
-  RecordData,
-  FirebaseDocument
-} from '../models/firebase.model';
+import {
+  Firestore,
+  addDoc,
+  collection,
+  collectionData,
+  deleteDoc,
+  doc,
+  docData,
+  onSnapshot,
+  orderBy,
+  query,
+  setDoc,
+  updateDoc,
+} from '@angular/fire/firestore';
+import {
+  Storage,
+  UploadMetadata,
+  getDownloadURL,
+  ref,
+  uploadBytesResumable,
+} from '@angular/fire/storage';
+import {
+  BehaviorSubject,
+  Observable,
+  catchError,
+  combineLatest,
+  map,
+  of,
+  switchMap
+} from 'rxjs';
 import { Action } from '../models/action.model';
+import {
+  Agent,
+  DataRecord,
+  FirebaseDocument,
+  Machine,
+  Module,
+  Project,
+  RecordData,
+  Repository,
+} from '../models/firebase.model';
 import { ProjectSettings } from '../models/projectSettings.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class FirebaseDataService {
   private firestore = inject(Firestore);
   private storage = inject(Storage);
   private destroyRef = inject(DestroyRef);
   private injector = inject(Injector);
-  
+
   // Use BehaviorSubject for project changes
   private currentProjectId = new BehaviorSubject<string>('');
-  
+
   // Use BehaviorSubject for agent context
   private currentAgentId = new BehaviorSubject<string>('');
 
   // Use BehaviorSubject for user context
   private currentUserId = new BehaviorSubject<string>('');
-  
+
   // Data signals for different collections
   private modulesSignal = signal<Module[]>([]);
   private dataSignal = signal<DataRecord[]>([]);
@@ -43,9 +78,8 @@ export class FirebaseDataService {
   private repositoriesSignal = signal<Repository[]>([]);
   private agentsSignal = signal<Agent[]>([]);
   private machinesSignal = signal<Machine[]>([]);
-  private projectsSignal = signal<Project[]>([]);
   private userProjectsSignal = signal<Project[]>([]);
-  
+
   // Project settings signal
   private projectSettingsSignal = signal<ProjectSettings | null>(null);
 
@@ -58,36 +92,36 @@ export class FirebaseDataService {
   private repositoriesObservable$: Observable<unknown[]>;
   private agentsObservable$: Observable<unknown[]>;
   private machinesObservable$: Observable<unknown[]>;
-  private projectsObservable$: Observable<unknown[]>;
   public userProjectsObservable$: Observable<Project[]>; // Made public for ProjectService
   private projectSettingsObservable$: Observable<unknown>;
 
   constructor() {
     // Create all Firebase observables during injection context
-    this.projectsObservable$ = runInInjectionContext(this.injector, () => 
-      collectionData(collection(this.firestore, '/projects'), { idField: 'id' })
-    );
-    
+
     this.modulesObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () => 
-          collectionData(collection(this.firestore, `/projects/${projectId}/modules`), { idField: 'id' })
+        return runInInjectionContext(this.injector, () =>
+          collectionData(collection(this.firestore, `/projects/${projectId}/modules`), {
+            idField: 'id',
+          })
         );
       })
     );
 
     this.dataObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () => 
-          collectionData(collection(this.firestore, `/projects/${projectId}/data`), { idField: 'key' })
+        return runInInjectionContext(this.injector, () =>
+          collectionData(collection(this.firestore, `/projects/${projectId}/data`), {
+            idField: 'key',
+          })
         );
       })
     );
 
     this.recordObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
         return runInInjectionContext(this.injector, () => {
           const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
@@ -98,7 +132,7 @@ export class FirebaseDataService {
     );
 
     this.actionsObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
         return runInInjectionContext(this.injector, () => {
           const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
@@ -111,15 +145,25 @@ export class FirebaseDataService {
     this.agentActionsObservable$ = combineLatest([this.currentProjectId, this.currentAgentId]).pipe(
       switchMap(([projectId, agentId]) => {
         if (!projectId || !agentId) return of([]);
-        console.log('Querying agent actions for project:', projectId, 'agent:', agentId);
         return runInInjectionContext(this.injector, () => {
-          const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
-          const orderedAgentActionsQuery = query(agentActionsCollection, orderBy('created', 'desc'));
+          const agentActionsCollection = collection(
+            this.firestore,
+            `/projects/${projectId}/agents/${agentId}/actions`
+          );
+          const orderedAgentActionsQuery = query(
+            agentActionsCollection,
+            orderBy('created', 'desc')
+          );
           return collectionData(orderedAgentActionsQuery, { idField: 'id' });
         }).pipe(
-          tap(data => console.log('Agent actions loaded:', data?.length || 0, 'actions')),
-          catchError(error => {
-            console.error('Error loading agent actions for project:', projectId, 'agent:', agentId, error);
+          catchError((error) => {
+            console.error(
+              'Error loading agent actions for project:',
+              projectId,
+              'agent:',
+              agentId,
+              error
+            );
             return of([]);
           })
         );
@@ -127,42 +171,46 @@ export class FirebaseDataService {
     );
 
     this.repositoriesObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () => 
-          collectionData(collection(this.firestore, `/projects/${projectId}/repositories`), { idField: 'key' })
+        return runInInjectionContext(this.injector, () =>
+          collectionData(collection(this.firestore, `/projects/${projectId}/repositories`), {
+            idField: 'key',
+          })
         );
       })
     );
 
     this.agentsObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () => 
-          collectionData(collection(this.firestore, `/projects/${projectId}/agents`), { idField: 'id' })
+        return runInInjectionContext(this.injector, () =>
+          collectionData(collection(this.firestore, `/projects/${projectId}/agents`), {
+            idField: 'id',
+          })
         );
       })
     );
 
     this.machinesObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () => 
-          collectionData(collection(this.firestore, `/projects/${projectId}/machines`), { idField: 'name' })
+        return runInInjectionContext(this.injector, () =>
+          collectionData(collection(this.firestore, `/projects/${projectId}/machines`), {
+            idField: 'name',
+          })
         );
       })
     );
 
     this.userProjectsObservable$ = this.currentUserId.pipe(
-      switchMap(userId => {
+      switchMap((userId) => {
         if (!userId) return of([]);
-        console.log('Querying user projects for userId:', userId);
-        return runInInjectionContext(this.injector, () => 
+        return runInInjectionContext(this.injector, () =>
           collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' })
         ).pipe(
-          map(data => data as Project[]),
-          tap(data => console.log('User projects loaded:', data?.length || 0, 'projects')),
-          catchError(error => {
+          map((data) => data as Project[]),
+          catchError((error) => {
             console.error('Error loading user projects for user:', userId, error);
             return of([]);
           })
@@ -171,9 +219,9 @@ export class FirebaseDataService {
     );
 
     this.projectSettingsObservable$ = this.currentProjectId.pipe(
-      switchMap(projectId => {
+      switchMap((projectId) => {
         if (!projectId) return of(null);
-        return runInInjectionContext(this.injector, () => 
+        return runInInjectionContext(this.injector, () =>
           docData(doc(this.firestore, `/projects/${projectId}`))
         );
       })
@@ -185,49 +233,45 @@ export class FirebaseDataService {
 
   private setupSubscriptions() {
     // Subscribe to all observables and update signals
-    this.modulesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.modulesSignal.set(data as Module[] || [])
-    );
+    this.modulesObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.modulesSignal.set((data as Module[]) || []));
 
-    this.dataObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.dataSignal.set(data as DataRecord[] || [])
-    );
+    this.dataObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.dataSignal.set((data as DataRecord[]) || []));
 
-    this.recordObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.recordSignal.set(data as RecordData[] || [])
-    );
+    this.recordObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.recordSignal.set((data as RecordData[]) || []));
 
-    this.actionsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.actionsSignal.set(data as Action[] || [])
-    );
+    this.actionsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.actionsSignal.set((data as Action[]) || []));
 
-    this.agentActionsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.agentActionsSignal.set(data as Action[] || [])
-    );
+    this.agentActionsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.agentActionsSignal.set((data as Action[]) || []));
 
-    this.repositoriesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.repositoriesSignal.set(data as Repository[] || [])
-    );
+    this.repositoriesObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.repositoriesSignal.set((data as Repository[]) || []));
 
-    this.agentsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.agentsSignal.set(data as Agent[] || [])
-    );
+    this.agentsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.agentsSignal.set((data as Agent[]) || []));
 
-    this.machinesObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.machinesSignal.set(data as Machine[] || [])
-    );
+    this.machinesObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.machinesSignal.set((data as Machine[]) || []));
 
-    this.projectsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.projectsSignal.set(data as Project[] || [])
-    );
+    this.userProjectsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.userProjectsSignal.set((data as Project[]) || []));
 
-    this.userProjectsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.userProjectsSignal.set(data as Project[] || [])
-    );
-
-    this.projectSettingsObservable$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(
-      data => this.projectSettingsSignal.set(data as ProjectSettings | null)
-    );
+    this.projectSettingsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.projectSettingsSignal.set(data as ProjectSettings | null));
   }
 
   // Public methods to set project and agent
@@ -276,9 +320,6 @@ export class FirebaseDataService {
     return this.machinesSignal.asReadonly();
   }
 
-  get projects() {
-    return this.projectsSignal.asReadonly();
-  }
 
   get userProjects() {
     return this.userProjectsSignal.asReadonly();
@@ -299,29 +340,37 @@ export class FirebaseDataService {
   // Method to get agent-specific actions (separate subscription)
   getAgentActionsData(agentId: string) {
     const agentActionsSignal = signal<Action[]>([]);
-    
+
     const createAgentActionsObservable = (projectId: string): Observable<unknown[]> => {
       if (!projectId || !agentId) return of([]);
-      const agentActionsCollection = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
+      const agentActionsCollection = collection(
+        this.firestore,
+        `/projects/${projectId}/agents/${agentId}/actions`
+      );
       return collectionData(agentActionsCollection, { idField: 'id' });
     };
-    
-    this.currentProjectId.pipe(
-      switchMap(projectId => createAgentActionsObservable(projectId)),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe(actions => {
-      agentActionsSignal.set(actions as Action[]);
-    });
+
+    this.currentProjectId
+      .pipe(
+        switchMap((projectId) => createAgentActionsObservable(projectId)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((actions) => {
+        agentActionsSignal.set(actions as Action[]);
+      });
 
     return agentActionsSignal.asReadonly();
   }
 
   // CRUD Operations - all centralized here to maintain injection context
-  
+
   // Add operations
   async addRepository(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const repositoriesCollection = collection(this.firestore, `/projects/${projectId}/repositories`);
+      const repositoriesCollection = collection(
+        this.firestore,
+        `/projects/${projectId}/repositories`
+      );
       await addDoc(repositoriesCollection, data);
     });
   }
@@ -359,7 +408,7 @@ export class FirebaseDataService {
   async addRecording(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
-      await addDoc(collectionRef, { ...data as object, lastModified: Date.now() });
+      await addDoc(collectionRef, { ...(data as object), lastModified: Date.now() });
     });
   }
 
@@ -423,12 +472,20 @@ export class FirebaseDataService {
   // Agent actions CRUD operations
   async addAgentAction(projectId: string, agentId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const collectionRef = collection(this.firestore, `/projects/${projectId}/agents/${agentId}/actions`);
+      const collectionRef = collection(
+        this.firestore,
+        `/projects/${projectId}/agents/${agentId}/actions`
+      );
       await addDoc(collectionRef, data);
     });
   }
 
-  async updateAgentAction(projectId: string, agentId: string, id: string, data: unknown): Promise<void> {
+  async updateAgentAction(
+    projectId: string,
+    agentId: string,
+    id: string,
+    data: unknown
+  ): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -445,9 +502,7 @@ export class FirebaseDataService {
   // Get single document
   getDocument(projectId: string, collection: string, id: string): Observable<FirebaseDocument> {
     const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
-    return docData(docRef).pipe(
-      map(data => data as FirebaseDocument)
-    );
+    return docData(docRef).pipe(map((data) => data as FirebaseDocument));
   }
 
   // Project settings operations
@@ -462,15 +517,19 @@ export class FirebaseDataService {
   async updateUserProject(projectId: string, projectData: unknown): Promise<void> {
     const currentUserId = this.currentUserId.value;
     if (!currentUserId) return;
-    
+
     await runInInjectionContext(this.injector, async () => {
       const userProjectRef = doc(this.firestore, `/users/${currentUserId}/projects/${projectId}`);
-      await setDoc(userProjectRef, {
-        id: projectId,
-        name: (projectData as {name?: string}).name || 'Untitled Project',
-        lastAccessed: new Date(),
-        ...projectData as object
-      }, { merge: true });
+      await setDoc(
+        userProjectRef,
+        {
+          id: projectId,
+          name: (projectData as { name?: string }).name || 'Untitled Project',
+          lastAccessed: new Date(),
+          ...(projectData as object),
+        },
+        { merge: true }
+      );
     });
   }
 
@@ -498,7 +557,7 @@ export class FirebaseDataService {
         uid: uid,
         data: data ?? {},
         payload: payload ? payload : {},
-        version: '1.0.0' // You may want to import this from environment
+        version: '1.0.0', // You may want to import this from environment
       };
 
       runInInjectionContext(this.injector, () => {
@@ -507,7 +566,7 @@ export class FirebaseDataService {
           .then((ref) => {
             const key = ref.path;
             console.log('watching for project action to complete ', key);
-            
+
             const unsubscribe = onSnapshot(ref, (snapshot) => {
               const val = snapshot.data() as {
                 status: string;
@@ -515,7 +574,7 @@ export class FirebaseDataService {
                 payload?: Record<string, unknown>;
               };
               console.log(val);
-              
+
               switch (val.status) {
                 case 'complete':
                   unsubscribe();
