@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.16](https://github.com/nstrumenta/nstrumenta/compare/v3.1.42...v1.7.16) (2025-09-01)
+
+
+### Bug Fixes
+
+* **firebase:** stop automatic /projects reads; use userProjects in UI ([1e8560f](https://github.com/nstrumenta/nstrumenta/commit/1e8560f5060b8c8463a686f666de82afa2d73a38))
+
 ### [1.7.15](https://github.com/nstrumenta/nstrumenta/compare/v3.1.42...v1.7.15) (2025-09-01)
 
 ### [1.7.14](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v1.7.14) (2025-08-28)
