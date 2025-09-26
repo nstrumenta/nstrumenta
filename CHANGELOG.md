@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.43](https://github.com/nstrumenta/nstrumenta/compare/v3.1.42...v3.1.43) (2025-09-26)
+
+
+### Bug Fixes
+
+* removes break-system flags not needed with updates to base image ([d6e326d](https://github.com/nstrumenta/nstrumenta/commit/d6e326d34d5a52852afbd4acd9c318fafbfa3cd8))
+
 ### [3.1.42](https://github.com/nstrumenta/nstrumenta/compare/v3.1.41...v3.1.42) (2025-08-30)
 
 
