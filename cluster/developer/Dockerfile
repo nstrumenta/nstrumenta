@@ -15,4 +15,4 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 
 COPY cluster/developer/requirements.txt .
 
-RUN pip install --break-system-packages -r requirements.txt
+RUN pip install -r requirements.txt
