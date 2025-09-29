@@ -26,7 +26,7 @@ const createApiKeyBase = async (
     }
 
     const project = projectDoc.data()
-    if (!project.members || !project.members[userId]) {
+    if (!project || !project.members || !project.members[userId]) {
       return res.status(403).send('Permission denied')
     }
 
