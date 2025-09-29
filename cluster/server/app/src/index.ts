@@ -413,13 +413,6 @@ firestore
                         console.error(err)
                       }
                       break
-                    case 'createApiKey':
-                      apiKeyService.createApiKey(
-                        doc.ref.path,
-                        projectId,
-                        data.payload.apiUrl,
-                      )
-                      break
                     case 'revokeApiKey':
                       apiKeyService.revokeApiKey(
                         doc.ref.path,

@@ -10,12 +10,10 @@ export interface ApiKeyServiceDependencies {
 }
 
 export interface ApiKeyService {
-  createAndAddApiKey(projectId: string): Promise<string | undefined>
-  createApiKey(
-    actionPath: string,
+  createAndAddApiKey(
     projectId: string,
-    apiUrl: string,
-  ): Promise<void>
+    apiUrl?: string,
+  ): Promise<{ key: string; keyId: string; createdAt: number } | undefined>
   removeTempKey(apiKey: string): Promise<void>
   revokeApiKey(
     actionPath: string,
@@ -28,13 +26,17 @@ export function CreateApiKeyService({
   firestore,
 }: ApiKeyServiceDependencies): ApiKeyService {
   return {
-    createAndAddApiKey: async function createAndAddApiKey(projectId: string) {
+    createAndAddApiKey: async function createAndAddApiKey(
+      projectId: string,
+      apiUrlParam?: string,
+    ) {
       // apiUrl: payload > projectData > nstrumentaDeployment
 
       const projectData = (
         await firestore.doc(`/projects/${projectId}`).get()
       ).data()
       const apiUrl =
+        apiUrlParam ??
         projectData?.apiUrl ??
         (
           (await (
@@ -63,7 +65,7 @@ export function CreateApiKeyService({
         await firestore.doc(projectPath).update({ apiKeys })
 
         const keyWithUrl = `${key}:${btoa(apiUrl)}`
-        return keyWithUrl
+        return { key: keyWithUrl, keyId, createdAt }
       } catch (err) {
         console.log(err)
       }
@@ -75,34 +77,6 @@ export function CreateApiKeyService({
       await doc.delete()
     },
 
-    createApiKey: async function createApiKey(
-      actionPath: string,
-      projectId: string,
-      apiUrl: string,
-    ) {
-      console.log('createApiKey', projectId)
-
-      const key = uuid()
-      const keyId = createKeyId(key)
-
-      try {
-        const doc = firestore.collection('keys').doc(keyId)
-        await doc.set({ projectId, createdAt: Date.now() })
-
-        const keyWithUrl = `${key}:${btoa(apiUrl)}`
-        await firestore
-          .doc(actionPath)
-          .set(
-            { status: 'complete', payload: { key: keyWithUrl, keyId } },
-            { merge: true },
-          )
-      } catch (err) {
-        console.log(err)
-        await firestore
-          .doc(actionPath)
-          .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
-      }
-    },
     revokeApiKey: async function revokeApiKey(
       actionPath: string,
       projectId: string,

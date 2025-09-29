@@ -13,18 +13,11 @@ export interface CreateKeyDialogResponse {
   createdAt?: string;
 }
 
-interface ServerApiKeyResponse {
-  payload: {
-    keyId: string;
-    key: string;
-  };
-  created: string;
-}
-
 @Component({
     selector: 'app-create-key-dialog',
     templateUrl: `create-key-dialog.component.html`,
     styles: [],
+    standalone: true,
     imports: [MatDialogTitle, MatProgressSpinner, CdkScrollable, MatDialogContent, MatButton, CdkCopyToClipboard, MatIcon, MatDialogActions, MatDialogClose]
 })
 export class CreateKeyDialogComponent {
@@ -38,13 +31,20 @@ export class CreateKeyDialogComponent {
   constructor() {
     this.response = {};
 
-    this.projectService.createApiKey().then(actionResponse => {
-      const typedResponse = actionResponse as ServerApiKeyResponse;
-      this.response.keyId = typedResponse.payload.keyId;
-      this.response.createdAt = typedResponse.created;
-      this.key = typedResponse.payload.key;
-      console.log('createApiKey response', actionResponse);
-    });
+    this.projectService.createApiKey()
+      .then(response => {
+        if (response) {
+          this.response.keyId = response.keyId;
+          this.response.createdAt = new Date(response.createdAt).toISOString();
+          this.key = response.key;
+          console.log('createApiKey response', response);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to create API key:', error);
+        // Optionally, close the dialog with an error message
+        this.dialogRef.close({ error: 'Failed to create API key' });
+      });
   }
 
   close() {

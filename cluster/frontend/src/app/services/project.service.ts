@@ -50,15 +50,11 @@ export class ProjectService {
 
   async createApiKey() {
     if (!this.currentProjectId) return;
-    //getApiUrl from api.service
     const apiUrl = await this.apiService.getApiUrl();
-
-    return this.serverService.runServerTask(
-      'createApiKey',
-      this.currentProjectId,
-      { apiUrl },
-      console.log
-    );
+    return this.apiService.createApiKey({
+      projectId: this.currentProjectId,
+      apiUrl,
+    });
   }
 
   async revokeApiKey(keyId: string) {
