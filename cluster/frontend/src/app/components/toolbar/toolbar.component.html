@@ -18,7 +18,7 @@
       <span class="fill-remaining-space"></span>
     }
     @if (router.url === '/') {
-      <div><button mat-button [routerLink]="['/projects']">Go to Projects</button></div>
+      <div><button mat-button [routerLink]="['/projects']" queryParamsHandling="preserve">Go to Projects</button></div>
     }
     @if (router.url !== '/') {
       <app-navbar-vscode></app-navbar-vscode>

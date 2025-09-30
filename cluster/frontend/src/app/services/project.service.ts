@@ -54,10 +54,35 @@ export class ProjectService {
   }
 
   async createApiKey() {
+    // Get projectId from route at call time to handle hot reload scenarios
+    let projectId = this.currentProjectId;
+    
+    // If not set, try to get it from the current route snapshot
+    if (!projectId) {
+      projectId = this.activatedRoute.snapshot.paramMap.get('projectId') || '';
+    }
+    
+    // If still not found, try getting it from the first child route
+    if (!projectId) {
+      let route = this.activatedRoute.snapshot;
+      while (route.firstChild) {
+        route = route.firstChild;
+        const id = route.paramMap.get('projectId');
+        if (id) {
+          projectId = id;
+          break;
+        }
+      }
+    }
+    
+    if (!projectId) {
+      throw new Error('No project selected. Please select a project first.');
+    }
+    
     //getApiUrl from api.service
     const apiUrl = await this.apiService.getApiUrl();
     return this.apiService.createApiKey({
-      projectId: this.currentProjectId,
+      projectId: projectId,
       apiUrl,
     });
   }

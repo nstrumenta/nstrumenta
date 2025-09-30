@@ -5,28 +5,28 @@
       <app-navbar-title></app-navbar-title>
       <mat-nav-list>
         @if (router.url.startsWith('/projects/')) {
-          <a mat-menu-item [routerLink]="['record']">
+          <a mat-menu-item [routerLink]="['record']" queryParamsHandling="preserve">
             <mat-icon>fiber_manual_record</mat-icon> Record
           </a>
-          <a mat-menu-item [routerLink]="['data']">
+          <a mat-menu-item [routerLink]="['data']" queryParamsHandling="preserve">
             <mat-icon>storage</mat-icon> Data
           </a>
-          <a mat-menu-item [routerLink]="['repositories']">
+          <a mat-menu-item [routerLink]="['repositories']" queryParamsHandling="preserve">
             <mat-icon>code</mat-icon> Repositories
           </a>
-          <a mat-menu-item [routerLink]="['modules']">
+          <a mat-menu-item [routerLink]="['modules']" queryParamsHandling="preserve">
             <mat-icon>category</mat-icon> Modules
           </a>
-          <a mat-menu-item [routerLink]="['agents']">
+          <a mat-menu-item [routerLink]="['agents']" queryParamsHandling="preserve">
             <mat-icon>developer_board</mat-icon> Agents
           </a>
-          <a mat-menu-item [routerLink]="['actions']">
+          <a mat-menu-item [routerLink]="['actions']" queryParamsHandling="preserve">
             <mat-icon>list</mat-icon> Action Log
           </a>
-          <a mat-menu-item [routerLink]="['machines']">
+          <a mat-menu-item [routerLink]="['machines']" queryParamsHandling="preserve">
             <mat-icon>cloud</mat-icon> Machines
           </a>
-          <a mat-menu-item [routerLink]="['settings']">
+          <a mat-menu-item [routerLink]="['settings']" queryParamsHandling="preserve">
             <mat-icon>settings</mat-icon>Settings
           </a>
         }

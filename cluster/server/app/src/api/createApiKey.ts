@@ -9,7 +9,7 @@ const createApiKeyBase = async (
   res: any,
   args: {
     projectId: string
-    apiUrl: string
+    apiUrl?: string
   } & FirebaseAuthResult
 ) => {
   const { projectId, apiUrl, authenticated, userId } = args
