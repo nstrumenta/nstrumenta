@@ -29,16 +29,21 @@ export class ProjectService {
   projectSettings: ProjectSettings;
 
   constructor() {
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
+    this.authService.user.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => {
       if (user) {
         this.user = user;
         this.firebaseDataService.setUser(user.uid);
         this.projects = this.firebaseDataService.userProjectsObservable$;
       }
     });
-    this.activatedRoute.paramMap.subscribe();
+
+    // Watch route parameters for project changes
+    this.activatedRoute.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((paramMap) => {
+      const projectId = paramMap.get('projectId');
+      if (projectId) {
+        this.setProject(projectId);
+      }
+    });
   }
 
   setProject(id: string) {
@@ -49,7 +54,6 @@ export class ProjectService {
   }
 
   async createApiKey() {
-    if (!this.currentProjectId) return;
     //getApiUrl from api.service
     const apiUrl = await this.apiService.getApiUrl();
 
@@ -62,7 +66,6 @@ export class ProjectService {
   }
 
   async revokeApiKey(keyId: string) {
-    if (!this.currentProjectId) return;
     return this.serverService.runServerTask(
       'revokeApiKey',
       this.currentProjectId,
