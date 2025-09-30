@@ -23,7 +23,10 @@ import * as Sentry from '@sentry/browser';
 class SentryErrorHandler implements ErrorHandler {
   handleError(error: unknown): void {
     Sentry.captureException(error);
-    console.error(error);
+    
+    if (!environment.production) {
+      throw error;
+    }
   }
 }
 
