@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 
 const server = require('http').Server(app)
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log('listening on *:', port)
 })
 
@@ -412,13 +412,6 @@ firestore
                       } catch (err) {
                         console.error(err)
                       }
-                      break
-                    case 'createApiKey':
-                      apiKeyService.createApiKey(
-                        doc.ref.path,
-                        projectId,
-                        data.payload.apiUrl,
-                      )
                       break
                     case 'revokeApiKey':
                       apiKeyService.revokeApiKey(

@@ -37,12 +37,11 @@ export const auth: AuthFunction = async (req, res) => {
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
-    // intentionally do not await for usage update
     const lastUsed = Date.now()
-    firestore.collection('keys').doc(hash).set({ lastUsed }, { merge: true })
-    firestore.collection('keys').doc(hash).collection('usage').add({
-      timestamp: lastUsed,
-      ip: req.ip,
+    const projectPath = `projects/${docData.projectId}`
+    
+    firestore.doc(projectPath).update({
+      [`apiKeys.${hash}.lastUsed`]: lastUsed
     })
 
     return { authenticated: true, projectId: docData.projectId }

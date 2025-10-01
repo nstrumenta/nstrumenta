@@ -14,6 +14,18 @@ export interface CreateProjectResponse {
   message: string;
 }
 
+export interface CreateApiKeyRequest {
+  projectId: string;
+  apiUrl: string;
+}
+
+export interface CreateApiKeyResponse {
+  key: string;
+  keyId: string;
+  createdAt: number;
+  message: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -71,6 +83,31 @@ export class ApiService {
 
     return this.http.post<CreateProjectResponse>(
       `${apiUrl}/createProject`,
+      request,
+      { headers }
+    ).toPromise();
+  }
+
+  async createApiKey(request: CreateApiKeyRequest): Promise<CreateApiKeyResponse> {
+    const user = this.authService.user.value;
+
+    if (!user) {
+      throw new Error('User must be authenticated to create an API key');
+    }
+
+    // Get Firebase ID token
+    const idToken = await user.getIdToken();
+
+    // Get the API URL dynamically
+    const apiUrl = await this.getApiUrl();
+
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
+    });
+
+    return this.http.post<CreateApiKeyResponse>(
+      `${apiUrl}/createApiKey`,
       request,
       { headers }
     ).toPromise();

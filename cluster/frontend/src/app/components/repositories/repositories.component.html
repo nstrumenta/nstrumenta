@@ -29,7 +29,7 @@
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument">
-      <a mat-button [routerLink]="fileDocument.key + '/jobs'">{{ fileDocument.key }}</a>
+      <a mat-button [routerLink]="fileDocument.key + '/jobs'" queryParamsHandling="preserve">{{ fileDocument.key }}</a>
     </mat-cell>
   </ng-container>
 

@@ -10,7 +10,7 @@
       <ng-container matColumnDef="id">
         <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
         <mat-cell *matCellDef="let fileDocument">
-          <a mat-button [routerLink]="[fileDocument.id,'overview']">
+          <a mat-button [routerLink]="[fileDocument.id,'overview']" queryParamsHandling="preserve">
             {{ fileDocument.id }}
           </a>
         </mat-cell>

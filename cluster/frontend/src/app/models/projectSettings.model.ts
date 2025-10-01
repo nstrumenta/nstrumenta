@@ -1,6 +1,7 @@
 export type ProjectRoles = 'owner' | 'admin' | 'viewer';
 export interface ApiKeyInfo { 
   createdAt: string;
+  lastUsed?: number;
 }
 
 export interface ProjectSettings {
