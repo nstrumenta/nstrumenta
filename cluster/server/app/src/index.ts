@@ -68,7 +68,7 @@ app.get('/', (req, res) => {
 
 const server = require('http').Server(app)
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
   console.log('listening on *:', port)
 })
 

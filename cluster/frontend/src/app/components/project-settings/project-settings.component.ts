@@ -30,6 +30,7 @@ interface MemberEntry {
 interface ApiKeyEntry {
   keyId: string;
   createdAt: string;
+  lastUsed?: number;
 }
 
 @Component({
@@ -78,7 +79,11 @@ export class ProjectSettingsComponent implements OnInit {
         // Transform apiKeys object to table data
         const apiKeysData = Object.keys(settings.apiKeys ? settings.apiKeys : {})
           .map((key) => {
-            return { keyId: key, createdAt: settings.apiKeys[key].createdAt };
+            return { 
+              keyId: key, 
+              createdAt: settings.apiKeys[key].createdAt,
+              lastUsed: settings.apiKeys[key].lastUsed
+            };
           })
           .sort((a, b) => {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
