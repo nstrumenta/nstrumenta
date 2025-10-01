@@ -180,7 +180,7 @@ export const createCloudDataJobService = ({
     }
 
     //revoke temp apiKey
-    apiKeyService.removeTempKey(apiKey)
+    apiKeyService.removeTempKey(apiKey.key)
 
     //mark action as complete
     await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })

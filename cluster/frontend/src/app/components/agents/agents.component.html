@@ -26,7 +26,7 @@
   <ng-container matColumnDef="id">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument">
-      <a mat-button [routerLink]="fileDocument.id">
+      <a mat-button [routerLink]="fileDocument.id" queryParamsHandling="preserve">
         {{ fileDocument.id }}
       </a>
     </mat-cell>

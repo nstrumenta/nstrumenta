@@ -5,9 +5,10 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "npx tsc -p .",
+    "typecheck": "npx tsc --noEmit -p .",
     "format": "prettier -w ./src",
     "dev-dotenv": "dotenv -e $ENVFILE -- bash -c 'env && npm run dev'",
-    "dev": "NST_AGENT_TYPE=dev NODE_ENV=development npx nodemon --watch 'src/**/*.ts' -e ts --exec 'npm run build && node --trace-warnings --inspect=0.0.0.0:9229 dist/index.js'"
+    "dev": "tsx watch --inspect=0.0.0.0:9229 src/index.ts"
   },
   "author": "Tyler Bryant",
   "license": "UNLICENSED",
@@ -29,8 +30,8 @@
     "@types/jsonwebtoken": "^9.0.2",
     "@types/node": "^20.10.4",
     "@types/uuid": "^9.0.2",
-    "nodemon": "^3.1.10",
     "prettier": "^2.2.1",
+    "tsx": "^4.20.6",
     "typescript": "^4.4.2"
   },
   "prettier": {

@@ -35,7 +35,9 @@ export class NavbarAccountComponent {
   async logout() {
     await this.auth.signOut();
     this.loggedIn = false;
-    this.router.navigate(['/']);
+    this.router.navigate(['/'], {
+      queryParamsHandling: 'preserve'
+    });
   }
 
   async login() {
