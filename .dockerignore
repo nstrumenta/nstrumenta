@@ -5,3 +5,6 @@
 **/.angular
 .git
 .nst
+
+# Credentials and secrets
+cluster/credentials/
