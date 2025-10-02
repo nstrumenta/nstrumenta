@@ -331,6 +331,10 @@ resource "google_cloud_run_v2_service" "default" {
 
   template {
     service_account = data.google_app_engine_default_service_account.default.email
+    annotations = {
+      # Force new revision when secret version changes
+      "secret-version" = google_secret_manager_secret_version.server_key.version
+    }
     containers {
       name = "server"
       ports {
@@ -403,6 +407,11 @@ resource "google_cloudfunctions2_function" "finalize" {
   location = var.location_id
   project  = google_project.fs.project_id
 
+  labels = {
+    # Force new deployment when secret version changes
+    secret-version = google_secret_manager_secret_version.server_key.version
+  }
+
   build_config {
     runtime     = "nodejs20"
     entry_point = "storageObjectFinalize"
@@ -446,6 +455,11 @@ resource "google_cloudfunctions2_function" "delete" {
   name     = "storageObjectDelete"
   location = var.location_id
   project  = google_project.fs.project_id
+
+  labels = {
+    # Force new deployment when secret version changes
+    secret-version = google_secret_manager_secret_version.server_key.version
+  }
 
   build_config {
     runtime     = "nodejs20"

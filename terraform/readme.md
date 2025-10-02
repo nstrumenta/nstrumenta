@@ -59,7 +59,11 @@ gcloud auth application-default login
 gcloud auth activate-service-account --key-file [path to key-file]
 ```
 
-
+## to Rotate Keys:
+```
+terraform taint google_service_account_key.server
+terraform apply
+```
 
 
 ## if not using terraform cloud
