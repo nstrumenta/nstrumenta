@@ -6,3 +6,5 @@
 **/temp
 **/dist
 **/.firebase
+**/credentials/*.env
+**/credentials/*.json

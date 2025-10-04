@@ -1,17 +1,16 @@
-import { Component, Input } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Component, inject } from '@angular/core';
+import { UploadService } from '../services/upload.service';
 import { MatCard, MatCardHeader, MatCardTitle, MatCardContent } from '@angular/material/card';
-import { AsyncPipe, DecimalPipe, KeyValuePipe } from '@angular/common';
-import { MatList, MatListItem } from '@angular/material/list';
-import { MatLabel } from '@angular/material/form-field';
+import { DecimalPipe } from '@angular/common';
 import { MatProgressBar } from '@angular/material/progress-bar';
+import { MatChip } from '@angular/material/chips';
 
 @Component({
     selector: 'app-upload-progress',
     templateUrl: './upload-progress.component.html',
     styleUrls: ['./upload-progress.component.scss'],
-    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatList, MatListItem, MatLabel, MatProgressBar, AsyncPipe, DecimalPipe, KeyValuePipe]
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardContent, MatProgressBar, MatChip, DecimalPipe]
 })
 export class UploadProgressComponent {
-  @Input() uploads: Map<string, { name: string; progress: Observable<number> }>;
+  uploadService = inject(UploadService);
 }

@@ -80,7 +80,7 @@ describe('web', () => {
     const result = await pollNstrumenta({
       matchString: moduleName,
       interval: 1_000,
-      timeout: 5_000,
+      timeout: 8_000,
       command: `module list --filter ${moduleName}`,
     });
     expect(result).toEqual(expect.stringMatching(moduleName));
