@@ -32,14 +32,19 @@ const uploadDataBase = async (
     const folderPath = normalizedFolder ? `${normalizedFolder}/` : ''
     const filePath = `projects/${projectId}/data/${folderPath}${name}`
 
-    const uploadUrl = await generateV4UploadSignedUrl(filePath, {
-      name,
-      folder: normalizedFolder,
-      size: `${size}`,
-      contentType: contentType || 'application/octet-stream',
-      uploadedBy: userId,
-      uploadedAt: `${timestamp}`,
-    })
+    const uploadUrl = await generateV4UploadSignedUrl(
+      filePath,
+      {
+        name,
+        folder: normalizedFolder,
+        size: `${size}`,
+        contentType: contentType || 'application/octet-stream',
+        uploadedBy: userId,
+        uploadedAt: `${timestamp}`,
+      },
+      undefined, // origin
+      true // overwrite: allow replacing existing files
+    )
 
     return res.status(200).send({ uploadUrl, filePath })
   } catch (error) {

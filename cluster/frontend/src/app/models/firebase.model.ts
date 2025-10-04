@@ -50,8 +50,10 @@ export interface DataRecord extends DocumentData {
   name?: string;
   type?: string;
   filePath?: string;
+  dirname?: string;
   lastModified?: number;
   size?: number;
+  displayName?: string; // Used in flat view to show relative path
   [key: string]: unknown;
 }
 

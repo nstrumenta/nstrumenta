@@ -5,9 +5,14 @@ import { Injectable, signal } from '@angular/core';
 })
 export class FolderNavigationService {
   currentFolder = signal<string>('');
+  flatView = signal<boolean>(false); // Toggle between hierarchical and flat view
 
   setFolder(folder: string) {
     this.currentFolder.set(folder);
+  }
+
+  toggleFlatView() {
+    this.flatView.update(current => !current);
   }
 
   navigateToFolder(folder: string) {

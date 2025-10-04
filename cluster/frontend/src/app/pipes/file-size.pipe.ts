@@ -4,18 +4,21 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class FileSizePipe implements PipeTransform {
   private units = ['bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
 
-  transform(bytes = 0, precision = 2): string {
-    if (isNaN(parseFloat(String(bytes))) || !isFinite(bytes)) {
+  transform(bytes: any = 0, precision = 2): string {
+    // Handle null, undefined, or non-numeric values
+    if (bytes == null || bytes === '' || isNaN(parseFloat(String(bytes))) || !isFinite(Number(bytes))) {
       return '---';
     }
 
+    // Convert to number
+    let numBytes = Number(bytes);
     let unit = 0;
 
-    while (bytes >= 1024) {
-      bytes /= 1024;
+    while (numBytes >= 1024) {
+      numBytes /= 1024;
       unit++;
     }
 
-    return bytes.toFixed(+precision) + ' ' + this.units[unit];
+    return numBytes.toFixed(+precision) + ' ' + this.units[unit];
   }
 }

@@ -1,31 +1,49 @@
-<div style="flex-direction: row; display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-  <mat-form-field>
-    <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
-  </mat-form-field>
-  
-  <div style="display: flex; align-items: center; gap: 8px;">
-    <mat-icon>folder</mat-icon>
-    @if (folderNav.currentFolder()) {
-      <button mat-icon-button (click)="folderNav.navigateToFolder('')" matTooltip="Root">
-        <mat-icon>home</mat-icon>
-      </button>
-      @for (crumb of folderNav.breadcrumbs; track crumb.path) {
-        <span>/</span>
-        <button mat-button (click)="folderNav.navigateToFolder(crumb.path)">
-          {{ crumb.label }}
-        </button>
-      }
-    } @else {
-      <span style="color: #666;">/</span>
-    }
-    <mat-form-field style="width: 200px;">
-      <mat-label>New folder</mat-label>
-      <input matInput [(ngModel)]="newFolderName" placeholder="sensors/data" />
+<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+  <!-- Filter row with view toggle -->
+  <div style="display: flex; align-items: center; gap: 16px;">
+    <mat-form-field>
+      <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
     </mat-form-field>
-    <button mat-icon-button (click)="setFolder()" matTooltip="Set folder">
-      <mat-icon>check</mat-icon>
+    <button mat-icon-button (click)="folderNav.toggleFlatView()" 
+            [matTooltip]="folderNav.flatView() ? 'Switch to folder view' : 'Switch to flat view'">
+      <mat-icon>{{ folderNav.flatView() ? 'folder' : 'list' }}</mat-icon>
     </button>
   </div>
+  
+  <!-- Breadcrumb navigation row (only in hierarchical view) -->
+  @if (!folderNav.flatView()) {
+  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <mat-icon style="color: #666;">folder_open</mat-icon>
+    <button mat-button (click)="folderNav.navigateToFolder('')" 
+            [class.active-crumb]="!folderNav.currentFolder()"
+            style="min-width: auto; padding: 0 8px;">
+      <strong>/</strong>
+    </button>
+    @for (crumb of folderNav.breadcrumbs; track crumb.path) {
+      <span style="color: #999;">/</span>
+      <button mat-button (click)="folderNav.navigateToFolder(crumb.path)"
+              [class.active-crumb]="crumb.path === folderNav.currentFolder()"
+              style="min-width: auto; padding: 0 8px;">
+        {{ crumb.label }}
+      </button>
+    }
+    
+    <span style="flex: 1;"></span>
+    
+    <!-- New folder controls -->
+    <mat-form-field style="width: 200px;" subscriptSizing="dynamic">
+      <mat-label>New folder name</mat-label>
+      <input matInput [(ngModel)]="newFolderName" placeholder="e.g., sensors" 
+             (keyup.enter)="createFolder()" />
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="createFolder()" 
+            [disabled]="!newFolderName.trim()" 
+            matTooltip="Create and navigate to folder">
+      <mat-icon>create_new_folder</mat-icon>
+      Create Folder
+    </button>
+  </div>
+  }
 
   @if (selection.hasValue()) {
     {{ selection.selected.length }} files selected:
@@ -38,7 +56,7 @@
   }
 </div>
 
-<mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc"
+<mat-table #table [dataSource]="dataSource" matSort matSortActive="name" matSortDirection="asc"
   class="animate">
   <!-- Checkbox Column -->
   <ng-container matColumnDef="select">
@@ -48,53 +66,67 @@
       </mat-checkbox>
     </mat-header-cell>
     <mat-cell *matCellDef="let row">
-      <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-        [checked]="selection.isSelected(row)">
-      </mat-checkbox>
+      @if (!isFolder(row)) {
+        <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      }
     </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument">
-      <a mat-button [matTooltip]="fileDocument.name" matTooltipPosition="right" [routerLink]="fileDocument.key" queryParamsHandling="preserve">
-        {{ fileDocument.name }}
-      </a>
+    <mat-cell *matCellDef="let item">
+      @if (isFolder(item)) {
+        <button mat-button (click)="navigateToFolder(item.path)" style="text-align: left;">
+          <mat-icon>folder</mat-icon>
+          <span style="margin-left: 8px;">{{ item.name }}</span>
+        </button>
+      } @else {
+        <a mat-button [matTooltip]="item.displayName || item.name" matTooltipPosition="right" [routerLink]="item.key" queryParamsHandling="preserve">
+          {{ item.displayName || item.name }}
+        </a>
+      }
     </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="size">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Size </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.size | fileSize }} </mat-cell>
+    <mat-cell *matCellDef="let item">
+      {{ item.size | fileSize }}
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="lastModified">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument">
-      {{ fileDocument.lastModified | date : 'medium' }}
+    <mat-cell *matCellDef="let item">
+      {{ item.lastModified | date : 'medium' }}
     </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument" style="align-content: center">
-      <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
-        <mat-icon>more_vert</mat-icon>
-      </button>
-      <mat-menu #menu="matMenu">
-        <button mat-menu-item (click)="download(fileDocument)">
-          <span>Download</span>
+    <mat-cell *matCellDef="let item" style="align-content: center">
+      @if (!isFolder(item)) {
+        <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
+          <mat-icon>more_vert</mat-icon>
         </button>
-        @for (moduleAction of moduleActions | keyvalue; track moduleAction.key) {
-          <button mat-menu-item (click)="handleModuleAction(moduleAction.value,fileDocument)">
-            <span>{{moduleAction.key}}</span>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="download(item)">
+            <span>Download</span>
           </button>
-        }
-      </mat-menu>
-
+          @for (moduleAction of moduleActions | keyvalue; track moduleAction.key) {
+            <button mat-menu-item (click)="handleModuleAction(moduleAction.value, item)">
+              <span>{{moduleAction.key}}</span>
+            </button>
+          }
+        </mat-menu>
+      }
     </mat-cell>
   </ng-container>
 
   <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns" class="animate"></mat-row>
+  <mat-row *matRowDef="let row; columns: displayedColumns" 
+           [class.animate]="!isFolder(row)"
+           [class.folder-row]="isFolder(row)"></mat-row>
 </mat-table>
