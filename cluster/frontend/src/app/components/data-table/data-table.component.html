@@ -1,7 +1,32 @@
-<div style="flex-direction: row">
+<div style="flex-direction: row; display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
   <mat-form-field>
     <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
   </mat-form-field>
+  
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <mat-icon>folder</mat-icon>
+    @if (folderNav.currentFolder()) {
+      <button mat-icon-button (click)="folderNav.navigateToFolder('')" matTooltip="Root">
+        <mat-icon>home</mat-icon>
+      </button>
+      @for (crumb of folderNav.breadcrumbs; track crumb.path) {
+        <span>/</span>
+        <button mat-button (click)="folderNav.navigateToFolder(crumb.path)">
+          {{ crumb.label }}
+        </button>
+      }
+    } @else {
+      <span style="color: #666;">/</span>
+    }
+    <mat-form-field style="width: 200px;">
+      <mat-label>New folder</mat-label>
+      <input matInput [(ngModel)]="newFolderName" placeholder="sensors/data" />
+    </mat-form-field>
+    <button mat-icon-button (click)="setFolder()" matTooltip="Set folder">
+      <mat-icon>check</mat-icon>
+    </button>
+  </div>
+
   @if (selection.hasValue()) {
     {{ selection.selected.length }} files selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">

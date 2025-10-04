@@ -1,10 +1,12 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { UploadService } from 'src/app/services/upload.service';
+import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
 import { MatToolbar } from '@angular/material/toolbar';
 import { AsyncPipe } from '@angular/common';
 import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
@@ -25,6 +27,8 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
 export class ToolbarComponent {
   private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);
+  uploadService = inject(UploadService);
+  private folderNav = inject(FolderNavigationService);
   authService = inject(AuthService);
   router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);
@@ -32,14 +36,13 @@ export class ToolbarComponent {
   @Output() drawerToggleClick = new EventEmitter();
   downloadURL: Observable<string>;
   projectId: string;
-  uploads = new Map<string, { name: string; progress: Observable<number> }>();
 
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe(Breakpoints.Handset)
     .pipe(map((result) => result.matches));
 
   isDataRouteOrUploading() {
-    return this.uploads.size > 0 || this.router.url.endsWith('/data');
+    return this.uploadService.hasActiveUploads() || this.router.url.includes('/data');
   }
 
   chooseFiles(event: Event) {
@@ -51,10 +54,18 @@ export class ToolbarComponent {
     this.upload(files);
   }
 
-  upload(_files: File[]): void {
-    console.warn('Upload functionality temporarily disabled - needs migration to modern Firebase Storage API');
-    // TODO: Migrate entire upload method to modern Firebase Storage
-    // The upload functionality in this component needs to be completely rewritten
-    // to use the modern Firebase Storage API instead of compat layer
+  async upload(files: File[], folder?: string): Promise<void> {
+    const projectId = this.firebaseDataService.projectId();
+    if (!projectId || !files?.length) return;
+
+    const uploadFolder = folder || this.folderNav.currentFolder();
+
+    for (const file of files) {
+      try {
+        await this.uploadService.uploadFile(projectId, file, uploadFolder);
+      } catch (error) {
+        console.error(`Failed to initialize upload for ${file.name}:`, error);
+      }
+    }
   }
 }

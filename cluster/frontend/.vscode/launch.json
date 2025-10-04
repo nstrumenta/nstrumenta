@@ -16,7 +16,7 @@
       "type": "chrome",
       "request": "launch",
       "name": "frontend dev apiUrl",
-      "url": "http://localhost:5008?apiUrl=http://localhost:5999",
+      "url": "http://localhost:5008?apiUrl=http://server.starshipinteractive.com:5999",
       "webRoot": "${workspaceFolder}",
       "sourceMaps": true,
     }

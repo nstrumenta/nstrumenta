@@ -9,10 +9,12 @@ import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage'
 import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
 import { environment } from 'src/environments/environment';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe, KeyValuePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
@@ -30,7 +32,7 @@ interface ModuleAction {
     selector: 'app-data-table',
     templateUrl: './data-table.component.html',
     styleUrls: ['./data-table.component.scss'],
-    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatMenuTrigger, MatMenu, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, KeyValuePipe, FileSizePipe]
+    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatMenuTrigger, MatMenu, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, KeyValuePipe, FileSizePipe, FormsModule]
 })
 export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'lastModified', 'size', 'actions'];
@@ -39,6 +41,7 @@ export class DataTableComponent implements OnInit {
   projectId: string;
   dataPath: string;
   filterParam: string;
+  newFolderName = '';
 
   moduleActions = new Map<string, ModuleAction>();
 
@@ -49,6 +52,7 @@ export class DataTableComponent implements OnInit {
   private serverService = inject(ServerService);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
+  folderNav = inject(FolderNavigationService);
   public dialog = inject(MatDialog);
 
   constructor() {
@@ -186,5 +190,12 @@ export class DataTableComponent implements OnInit {
     this.selection.selected.forEach((selectedFile) => {
       this.download(selectedFile);
     });
+  }
+
+  setFolder() {
+    if (this.newFolderName) {
+      this.folderNav.setFolder(this.newFolderName);
+      this.newFolderName = '';
+    }
   }
 }

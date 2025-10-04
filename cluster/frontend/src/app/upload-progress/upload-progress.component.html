@@ -4,16 +4,36 @@
       <mat-card-title>Upload Progress</mat-card-title>
     </mat-card-header>
     <mat-card-content class='upload-progress-body'>
-      @for (file of uploads | keyvalue; track file.key) {
-        <mat-list class='upload-progress-item'>
-          <mat-list-item>
-            <mat-label class='upload-progress-label'>{{file.value.name}}</mat-label>
-            <mat-label>{{file.value.progress | async | number : '0.0-0'}}%</mat-label>
-          </mat-list-item>
-          <mat-list-item>
-            <mat-progress-bar [value]='file.value.progress | async'></mat-progress-bar>
-          </mat-list-item>
-        </mat-list>
+      @for (task of uploadService.getUploadsArray(); track task.id) {
+        <div class='upload-progress-item'>
+          <div class='upload-status-row'>
+            <span class='upload-progress-label'>{{ task.fileName }}</span>
+            <div class='upload-status-indicator'>
+              @if (task.status === 'uploading') {
+                <span class='progress-text'>{{ task.progress | number : '0.0-0' }}%</span>
+              } @else if (task.status === 'verifying') {
+                <mat-chip color="accent">Verifying...</mat-chip>
+              } @else if (task.status === 'complete') {
+                <mat-chip color="primary">Complete ✓</mat-chip>
+              } @else if (task.status === 'error') {
+                <mat-chip color="warn">Error</mat-chip>
+              }
+            </div>
+          </div>
+          <div class='upload-progress-row'>
+            @if (task.status === 'uploading' || task.status === 'verifying') {
+              <mat-progress-bar 
+                [value]="task.progress" 
+                [mode]="task.status === 'verifying' ? 'indeterminate' : 'determinate'">
+              </mat-progress-bar>
+            }
+          </div>
+          @if (task.error) {
+            <div class='upload-error-row'>
+              <span class='error-message'>{{ task.error }}</span>
+            </div>
+          }
+        </div>
       }
     </mat-card-content>
   </mat-card>
