@@ -35,8 +35,8 @@
       <mat-icon>add</mat-icon>
     </button>
     <input hidden type="file" multiple #uploader (change)="chooseFiles($event)" />
-    @if (uploads && uploads.size > 0) {
-      <app-upload-progress [uploads]="uploads"></app-upload-progress>
+    @if (uploadService.hasActiveUploads()) {
+      <app-upload-progress></app-upload-progress>
     }
   }
 </mat-toolbar>
