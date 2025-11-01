@@ -61,6 +61,8 @@
   },
   "dependencies": {
     "@mcap/core": "^0.2.2",
+    "@mcp/core": "^0.0.8",
+    "@mcp/server": "^0.0.8",
     "@types/bytebuffer": "^5.0.42",
     "bytebuffer": "^5.0.1",
     "commander": "^8.1.0",
@@ -71,7 +73,8 @@
     "serve-index": "^1.9.1",
     "tar": "^6.1.15",
     "uuid": "^9.0.0",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "zod": "^3.23.8"
   },
   "engines": {
     "node": ">=18"

@@ -125,6 +125,7 @@ agentCommand
   .option('-p,--port <port>', 'websocket port', '8088')
   .option('-d, --debug', 'output extra debugging', false)
   .option('-t,--tag <tag>', 'optional tag - removes tag from any agent that might already have it')
+  .option('--mcp', 'start the MCP server')
   .description('start agent')
   .action(Start);
 
