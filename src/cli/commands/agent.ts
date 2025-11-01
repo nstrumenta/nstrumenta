@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import { Command } from 'commander';
+import * as path from 'path';
 import { NstrumentaServer } from '../../nodejs/server';
 
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
@@ -15,7 +16,8 @@ export const Start = async function (options: {
   const apiKey = resolveApiKey();
 
   if (mcp) {
-    const mcpServer = spawn('npx', ['ts-node', 'src/nodejs/mcp.ts'], {
+    const mcpScriptPath = path.join(__dirname, '..', '..', 'nodejs', 'mcp.js');
+    const mcpServer = spawn('node', [mcpScriptPath], {
       stdio: 'inherit',
       env: { ...process.env, NSTRUMENTA_API_KEY: apiKey },
     });
