@@ -61,8 +61,7 @@
   },
   "dependencies": {
     "@mcap/core": "^0.2.2",
-    "@mcp/core": "^0.0.8",
-    "@mcp/server": "^0.0.8",
+    "@modelcontextprotocol/sdk": "^1.21.0",
     "@types/bytebuffer": "^5.0.42",
     "bytebuffer": "^5.0.1",
     "commander": "^8.1.0",

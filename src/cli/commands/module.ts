@@ -414,10 +414,11 @@ export const publishModule = async (module: ModuleExtended) => {
 
 export const List = async (options: {
   filter: string;
+  depth?: number | null;
   json?: boolean;
 }): Promise<ModuleExtended[] | void> => {
   const apiKey = resolveApiKey();
-  const { filter, json } = options;
+  const { filter, json, depth = 2 } = options;
 
   try {
     const response = await fetch(endpoints.LIST_MODULES, {
@@ -440,7 +441,7 @@ export const List = async (options: {
     if (json) {
       return filteredModules;
     } else {
-      console.dir(filteredModules, { depth: null });
+      console.dir(filteredModules, { depth });
     }
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
