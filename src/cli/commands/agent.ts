@@ -1,3 +1,4 @@
+import { spawn } from 'child_process';
 import { Command } from 'commander';
 import { NstrumentaServer } from '../../nodejs/server';
 
@@ -8,9 +9,21 @@ export const Start = async function (options: {
   port: string;
   tag?: string;
   debug?: boolean;
+  mcp?: boolean;
 }): Promise<void> {
-  const { port, tag, debug } = options;
+  const { port, tag, debug, mcp } = options;
   const apiKey = resolveApiKey();
+
+  if (mcp) {
+    const mcpServer = spawn('npx', ['ts-node', 'src/nodejs/mcp.ts'], {
+      stdio: 'inherit',
+      env: { ...process.env, NSTRUMENTA_API_KEY: apiKey },
+    });
+
+    mcpServer.on('error', (err) => {
+      console.log('Error starting MCP server:', err);
+    });
+  }
 
   const server = new NstrumentaServer({
     apiKey,

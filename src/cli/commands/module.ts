@@ -412,9 +412,12 @@ export const publishModule = async (module: ModuleExtended) => {
   return fileName;
 };
 
-export const List = async (options: { filter: string; depth?: number | null }) => {
+export const List = async (options: {
+  filter: string;
+  json?: boolean;
+}): Promise<ModuleExtended[] | void> => {
   const apiKey = resolveApiKey();
-  const { filter, depth = 2 } = options;
+  const { filter, json } = options;
 
   try {
     const response = await fetch(endpoints.LIST_MODULES, {
@@ -434,7 +437,11 @@ export const List = async (options: { filter: string; depth?: number | null }) =
       ? data.filter((module: any) => JSON.stringify(module).includes(filter))
       : data;
 
-    console.dir(filteredModules, { depth });
+    if (json) {
+      return filteredModules;
+    } else {
+      console.dir(filteredModules, { depth: null });
+    }
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }
