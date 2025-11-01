@@ -108,7 +108,9 @@ moduleCommand
   .description('list modules published in current project')
   .option('--filter <filter>', 'filter string to match')
   .option('--depth <depth>', 'depth of object to print')
-  .action(List);
+  .action(async (options) => {
+    await List(options);
+  });
 moduleCommand
   .command('query')
   .description('query modules with field, comparison, compareValue')
