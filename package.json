@@ -25,8 +25,12 @@
     "watch:link": "nodemon --exec 'npm run build:browser && npm link' --watch ./src",
     "dev": "nodemon -- module list",
     "dev:agent": "nodemon -- agent start",
+    "dev:mcp": "npm run build:nodejs && node --watch dist/nodejs/nodejs/mcp.js",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
+    "test": "node --test --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
+    "test:watch": "node --test --watch --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
+    "test:coverage": "node --test --experimental-test-coverage --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; standard-version --release-as patch"
