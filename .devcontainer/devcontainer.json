@@ -1,5 +1,7 @@
 {
-  "image": "nstrumenta/toolchain:24.1.0a",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "forwardPorts": [5999, 9229],
   "portsAttributes": {
     "5999": {
