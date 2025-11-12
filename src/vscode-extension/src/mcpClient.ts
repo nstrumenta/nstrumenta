@@ -33,64 +33,57 @@ export interface ProjectInfo {
 
 export class MCPClient {
   private serverUrl: string;
-  private apiKey?: string;
+  private apiKey: string;
 
   constructor(config: MCPClientConfig) {
+    if (!config.apiKey) {
+      throw new Error('API key is required for MCP client');
+    }
+    
     this.apiKey = config.apiKey;
-    
-    const configuredUrl = vscode.workspace.getConfiguration('nstrumenta').get<string>('mcpServer.url');
-    
-    if (configuredUrl && configuredUrl !== 'http://localhost:3100') {
-      this.serverUrl = configuredUrl;
-    } else if (config.serverUrl) {
-      this.serverUrl = config.serverUrl;
-    } else if (config.apiKey) {
-      this.serverUrl = this.extractServerUrlFromApiKey(config.apiKey);
-    } else {
-      this.serverUrl = 'http://localhost:3100';
-    }
-  }
-
-  private extractServerUrlFromApiKey(apiKey: string): string {
-    try {
-      const parts = apiKey.split('.');
-      if (parts.length >= 2) {
-        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-        if (payload.mcpServerUrl) {
-          return payload.mcpServerUrl;
-        }
-      }
-    } catch (error) {
-      console.error('Failed to parse API key:', error);
-    }
-    return 'http://localhost:3100';
+    this.serverUrl = config.serverUrl || 'http://localhost:5999';
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
-    const response = await fetch(`${this.serverUrl}/mcp/tools/call`, {
+    const response = await fetch(`${this.serverUrl}/mcp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {})
+        'x-api-key': this.apiKey
       },
       body: JSON.stringify({
-        name: toolName,
-        arguments: args
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: {
+          name: toolName,
+          arguments: args
+        },
+        id: Date.now()
       })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`MCP tool call failed: ${response.status} ${errorText}`);
+      throw new Error(`MCP request failed: ${response.status} ${errorText}`);
     }
 
     const result = await response.json() as any;
     
-    if (result.isError) {
-      throw new Error(`MCP tool error: ${result.content?.[0]?.text || 'Unknown error'}`);
+    if (result.error) {
+      throw new Error(`MCP error: ${result.error.message || 'Unknown error'}`);
     }
 
-    return result.content?.[0]?.text ? JSON.parse(result.content[0].text) : result as T;
+    const toolResult = result.result;
+    if (toolResult.isError) {
+      throw new Error(`Tool error: ${toolResult.content?.[0]?.text || 'Unknown error'}`);
+    }
+
+    // Return structured content if available, otherwise parse text content
+    if (toolResult.structuredContent) {
+      return toolResult.structuredContent as T;
+    }
+    
+    return toolResult.content?.[0]?.text ? JSON.parse(toolResult.content[0].text) : toolResult as T;
   }
 
   async listModules(): Promise<Module[]> {

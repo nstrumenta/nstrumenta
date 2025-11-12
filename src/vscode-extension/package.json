@@ -17,23 +17,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "nstrumenta.auth.login",
-        "title": "Login",
+        "command": "nstrumenta.setApiKey",
+        "title": "Set API Key",
         "category": "Nstrumenta"
       },
       {
-        "command": "nstrumenta.auth.logout",
-        "title": "Logout",
+        "command": "nstrumenta.clearApiKey",
+        "title": "Clear API Key",
         "category": "Nstrumenta"
       },
       {
-        "command": "nstrumenta.project.select",
-        "title": "Select Project",
-        "category": "Nstrumenta"
-      },
-      {
-        "command": "nstrumenta.project.info",
-        "title": "Show Project Info",
+        "command": "nstrumenta.status",
+        "title": "Show Status",
         "category": "Nstrumenta"
       },
       {
@@ -84,8 +79,8 @@
       "properties": {
         "nstrumenta.mcpServer.url": {
           "type": "string",
-          "default": "http://localhost:3100",
-          "description": "MCP server URL (leave as localhost:3100 for development, production uses URL from API key)"
+          "default": "http://localhost:5999",
+          "description": "MCP server URL (should match your nstrumenta server)"
         }
       }
     }

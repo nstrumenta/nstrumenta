@@ -22,6 +22,7 @@ import {
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
+import { handleMcpRequest } from './mcp'
 
 const version = require('../package.json').version
 
@@ -61,6 +62,9 @@ Object.keys(functions).map((fn) => {
   // console.log(`register GET listener [${fn}]`)
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
+
+// MCP endpoint
+app.post('/mcp', handleMcpRequest)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')
