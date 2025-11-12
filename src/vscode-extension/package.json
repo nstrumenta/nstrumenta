@@ -1,0 +1,108 @@
+{
+  "name": "nstrumenta-vscode",
+  "displayName": "Nstrumenta",
+  "description": "Connect your local development workspace to nstrumenta cloud projects",
+  "version": "2.0.0",
+  "publisher": "nstrumenta",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "nstrumenta.auth.login",
+        "title": "Login",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.auth.logout",
+        "title": "Logout",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.project.select",
+        "title": "Select Project",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.project.info",
+        "title": "Show Project Info",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.module.list",
+        "title": "List Modules",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.module.run",
+        "title": "Run Module",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.module.publish",
+        "title": "Publish Modules",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.data.list",
+        "title": "List Data",
+        "category": "Nstrumenta"
+      },
+      {
+        "command": "nstrumenta.agent.list",
+        "title": "List Agents",
+        "category": "Nstrumenta"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nstrumenta",
+          "title": "Nstrumenta",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "nstrumenta": [
+        {
+          "id": "nstrumentaModules",
+          "name": "Modules"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Nstrumenta",
+      "properties": {
+        "nstrumenta.mcpServer.url": {
+          "type": "string",
+          "default": "http://localhost:3100",
+          "description": "MCP server URL (leave as localhost:3100 for development, production uses URL from API key)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "node --test --experimental-strip-types __tests__/unit/**/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.80.0",
+    "@vscode/test-electron": "^2.3.0",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2"
+  }
+}
