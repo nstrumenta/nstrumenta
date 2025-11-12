@@ -33,8 +33,10 @@ Beads is a git-backed issue tracker designed specifically for AI coding agents t
 Use `bd` commands to create, track, and query issues instead of markdown TODO lists.
 Key commands: `bd create`, `bd list`, `bd ready`, `bd update`, `bd dep add`, `bd show`
 All issues are automatically synced via git in `.beads/issues.jsonl`
-Before starting work, check `bd ready --json` to see what tasks have no blockers.
+Before starting work, check `bd ready` to see what tasks have no blockers.
 When you discover new work, use `bd create` to track it with proper dependencies.
+Avoid complex shell patterns with quotes, parentheses, or redirects in arguments as these may require manual approval for security.
+Prefer simple `bd` commands without jq filtering - use `bd list`, `bd ready`, `bd show <id>` directly.
 
 ## Architecture Understanding
 - **Sensor Events**: Real-time data streams from sensors (accelerometer, gyro, magnetometer, etc.) with typed IDs and value arrays

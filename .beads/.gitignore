@@ -14,7 +14,12 @@ bd.sock
 db.sqlite
 bd.db
 
+# Merge artifacts from git operations
+beads.base.*
+beads.left.*
+beads.right.*
+
 # Keep JSONL exports and config (source of truth for git)
-!*.jsonl
+!issues.jsonl
 !metadata.json
-!config.json
+!config.yaml
