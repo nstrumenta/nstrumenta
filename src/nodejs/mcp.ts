@@ -6,8 +6,28 @@ import { List as ListModules, Publish as PublishModule, Run as RunModule } from 
 import { List as ListData } from '../cli/commands/data.js';
 import { List as ListAgents } from '../cli/commands/agent.js';
 import { Info as ProjectInfo, ProjectId } from '../cli/commands/project.js';
+import { validateApiKey } from '../shared/auth.js';
+import { Firestore } from '@google-cloud/firestore';
 
 const PORT = parseInt(process.env.MCP_PORT || '3100');
+
+// Initialize Firestore for auth validation
+let firestore: Firestore | null = null;
+const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY;
+if (serviceKeyJson) {
+  try {
+    const serviceAccount = JSON.parse(serviceKeyJson);
+    firestore = new Firestore({
+      projectId: serviceAccount.project_id,
+      credentials: {
+        client_email: serviceAccount.client_email,
+        private_key: serviceAccount.private_key,
+      },
+    });
+  } catch (error) {
+    console.warn('Failed to initialize Firestore for MCP auth:', error);
+  }
+}
 
 const server = new McpServer({
   name: 'nstrumenta',
@@ -229,6 +249,24 @@ async function main() {
     // MCP endpoint - creates new transport per request (stateless mode)
     app.post('/mcp', async (req, res) => {
         try {
+            // Extract API key from Authorization header
+            const authHeader = req.headers.authorization;
+            if (authHeader && authHeader.startsWith('Bearer ')) {
+                const apiKey = authHeader.substring(7);
+                // Set API key in environment for this request's CLI commands
+                process.env.NSTRUMENTA_API_KEY = apiKey;
+            } else if (!process.env.NSTRUMENTA_API_KEY) {
+                // If no auth header and no env var, return error
+                return res.status(401).json({
+                    jsonrpc: '2.0',
+                    error: {
+                        code: -32001,
+                        message: 'Authentication required: Missing API key'
+                    },
+                    id: null
+                });
+            }
+
             const transport = new StreamableHTTPServerTransport({
                 sessionIdGenerator: undefined,
                 enableJsonResponse: true
