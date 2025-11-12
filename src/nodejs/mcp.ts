@@ -1,10 +1,13 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import express from 'express';
 import { z } from 'zod';
 import { List as ListModules, Publish as PublishModule, Run as RunModule } from '../cli/commands/module.js';
-import { List as ListData, Get as GetData, Upload as UploadData } from '../cli/commands/data.js';
+import { List as ListData } from '../cli/commands/data.js';
 import { List as ListAgents } from '../cli/commands/agent.js';
 import { Info as ProjectInfo, ProjectId } from '../cli/commands/project.js';
+
+const PORT = parseInt(process.env.MCP_PORT || '3100');
 
 const server = new McpServer({
   name: 'nstrumenta',
@@ -103,7 +106,6 @@ server.registerTool(
     },
     async () => {
         try {
-            // ListData logs to console, we need to capture or return structured data
             await ListData(null, {});
             return {
                 content: [{ type: 'text', text: 'Data files listed (check console output)' }],
@@ -166,7 +168,7 @@ server.registerTool(
     }
 );
 
-// Resources - read-only contextual data
+// Resources
 server.registerResource(
     'Available Modules',
     'nstrumenta://modules/list',
@@ -200,7 +202,6 @@ server.registerResource(
     },
     async () => {
         try {
-            // For now, return project ID - can be expanded to include full config
             const projectId = await ProjectId();
             return {
                 contents: [{
@@ -217,8 +218,48 @@ server.registerResource(
 );
 
 async function main() {
-    const transport = new StdioServerTransport();
-    await server.connect(transport);
+    const app = express();
+    app.use(express.json());
+    
+    // Health check
+    app.get('/health', (req, res) => {
+        res.json({ status: 'ok', service: 'nstrumenta-mcp-server' });
+    });
+    
+    // MCP endpoint - creates new transport per request (stateless mode)
+    app.post('/mcp', async (req, res) => {
+        try {
+            const transport = new StreamableHTTPServerTransport({
+                sessionIdGenerator: undefined,
+                enableJsonResponse: true
+            });
+
+            res.on('close', () => {
+                transport.close();
+            });
+
+            await server.connect(transport);
+            await transport.handleRequest(req, res, req.body);
+        } catch (error) {
+            console.error('Error handling MCP request:', error);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    jsonrpc: '2.0',
+                    error: {
+                        code: -32603,
+                        message: 'Internal server error'
+                    },
+                    id: null
+                });
+            }
+        }
+    });
+    
+    app.listen(PORT, () => {
+        console.log(`Nstrumenta MCP server listening on http://localhost:${PORT}`);
+        console.log(`MCP endpoint: http://localhost:${PORT}/mcp`);
+        console.log(`Health check: http://localhost:${PORT}/health`);
+    });
 }
 
-main();
+main().catch(console.error);
