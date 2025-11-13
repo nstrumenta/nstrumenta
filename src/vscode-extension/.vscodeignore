@@ -7,3 +7,4 @@ src/
 __tests__/
 tsconfig.json
 .gitignore
+**/*.map

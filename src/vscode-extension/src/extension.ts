@@ -43,7 +43,7 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('nstrumenta.status', async () => {
       const apiKey = await context.secrets.get('nstrumenta.apiKey');
       const hasApiKey = !!apiKey;
-      const serverUrl = getMcpServerUrl();
+      const serverUrl = apiKey ? extractServerUrl(apiKey) : 'Not configured';
       
       const info = [
         `API Key: ${hasApiKey ? 'Set ✓' : 'Not set ✗'}`,
@@ -185,7 +185,7 @@ async function initializeClient(context: vscode.ExtensionContext) {
   const apiKey = await context.secrets.get('nstrumenta.apiKey');
   
   if (apiKey) {
-    const serverUrl = getMcpServerUrl();
+    const serverUrl = extractServerUrl(apiKey);
     mcpClient = new MCPClient({ apiKey, serverUrl });
     updateStatusBar(true);
   } else {
@@ -194,9 +194,14 @@ async function initializeClient(context: vscode.ExtensionContext) {
   }
 }
 
-function getMcpServerUrl(): string {
-  const configured = vscode.workspace.getConfiguration('nstrumenta').get<string>('mcpServer.url');
-  return configured || 'http://localhost:5999';
+function extractServerUrl(apiKey: string): string {
+  const parts = apiKey.split(':');
+  if (parts.length !== 2) {
+    throw new Error('Invalid API key format. Expected: uuid:base64encodedurl');
+  }
+  
+  const decoded = Buffer.from(parts[1], 'base64').toString('utf-8');
+  return decoded;
 }
 
 function updateStatusBar(connected: boolean) {
