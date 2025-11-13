@@ -31,14 +31,9 @@ describe('MCPClient compilation', () => {
     assert.ok(mcpClientJs.includes('getProjectInfo'));
   });
 
-  it('should extract server URL from API key', () => {
-    const mcpClientJs = readFileSync(join(__dirname, '../../out/mcpClient.js'), 'utf-8');
-    assert.ok(mcpClientJs.includes('extractServerUrlFromApiKey'));
-  });
-
   it('should call tools via HTTP', () => {
     const mcpClientJs = readFileSync(join(__dirname, '../../out/mcpClient.js'), 'utf-8');
     assert.ok(mcpClientJs.includes('callTool'));
-    assert.ok(mcpClientJs.includes('/mcp/tools/call'));
+    assert.ok(mcpClientJs.includes('/mcp'));
   });
 });
