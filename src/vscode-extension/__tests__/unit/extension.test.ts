@@ -20,16 +20,20 @@ describe('Extension compilation', () => {
     assert.ok(extensionJs.includes('exports.deactivate'));
   });
 
-  it('should register all 9 commands', () => {
+  it('should register all commands', () => {
     const extensionJs = readFileSync(join(__dirname, '../../out/extension.js'), 'utf-8');
-    assert.ok(extensionJs.includes('nstrumenta.auth.login'));
-    assert.ok(extensionJs.includes('nstrumenta.auth.logout'));
-    assert.ok(extensionJs.includes('nstrumenta.project.select'));
-    assert.ok(extensionJs.includes('nstrumenta.project.info'));
+    assert.ok(extensionJs.includes('nstrumenta.setApiKey'));
+    assert.ok(extensionJs.includes('nstrumenta.clearApiKey'));
+    assert.ok(extensionJs.includes('nstrumenta.status'));
     assert.ok(extensionJs.includes('nstrumenta.module.list'));
     assert.ok(extensionJs.includes('nstrumenta.module.run'));
     assert.ok(extensionJs.includes('nstrumenta.module.publish'));
     assert.ok(extensionJs.includes('nstrumenta.data.list'));
     assert.ok(extensionJs.includes('nstrumenta.agent.list'));
+  });
+
+  it('should extract server URL from API key', () => {
+    const extensionJs = readFileSync(join(__dirname, '../../out/extension.js'), 'utf-8');
+    assert.ok(extensionJs.includes('extractServerUrl'));
   });
 });
