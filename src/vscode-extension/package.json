@@ -1,15 +1,37 @@
 {
   "name": "nstrumenta-vscode",
-  "displayName": "Nstrumenta",
-  "description": "Connect your local development workspace to nstrumenta cloud projects",
+  "displayName": "nstrumenta",
+  "description": "Integration with https://nstrumenta.com",
   "version": "2.0.0",
   "publisher": "nstrumenta",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nstrumenta/nstrumenta.git",
+    "directory": "src/vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/nstrumenta/nstrumenta/issues"
+  },
+  "homepage": "https://nstrumenta.com",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "nstrumenta",
+    "sensor",
+    "data",
+    "iot",
+    "mcp"
+  ],
+  "icon": "favicon.png",
+  "galleryBanner": {
+    "color": "#C80000",
+    "theme": "dark"
+  },
   "activationEvents": [
     "onStartupFinished"
   ],
@@ -56,34 +78,7 @@
         "title": "List Agents",
         "category": "Nstrumenta"
       }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "nstrumenta",
-          "title": "Nstrumenta",
-          "icon": "resources/icon.svg"
-        }
-      ]
-    },
-    "views": {
-      "nstrumenta": [
-        {
-          "id": "nstrumentaModules",
-          "name": "Modules"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "Nstrumenta",
-      "properties": {
-        "nstrumenta.mcpServer.url": {
-          "type": "string",
-          "default": "http://localhost:5999",
-          "description": "MCP server URL (should match your nstrumenta server)"
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
