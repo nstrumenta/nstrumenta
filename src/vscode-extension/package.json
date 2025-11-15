@@ -33,11 +33,10 @@
     "theme": "dark"
   },
   "extensionKind": [
-    "workspace",
-    "ui"
+    "workspace"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
