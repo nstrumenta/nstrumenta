@@ -32,8 +32,12 @@
     "color": "#C80000",
     "theme": "dark"
   },
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ],
   "activationEvents": [
-    "onStartupFinished"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {

@@ -58,5 +58,5 @@ Check running services before starting to avoid port conflicts
 ## Code Quality and Organization
 If necessary, you make summary documents and plans in a temp folder that is .gitignored called ai-work
 You always delete unused code and files.
-You do not comment out code, you delete it. You make variable and function names as descriptive as possible and avoid comments.
+You do not comment out code, you delete it. You make variable and function names as descriptive as possible and *avoid comments*.
 You don't use emojis unless specifically asked.

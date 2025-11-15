@@ -3,52 +3,46 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { auth } from './authentication';
+import { getModulesList } from './api/listModules';
+import { getAgentsList } from './api/listAgents';
+import { getDataList } from './api/listStorageObjects';
+import { getProjectInfo } from './api/getProject';
+import { createAgentAction } from './api/setAgentAction';
 
 const server = new McpServer({
   name: 'nstrumenta',
   version: '0.0.1',
 });
 
-// Helper to run CLI commands with API key from request
-async function withApiKeyFromRequest<T>(
-  req: Request,
-  fn: () => Promise<T>
-): Promise<T> {
-  const apiKey = req.headers['x-api-key'] as string;
-  const originalApiKey = process.env.NSTRUMENTA_API_KEY;
-  
-  try {
-    // Set API key for CLI commands
-    process.env.NSTRUMENTA_API_KEY = apiKey;
-    return await fn();
-  } finally {
-    // Restore original or clear
-    if (originalApiKey) {
-      process.env.NSTRUMENTA_API_KEY = originalApiKey;
-    } else {
-      delete process.env.NSTRUMENTA_API_KEY;
-    }
-  }
+// Store current request context
+let currentProjectId: string = '';
+
+// Helper to get project ID from authenticated request
+function getProjectId(): string {
+  return currentProjectId;
 }
 
-// Module tools
 server.registerTool(
     'list_modules',
     {
-        title: 'List Nstrumenta Modules',
-        description: 'Lists all available modules in the current project.',
+        title: 'List Modules',
+        description: 'Lists all modules in the project',
         inputSchema: {
-            filter: z.string().optional().describe("A string to filter the list of modules by."),
+            filter: z.string().optional().describe("Optional filter string to match against module data"),
         },
         outputSchema: {
-            modules: z.array(z.any()).describe("The list of modules.")
+            modules: z.array(z.any()).describe("Array of module objects with metadata")
         }
     },
     async ({ filter }) => {
         try {
-            // CLI commands will be imported and called here
-            // For now, return placeholder
-            const modules: any[] = [];
+            const projectId = getProjectId();
+            let modules = await getModulesList(projectId);
+
+            if (filter) {
+                modules = modules.filter(m => JSON.stringify(m).toLowerCase().includes(filter.toLowerCase()));
+            }
+
             return {
                 content: [{ type: 'text', text: JSON.stringify(modules, null, 2) }],
                 structuredContent: { modules },
@@ -61,47 +55,37 @@ server.registerTool(
 );
 
 server.registerTool(
-    'publish_module',
-    {
-        title: 'Publish Module',
-        description: 'Publishes modules defined in the project configuration to nstrumenta cloud storage.',
-        inputSchema: {},
-        outputSchema: {
-            result: z.string().describe("Result of the publish operation.")
-        }
-    },
-    async () => {
-        try {
-            return {
-                content: [{ type: 'text', text: 'Module(s) published successfully' }],
-                structuredContent: { result: 'success' },
-            };
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unknown error occurred';
-            throw new Error(`Failed to publish module: ${message}`);
-        }
-    }
-);
-
-server.registerTool(
     'run_module',
     {
         title: 'Run Module',
-        description: 'Runs a specified module locally.',
+        description: 'Triggers an agent to run a specified module.',
         inputSchema: {
-            name: z.string().describe("Name of the module to run."),
-            version: z.string().optional().describe("Optional specific version, otherwise uses latest."),
-            args: z.array(z.string()).optional().describe("Optional command-line arguments to pass to the module."),
+            agentId: z.string().describe("ID of the agent to run the module on"),
+            moduleName: z.string().describe("Name of the module to run"),
+            moduleVersion: z.string().optional().describe("Optional specific version, otherwise uses latest"),
+            args: z.array(z.string()).optional().describe("Optional command-line arguments"),
         },
         outputSchema: {
-            result: z.string().describe("Result of running the module.")
+            actionId: z.string().describe("ID of the created action")
         }
     },
-    async ({ name, version, args }) => {
+    async ({ agentId, moduleName, moduleVersion, args }) => {
         try {
+            const projectId = getProjectId();
+            const action = {
+                task: 'runModule',
+                status: 'pending',
+                data: {
+                    moduleName,
+                    moduleVersion,
+                    args: args || [],
+                },
+            };
+            const actionId = await createAgentAction(projectId, agentId, action);
+            
             return {
-                content: [{ type: 'text', text: `Module ${name} executed` }],
-                structuredContent: { result: 'executed' },
+                content: [{ type: 'text', text: `Action ${actionId} created to run ${moduleName} on agent ${agentId}` }],
+                structuredContent: { actionId },
             };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -110,22 +94,26 @@ server.registerTool(
     }
 );
 
-// Data tools
 server.registerTool(
     'list_data',
     {
-        title: 'List Data Files',
-        description: 'Lists all data files in the current project.',
-        inputSchema: {},
+        title: 'List Data',
+        description: 'Lists data objects in the current project.',
+        inputSchema: {
+            type: z.string().optional().default('data').describe("Type of objects to list (e.g., 'data', 'modules')"),
+        },
         outputSchema: {
-            data: z.array(z.any()).describe("The list of data files.")
+            objects: z.array(z.any()).describe("List of data objects with id and metadata")
         }
     },
-    async () => {
+    async ({ type }) => {
         try {
+            const projectId = getProjectId();
+            const objects = await getDataList(projectId, type);
+            
             return {
-                content: [{ type: 'text', text: 'Data files listed' }],
-                structuredContent: { data: [] },
+                content: [{ type: 'text', text: JSON.stringify(objects, null, 2) }],
+                structuredContent: { objects },
             };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -134,22 +122,24 @@ server.registerTool(
     }
 );
 
-// Agent tools  
 server.registerTool(
     'list_agents',
     {
-        title: 'List Active Agents',
-        description: 'Lists all currently running agents in the project.',
+        title: 'List Agents',
+        description: 'Lists all agents in the project',
         inputSchema: {},
         outputSchema: {
-            agents: z.array(z.any()).describe("The list of active agents.")
+            agents: z.array(z.tuple([z.string(), z.any()])).describe("Array of [agentId, agentData] tuples")
         }
     },
     async () => {
         try {
+            const projectId = getProjectId();
+            const agents = await getAgentsList(projectId);
+            
             return {
-                content: [{ type: 'text', text: 'Agents listed' }],
-                structuredContent: { agents: [] },
+                content: [{ type: 'text', text: JSON.stringify(agents, null, 2) }],
+                structuredContent: { agents },
             };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
@@ -158,31 +148,35 @@ server.registerTool(
     }
 );
 
-// Project tools
 server.registerTool(
-    'project_info',
+    'get_project',
     {
-        title: 'Get Project Info',
-        description: 'Retrieves information about the current nstrumenta project.',
+        title: 'Get Project',
+        description: 'Retrieves information about the current project.',
         inputSchema: {},
         outputSchema: {
-            info: z.any().describe("Project information.")
+            project: z.object({
+                id: z.string(),
+            }).passthrough().describe("Project information")
         }
     },
     async () => {
         try {
+            const projectId = getProjectId();
+            const project = await getProjectInfo(projectId);
+            
             return {
-                content: [{ type: 'text', text: 'Project info retrieved' }],
-                structuredContent: { info: {} },
+                content: [{ type: 'text', text: JSON.stringify(project, null, 2) }],
+                structuredContent: { project },
             };
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
-            throw new Error(`Failed to get project info: ${message}`);
+            throw new Error(`Failed to get project: ${message}`);
         }
     }
 );
 
-// Express handler with withAuth pattern
+// Express handler with auth
 export async function handleMcpRequest(req: Request, res: Response) {
     // Authenticate using existing auth system
     const authResult = await auth(req, res);
@@ -198,6 +192,9 @@ export async function handleMcpRequest(req: Request, res: Response) {
         });
     }
 
+    // Store project ID for tool handlers to access
+    currentProjectId = (req as any).projectId || '';
+
     try {
         const transport = new StreamableHTTPServerTransport({
             sessionIdGenerator: undefined,
@@ -209,11 +206,7 @@ export async function handleMcpRequest(req: Request, res: Response) {
         });
 
         await server.connect(transport);
-        
-        // Set API key for CLI commands before handling request
-        await withApiKeyFromRequest(req, async () => {
-            await transport.handleRequest(req, res, req.body);
-        });
+        await transport.handleRequest(req, res, req.body);
         
     } catch (error) {
         console.error('Error handling MCP request:', error);
