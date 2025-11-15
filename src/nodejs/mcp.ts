@@ -6,28 +6,8 @@ import { List as ListModules, Publish as PublishModule, Run as RunModule } from 
 import { List as ListData } from '../cli/commands/data.js';
 import { List as ListAgents } from '../cli/commands/agent.js';
 import { Info as ProjectInfo, ProjectId } from '../cli/commands/project.js';
-import { validateApiKey } from '../shared/auth.js';
-import { Firestore } from '@google-cloud/firestore';
 
 const PORT = parseInt(process.env.MCP_PORT || '3100');
-
-// Initialize Firestore for auth validation
-let firestore: Firestore | null = null;
-const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY;
-if (serviceKeyJson) {
-  try {
-    const serviceAccount = JSON.parse(serviceKeyJson);
-    firestore = new Firestore({
-      projectId: serviceAccount.project_id,
-      credentials: {
-        client_email: serviceAccount.client_email,
-        private_key: serviceAccount.private_key,
-      },
-    });
-  } catch (error) {
-    console.warn('Failed to initialize Firestore for MCP auth:', error);
-  }
-}
 
 const server = new McpServer({
   name: 'nstrumenta',
