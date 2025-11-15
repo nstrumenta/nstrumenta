@@ -32,51 +32,29 @@ The extension connects to the nstrumenta server's MCP endpoint:
 
 ### Setup for Development
 
-#### 1. Start the nstrumenta server
+Development requires two VSCode windows with debuggers running:
 
-From the repository root:
+#### 1. Start the server with debugger
 
-\`\`\`bash
-cd cluster
-docker compose up server
-\`\`\`
-
-Or run the server directly:
+Open the server in one VSCode window:
 
 \`\`\`bash
-cd cluster/server/app
-npm run dev
+code /workspaces/nstrumenta/cluster/server/app
 \`\`\`
 
-The server will start on port 5999 with the MCP endpoint at \`/mcp\`.
+Press \`F5\` to start the server with the debugger attached (port 9229). The server will run on port 5999 with the MCP endpoint at \`/mcp\`.
 
-#### 2. Build and run the extension
+#### 2. Start the extension with debugger
 
-**Option A: Debug mode (recommended)**
-
-1. Open the \`nstrumenta\` repository in VSCode
-2. Navigate to \`src/vscode-extension/\` in the file tree
-3. Press \`F5\` or Run > Start Debugging
-4. A new "Extension Development Host" VSCode window will open
-5. In that window, open your nstrumenta project directory
-
-**Option B: Watch mode for continuous development**
+Open the extension in a second VSCode window:
 
 \`\`\`bash
-cd src/vscode-extension
-npm run watch
+code /workspaces/nstrumenta/src/vscode-extension
 \`\`\`
 
-Then press F5 to launch the Extension Development Host.
+Press \`F5\` to launch the Extension Development Host. A third VSCode window will open where you can test the extension.
 
-**Option C: Install as local extension**
-
-\`\`\`bash
-cd src/vscode-extension
-npm install -g @vscode/vsce
-vsce package
-code --install-extension nstrumenta-vscode-2.0.0.vsix
-\`\`\`
+Note: You must open `src/vscode-extension/` as the workspace root (not the repository root) so that `${workspaceFolder}` in `.vscode/launch.json` resolves correctly.
 
 #### 3. Configure API Key
 
@@ -161,7 +139,7 @@ curl -X POST http://localhost:5999/mcp \\
 **"Failed to list modules"**
 - Must be in a nstrumenta project directory
 - Check \`nstrumenta.json\` exists
-- Verify \`NSTRUMENTA_API_KEY\` is set on server
+- Verify your API key is valid (server validates it before executing commands)
 
 **Extension doesn't activate**
 - Check for TypeScript errors
