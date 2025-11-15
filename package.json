@@ -20,7 +20,7 @@
     "build:nodejs": "tsc --project ./src/nodejs",
     "build:browser": "tsc --project ./src/browser",
     "build:server": "(cd cluster/server/app ; rm -rf node_modules ; npm i ; npm run build)",
-    "build:vscode-extension": "tsc --project ./src/vscode-extension",
+    "build:vscode-extension": "(cd src/vscode-extension ; rm -rf node_modules ; npm i ; npm run compile)",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server ; npm run build:vscode-extension",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
     "watch:link": "nodemon --exec 'npm run build:browser && npm link' --watch ./src",
