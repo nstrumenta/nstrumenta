@@ -40,8 +40,12 @@ export class MCPClient {
       throw new Error('API key is required for MCP client');
     }
     
+    if (!config.serverUrl) {
+      throw new Error('Server URL is required for MCP client');
+    }
+    
     this.apiKey = config.apiKey;
-    this.serverUrl = config.serverUrl || 'http://localhost:5999';
+    this.serverUrl = config.serverUrl;
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {

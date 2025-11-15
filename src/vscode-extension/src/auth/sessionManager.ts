@@ -59,7 +59,7 @@ export class SessionManager {
       return configuredUrl;
     }
     
-    return 'http://localhost:3100';
+    throw new Error('MCP server URL not configured. Please set a valid API key with server URL encoded.');
   }
 
   async setProjectId(projectId: string): Promise<void> {

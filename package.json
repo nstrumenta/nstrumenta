@@ -27,7 +27,6 @@
     "watch:vscode-extension": "tsc --watch --project ./src/vscode-extension",
     "dev": "nodemon -- module list",
     "dev:agent": "nodemon -- agent start",
-    "dev:mcp": "npm run build:nodejs && node --watch dist/nodejs/nodejs/mcp.js",
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
     "test": "node --test --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
