@@ -4,7 +4,7 @@ import { firestore } from './ServiceAccount'
 
 export type AuthResult =
   | { authenticated: false; projectId: string; message?: string }
-  | { authenticated: true; projectId: string; message?: string }
+  | { authenticated: true; projectId: string; apiKey: string; message?: string }
 
 export type WrappedArgs<TArgs> = AuthResult & TArgs
 
@@ -22,7 +22,7 @@ export type AuthFunction = (req: Request, res: Response) => Promise<AuthResult>
 export type InternalEndpoint = (req: Request, res: Response) => Promise<unknown>
 
 export const auth: AuthFunction = async (req, res) => {
-  const key = req.headers['x-api-key'] as string
+  const key = extractApiKey(req)
 
   if (!key)
     return { authenticated: false, message: 'missing key', projectId: '' }
@@ -44,11 +44,28 @@ export const auth: AuthFunction = async (req, res) => {
       [`apiKeys.${hash}.lastUsed`]: lastUsed
     })
 
-    return { authenticated: true, projectId: docData.projectId }
+    return { authenticated: true, projectId: docData.projectId, apiKey: key }
   } catch (error) {
     console.log(error)
     return { authenticated: false, message: 'error', projectId: '' }
   }
+}
+
+function extractApiKey(req: Request): string | undefined {
+  const headerKey = req.headers['x-api-key']
+  if (typeof headerKey === 'string' && headerKey.trim().length > 0) {
+    return headerKey.trim()
+  }
+
+  const authHeader = req.headers['authorization']
+  if (typeof authHeader === 'string') {
+    const [scheme, token] = authHeader.split(' ')
+    if (scheme?.toLowerCase() === 'bearer' && token?.trim()) {
+      return token.trim()
+    }
+  }
+
+  return undefined
 }
 
 export function withAuth<T>(

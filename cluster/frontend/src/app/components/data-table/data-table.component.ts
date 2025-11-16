@@ -74,7 +74,6 @@ export class DataTableComponent implements OnInit {
     effect(() => {
       const modules = this.firebaseDataService.modules();
       modules.forEach((module) => {
-        console.log(module);
         const { name, url } = module;
         if (url != undefined) {
           this.moduleActions.set(name as string, { name: name as string, url: url as string });
