@@ -23,6 +23,7 @@ import {
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
 import { handleMcpRequest } from './mcp'
+import { registerOAuthRoutes } from './oauth'
 
 const version = require('../package.json').version
 
@@ -50,8 +51,11 @@ const port = process.env.API_PORT ?? 5999
 
 const app = express()
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
+
+registerOAuthRoutes(app)
 
 Object.keys({ ...functions }).map((fn) => {
   // console.log(`register POST listener [${fn}]`)
@@ -63,7 +67,8 @@ Object.keys(functions).map((fn) => {
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
 
-// MCP endpoint
+// MCP endpoint (root is canonical; /mcp remains for older clients)
+app.post('/', handleMcpRequest)
 app.post('/mcp', handleMcpRequest)
 
 app.get('/', (req, res) => {
