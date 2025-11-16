@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
@@ -157,7 +157,7 @@ export class ApiService {
       reportProgress: true,
       observe: 'events'
     }).pipe(
-      map((event: HttpEvent<any>) => {
+      map((event: HttpEvent<unknown>) => {
         if (event.type === HttpEventType.UploadProgress) {
           return event.total ? Math.round((100 * event.loaded) / event.total) : 0;
         } else if (event.type === HttpEventType.Response) {
@@ -180,4 +180,5 @@ export class ApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
+
 }
