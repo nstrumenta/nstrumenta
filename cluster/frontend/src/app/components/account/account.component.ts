@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatToolbar } from '@angular/material/toolbar';
 import { RouterOutlet } from '@angular/router';
 
@@ -8,8 +8,4 @@ import { RouterOutlet } from '@angular/router';
     styleUrls: ['./account.component.scss'],
     imports: [MatToolbar, RouterOutlet]
 })
-export class AccountComponent implements OnInit {
-  constructor() {}
-
-  ngOnInit() {}
-}
+export class AccountComponent {}

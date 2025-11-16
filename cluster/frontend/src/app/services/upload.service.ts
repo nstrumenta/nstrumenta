@@ -3,7 +3,6 @@ import { ApiService } from './api.service';
 import { FirebaseDataService } from './firebase-data.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, interval } from 'rxjs';
-import { filter, take, timeout } from 'rxjs/operators';
 
 export interface UploadTask {
   id: string;
