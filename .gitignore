@@ -1,6 +1,7 @@
 .DS_Store
 src/.DS_Store
 */__pycache__/*
+ai-work/
 
 ##start .gitignore defaults for node.js from github
 # Logs

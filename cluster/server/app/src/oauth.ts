@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { Application, Request, Response } from 'express'
+import { Application, Request, Response, RequestHandler } from 'express'
 import { auth } from './authentication'
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000
@@ -26,11 +26,31 @@ const registeredClients = new Map<string, ClientRegistration>()
 
 seedDefaultClients()
 
-export function registerOAuthRoutes(app: Application) {
+export function registerOAuthRoutes(
+  app: Application,
+  authorizeLimiter?: RequestHandler,
+  tokenLimiter?: RequestHandler,
+  registerLimiter?: RequestHandler,
+) {
   app.get('/.well-known/openid-configuration', handleDiscovery)
-  app.get('/oauth/authorize', handleAuthorize)
-  app.post('/oauth/token', handleToken)
-  app.post('/oauth/register', handleClientRegistration)
+  
+  if (authorizeLimiter) {
+    app.get('/oauth/authorize', authorizeLimiter, handleAuthorize)
+  } else {
+    app.get('/oauth/authorize', handleAuthorize)
+  }
+  
+  if (tokenLimiter) {
+    app.post('/oauth/token', tokenLimiter, handleToken)
+  } else {
+    app.post('/oauth/token', handleToken)
+  }
+  
+  if (registerLimiter) {
+    app.post('/oauth/register', registerLimiter, handleClientRegistration)
+  } else {
+    app.post('/oauth/register', handleClientRegistration)
+  }
 }
 
 function handleDiscovery(req: Request, res: Response) {
