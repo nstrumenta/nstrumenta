@@ -56,9 +56,19 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 
 // Rate limiting middleware
-const requestCounts = new Map<string, { count: number; resetTime: number }>()
-
 function rateLimiter(windowMs: number, max: number) {
+  const requestCounts = new Map<string, { count: number; resetTime: number }>()
+
+  // Cleanup expired entries every minute
+  setInterval(() => {
+    const now = Date.now()
+    for (const [ip, record] of requestCounts.entries()) {
+      if (now > record.resetTime) {
+        requestCounts.delete(ip)
+      }
+    }
+  }, 60000).unref()
+
   return (req: Request, res: Response, next: NextFunction) => {
     const ip = req.ip || req.socket.remoteAddress || 'unknown'
     const now = Date.now()
@@ -84,16 +94,6 @@ function rateLimiter(windowMs: number, max: number) {
   }
 }
 
-// Cleanup expired entries every minute
-setInterval(() => {
-  const now = Date.now()
-  for (const [ip, record] of requestCounts.entries()) {
-    if (now > record.resetTime) {
-      requestCounts.delete(ip)
-    }
-  }
-}, 60000)
-
 // Rate limiters for different endpoints
 const mcpLimiter = rateLimiter(15 * 60 * 1000, 50) // 50 requests per 15 minutes
 const oauthAuthorizeLimiter = rateLimiter(60 * 1000, 10) // 10 requests per minute
@@ -112,9 +112,8 @@ Object.keys(functions).map((fn) => {
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
 
-// MCP endpoint (root is canonical; /mcp remains for older clients)
+// MCP endpoint
 app.post('/', mcpLimiter, handleMcpRequest)
-app.post('/mcp', mcpLimiter, handleMcpRequest)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')

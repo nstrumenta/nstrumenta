@@ -10,22 +10,9 @@ export const Start = async function (options: {
   port: string;
   tag?: string;
   debug?: boolean;
-  mcp?: boolean;
 }): Promise<void> {
-  const { port, tag, debug, mcp } = options;
+  const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
-
-  if (mcp) {
-    const mcpScriptPath = path.join(__dirname, '..', '..', 'nodejs', 'mcp.js');
-    const mcpServer = spawn('node', [mcpScriptPath], {
-      stdio: 'inherit',
-      env: { ...process.env, NSTRUMENTA_API_KEY: apiKey },
-    });
-
-    mcpServer.on('error', (err) => {
-      console.log('Error starting MCP server:', err);
-    });
-  }
 
   const server = new NstrumentaServer({
     apiKey,

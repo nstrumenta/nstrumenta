@@ -49,7 +49,7 @@ export class MCPClient {
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
-    const response = await fetch(`${this.serverUrl}/mcp`, {
+    const response = await fetch(`${this.serverUrl}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
