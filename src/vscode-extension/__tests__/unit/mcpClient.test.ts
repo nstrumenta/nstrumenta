@@ -34,6 +34,6 @@ describe('MCPClient compilation', () => {
   it('should call tools via HTTP', () => {
     const mcpClientJs = readFileSync(join(__dirname, '../../out/mcpClient.js'), 'utf-8');
     assert.ok(mcpClientJs.includes('callTool'));
-    assert.ok(mcpClientJs.includes('/mcp'));
+    assert.ok(mcpClientJs.includes('tools/call'));
   });
 });

@@ -89,6 +89,7 @@ jobs:
       - checkout:
           path: ~/project
       - run: npm install
+      - run: npm run build:vscode-extension
       - run: npm run test:vscode-extension
   run-tests:
     resource_class: large
