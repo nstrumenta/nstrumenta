@@ -5,7 +5,7 @@ import { createArchiveService } from './services/firestoreArchive'
 
 import { spawn } from 'child_process'
 import cors from 'cors'
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import {
   copyFileSync,
   readFileSync,
@@ -55,7 +55,52 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-registerOAuthRoutes(app)
+// Rate limiting middleware
+const requestCounts = new Map<string, { count: number; resetTime: number }>()
+
+function rateLimiter(windowMs: number, max: number) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = req.ip || req.socket.remoteAddress || 'unknown'
+    const now = Date.now()
+    const record = requestCounts.get(ip)
+
+    if (!record || now > record.resetTime) {
+      requestCounts.set(ip, { count: 1, resetTime: now + windowMs })
+      return next()
+    }
+
+    if (record.count >= max) {
+      const retryAfter = Math.ceil((record.resetTime - now) / 1000)
+      res.set('Retry-After', String(retryAfter))
+      return res.status(429).json({
+        error: 'Too many requests',
+        message: 'Rate limit exceeded. Please try again later.',
+        retryAfter,
+      })
+    }
+
+    record.count++
+    next()
+  }
+}
+
+// Cleanup expired entries every minute
+setInterval(() => {
+  const now = Date.now()
+  for (const [ip, record] of requestCounts.entries()) {
+    if (now > record.resetTime) {
+      requestCounts.delete(ip)
+    }
+  }
+}, 60000)
+
+// Rate limiters for different endpoints
+const mcpLimiter = rateLimiter(15 * 60 * 1000, 50) // 50 requests per 15 minutes
+const oauthAuthorizeLimiter = rateLimiter(60 * 1000, 10) // 10 requests per minute
+const oauthTokenLimiter = rateLimiter(60 * 1000, 10) // 10 requests per minute
+const oauthRegisterLimiter = rateLimiter(15 * 60 * 1000, 5) // 5 requests per 15 minutes
+
+registerOAuthRoutes(app, oauthAuthorizeLimiter, oauthTokenLimiter, oauthRegisterLimiter)
 
 Object.keys({ ...functions }).map((fn) => {
   // console.log(`register POST listener [${fn}]`)
@@ -68,8 +113,8 @@ Object.keys(functions).map((fn) => {
 })
 
 // MCP endpoint (root is canonical; /mcp remains for older clients)
-app.post('/', handleMcpRequest)
-app.post('/mcp', handleMcpRequest)
+app.post('/', mcpLimiter, handleMcpRequest)
+app.post('/mcp', mcpLimiter, handleMcpRequest)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')
