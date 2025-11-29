@@ -22,7 +22,11 @@ async function withOAuthServer(
   const app = express()
   app.use(express.json())
   app.use(express.urlencoded({ extended: true }))
-  registerOAuthRoutes(app)
+
+  // Mock limiters
+  const mockLimiter = (req: any, res: any, next: any) => next()
+
+  registerOAuthRoutes(app, mockLimiter, mockLimiter, mockLimiter)
 
   const server = await new Promise<ReturnType<typeof app.listen>>((resolve) =>
     resolve(app.listen(0)),
