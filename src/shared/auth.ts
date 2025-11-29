@@ -7,10 +7,7 @@ export interface AuthResult {
 }
 
 export function createApiKeyHash(key: string): string {
-  // Security Note: CodeQL flags this as "insufficient computational effort" because it uses SHA256.
-  // However, API keys are high-entropy random strings (32+ chars), making rainbow tables ineffective.
-  // Changing this to a slower hash (like PBKDF2) would be a breaking change for existing keys.
-  // We accept this risk for now. Future key versions should use PBKDF2/scrypt.
+  // Legacy SHA256 hash for existing keys
   return crypto.createHash('sha256').update(key).update('salt').digest('hex');
 }
 
@@ -23,12 +20,43 @@ export async function validateApiKey(
   }
 
   try {
-    const hash = createApiKeyHash(apiKey.split(':')[0]);
-    const keyDoc = await firestore.collection('keys').doc(hash).get();
+    const rawKey = apiKey.split(':')[0];
+    let docId: string;
+    let isV2 = false;
+
+    // Check if it's a V2 key (48 chars hex)
+    if (rawKey.length === 48 && /^[0-9a-f]+$/i.test(rawKey)) {
+      docId = rawKey.substring(0, 16);
+      isV2 = true;
+    } else {
+      // Legacy key
+      docId = createApiKeyHash(rawKey);
+    }
+
+    const keyDoc = await firestore.collection('keys').doc(docId).get();
     const docData = keyDoc.data();
 
     if (!docData) {
       return { authenticated: false, message: 'invalid key', projectId: '' };
+    }
+
+    // Verify V2 key hash
+    if (isV2) {
+      if (docData.version !== 'v2' || !docData.salt || !docData.hash) {
+        return { authenticated: false, message: 'invalid key version', projectId: '' };
+      }
+      
+      const secretAccessKey = rawKey.substring(16);
+      // Note: In shared code (client-side or non-server), we might not have process.env.NSTRUMENTA_API_KEY_PEPPER
+      // But validateApiKey is typically run on server/functions where env vars are available.
+      // If this runs in browser, process.env might be empty or polyfilled.
+      // Assuming this runs in a secure environment (Cloud Functions / Server).
+      const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || '';
+      const hash = crypto.scryptSync(secretAccessKey, docData.salt + pepper, 64).toString('hex');
+      
+      if (hash !== docData.hash) {
+        return { authenticated: false, message: 'invalid key', projectId: '' };
+      }
     }
 
     const lastUsed = Date.now();
@@ -36,7 +64,7 @@ export async function validateApiKey(
     
     // Update last used timestamp (fire and forget)
     firestore.doc(projectPath).update({
-      [`apiKeys.${hash}.lastUsed`]: lastUsed
+      [`apiKeys.${docId}.lastUsed`]: lastUsed
     }).catch((err: Error) => {
       console.error('Failed to update lastUsed:', err);
     });

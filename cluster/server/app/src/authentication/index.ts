@@ -28,20 +28,47 @@ export const auth: AuthFunction = async (req, res) => {
     return { authenticated: false, message: 'missing key', projectId: '' }
 
   try {
-    const hash = createHash(key.split(':')[0])
+    const rawKey = key.split(':')[0]
+    let docId: string
+    let isV2 = false
+
+    // Check if it's a V2 key (48 chars hex)
+    if (rawKey.length === 48 && /^[0-9a-f]+$/i.test(rawKey)) {
+      docId = rawKey.substring(0, 16)
+      isV2 = true
+    } else {
+      // Legacy key
+      docId = createHash(rawKey)
+    }
+
     const docData = await (
-      await firestore.collection('keys').doc(hash).get()
+      await firestore.collection('keys').doc(docId).get()
     ).data()
 
     if (docData == undefined) {
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
+    // Verify V2 key hash
+    if (isV2) {
+      if (docData.version !== 'v2' || !docData.salt || !docData.hash) {
+        return { authenticated: false, message: 'invalid key version', projectId: '' }
+      }
+      
+      const secretAccessKey = rawKey.substring(16)
+      const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || ''
+      const hash = crypto.scryptSync(secretAccessKey, docData.salt + pepper, 64).toString('hex')
+      
+      if (hash !== docData.hash) {
+        return { authenticated: false, message: 'invalid key', projectId: '' }
+      }
+    }
+
     const lastUsed = Date.now()
     const projectPath = `projects/${docData.projectId}`
     
     firestore.doc(projectPath).update({
-      [`apiKeys.${hash}.lastUsed`]: lastUsed
+      [`apiKeys.${docId}.lastUsed`]: lastUsed
     })
 
     return { authenticated: true, projectId: docData.projectId, apiKey: key }
@@ -94,9 +121,6 @@ export function withAuth<T>(
 }
 
 function createHash(key: string) {
-  // Security Note: CodeQL flags this as "insufficient computational effort" because it uses SHA256.
-  // However, API keys are high-entropy random strings (32+ chars), making rainbow tables ineffective.
-  // Changing this to a slower hash (like PBKDF2) would be a breaking change for existing keys.
-  // We accept this risk for now. Future key versions should use PBKDF2/scrypt.
+  // Legacy SHA256 hash for existing keys
   return crypto.createHash('sha256').update(key).update('salt').digest('hex')
 }
