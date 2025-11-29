@@ -59,6 +59,37 @@ jobs:
           key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/functions/dist'
+  test-server:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project/cluster/server/app
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install Dependencies
+          command: npm install
+      - run:
+          name: Run Tests
+          command: npm test
+  test-nodejs:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: npm install
+      - run: npm test
+  test-vscode-extension:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: npm install
+      - run: npm run test:vscode-extension
   run-tests:
     resource_class: large
     docker:
@@ -159,6 +190,9 @@ workflows:
   -ci:
     jobs:
       - build
+      - test-server
+      - test-nodejs
+      - test-vscode-extension
       - build-frontend
       - build-functions
       - build-ci-images
