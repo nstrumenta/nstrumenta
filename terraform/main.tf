@@ -17,7 +17,6 @@ variable "location_id" {
   default = "us-west1"
 }
 
-
 # Creates a new Google Cloud project.
 resource "google_project" "fs" { # fs = Firestore + Storage
   provider        = google-beta.no_user_project_override
@@ -323,6 +322,34 @@ resource "google_secret_manager_secret_version" "server_key" {
   secret_data = base64decode(google_service_account_key.server.private_key)
 }
 
+# Secret for API Key Pepper
+resource "google_secret_manager_secret" "api_key_pepper" {
+  secret_id = "NSTRUMENTA_API_KEY_PEPPER"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+resource "random_password" "api_key_pepper" {
+  length  = 32
+  special = true
+}
+
+resource "google_secret_manager_secret_version" "api_key_pepper" {
+  provider = google-beta
+
+  secret      = google_secret_manager_secret.api_key_pepper.id
+  secret_data = random_password.api_key_pepper.result
+}
+
+resource "google_secret_manager_secret_iam_member" "app_engine_pepper" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.api_key_pepper.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 # server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
   name     = "cloudrun-service"
@@ -351,6 +378,15 @@ resource "google_cloud_run_v2_service" "default" {
         value_source {
           secret_key_ref {
             secret  = "GCLOUD_SERVICE_KEY"
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "NSTRUMENTA_API_KEY_PEPPER"
+        value_source {
+          secret_key_ref {
+            secret  = "NSTRUMENTA_API_KEY_PEPPER"
             version = "latest"
           }
         }
