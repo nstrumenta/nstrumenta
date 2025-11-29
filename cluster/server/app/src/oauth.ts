@@ -28,29 +28,15 @@ seedDefaultClients()
 
 export function registerOAuthRoutes(
   app: Application,
-  authorizeLimiter?: RequestHandler,
-  tokenLimiter?: RequestHandler,
-  registerLimiter?: RequestHandler,
+  authorizeLimiter: RequestHandler,
+  tokenLimiter: RequestHandler,
+  registerLimiter: RequestHandler,
 ) {
   app.get('/.well-known/openid-configuration', handleDiscovery)
   
-  if (authorizeLimiter) {
-    app.get('/oauth/authorize', authorizeLimiter, handleAuthorize)
-  } else {
-    app.get('/oauth/authorize', handleAuthorize)
-  }
-  
-  if (tokenLimiter) {
-    app.post('/oauth/token', tokenLimiter, handleToken)
-  } else {
-    app.post('/oauth/token', handleToken)
-  }
-  
-  if (registerLimiter) {
-    app.post('/oauth/register', registerLimiter, handleClientRegistration)
-  } else {
-    app.post('/oauth/register', handleClientRegistration)
-  }
+  app.get('/oauth/authorize', authorizeLimiter, handleAuthorize)
+  app.post('/oauth/token', tokenLimiter, handleToken)
+  app.post('/oauth/register', registerLimiter, handleClientRegistration)
 }
 
 function handleDiscovery(req: Request, res: Response) {

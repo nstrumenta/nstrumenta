@@ -94,5 +94,9 @@ export function withAuth<T>(
 }
 
 function createHash(key: string) {
+  // Security Note: CodeQL flags this as "insufficient computational effort" because it uses SHA256.
+  // However, API keys are high-entropy random strings (32+ chars), making rainbow tables ineffective.
+  // Changing this to a slower hash (like PBKDF2) would be a breaking change for existing keys.
+  // We accept this risk for now. Future key versions should use PBKDF2/scrypt.
   return crypto.createHash('sha256').update(key).update('salt').digest('hex')
 }
