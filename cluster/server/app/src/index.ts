@@ -65,28 +65,7 @@ const mcpLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-const oauthAuthorizeLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-const oauthTokenLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-const oauthRegisterLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per 15 minutes
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-registerOAuthRoutes(app, oauthAuthorizeLimiter, oauthTokenLimiter, oauthRegisterLimiter)
+registerOAuthRoutes(app)
 
 Object.keys({ ...functions }).map((fn) => {
   // console.log(`register POST listener [${fn}]`)

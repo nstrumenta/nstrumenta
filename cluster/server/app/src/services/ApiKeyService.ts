@@ -1,5 +1,5 @@
 import { Firestore } from '@google-cloud/firestore'
-import { createHash, randomBytes, scryptSync } from 'crypto'
+import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
 
@@ -91,19 +91,12 @@ export function CreateApiKeyService({
     },
 
     removeTempKey: async function removeTempKey(apiKey: string) {
-      // Handle both legacy (hash-as-id) and new (id-as-id) keys
-      // For removal, we need to know if it's a legacy key or new key
-      // If apiKey is 48 chars (16+32), it's likely new.
-      // But removeTempKey might receive the full key string or just the ID?
-      // Assuming it receives the key string (before colon)
-      
-      let keyId: string
-      if (apiKey.length === 48) {
-        keyId = apiKey.substring(0, 16)
-      } else {
-        keyId = createKeyId(apiKey)
+      // Only supports V2 keys
+      if (apiKey.length !== 48) {
+        console.warn('Attempted to remove invalid key format')
+        return
       }
-      
+      const keyId = apiKey.substring(0, 16)
       const doc = firestore.collection('keys').doc(keyId)
       await doc.delete()
     },
@@ -130,11 +123,4 @@ export function CreateApiKeyService({
       }
     },
   }
-}
-
-function createKeyId(key: string) {
-  return createHash('sha256')
-    .update(key.split(':')[0])
-    .update('salt')
-    .digest('hex')
 }
