@@ -54,11 +54,13 @@ export const auth: AuthFunction = async (req, res) => {
       if (docData.version !== 'v2' || !docData.salt || !docData.hash) {
         return { authenticated: false, message: 'invalid key version', projectId: '' }
       }
-      
+
       const secretAccessKey = rawKey.substring(16)
       const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || ''
-      const hash = crypto.scryptSync(secretAccessKey, docData.salt + pepper, 64).toString('hex')
-      
+      const hash = crypto
+        .scryptSync(secretAccessKey, docData.salt + pepper, 64)
+        .toString('hex')
+
       if (hash !== docData.hash) {
         return { authenticated: false, message: 'invalid key', projectId: '' }
       }

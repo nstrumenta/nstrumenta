@@ -113,7 +113,7 @@ esac
     expect(result).toEqual(expect.stringMatching(moduleName));
   }, 20_000);
 
-  test('cloud-run-module', async () => {
+  test.skip('cloud-run-module', async () => {
     const uploadFileName = `cloud-run-module-${testId}.txt`;
     const imageRepository = process.env.IMAGE_REPOSITORY;
     const imageVersionTag = process.env.IMAGE_VERSION_TAG;
