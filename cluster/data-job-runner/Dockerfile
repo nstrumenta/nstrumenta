@@ -3,7 +3,7 @@ FROM nstrumenta/toolchain:${BASE_TAG}
 
 #install ffmpeg
 RUN apt-get -y update --allow-releaseinfo-change
-RUN apt-get install -y ffmpeg curl gnupg lsb-release
+RUN apt-get install -y ffmpeg curl gnupg lsb-release ca-certificates
 
 # install gcsfuse
 RUN export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s` \
