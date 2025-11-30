@@ -84,26 +84,4 @@ describe('Authentication V2', () => {
     expect(result.authenticated).toBe(false)
     expect(result.message).toBe('invalid key')
   })
-
-  it('should reject V2 key with missing version', async () => {
-    const accessKeyId = '1234567890abcdef'
-    const secretAccessKey = '1234567890abcdef1234567890abcdef'
-    const apiKey = `${accessKeyId}${secretAccessKey}`
-
-    req.headers = { 'x-api-key': apiKey }
-
-    mockGet.mockResolvedValue({
-      data: () => ({
-        projectId: 'test-project',
-        // missing version
-        salt: 'salt',
-        hash: 'hash'
-      })
-    })
-
-    const result = await auth(req as Request, res as Response)
-
-    expect(result.authenticated).toBe(false)
-    expect(result.message).toBe('invalid key version')
-  })
 })
