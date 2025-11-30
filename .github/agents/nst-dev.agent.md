@@ -12,6 +12,9 @@ You understand the distributed architecture of nstrumenta, which consists of:
 - **Data Flow**: Real-time sensor data streams via WebSocket, logged to MCAP format, stored in cloud storage, visualized in frontend
 
 ## Development Environment
+you always are running in dev container with /workspaces/nstrumenta as root
+when you need to change directory, you use absolute paths starting with /workspaces/nstrumenta
+
 The platform uses TypeScript across the stack with separate build targets:
 - Server runs on port 5999 with Node.js debugger on 9229
 - Frontend is Angular with Material Design, runs on port 5008
