@@ -2,7 +2,7 @@ import { Mcap0Writer as McapWriter } from '@mcap/core';
 import { ChildProcess } from 'child_process';
 import { randomUUID } from 'crypto';
 import express from 'express';
-import { createWriteStream } from 'fs';
+import { createWriteStream, WriteStream } from 'fs';
 import { mkdir, open, readFile, stat } from 'fs/promises';
 import serveIndex from 'serve-index';
 import { WebSocket, WebSocketServer } from 'ws';
@@ -26,8 +26,6 @@ import {
 import { verifyToken } from '../shared/lib/sessionToken';
 import { NstrumentaClient } from './client';
 import { FileHandleWritable } from './fileHandleWriteable';
-
-import WritableStream = NodeJS.WritableStream;
 
 type ListenerCallback = (event?: any) => void;
 
@@ -81,7 +79,7 @@ export type DataLog =
       type: 'stream';
       localPath: string;
       channels: string[];
-      stream: WritableStream;
+      stream: WriteStream;
     }
   | {
       type: 'mcap';
@@ -283,7 +281,7 @@ export class NstrumentaServer {
       const clientId: string = req.headers['sec-websocket-key']!;
 
       console.log('a user connected - clientsCount = ' + wss.clients.size);
-      ws.on('message', async (busMessage: Uint8Array) => {
+      ws.on('message', async (busMessage: Buffer) => {
         if (!verifiedConnections.has(clientId)) {
           try {
             if (!this.allowUnverifiedConnection) {
@@ -600,7 +598,7 @@ export class NstrumentaServer {
         headers: {
           'Content-Type': 'application/octet-stream',
         },
-        body: fileBuffer,
+        body: new Uint8Array(fileBuffer.buffer, fileBuffer.byteOffset, fileBuffer.byteLength),
       });
 
       if (!putResponse.ok) {
