@@ -10,7 +10,7 @@ RUN export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s` \
     && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | tee /etc/apt/sources.list.d/gcsfuse.list \
     && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
     && apt-get update \
-    && apt-get install -y gcsfuse
+    && apt-get install -y gcsfuse fuse
 
 #install nstrumenta
 RUN npm i -g nstrumenta

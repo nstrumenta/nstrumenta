@@ -115,10 +115,21 @@ esac
 
   test('cloud-run-module', async () => {
     const uploadFileName = `cloud-run-module-${testId}.txt`;
-    console.log(`nst module cloud-run ${moduleName} --command-args create ${uploadFileName}`);
+    const imageRepository = process.env.IMAGE_REPOSITORY;
+    const imageVersionTag = process.env.IMAGE_VERSION_TAG;
+    let imageArg = '';
+    if (imageRepository && imageVersionTag) {
+      imageArg = `--image ${imageRepository}/data-job-runner:${imageVersionTag}`;
+    }
+
+    console.log(
+      `nst module cloud-run ${moduleName} --command-args create ${uploadFileName} ${imageArg}`
+    );
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} --command-args create ${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} --command-args create ${uploadFileName} ${imageArg}`.split(
+        ' '
+      ),
       { cwd: testFolderBase, quiet: true }
     );
 
@@ -131,7 +142,9 @@ esac
 
     await asyncSpawn(
       'nst',
-      `module cloud-run ${moduleName} --command-args delete ${uploadFileName}`.split(' '),
+      `module cloud-run ${moduleName} --command-args delete ${uploadFileName} ${imageArg}`.split(
+        ' '
+      ),
       { cwd: testFolderBase, quiet: true }
     );
 

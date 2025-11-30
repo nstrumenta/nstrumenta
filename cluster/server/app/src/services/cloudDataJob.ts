@@ -83,7 +83,9 @@ export const createCloudDataJobService = ({
     const actionId = actionPath.split('/').slice(-1)[0].toLowerCase()
     const jobId = `job-${Date.now()}-${actionId}`
 
-    const imageId = `${nstrumentaImageRepository}/data-job-runner:${nstrumentaImageVersionTag}`
+    const imageId =
+      data.data.image ||
+      `${nstrumentaImageRepository}/data-job-runner:${nstrumentaImageVersionTag}`
 
     const apiKeyService = CreateApiKeyService({ firestore })
 
