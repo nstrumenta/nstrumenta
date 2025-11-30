@@ -86,8 +86,6 @@ export const Mount = async (_: unknown, options: DataMountOptions) => {
       `--implicit-dirs`,
       `--only-dir=projects/${projectId}/data`,
       `--key-file=${keyfilePath}`,
-      `--debug_gcs`,
-      `--debug_fuse`,
       `${bucket}`,
       `${projectId}/data`,
     ],

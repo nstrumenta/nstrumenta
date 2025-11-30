@@ -91,108 +91,62 @@ export const createCloudDataJobService = ({
 
     const apiKey = await apiKeyService.createAndAddApiKey(projectId)
     if (!apiKey) throw new Error('failed to create temporary apiKey')
-    // mark action as started
-    await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
-    const keyfile = './credentials.json'
-    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
-    await asyncSpawn(
-      'gcloud',
-      `auth activate-service-account --key-file ${keyfile}`.split(' '),
-    )
-    await asyncSpawn(
-      'gcloud',
-      `config set core/project ${serviceAccount.project_id}`.split(' '),
-    )
-    // could use the region for the firebase project
-    await asyncSpawn('gcloud', [
-      'run',
-      'jobs',
-      'create',
-      jobId,
-      '--cpu=2',
-      '--memory=8Gi',
-      `--image=${imageId}`,
-      '--region=us-west1',
-      '--execution-environment=gen2',
-      `--set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest`,
-      `--max-retries=1`,
-      `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey.key},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
-        JSON.stringify(data),
-      )}`,
-    ])
-    await asyncSpawn('gcloud', [
-      'run',
-      'jobs',
-      'execute',
-      jobId,
-      '--region=us-west1',
-    ])
 
-    console.log(`started ${jobId}`)
-
-    const listExecutionsOutput = await asyncSpawn('gcloud', [
-      'run',
-      'jobs',
-      'executions',
-      'list',
-      `--job=${jobId}`,
-      '--region=us-west1',
-    ])
-
-    if (listExecutionsOutput !== null) {
-      const executionMatch = listExecutionsOutput.match(
-        new RegExp(`${jobId}-.....`),
+    try {
+      // mark action as started
+      await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
+      const keyfile = './credentials.json'
+      await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
+      await asyncSpawn(
+        'gcloud',
+        `auth activate-service-account --key-file ${keyfile}`.split(' '),
       )
-      if (executionMatch) {
-        const executionId = executionMatch[0]
-        // watch for status
-        await new Promise<void>((resolve, reject) => {
-          const checkStatus = async () => {
-            console.log(`checking status for job: ${executionId}`)
-            const description = JSON.parse(
-              await asyncSpawn(
-                'gcloud',
-                [
-                  'run',
-                  'jobs',
-                  'executions',
-                  'describe',
-                  executionId,
-                  '--region=us-west1',
-                  '--format="json"',
-                ],
-                { quiet: true },
-              ),
-            )
-            const completedCondition = description.status.conditions?.find(
-              (c: any) => c.type === 'Completed',
-            )
+      await asyncSpawn(
+        'gcloud',
+        `config set core/project ${serviceAccount.project_id}`.split(' '),
+      )
+      // could use the region for the firebase project
+      await asyncSpawn('gcloud', [
+        'run',
+        'jobs',
+        'create',
+        jobId,
+        '--cpu=2',
+        '--memory=8Gi',
+        `--image=${imageId}`,
+        '--region=us-west1',
+        '--execution-environment=gen2',
+        `--set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest`,
+        `--max-retries=1`,
+        `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey.key},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
+          JSON.stringify(data),
+        )}`,
+      ])
 
-            if (
-              completedCondition &&
-              (completedCondition.status === 'True' ||
-                completedCondition.status === 'False')
-            ) {
-              console.log(
-                `${executionId} Completed: ${completedCondition.status} - ${completedCondition.message}`,
-              )
-              resolve()
-            } else {
-              const message = description.status.conditions?.[0]?.message
-              console.log(`status ${executionId} : ${message || 'Running...'}`)
-              setTimeout(checkStatus, 2000)
-            }
-          }
-          checkStatus()
-        })
-      }
+      console.log(`starting execution for ${jobId}`)
+
+      await asyncSpawn('gcloud', [
+        'run',
+        'jobs',
+        'execute',
+        jobId,
+        '--region=us-west1',
+        '--wait',
+      ])
+
+      console.log(`completed ${jobId}`)
+
+      //mark action as complete
+      await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
+    } catch (error) {
+      console.error(`Error in createJob for ${jobId}:`, error)
+      await firestore
+        .doc(actionPath)
+        .set({ status: 'error', error: String(error) }, { merge: true })
+    } finally {
+      //revoke temp apiKey
+      await apiKeyService.removeTempKey(apiKey.key)
     }
-
-    //revoke temp apiKey
-    apiKeyService.removeTempKey(apiKey.key)
-
-    //mark action as complete
-    await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
   }
 
   async function createService(
