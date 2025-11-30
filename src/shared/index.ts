@@ -11,6 +11,7 @@ export const getEndpoints = (apiKey: string) => {
     REGISTER_AGENT: `${url}/registerAgent`,
     LIST_AGENTS: `${url}/listAgents`,
     SET_ACTION: `${url}/setAction`,
+    GET_ACTION: `${url}/getAction`,
     SET_AGENT_ACTION: `${url}/setAgentAction`,
     GET_AGENT_ID_BY_TAG: `${url}/getAgentIdByTag`,
     CLEAN_AGENT_ACTIONS: `${url}/cleanAgentActions`,

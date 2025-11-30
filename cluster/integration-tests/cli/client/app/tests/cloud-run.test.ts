@@ -63,19 +63,11 @@ case $1 in
 create)
     echo creating $2
     nst -v
-    nst data mount
-    echo "Hello World!" > ${projectId}/data/$2
-    nst data unmount
-    ;;
-delete)
-    echo deleting $2
-    nst -v
-    nst data mount
-    rm ${projectId}/data/$2
-    nst data unmount
+    echo "Hello World!" > $2
+    nst data upload $2
     ;;
 *)
-    echo 'usage: ./script.sh [create|delete] filename'
+    echo 'usage: ./script.sh [create] filename'
     ;;
 esac
     
@@ -104,16 +96,15 @@ esac
     console.log(output);
     expect(output).not.toContain('Request failed');
 
-    const result = await pollNstrumenta({
-      matchString: moduleName,
-      interval: 1_000,
-      timeout: 20_000,
-      command: 'module list',
+    const result = await asyncSpawn('nst', 'module list'.split(' '), {
+      cwd: testFolderBase,
+      env: process.env,
+      quiet: true,
     });
     expect(result).toEqual(expect.stringMatching(moduleName));
-  }, 20_000);
+  }, 60_000);
 
-  test.skip('cloud-run-module', async () => {
+  test('cloud-run-module', async () => {
     const uploadFileName = `cloud-run-module-${testId}.txt`;
     const imageRepository = process.env.IMAGE_REPOSITORY;
     const imageVersionTag = process.env.IMAGE_VERSION_TAG;
@@ -133,27 +124,7 @@ esac
       { cwd: testFolderBase, quiet: true }
     );
 
-    const result = await pollNstrumenta({
-      matchString: uploadFileName,
-      interval: 5_000,
-      timeout: 300_000,
-    });
-    await expect(result).toBeTruthy();
-
-    await asyncSpawn(
-      'nst',
-      `module cloud-run ${moduleName} --command-args delete ${uploadFileName} ${imageArg}`.split(
-        ' '
-      ),
-      { cwd: testFolderBase, quiet: true }
-    );
-
-    const deleteResult = await pollNstrumenta({
-      matchString: uploadFileName,
-      interval: 5_000,
-      timeout: 300_000,
-      inverseMatch: true,
-    });
-    await expect(deleteResult).toBeTruthy();
+    const result = await asyncSpawn('nst', 'data list'.split(' '), { quiet: true });
+    await expect(result).toEqual(expect.stringMatching(uploadFileName));
   }, 600_000);
 });

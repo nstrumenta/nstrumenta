@@ -89,6 +89,7 @@ export const SetAction = async (options: { action: string; tag?: string }) => {
 
     const actionId = await response.text();
     console.log(`created action: ${actionId} `, action);
+    return actionId;
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
@@ -215,7 +216,10 @@ export const CloudRun = async function (
     data: { module: specificModule, apiUrl, args, image },
   });
 
-  SetAction({ action });
+  const actionId = await SetAction({ action });
+  if (actionId) {
+    await waitForAction(actionId);
+  }
 };
 
 export type ModuleTypes = 'sandbox' | 'web' | 'nodejs' | 'script' | 'algorithm';
@@ -271,6 +275,74 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
   return Promise.all(promises);
 };
 
+const waitForModule = async (name: string, version: string) => {
+  const apiKey = resolveApiKey();
+  const maxRetries = 20;
+  const interval = 1000;
+  console.log(`Waiting for module ${name} version ${version} to be indexed...`);
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(endpoints.LIST_MODULES, {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'content-type': 'application/json',
+        },
+      });
+      if (response.ok) {
+        const modules = (await response.json()) as Module[];
+        const match = modules.find(
+          (m) =>
+            m.name === `${name}-${version}.tar.gz` ||
+            (m.name.startsWith(name) && getVersionFromPath(m.name) === version)
+        );
+        if (match) {
+          console.log(`Module ${name} version ${version} is ready.`);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log('Error checking module status:', e);
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  }
+  throw new Error(`Timeout waiting for module ${name} version ${version} to be indexed.`);
+};
+
+const waitForAction = async (actionId: string) => {
+  const apiKey = resolveApiKey();
+  const maxRetries = 300; // 5 minutes for cloud run
+  const interval = 2000;
+  console.log(`Waiting for action ${actionId} to complete...`);
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(endpoints.GET_ACTION, {
+        method: 'POST',
+        headers: {
+          'x-api-key': apiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({ actionId }),
+      });
+      if (response.ok) {
+        const action = (await response.json()) as { status: string; error?: string };
+        if (action.status === 'complete') {
+          console.log(`Action ${actionId} completed.`);
+          return;
+        }
+        if (action.status === 'error') {
+          throw new Error(`Action ${actionId} failed: ${action.error}`);
+        }
+        // console.log(`Action status: ${action.status}`);
+      }
+    } catch (e) {
+      console.log('Error checking action status:', e);
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  }
+  throw new Error(`Timeout waiting for action ${actionId} to complete.`);
+};
+
 export const Publish = async () => {
   let moduleMetas: ModuleMeta[];
   let modules: ModuleExtended[] = [];
@@ -305,6 +377,10 @@ export const Publish = async () => {
     const results = await Promise.all(promises);
 
     console.log(results);
+
+    for (const module of modules) {
+      await waitForModule(module.name, module.version);
+    }
   } catch (err) {
     console.log((err as Error).message);
   }

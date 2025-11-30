@@ -19,7 +19,7 @@ export interface QueryCollectionOptions {
     | 'in'
     | 'not-in'
   compareValue: string
-  collection?: 'data' | 'modules'
+  collection?: 'data' | 'modules' | 'actions'
   limit?: number
 }
 
