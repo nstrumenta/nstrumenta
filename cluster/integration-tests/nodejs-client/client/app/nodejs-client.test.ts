@@ -249,7 +249,7 @@ describe('NodeJS client', () => {
       // Set up test data
       await nstClient.storage.upload({
         filename,
-        data: 'hello world' as unknown as Blob,
+        data: Buffer.from('hello world') as unknown as Blob,
         meta: { testId },
       });
       await new Promise((res) => setTimeout(res, 2000));
@@ -261,7 +261,8 @@ describe('NodeJS client', () => {
         compareValue: filename,
       });
 
-      expect(queryData).toMatchObject < Array<Record<string, unknown>>;
+      expect(queryData).toBeDefined();
+      expect(queryData.length).toBeGreaterThan(0);
 
       await nstClient.shutdown();
     }, 30000);

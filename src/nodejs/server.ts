@@ -599,6 +599,7 @@ export class NstrumentaServer {
         method: 'PUT',
         headers: {
           'Content-Range': `bytes 0-${size - 1}/${size}`,
+          'Content-Type': 'application/octet-stream',
         },
         body: fileBuffer,
       });
