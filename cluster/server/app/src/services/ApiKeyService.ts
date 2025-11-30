@@ -91,12 +91,13 @@ export function CreateApiKeyService({
     },
 
     removeTempKey: async function removeTempKey(apiKey: string) {
+      const keyPart = apiKey.split(':')[0]
       // Only supports V2 keys
-      if (apiKey.length !== 48) {
+      if (keyPart.length !== 48) {
         console.warn('Attempted to remove invalid key format')
         return
       }
-      const keyId = apiKey.substring(0, 16)
+      const keyId = keyPart.substring(0, 16)
       const doc = firestore.collection('keys').doc(keyId)
       await doc.delete()
     },
