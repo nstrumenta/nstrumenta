@@ -399,9 +399,6 @@ export const publishModule = async (module: ModuleExtended) => {
   try {
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
-      },
       body: fileBuffer,
     });
 

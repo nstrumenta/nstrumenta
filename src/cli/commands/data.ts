@@ -212,9 +212,6 @@ export const uploadFile = async ({
 
     const putConfig = {
       method: 'PUT',
-      headers: {
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
-      },
       body: fileBuffer,
     };
 

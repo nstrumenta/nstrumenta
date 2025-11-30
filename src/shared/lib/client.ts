@@ -219,7 +219,6 @@ export abstract class NstrumentaClientBase {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/octet-stream',
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
       },
       body: data,
     });
@@ -443,7 +442,6 @@ export class StorageService {
     const uploadConfig = {
       method: 'PUT',
       headers: {
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
         'Content-Type': 'application/octet-stream',
       },
       body: data,
