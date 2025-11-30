@@ -407,7 +407,7 @@ export class StorageService {
   }
 
   public async upload({ filename, data, meta, overwrite }: StorageUploadParameters) {
-    const size = data.size;
+    const size = data.size || (data as any).length;
     let url;
 
     const config = {
