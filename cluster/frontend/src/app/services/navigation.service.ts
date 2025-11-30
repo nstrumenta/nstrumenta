@@ -10,7 +10,7 @@ export class NavigationService {
   /**
    * Navigate to a route while preserving query parameters
    */
-  navigate(commands: any[], extras?: NavigationExtras): Promise<boolean> {
+  navigate(commands: Parameters<Router['navigate']>[0], extras?: NavigationExtras): Promise<boolean> {
     const mergedExtras: NavigationExtras = {
       queryParamsHandling: 'preserve',
       ...extras

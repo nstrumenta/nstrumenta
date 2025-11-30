@@ -30,6 +30,14 @@ async function getDocs(path: string) {
   return objects
 }
 
+export async function getDataList(projectId: string, type: string = 'data') {
+  const sanitizedType = sanitizeString(type)
+  const projectPath = `projects/${projectId}`
+  const path = `${projectPath}/${sanitizedType}`
+  const objects = await getDocs(path)
+  return objects
+}
+
 const listStorageObjectsBase: APIEndpoint<ListObjectsArgs> = async (
   req,
   res,
@@ -39,12 +47,7 @@ const listStorageObjectsBase: APIEndpoint<ListObjectsArgs> = async (
   const { type: originalType }: ListObjectsOptions = req.body
 
   try {
-    const type = sanitizeString(originalType)
-    console.log({ projectId, type })
-    const projectPath = `projects/${projectId}`
-    const path = `${projectPath}/${type}`
-    const objects = await getDocs(path)
-
+    const objects = await getDataList(projectId, originalType)
     return res.status(200).send(objects)
   } catch (error) {
     res.status(500).send(`Something went wrong`)

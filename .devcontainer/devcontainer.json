@@ -1,5 +1,7 @@
 {
-  "image": "nstrumenta/toolchain:24.1.0a",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
   "forwardPorts": [5999, 9229],
   "portsAttributes": {
     "5999": {
@@ -19,7 +21,8 @@
         "eamodio.gitlens",
         "hashicorp.terraform",
         "ms-vscode.vscode-typescript-next",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "GitHub.vscode-pull-request-github"
       ]
     }
   },

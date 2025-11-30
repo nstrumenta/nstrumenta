@@ -219,7 +219,6 @@ export abstract class NstrumentaClientBase {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/octet-stream',
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
       },
       body: data,
     });
@@ -407,7 +406,7 @@ export class StorageService {
   }
 
   public async upload({ filename, data, meta, overwrite }: StorageUploadParameters) {
-    const size = data.size;
+    const size = data.size || (data as any).length;
     let url;
 
     const config = {
@@ -443,7 +442,6 @@ export class StorageService {
     const uploadConfig = {
       method: 'PUT',
       headers: {
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
         'Content-Type': 'application/octet-stream',
       },
       body: data,

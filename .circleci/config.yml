@@ -59,6 +59,38 @@ jobs:
           key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - '~/project/cluster/functions/dist'
+  test-server:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project/cluster/server/app
+    steps:
+      - checkout:
+          path: ~/project
+      - run:
+          name: Install Dependencies
+          command: npm install
+      - run:
+          name: Run Tests
+          command: npm test
+  test-nodejs:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: npm install
+      - run: npm test
+  test-vscode-extension:
+    docker:
+      - image: nstrumenta/toolchain
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: npm install
+      - run: npm run build:vscode-extension
+      - run: npm run test:vscode-extension
   run-tests:
     resource_class: large
     docker:
@@ -96,9 +128,17 @@ jobs:
             echo 'export API_URL=`gcloud run services describe --region=us-west1 ${TEST_SERVER} --format=json | jq -r .status.address.url`'
             >> $BASH_ENV
       - run:
-          name: make api key with test server url
-          command: >
-            echo 'export NSTRUMENTA_API_KEY=`node changeApiKeyUrl ${NSTRUMENTA_INTEGRATION_TEST_API_KEY} ${API_URL}`' >> "$BASH_ENV"
+          name: install dependencies for key generation
+          command: npm install
+      - run:
+          name: create api key with test server url
+          command: |
+            export NSTRUMENTA_API_KEY=$(node create-api-key.js ci ${API_URL})
+            if [ -z "$NSTRUMENTA_API_KEY" ]; then
+              echo "Failed to generate API key"
+              exit 1
+            fi
+            echo "export NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> "$BASH_ENV"
       - run:
           name: deploy test-backplane
           command: >
@@ -159,6 +199,9 @@ workflows:
   -ci:
     jobs:
       - build
+      - test-server
+      - test-nodejs
+      - test-vscode-extension
       - build-frontend
       - build-functions
       - build-ci-images

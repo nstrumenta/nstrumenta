@@ -1,4 +1,6 @@
+import { spawn } from 'child_process';
 import { Command } from 'commander';
+import * as path from 'path';
 import { NstrumentaServer } from '../../nodejs/server';
 
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';

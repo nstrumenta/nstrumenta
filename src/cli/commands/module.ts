@@ -155,9 +155,11 @@ export const CloudRun = async function (
   {
     moduleVersion,
     commandArgs,
+    image,
   }: {
     moduleVersion?: string;
     commandArgs?: string[];
+    image?: string;
   }
 ): Promise<void> {
   console.log('Finding ', moduleName);
@@ -210,7 +212,7 @@ export const CloudRun = async function (
   const action = JSON.stringify({
     task: 'cloudRun',
     status: 'pending',
-    data: { module: specificModule, apiUrl, args },
+    data: { module: specificModule, apiUrl, args, image },
   });
 
   SetAction({ action });
@@ -397,9 +399,6 @@ export const publishModule = async (module: ModuleExtended) => {
   try {
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Range': `bytes 0-${size - 1}/${size}`,
-      },
       body: fileBuffer,
     });
 
@@ -412,9 +411,13 @@ export const publishModule = async (module: ModuleExtended) => {
   return fileName;
 };
 
-export const List = async (options: { filter: string; depth?: number | null }) => {
+export const List = async (options: {
+  filter: string;
+  depth?: number | null;
+  json?: boolean;
+}): Promise<ModuleExtended[] | void> => {
   const apiKey = resolveApiKey();
-  const { filter, depth = 2 } = options;
+  const { filter, json, depth = 2 } = options;
 
   try {
     const response = await fetch(endpoints.LIST_MODULES, {
@@ -434,7 +437,11 @@ export const List = async (options: { filter: string; depth?: number | null }) =
       ? data.filter((module: any) => JSON.stringify(module).includes(filter))
       : data;
 
-    console.dir(filteredModules, { depth });
+    if (json) {
+      return filteredModules;
+    } else {
+      console.dir(filteredModules, { depth });
+    }
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
   }

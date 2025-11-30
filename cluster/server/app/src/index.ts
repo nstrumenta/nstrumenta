@@ -5,7 +5,7 @@ import { createArchiveService } from './services/firestoreArchive'
 
 import { spawn } from 'child_process'
 import cors from 'cors'
-import express from 'express'
+import express, { Request, Response, NextFunction } from 'express'
 import {
   copyFileSync,
   readFileSync,
@@ -22,6 +22,8 @@ import {
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
+import { handleMcpRequest } from './mcp'
+import { registerOAuthRoutes } from './oauth'
 
 const version = require('../package.json').version
 
@@ -49,8 +51,21 @@ const port = process.env.API_PORT ?? 5999
 
 const app = express()
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
+
+import rateLimit from 'express-rate-limit'
+
+// Rate limiters for different endpoints
+const mcpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // 50 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+registerOAuthRoutes(app)
 
 Object.keys({ ...functions }).map((fn) => {
   // console.log(`register POST listener [${fn}]`)
@@ -61,6 +76,9 @@ Object.keys(functions).map((fn) => {
   // console.log(`register GET listener [${fn}]`)
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
+
+// MCP endpoint
+app.post('/', mcpLimiter, handleMcpRequest)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')

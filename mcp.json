@@ -1,0 +1,12 @@
+{
+  "servers": [
+    {
+      "name": "nstrumentaDev",
+      "type": "http",
+      "url": "http://localhost:5999/mcp",
+      "headers": {
+        "X-Api-Key": "${input:apiKey}"
+      }
+    }
+  ]
+}

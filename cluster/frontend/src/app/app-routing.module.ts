@@ -1,5 +1,4 @@
-import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
 import { AccountComponent } from './components/account/account.component';
 import { ActionsComponent } from './components/actions/actions.component';
 import { AgentDetailComponent } from './components/agent-detail/agent-detail.component';

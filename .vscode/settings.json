@@ -1,0 +1,50 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "bd": true,
+        "git status": true,
+        "git log": true,
+        "git show": true,
+        "git diff": true,
+        "git grep": true,
+        "git branch": true,
+        "/^git branch\\b.*-(d|D|m|M|-delete|-force)\\b/": false,
+        "npm": true,
+        "node": true,
+        "tsc": true,
+        "docker": true,
+        "docker compose": true,
+        "ls": true,
+        "cat": true,
+        "head": true,
+        "tail": true,
+        "grep": true,
+        "find": true,
+        "wc": true,
+        "sort": true,
+        "uniq": true,
+        "tr": true,
+        "cut": true,
+        "sed": true,
+        "awk": true,
+        "echo": true,
+        "pwd": true,
+        "cd": true,
+        "which": true,
+        "tree": true,
+        "/\\$\\(.+\\)/s": {
+            "approve": false,
+            "matchCommandLine": true
+        },
+        "/`.+`/s": {
+            "approve": false,
+            "matchCommandLine": true
+        },
+        "rm": false,
+        "chmod": false,
+        "chown": false,
+        "curl": false,
+        "wget": false,
+        "xargs": false,
+        "eval": false
+    }
+}

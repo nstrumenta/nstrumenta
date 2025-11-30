@@ -1,5 +1,5 @@
 import { Firestore } from '@google-cloud/firestore'
-import { createHash } from 'crypto'
+import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
 
@@ -48,31 +48,56 @@ export function CreateApiKeyService({
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 
-      const key = uuid()
-      const keyId = createKeyId(key)
+      // New Key Format: accessKeyId (16 hex) + secretAccessKey (32 hex)
+      const accessKeyId = randomBytes(8).toString('hex')
+      const secretAccessKey = randomBytes(16).toString('hex')
+      const key = `${accessKeyId}${secretAccessKey}`
+      
+      // Salt for scrypt
+      const salt = randomBytes(16).toString('hex')
+      const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || ''
+      
+      // Hash the secret part
+      const hash = scryptSync(secretAccessKey, salt + pepper, 64).toString('hex')
 
       try {
-        const doc = firestore.collection('keys').doc(keyId)
+        // Store under accessKeyId (public ID)
+        const doc = firestore.collection('keys').doc(accessKeyId)
         const createdAt = Date.now()
-        await doc.set({ projectId, createdAt })
+        
+        await doc.set({ 
+          projectId, 
+          createdAt,
+          salt,
+          hash,
+          version: 'v2' // Mark as new version
+        })
 
         const projectPath = `/projects/${projectId}`
 
         const projectDoc = await (await firestore.doc(projectPath).get()).data()
         const apiKeys = projectDoc?.apiKeys ? projectDoc.apiKeys : {}
-        apiKeys[keyId] = { createdAt }
+        
+        // Store metadata in project
+        apiKeys[accessKeyId] = { createdAt }
 
         await firestore.doc(projectPath).update({ apiKeys })
 
         const keyWithUrl = `${key}:${btoa(apiUrl)}`
-        return { key: keyWithUrl, keyId, createdAt }
+        return { key: keyWithUrl, keyId: accessKeyId, createdAt }
       } catch (err) {
         console.log(err)
       }
     },
 
     removeTempKey: async function removeTempKey(apiKey: string) {
-      const keyId = createKeyId(apiKey)
+      const keyPart = apiKey.split(':')[0]
+      // Only supports V2 keys
+      if (keyPart.length !== 48) {
+        console.warn('Attempted to remove invalid key format')
+        return
+      }
+      const keyId = keyPart.substring(0, 16)
       const doc = firestore.collection('keys').doc(keyId)
       await doc.delete()
     },
@@ -99,11 +124,4 @@ export function CreateApiKeyService({
       }
     },
   }
-}
-
-function createKeyId(key: string) {
-  return createHash('sha256')
-    .update(key.split(':')[0])
-    .update('salt')
-    .digest('hex')
 }

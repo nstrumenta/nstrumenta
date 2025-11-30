@@ -1,4 +1,3 @@
-version: '3'
 services:
   cli:
     container_name: cli
@@ -8,3 +7,5 @@ services:
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - IMAGE_REPOSITORY=${IMAGE_REPOSITORY}
+      - IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}
