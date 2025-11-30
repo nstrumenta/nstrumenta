@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.1.48](https://github.com/nstrumenta/nstrumenta/compare/v3.1.47...v3.1.48) (2025-11-30)
+
+
+### Features
+
+* Add Model Context Protocol server ([edc749a](https://github.com/nstrumenta/nstrumenta/commit/edc749a36a02de998d1635be852339658587044d))
+* Add Model Context Protocol server ([cf79acd](https://github.com/nstrumenta/nstrumenta/commit/cf79acde2ed9902b2635cd00253af79138c07b64))
+* Add Model Context Protocol server ([c5779a4](https://github.com/nstrumenta/nstrumenta/commit/c5779a4f1494153ca11a70a63d5dd26962d02de8))
+* Add Model Context Protocol server ([4214433](https://github.com/nstrumenta/nstrumenta/commit/421443376675137e9357a00d3f06711e931681f7))
+* unified API key authentication for MCP server and VS Code extension ([2c81b51](https://github.com/nstrumenta/nstrumenta/commit/2c81b51f352b1f95c2a75a753fc297467e4107a2))
+* **vscode-extension:** initial VS Code extension workspace setup ([f884a03](https://github.com/nstrumenta/nstrumenta/commit/f884a03b834ec771478fe3df9716b6c7509da77a))
+
 ### [3.1.47](https://github.com/nstrumenta/nstrumenta/compare/v3.1.46...v3.1.47) (2025-10-04)
 
 ### [3.1.46](https://github.com/nstrumenta/nstrumenta/compare/v3.1.45...v3.1.46) (2025-10-02)
