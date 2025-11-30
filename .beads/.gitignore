@@ -1,0 +1,25 @@
+# SQLite databases
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Daemon runtime files
+daemon.lock
+daemon.log
+daemon.pid
+bd.sock
+
+# Legacy database files
+db.sqlite
+bd.db
+
+# Merge artifacts from git operations
+beads.base.*
+beads.left.*
+beads.right.*
+
+# Keep JSONL exports and config (source of truth for git)
+!issues.jsonl
+!metadata.json
+!config.yaml

@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
-import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
+import { deleteObject, getDownloadURL, ref } from 'firebase/storage';
 import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
@@ -74,7 +74,6 @@ export class DataTableComponent implements OnInit {
     effect(() => {
       const modules = this.firebaseDataService.modules();
       modules.forEach((module) => {
-        console.log(module);
         const { name, url } = module;
         if (url != undefined) {
           this.moduleActions.set(name as string, { name: name as string, url: url as string });
@@ -151,7 +150,6 @@ export class DataTableComponent implements OnInit {
             const relativePath = itemFolder.substring(currentFolder.length + 1);
             const firstSegment = relativePath.split('/')[0];
             if (firstSegment) {
-              const folderPath = currentFolder ? `${currentFolder}/${firstSegment}` : firstSegment;
               if (!subfolders.has(firstSegment)) {
                 subfolders.set(firstSegment, []);
               }
@@ -232,8 +230,8 @@ export class DataTableComponent implements OnInit {
           if (!aIsFolder && bIsFolder) return 1;
           
           // Both are same type, sort by the active column
-          let aValue: any;
-          let bValue: any;
+          let aValue: string | number;
+          let bValue: string | number;
           
           if (aIsFolder && bIsFolder) {
             // Both folders - can sort by any column now
@@ -357,7 +355,7 @@ export class DataTableComponent implements OnInit {
 
   download(fileDocument) {
     console.log('download', fileDocument.name);
-    const storage = getStorage();
+  const storage = this.firebaseDataService.getStorage();
     getDownloadURL(ref(storage, fileDocument.filePath))
       .then((url) => {
         window.open(url);
@@ -395,7 +393,7 @@ export class DataTableComponent implements OnInit {
   }
 
   deleteSelected() {
-    const storage = getStorage();
+  const storage = this.firebaseDataService.getStorage();
 
     this.selection.selected.forEach((item) => {
       // Only delete files, not folders

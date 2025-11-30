@@ -5,7 +5,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
-import { deleteObject, getDownloadURL, getStorage, ref } from 'firebase/storage';
+import { deleteObject, getDownloadURL, ref } from 'firebase/storage';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { MatFormField } from '@angular/material/form-field';
@@ -76,7 +76,7 @@ export class ModulesComponent implements OnInit {
   }
 
   deleteSelected() {
-    const storage = getStorage();
+  const storage = this.firebaseDataService.getStorage();
 
     this.selection.selected.forEach((item) => {
       console.log('deleting', item);
@@ -94,7 +94,7 @@ export class ModulesComponent implements OnInit {
 
   download(fileDocument) {
     console.log('download', fileDocument.name);
-    const storage = getStorage();
+  const storage = this.firebaseDataService.getStorage();
     getDownloadURL(ref(storage, fileDocument.filePath))
       .then((url) => {
         window.open(url);

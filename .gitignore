@@ -1,6 +1,7 @@
 .DS_Store
 src/.DS_Store
 */__pycache__/*
+ai-work/
 
 ##start .gitignore defaults for node.js from github
 # Logs
@@ -77,7 +78,6 @@ profile
 # exclude locally downloaded modules in dev
 .nst
 
-**/.vscode/settings.json
 cluster/frontend/.firebaserc
 **/credentials.json
 cluster/frontend/src/environments/firebaseConfig.json

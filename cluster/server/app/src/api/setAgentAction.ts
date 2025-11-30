@@ -6,6 +6,19 @@ export interface SetAgentActionArgs {
   projectId: string
 }
 
+export async function createAgentAction(projectId: string, agentId: string, action: any) {
+  if (!agentId) {
+    throw new Error('agentId required')
+  }
+  const actionPath = `projects/${projectId}/agents/${agentId}/actions`
+  const actionId = uuid()
+  await firestore
+    .collection(actionPath)
+    .doc(actionId)
+    .create({ createdAt: Date.now(), lastModified: Date.now(), ...action })
+  return actionId
+}
+
 const setAgentActionBase: APIEndpoint<SetAgentActionArgs> = async (
   req,
   res,
@@ -14,16 +27,7 @@ const setAgentActionBase: APIEndpoint<SetAgentActionArgs> = async (
   const { projectId } = args
   const { agentId, action } = req.body
   try {
-    if (!agentId) {
-      throw new Error('agentId or tag required')
-    }
-    const actionPath = `projects/${projectId}/agents/${agentId}/actions`
-    const actionId = uuid()
-    await firestore
-      .collection(actionPath)
-      .doc(actionId)
-      .create({ createdAt: Date.now(), lastModified: Date.now(), ...action })
-
+    const actionId = await createAgentAction(projectId, agentId, action)
     return res.status(200).send(actionId)
   } catch (error) {
     res.status(500).send(`Something went wrong: ${(error as Error).message}`)

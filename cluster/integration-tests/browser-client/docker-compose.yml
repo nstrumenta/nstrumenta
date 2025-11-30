@@ -1,4 +1,3 @@
-version: '3'
 services:
   browser-client:
     container_name: browser-client
