@@ -132,8 +132,13 @@ jobs:
           command: npm install
       - run:
           name: create api key with test server url
-          command: >
-            echo 'export NSTRUMENTA_API_KEY=`node create-api-key.js ${GOOGLE_PROJECT_ID} ${API_URL}`' >> "$BASH_ENV"
+          command: |
+            export NSTRUMENTA_API_KEY=$(node create-api-key.js ci ${API_URL})
+            if [ -z "$NSTRUMENTA_API_KEY" ]; then
+              echo "Failed to generate API key"
+              exit 1
+            fi
+            echo "export NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> "$BASH_ENV"
       - run:
           name: deploy test-backplane
           command: >
