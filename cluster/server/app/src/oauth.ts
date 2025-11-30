@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { Application, Request, Response, RequestHandler } from 'express'
 import { auth } from './authentication'
+import rateLimit from 'express-rate-limit'
 
 const AUTH_CODE_TTL_MS = 5 * 60 * 1000
 const ACCESS_TOKEN_TTL_SECONDS = 60 * 60
@@ -26,12 +27,29 @@ const registeredClients = new Map<string, ClientRegistration>()
 
 seedDefaultClients()
 
-export function registerOAuthRoutes(
-  app: Application,
-  authorizeLimiter: RequestHandler,
-  tokenLimiter: RequestHandler,
-  registerLimiter: RequestHandler,
-) {
+// Rate limiters for OAuth endpoints
+const authorizeLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+const tokenLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
+export function registerOAuthRoutes(app: Application) {
   app.get('/.well-known/openid-configuration', handleDiscovery)
   
   app.get('/oauth/authorize', authorizeLimiter, handleAuthorize)
