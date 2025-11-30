@@ -46,11 +46,22 @@ async function createApiKey() {
     const projectDoc = await firestore.doc(projectPath).get();
     
     if (!projectDoc.exists) {
-        console.error(`Project ${projectId} not found`);
-        process.exit(1);
+        // Create the project if it doesn't exist
+        await firestore.doc(projectPath).set({
+            name: projectId,
+            members: {
+              'ci-user': 'owner'
+            },
+            agentType: 'main',
+            createdAt: new Date().toISOString(),
+            createdBy: 'ci-user',
+            apiKeys: {}
+        });
+        console.error(`Project ${projectId} created`);
     }
 
-    const projectData = projectDoc.data();
+    // Re-fetch to ensure we have the data (or just use what we set)
+    const projectData = (await firestore.doc(projectPath).get()).data();
     const apiKeys = projectData.apiKeys || {};
     apiKeys[accessKeyId] = { createdAt };
 
