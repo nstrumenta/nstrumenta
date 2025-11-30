@@ -155,9 +155,11 @@ export const CloudRun = async function (
   {
     moduleVersion,
     commandArgs,
+    image,
   }: {
     moduleVersion?: string;
     commandArgs?: string[];
+    image?: string;
   }
 ): Promise<void> {
   console.log('Finding ', moduleName);
@@ -210,7 +212,7 @@ export const CloudRun = async function (
   const action = JSON.stringify({
     task: 'cloudRun',
     status: 'pending',
-    data: { module: specificModule, apiUrl, args },
+    data: { module: specificModule, apiUrl, args, image },
   });
 
   SetAction({ action });
