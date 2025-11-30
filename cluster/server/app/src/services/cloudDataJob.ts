@@ -161,17 +161,23 @@ export const createCloudDataJobService = ({
                 { quiet: true },
               ),
             )
-            const message = description.status.conditions[0].message
-            if (!message?.startsWith('Waiting')) {
+            const completedCondition = description.status.conditions?.find(
+              (c: any) => c.type === 'Completed',
+            )
+
+            if (
+              completedCondition &&
+              (completedCondition.status === 'True' ||
+                completedCondition.status === 'False')
+            ) {
               console.log(
-                `${executionId} ${
-                  message ?? JSON.stringify(description.status)
-                }`,
+                `${executionId} Completed: ${completedCondition.status} - ${completedCondition.message}`,
               )
               resolve()
             } else {
-              console.log(`status ${executionId} : ${message}`)
-              checkStatus()
+              const message = description.status.conditions?.[0]?.message
+              console.log(`status ${executionId} : ${message || 'Running...'}`)
+              setTimeout(checkStatus, 2000)
             }
           }
           checkStatus()

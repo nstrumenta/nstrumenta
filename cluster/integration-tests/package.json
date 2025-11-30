@@ -1,0 +1,12 @@
+{
+  "name": "integration-tests-utils",
+  "version": "1.0.0",
+  "description": "Utilities for integration tests",
+  "main": "create-api-key.js",
+  "scripts": {
+    "create-key": "node create-api-key.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^11.11.0"
+  }
+}

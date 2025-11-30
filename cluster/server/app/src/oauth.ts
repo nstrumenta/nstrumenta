@@ -49,12 +49,17 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-export function registerOAuthRoutes(app: Application) {
+export function registerOAuthRoutes(
+  app: Application,
+  authorizeLimiterMiddleware: RequestHandler = authorizeLimiter,
+  tokenLimiterMiddleware: RequestHandler = tokenLimiter,
+  registerLimiterMiddleware: RequestHandler = registerLimiter,
+) {
   app.get('/.well-known/openid-configuration', handleDiscovery)
-  
-  app.get('/oauth/authorize', authorizeLimiter, handleAuthorize)
-  app.post('/oauth/token', tokenLimiter, handleToken)
-  app.post('/oauth/register', registerLimiter, handleClientRegistration)
+
+  app.get('/oauth/authorize', authorizeLimiterMiddleware, handleAuthorize)
+  app.post('/oauth/token', tokenLimiterMiddleware, handleToken)
+  app.post('/oauth/register', registerLimiterMiddleware, handleClientRegistration)
 }
 
 function handleDiscovery(req: Request, res: Response) {
