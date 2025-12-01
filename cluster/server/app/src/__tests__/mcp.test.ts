@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
 
-const { registerToolMock, connectMock } = vi.hoisted(() => {
+const { registerToolMock, connectMock, resourceMock } = vi.hoisted(() => {
   return {
     registerToolMock: vi.fn(),
-    connectMock: vi.fn()
+    connectMock: vi.fn(),
+    resourceMock: vi.fn()
   }
 })
 
@@ -26,6 +27,7 @@ vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => {
     McpServer: class {
       registerTool = registerToolMock
       connect = connectMock
+      resource = resourceMock
     }
   }
 })
