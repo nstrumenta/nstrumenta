@@ -132,7 +132,6 @@ export const SetAction = async (
   options: { action: string; tag?: string }
 ) => {
   const { action: actionString, tag } = options;
-  const action = JSON.parse(actionString);
   const apiKey = resolveApiKey();
 
   const agentId = agentIdArg ? agentIdArg : tag ? await getAgentIdByTag(apiKey, tag) : null;
@@ -143,44 +142,18 @@ export const SetAction = async (
   }
 
   try {
-    const response = await fetch(endpoints.SET_AGENT_ACTION, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-      body: JSON.stringify({ action, agentId }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const actionId = data;
-    console.log(`created action: ${actionId} on agent ${agentId}`, action);
+    const mcp = new McpClient();
+    const { actionId } = await mcp.setAgentAction(agentId, actionString);
+    console.log(`created action: ${actionId} on agent ${agentId}`, JSON.parse(actionString));
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
 };
 
 export const CleanActions = async (agentId: string) => {
-  const apiKey = resolveApiKey();
-
   try {
-    const response = await fetch(endpoints.CLEAN_AGENT_ACTIONS, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-      body: JSON.stringify({ agentId }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
+    const mcp = new McpClient();
+    await mcp.cleanAgentActions(agentId);
     console.log('Agent actions cleaned successfully');
   } catch (err) {
     console.error('Error:', (err as Error).message);

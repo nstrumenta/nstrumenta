@@ -11,6 +11,7 @@ import { getAgentsList } from './api/listAgents';
 import { getDataList } from './api/listStorageObjects';
 import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
+import { cancelAgentActions } from './api/closePendingAgentActions';
 import { createProjectAction } from './api/setAction';
 
 const server = new McpServer({
@@ -354,6 +355,82 @@ server.registerTool(
             const message =
                 error instanceof Error ? error.message : 'An unknown error occurred';
             throw new Error(`Failed to cloud run module: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'set_agent_action',
+    {
+        title: 'Set Agent Action',
+        description: 'Sets a generic action on an agent.',
+        inputSchema: {
+            agentId: z.string().describe('ID of the agent'),
+            action: z.string().describe('JSON string of the action object'),
+        },
+        outputSchema: {
+            actionId: z.string().describe('ID of the created action'),
+        },
+    },
+    async ({ agentId, action }) => {
+        try {
+            const projectId = getProjectId();
+            let actionObj;
+            try {
+                actionObj = JSON.parse(action);
+            } catch (e) {
+                throw new Error('Invalid JSON string for action');
+            }
+            
+            const actionId = await createAgentAction(projectId, agentId, actionObj);
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Action ${actionId} created on agent ${agentId}`,
+                    },
+                ],
+                structuredContent: { actionId },
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to set agent action: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'clean_agent_actions',
+    {
+        title: 'Clean Agent Actions',
+        description: 'Cancels all pending actions for an agent.',
+        inputSchema: {
+            agentId: z.string().describe('ID of the agent'),
+        },
+        outputSchema: {
+            success: z.boolean(),
+        },
+    },
+    async ({ agentId }) => {
+        try {
+            const projectId = getProjectId();
+            await cancelAgentActions(projectId, agentId);
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Actions cleaned for agent ${agentId}`,
+                    },
+                ],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to clean agent actions: ${message}`);
         }
     },
 );

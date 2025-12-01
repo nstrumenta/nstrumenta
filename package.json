@@ -30,6 +30,7 @@
     "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
     "test": "node --test --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
+    "test:cli": "NSTRUMENTA_API_KEY=test:aHR0cDovL2xvY2FsaG9zdDo4MDgw ts-node src/cli/__tests__/mcp.test.ts",
     "test:watch": "node --test --watch --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
     "test:coverage": "node --test --experimental-test-coverage --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
     "test:vscode-extension": "node --test --experimental-strip-types src/vscode-extension/__tests__/unit/**/*.test.ts",

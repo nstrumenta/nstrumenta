@@ -97,4 +97,21 @@ export class McpClient {
       image: options.image,
     });
   }
+
+  async setAgentAction(agentId: string, action: string): Promise<{ actionId: string }> {
+    return this.callTool('set_agent_action', {
+      agentId,
+      action,
+    });
+  }
+
+  async cleanAgentActions(agentId: string): Promise<{ success: boolean }> {
+    return this.callTool('clean_agent_actions', {
+      agentId,
+    });
+  }
+
+  async listData(type: string = 'data'): Promise<{ objects: any[] }> {
+    return this.callTool('list_data', { type });
+  }
 }

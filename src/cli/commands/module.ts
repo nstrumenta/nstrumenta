@@ -405,31 +405,16 @@ export const List = async (options: {
   depth?: number | null;
   json?: boolean;
 }): Promise<ModuleExtended[] | void> => {
-  const apiKey = resolveApiKey();
   const { filter, json, depth = 2 } = options;
 
   try {
-    const response = await fetch(endpoints.LIST_MODULES, {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'content-type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = (await response.json()) as ModuleExtended[];
-    const filteredModules = filter
-      ? data.filter((module: any) => JSON.stringify(module).includes(filter))
-      : data;
+    const mcp = new McpClient();
+    const { modules } = await mcp.listModules(filter);
 
     if (json) {
-      return filteredModules;
+      return modules as ModuleExtended[];
     } else {
-      console.dir(filteredModules, { depth });
+      console.dir(modules, { depth });
     }
   } catch (error) {
     console.log(`Problem fetching data ${(error as Error).name}`);
