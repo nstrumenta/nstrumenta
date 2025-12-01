@@ -96,12 +96,14 @@ esac
     console.log(output);
     expect(output).not.toContain('Request failed');
 
-    const result = await asyncSpawn('nst', 'module list'.split(' '), {
+    const result = await asyncSpawn('nst', 'module list --json'.split(' '), {
       cwd: testFolderBase,
       env: process.env,
       quiet: true,
     });
-    expect(result).toEqual(expect.stringMatching(moduleName));
+    const modules = JSON.parse(result);
+    const match = modules.find((m: any) => m.name.includes(moduleName));
+    expect(match).toBeTruthy();
   }, 60_000);
 
   test('cloud-run-module', async () => {

@@ -110,8 +110,12 @@ moduleCommand
   .description('list modules published in current project')
   .option('--filter <filter>', 'filter string to match')
   .option('--depth <depth>', 'depth of object to print')
+  .option('--json', 'output json')
   .action(async (options) => {
-    await List(options);
+    const result = await List(options);
+    if (options.json && result) {
+      console.log(JSON.stringify(result, null, 2));
+    }
   });
 moduleCommand
   .command('query')
