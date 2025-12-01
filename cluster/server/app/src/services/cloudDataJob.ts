@@ -106,33 +106,51 @@ export const createCloudDataJobService = ({
         `config set core/project ${serviceAccount.project_id}`.split(' '),
       )
       // could use the region for the firebase project
-      await asyncSpawn('gcloud', [
-        'run',
-        'jobs',
-        'create',
-        jobId,
-        '--cpu=2',
-        '--memory=8Gi',
-        `--image=${imageId}`,
-        '--region=us-west1',
-        '--execution-environment=gen2',
-        `--set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest`,
-        `--max-retries=1`,
-        `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey.key},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
-          JSON.stringify(data),
-        )}`,
-      ])
+      if (process.env.NSTRUMENTA_CLOUD_RUN_MODE === 'local') {
+        console.log(`starting local execution for ${jobId}`)
+        const args = [
+          'run',
+          '--rm',
+          '--network',
+          'cluster_default',
+          '-e',
+          `NSTRUMENTA_API_KEY=${apiKey.key}`,
+          '-e',
+          `ACTION_PATH=${actionPath}`,
+          '-e',
+          `ACTION_DATA=${btoa(JSON.stringify(data))}`,
+          imageId,
+        ]
+        await asyncSpawn('docker', args)
+      } else {
+        await asyncSpawn('gcloud', [
+          'run',
+          'jobs',
+          'create',
+          jobId,
+          '--cpu=2',
+          '--memory=8Gi',
+          `--image=${imageId}`,
+          '--region=us-west1',
+          '--execution-environment=gen2',
+          `--set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest`,
+          `--max-retries=1`,
+          `--set-env-vars=NSTRUMENTA_API_KEY=${apiKey.key},ACTION_PATH=${actionPath},ACTION_DATA=${btoa(
+            JSON.stringify(data),
+          )}`,
+        ])
 
-      console.log(`starting execution for ${jobId}`)
+        console.log(`starting execution for ${jobId}`)
 
-      await asyncSpawn('gcloud', [
-        'run',
-        'jobs',
-        'execute',
-        jobId,
-        '--region=us-west1',
-        '--wait',
-      ])
+        await asyncSpawn('gcloud', [
+          'run',
+          'jobs',
+          'execute',
+          jobId,
+          '--region=us-west1',
+          '--wait',
+        ])
+      }
 
       console.log(`completed ${jobId}`)
 

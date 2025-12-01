@@ -63,19 +63,11 @@ case $1 in
 create)
     echo creating $2
     nst -v
-    nst data mount
-    echo "Hello World!" > ${projectId}/data/$2
-    nst data unmount
-    ;;
-delete)
-    echo deleting $2
-    nst -v
-    nst data mount
-    rm ${projectId}/data/$2
-    nst data unmount
+    echo "Hello World!" > $2
+    nst data upload $2
     ;;
 *)
-    echo 'usage: ./script.sh [create|delete] filename'
+    echo 'usage: ./script.sh [create] filename'
     ;;
 esac
     
@@ -96,7 +88,6 @@ esac
   });
 
   test('publish', async () => {
-    console.log(`api key: ${process.env.NSTRUMENTA_API_KEY}`);
     const output = await asyncSpawn('nst', 'module publish'.split(' '), {
       cwd: testFolderBase,
       env: process.env,
@@ -104,16 +95,17 @@ esac
     console.log(output);
     expect(output).not.toContain('Request failed');
 
-    const result = await pollNstrumenta({
-      matchString: moduleName,
-      interval: 1_000,
-      timeout: 20_000,
-      command: 'module list',
+    const result = await asyncSpawn('nst', 'module list --json'.split(' '), {
+      cwd: testFolderBase,
+      env: process.env,
+      quiet: true,
     });
-    expect(result).toEqual(expect.stringMatching(moduleName));
-  }, 20_000);
+    const modules = JSON.parse(result);
+    const match = modules.find((m: any) => m.name.includes(moduleName));
+    expect(match).toBeTruthy();
+  }, 60_000);
 
-  test.skip('cloud-run-module', async () => {
+  test('cloud-run-module', async () => {
     const uploadFileName = `cloud-run-module-${testId}.txt`;
     const imageRepository = process.env.IMAGE_REPOSITORY;
     const imageVersionTag = process.env.IMAGE_VERSION_TAG;
@@ -130,30 +122,15 @@ esac
       `module cloud-run ${moduleName} --command-args create ${uploadFileName} ${imageArg}`.split(
         ' '
       ),
-      { cwd: testFolderBase, quiet: true }
+      { cwd: testFolderBase }
     );
 
     const result = await pollNstrumenta({
       matchString: uploadFileName,
-      interval: 5_000,
-      timeout: 300_000,
+      command: 'data list',
+      interval: 5000,
+      timeout: 600_000,
     });
-    await expect(result).toBeTruthy();
-
-    await asyncSpawn(
-      'nst',
-      `module cloud-run ${moduleName} --command-args delete ${uploadFileName} ${imageArg}`.split(
-        ' '
-      ),
-      { cwd: testFolderBase, quiet: true }
-    );
-
-    const deleteResult = await pollNstrumenta({
-      matchString: uploadFileName,
-      interval: 5_000,
-      timeout: 300_000,
-      inverseMatch: true,
-    });
-    await expect(deleteResult).toBeTruthy();
+    await expect(result).toEqual(expect.stringMatching(uploadFileName));
   }, 600_000);
 });

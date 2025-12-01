@@ -9,10 +9,11 @@ import {
   getToken,
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
+import { version } from '../shared/version';
 
 export class NstrumentaClient extends NstrumentaClientBase {
   constructor() {
-    super(resolveApiKey());
+    super(resolveApiKey(), { name: "nstrumenta-nodejs", version });
   }
 
   public async connect(connectOptions: ConnectOptions): Promise<Connection> {

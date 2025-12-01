@@ -50,9 +50,20 @@ async function createRunModuleTask() {
 
   const data = JSON.parse(atob(process.env.ACTION_DATA));
 
-  const moduleName = data.data.module.name;
-  const version = data.data.module.version;
+  let moduleName = data.data.module.name;
+  let version = data.data.module.version;
   const args = data.data.args;
+
+  if (moduleName.endsWith('.tar.gz')) {
+    const versionMatch = /(\d+)\.(\d+)\.(\d+)(?:-[\w\d\.]+)?/.exec(moduleName);
+    if (versionMatch) {
+      const extractedVersion = versionMatch[0];
+      moduleName = moduleName.replace(`-${extractedVersion}.tar.gz`, '');
+      if (!version) {
+        version = extractedVersion;
+      }
+    }
+  }
 
   console.log({ moduleName, version, args });
 

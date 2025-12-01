@@ -3,6 +3,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import { NstrumentaServer } from '../../nodejs/server';
 
+import { McpClient } from '../mcp';
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
 import { Module } from './module';
 
@@ -25,23 +26,10 @@ export const Start = async function (options: {
 };
 
 export const List = async () => {
-  const apiKey = resolveApiKey();
-
   try {
-    const response = await fetch(endpoints.LIST_AGENTS, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(data);
+    const mcp = new McpClient();
+    const { agents } = await mcp.listAgents();
+    console.log(agents);
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
@@ -90,13 +78,27 @@ export const RunModule = async (
     version = await inquiryForSelectModule(moduleVersions);
   }
 
-  const action = JSON.stringify({
-    task: 'runModule',
-    status: 'pending',
-    data: { module, tag, args, version },
-  });
+  const resolvedAgentId = agentId
+    ? agentId
+    : tag
+    ? await getAgentIdByTag(apiKey, tag)
+    : null;
 
-  SetAction(agentId, { action, tag });
+  if (!resolvedAgentId) {
+    console.error(`Agent id required`);
+    return;
+  }
+
+  try {
+    const mcp = new McpClient();
+    const { actionId } = await mcp.runModule(resolvedAgentId, module, {
+      version,
+      args,
+    });
+    console.log(`created action: ${actionId} on agent ${resolvedAgentId}`);
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
 };
 
 const getAgentIdByTag = async (apiKey: string, tag: string): Promise<string | undefined> => {

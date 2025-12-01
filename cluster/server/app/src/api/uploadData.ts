@@ -49,7 +49,7 @@ const uploadDataBase = async (
     return res.status(200).send({ uploadUrl, filePath })
   } catch (error) {
     console.error('Upload data error:', error)
-    return res.status(500).send(`Upload failed: ${(error as Error).message}`)
+    return res.status(500).json({ error: 'Upload failed', details: (error as Error).message })
   }
 }
 

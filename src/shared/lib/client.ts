@@ -1,4 +1,6 @@
 import { Mcap0Types } from '@mcap/core';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
@@ -13,6 +15,7 @@ import {
   makeBusMessageFromJsonObject,
 } from '../index';
 import { makeBusMessageFromBuffer } from './busMessage';
+import { z } from 'zod';
 
 export interface LogConfig {
   header: Mcap0Types.Header;
@@ -93,6 +96,8 @@ export const getToken = async (apiKey: string): Promise<string> => {
 export abstract class NstrumentaClientBase {
   public ws: WebSocketLike | null = null;
   public apiKey?: string;
+  public mcp?: Client;
+  private resourceSubscriptions: Map<string, Array<(uri: string) => void>> = new Map();
   public listeners: Map<string, Array<ListenerCallback>>;
   public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
@@ -103,9 +108,11 @@ export abstract class NstrumentaClientBase {
   private endpoints;
 
   public connection: Connection = { status: ClientStatus.INIT };
+  private clientInfo: { name: string; version: string };
 
-  constructor(apiKey?: string) {
+  constructor(apiKey?: string, clientInfo: { name: string; version: string } = { name: "nstrumenta-client", version: "1.0.0" }) {
     this.apiKey = apiKey;
+    this.clientInfo = clientInfo;
     this.listeners = new Map();
     this.subscriptions = new Map();
     this.datalogs = new Map();
@@ -248,6 +255,106 @@ export abstract class NstrumentaClientBase {
   public async finishLog(name: string) {
     console.log('finish log');
     this.send('_nstrumenta', { command: 'finishLog', name });
+  }
+
+  public async connectMcp() {
+    if (!this.apiKey) throw new Error('apiKey required for MCP');
+    
+    const transport = new SSEClientTransport(
+      new URL(`${this.endpoints.MCP_SSE}?apiKey=${this.apiKey.split(':')[0]}`)
+    );
+    
+    this.mcp = new Client(this.clientInfo, {
+      capabilities: {}
+    });
+
+    this.mcp.setNotificationHandler(
+        z.object({ method: z.literal("notifications/resources/updated"), params: z.object({ uri: z.string() }) }),
+        async (notification) => {
+            const uri = notification.params.uri;
+            const subs = this.resourceSubscriptions.get(uri);
+            subs?.forEach(cb => cb(uri));
+        }
+    );
+
+    await this.mcp.connect(transport);
+  }
+
+  public async subscribeToMcpResource(uri: string, callback: (uri: string) => void) {
+      if (!this.mcp) await this.connectMcp();
+      
+      let subs = this.resourceSubscriptions.get(uri);
+      if (!subs) {
+          subs = [];
+          this.resourceSubscriptions.set(uri, subs);
+          await this.mcp!.request({
+              method: "resources/subscribe",
+              params: { uri }
+          }, z.any());
+      }
+      subs.push(callback);
+  }
+
+  public async subscribeToAction(projectId: string, actionId: string, callback: (data: any) => void) {
+      const uri = `projects://${projectId}/actions/${actionId}`;
+      await this.subscribeToMcpResource(uri, async (u) => {
+          const result = await this.mcp!.request({
+              method: "resources/read",
+              params: { uri }
+          }, z.any());
+          
+          // @ts-ignore
+          const content = result.contents?.[0];
+          if (content && content.text) {
+              callback(JSON.parse(content.text));
+          }
+      });
+  }
+
+  public async callMcpTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
+    if (!this.apiKey) {
+      throw new Error('apiKey not set');
+    }
+    const response = await fetch(this.endpoints.MCP, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.apiKey,
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        params: {
+          name: toolName,
+          arguments: args,
+        },
+        id: Date.now(),
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`MCP request failed: ${response.status} ${errorText}`);
+    }
+
+    const result = (await response.json()) as any;
+
+    if (result.error) {
+      throw new Error(`MCP error: ${result.error.message || 'Unknown error'}`);
+    }
+
+    const toolResult = result.result;
+    if (toolResult.isError) {
+      throw new Error(`Tool error: ${toolResult.content?.[0]?.text || 'Unknown error'}`);
+    }
+
+    if (toolResult.structuredContent) {
+      return toolResult.structuredContent as T;
+    }
+
+    return toolResult.content?.[0]?.text
+      ? JSON.parse(toolResult.content[0].text)
+      : (toolResult as T);
   }
 
   async callRPC<T extends RPC>(type: T['type'], requestPayload: T['request']) {

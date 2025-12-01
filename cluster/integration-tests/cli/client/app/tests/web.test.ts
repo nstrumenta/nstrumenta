@@ -9,8 +9,6 @@ describe('web', () => {
   const testFolderBase = `./temp/${testId}/web`;
   const moduleName = `web-module-${testId}`;
 
-  console.log(`apiKey=${process.env.NSTRUMENTA_API_KEY}`);
-
   beforeAll(async () => {
     const version = `0.0.${Date.now()}`;
     await mkdir(`${testFolderBase}/.nstrumenta`, { recursive: true });
@@ -69,7 +67,6 @@ describe('web', () => {
   });
 
   test('publish', async () => {
-    console.log(`api key: ${process.env.NSTRUMENTA_API_KEY}`);
     const output = await asyncSpawn('nst', 'module publish'.split(' '), {
       cwd: testFolderBase,
       env: process.env,

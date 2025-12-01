@@ -184,7 +184,24 @@ export class NstrumentaServer {
                   } = message;
 
                   console.log('running module', moduleName, version);
-                  Run(moduleName, { moduleVersion: version, commandArgs: args });
+                  this.backplaneClient?.send(`actions/${actionId}`, {
+                    status: 'started',
+                    timestamp: Date.now(),
+                  });
+                  Run(moduleName, { moduleVersion: version, commandArgs: args })
+                    .then(() => {
+                      this.backplaneClient?.send(`actions/${actionId}`, {
+                        status: 'complete',
+                        timestamp: Date.now(),
+                      });
+                    })
+                    .catch((err) => {
+                      this.backplaneClient?.send(`actions/${actionId}`, {
+                        status: 'error',
+                        error: (err as Error).message,
+                        timestamp: Date.now(),
+                      });
+                    });
 
                   break;
                 default:

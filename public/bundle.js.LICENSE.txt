@@ -10,3 +10,5 @@
  * Released under the Apache License, Version 2.0
  * see: https://github.com/dcodeIO/long.js for details
  */
+
+/** @license URI.js v4.4.1 (c) 2011 Gary Court. License: http://github.com/garycourt/uri-js */

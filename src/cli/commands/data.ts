@@ -155,7 +155,8 @@ export const Upload = async (
       const response = await uploadFile({ filename, tags, overwrite });
       results.push(response);
     } catch (error) {
-      return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
+      console.log(`Error uploading ${filename}: ${(error as Error).message}`);
+      throw error;
     }
   }
 
@@ -222,6 +223,7 @@ export const uploadFile = async ({
     }
   } catch (err) {
     console.error('Error:', (err as Error).message);
+    throw err;
   }
 
   return { filename, remoteFilePath };

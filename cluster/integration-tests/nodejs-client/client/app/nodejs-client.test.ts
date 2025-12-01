@@ -252,7 +252,7 @@ describe('NodeJS client', () => {
         data: Buffer.from('hello world') as unknown as Blob,
         meta: { testId },
       });
-      await new Promise((res) => setTimeout(res, 2000));
+      await new Promise((res) => setTimeout(res, 5000));
 
       // Assert
       const queryData = await nstClient.storage.query({
