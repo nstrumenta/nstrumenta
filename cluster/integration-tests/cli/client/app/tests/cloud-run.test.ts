@@ -121,10 +121,15 @@ esac
       `module cloud-run ${moduleName} --command-args create ${uploadFileName} ${imageArg}`.split(
         ' '
       ),
-      { cwd: testFolderBase, quiet: true }
+      { cwd: testFolderBase }
     );
 
-    const result = await asyncSpawn('nst', 'data list'.split(' '), { quiet: true });
+    const result = await pollNstrumenta({
+      matchString: uploadFileName,
+      command: 'data list',
+      interval: 5000,
+      timeout: 600_000,
+    });
     await expect(result).toEqual(expect.stringMatching(uploadFileName));
   }, 600_000);
 });

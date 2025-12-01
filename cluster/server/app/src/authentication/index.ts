@@ -35,6 +35,7 @@ export const auth: AuthFunction = async (req, res) => {
     if (rawKey.length === 48 && /^[0-9a-f]+$/i.test(rawKey)) {
       docId = rawKey.substring(0, 16)
     } else {
+      console.log('Auth failed: invalid key format', rawKey);
       return { authenticated: false, message: 'invalid key format', projectId: '' }
     }
 
@@ -43,15 +44,18 @@ export const auth: AuthFunction = async (req, res) => {
     ).data()
 
     if (docData == undefined) {
+      console.log('Auth failed: key not found in firestore', docId);
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
     if (!docData.salt || !docData.hash) {
+      console.log('Auth failed: invalid key data in firestore', docId);
       return { authenticated: false, message: 'invalid key data', projectId: '' }
     }
 
     const secretAccessKey = rawKey.substring(16)
     const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || ''
+    console.log(`Auth: checking key ${docId}, pepper length: ${pepper.length}`);
 
     const hashBuffer = (await new Promise((resolve, reject) => {
       crypto.scrypt(
@@ -71,6 +75,7 @@ export const auth: AuthFunction = async (req, res) => {
       hashBuffer.length !== docHashBuffer.length ||
       !crypto.timingSafeEqual(hashBuffer, docHashBuffer)
     ) {
+      console.log('Auth failed: hash mismatch', docId);
       return { authenticated: false, message: 'invalid key', projectId: '' }
     }
 
@@ -100,6 +105,11 @@ function extractApiKey(req: Request): string | undefined {
     if (scheme?.toLowerCase() === 'bearer' && token?.trim()) {
       return token.trim()
     }
+  }
+
+  const queryKey = req.query['apiKey'];
+  if (typeof queryKey === 'string' && queryKey.trim().length > 0) {
+      return queryKey.trim();
   }
 
   return undefined

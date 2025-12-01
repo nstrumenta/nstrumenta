@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs/promises';
 import semver from 'semver';
 import tar from 'tar';
+import { McpClient } from '../mcp';
 import {
   asyncSpawn,
   endpoints,
@@ -18,55 +19,90 @@ const blue = (text: string) => {
 };
 
 export const Run = async function (
-  name: string,
+  moduleName: string,
   {
     moduleVersion,
     commandArgs,
   }: {
     moduleVersion?: string;
     commandArgs?: string[];
-  }
+  },
+  command?: Command
 ): Promise<void> {
-  let module: ModuleExtended;
-  const args: string[] = commandArgs ?? [];
-  const version = moduleVersion;
+  try {
+    const module = await getModuleFromStorage({ name: moduleName, version: moduleVersion });
+    console.log(`Running module ${module.name} version ${module.version} from ${module.folder}`);
 
-  console.log('Running module', name, 'version', version ?? 'not specified, using latest');
-
-  module = await getModuleFromStorage({ name, version });
-
-  switch (module.nstrumentaModuleType) {
-    case 'nodejs':
-      {
-        console.log(`${module.name} in ${module.folder} with args`, args);
-        const cwd = `${module.folder}`;
-        const { entry = `npm run start -- ` } = module;
-        const [command, ...entryArgs] = entry.split(' ');
-        console.log(`::: start the module...`, command, entryArgs, { entry });
-        await asyncSpawn(command, [...entryArgs, ...args], {
-          cwd,
-          stdio: 'inherit',
-          shell: true,
-        });
-      }
-      break;
-    default: {
-      console.log(`${module.name} in ${module.folder} with args`, args);
-      const cwd = `${module.folder}`;
-      const { entry } = module;
-      if (entry) {
-        const [command, ...entryArgs] = entry.split(' ');
-        console.log(command, entryArgs, { entry });
-        await process.nextTick(() => {});
-        await asyncSpawn(command, [...entryArgs, ...args], {
-          cwd,
-          stdio: 'inherit',
-          shell: true,
-        });
-      }
+    const entry = module.entry;
+    if (!entry) {
+      throw new Error('Module has no entry point defined');
     }
+
+    const [cmd, ...entryArgs] = entry.split(' ');
+    const args = [...entryArgs, ...(commandArgs || [])];
+
+    await asyncSpawn(cmd, args, {
+      cwd: module.folder,
+      stdio: 'inherit',
+      env: {
+        ...(process.env as Record<string, string>),
+      },
+    });
+  } catch (err) {
+    console.error('Error running module:', (err as Error).message);
+    process.exit(1);
   }
 };
+
+export const Host = async function (
+  moduleName: string,
+  {
+    version,
+  }: {
+    version?: string;
+  },
+  { args }: Command
+): Promise<void> {
+  try {
+    const mcp = new McpClient();
+    const { actionId } = await mcp.hostModule(moduleName, { version, args });
+    console.log(`created action: ${actionId} to host ${moduleName}`);
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+    process.exit(1);
+  }
+};
+
+export const CloudRun = async function (
+  moduleName: string,
+  {
+    moduleVersion,
+    commandArgs,
+    image,
+  }: {
+    moduleVersion?: string;
+    commandArgs?: string[];
+    image?: string;
+  }
+): Promise<void> {
+  const args: string[] = commandArgs ?? [];
+  try {
+    const mcp = new McpClient();
+    const { actionId } = await mcp.cloudRun(moduleName, {
+      version: moduleVersion,
+      args,
+      image,
+    });
+    console.log(`created action: ${actionId} to cloud run ${moduleName}`);
+    if (actionId) {
+      await waitForAction(actionId);
+    }
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+    process.exit(1);
+  }
+};
+
 
 export const SetAction = async (options: { action: string; tag?: string }) => {
   const { action: actionString, tag } = options;
@@ -92,135 +128,11 @@ export const SetAction = async (options: { action: string; tag?: string }) => {
     return actionId;
   } catch (err) {
     console.error('Error:', (err as Error).message);
+    process.exit(1);
   }
 };
 
-export const Host = async function (
-  moduleName: string,
-  {
-    version,
-  }: {
-    version?: string;
-  },
-  { args }: Command
-): Promise<void> {
-  console.log('Finding ', moduleName);
-  let modules: Module[] = [];
-  try {
-    const apiKey = resolveApiKey();
-    let response = await fetch(endpoints.LIST_MODULES, {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'content-type': 'application/json',
-      },
-    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! endpoint: ${endpoints.LIST_MODULES} status: ${response.status}`);
-    }
-
-    modules = (await response.json()) as Module[];
-  } catch (error) {
-    console.log(`Problem fetching data endpoint: ${endpoints.LIST_MODULES} error: ${error}`);
-  }
-
-  const matches = modules.filter((module) => module.name.startsWith(moduleName));
-
-  const specificModule = version
-    ? matches.find((match) => semver.eq(version, getVersionFromPath(match.name)))
-    : matches
-        .sort((a, b) => semver.compare(getVersionFromPath(a.name), getVersionFromPath(b.name)))
-        .reverse()
-        .shift();
-
-  if (!specificModule)
-    throw new Error(
-      `unable to find a matching version for ${moduleName} \n ${JSON.stringify(
-        modules
-      )} \n ${JSON.stringify(matches)}`
-    );
-  console.log('found moduleId: ', specificModule?.name);
-
-  const action = JSON.stringify({
-    task: 'hostModule',
-    status: 'pending',
-    data: { module: specificModule, args },
-  });
-
-  SetAction({ action });
-};
-
-export const CloudRun = async function (
-  moduleName: string,
-  {
-    moduleVersion,
-    commandArgs,
-    image,
-  }: {
-    moduleVersion?: string;
-    commandArgs?: string[];
-    image?: string;
-  }
-): Promise<void> {
-  console.log('Finding ', moduleName);
-  let modules: Module[] = [];
-  const args: string[] = commandArgs ?? [];
-  const version = moduleVersion;
-
-  try {
-    const apiKey = resolveApiKey();
-    let response = await fetch(endpoints.LIST_MODULES, {
-      method: 'POST',
-      headers: {
-        'x-api-key': apiKey,
-        'content-type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    modules = (await response.json()) as Module[];
-  } catch (error) {
-    console.log(`Problem fetching data ${(error as Error).name}`);
-  }
-  const matches = modules
-    .filter((module) => module.name.startsWith(moduleName))
-    .map((module) => {
-      return {
-        name: moduleName,
-        filePath: module,
-        version: getVersionFromPath(module.name),
-      };
-    });
-
-  console.log(modules, matches);
-  const specificModule = version
-    ? matches.find((match) => semver.eq(version, match.version))
-    : matches
-        .sort((a, b) => semver.compare(a.version, b.version))
-        .reverse()
-        .shift();
-
-  if (!specificModule) throw new Error(`unable to find a matching version for ${moduleName}`);
-  console.log('found moduleId: ', specificModule?.name);
-
-  const apiUrl = resolveApiUrl();
-  console.log({ apiUrl });
-
-  const action = JSON.stringify({
-    task: 'cloudRun',
-    status: 'pending',
-    data: { module: specificModule, apiUrl, args, image },
-  });
-
-  const actionId = await SetAction({ action });
-  if (actionId) {
-    await waitForAction(actionId);
-  }
-};
 
 export type ModuleTypes = 'sandbox' | 'web' | 'nodejs' | 'script' | 'algorithm';
 
@@ -333,7 +245,7 @@ const waitForAction = async (actionId: string) => {
         if (action.status === 'error') {
           throw new Error(`Action ${actionId} failed: ${action.error}`);
         }
-        // console.log(`Action status: ${action.status}`);
+        console.log(`Action status: ${action.status}`);
       }
     } catch (e) {
       console.log('Error checking action status:', e);
@@ -382,7 +294,8 @@ export const Publish = async () => {
       await waitForModule(module.name, module.version);
     }
   } catch (err) {
-    console.log((err as Error).message);
+    console.error((err as Error).message);
+    process.exit(1);
   }
 };
 

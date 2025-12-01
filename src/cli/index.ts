@@ -21,8 +21,9 @@ import { ListServices, StartService } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, ProjectId } from './commands/project';
 import { Send, Subscribe } from './commands/pubsub';
+import { version } from '../shared/version';
 
-export const nstrumentaVersion = require('../../package.json').version;
+export const nstrumentaVersion = version;
 
 const program = new Command()
   .version(nstrumentaVersion, '-v, --version', 'output the current version')

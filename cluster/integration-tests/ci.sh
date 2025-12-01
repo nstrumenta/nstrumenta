@@ -7,10 +7,24 @@ if [[ $ENVFILE ]]; then
     echo "Loading from envfile: $ENVFILE"
     if [[ -f $ENVFILE ]]; then
         while IFS= read -r line || [[ -n "$line" ]]; do
+            # Skip comments and empty lines
+            if [[ "$line" =~ ^#.* ]] || [[ -z "$line" ]]; then
+                continue
+            fi
             export "$line"
         done <"$ENVFILE"
     fi
 fi
+
+# Install dependencies for key generation script if needed
+if [ ! -d "node_modules" ]; then
+    npm install --no-save
+fi
+
+# Generate API Key for CI project
+echo "Generating API Key for project 'ci'..."
+export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://cluster-server-1:5999)
+echo "API Key generated."
 
 if [ $# -eq 0 ]; then
     TESTS="cli nodejs-client browser-client"

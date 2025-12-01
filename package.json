@@ -2,8 +2,8 @@
   "name": "nstrumenta",
   "version": "3.1.48",
   "description": "cli tool for nstrumenta",
-  "main": "dist/nodejs/nodejs/index.js",
-  "types": "dist/nodejs/nodejs/index.d.ts",
+  "main": "dist/nodejs/index.js",
+  "types": "dist/nodejs/index.d.ts",
   "bin": {
     "nstrumenta": "dist/cli/index.js",
     "nst": "dist/cli/index.js"
@@ -35,7 +35,7 @@
     "test:vscode-extension": "node --test --experimental-strip-types src/vscode-extension/__tests__/unit/**/*.test.ts",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",
-    "release": "npm run clean; npm run build ; standard-version --release-as patch"
+    "release": "npm run clean; npm run build ; standard-version --release-as patch --bumpFiles package.json src/shared/version.ts"
   },
   "repository": {
     "type": "git",
