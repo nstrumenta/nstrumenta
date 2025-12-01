@@ -111,6 +111,7 @@ describe('MCP Handler', () => {
     const calls = registerToolMock.mock.calls
     const tool = calls.find((call: any) => call[0] === 'set_agent_action')
     expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
     expect(tool[1].description).toContain('Sets a generic action')
   })
 
@@ -118,6 +119,7 @@ describe('MCP Handler', () => {
     const calls = registerToolMock.mock.calls
     const tool = calls.find((call: any) => call[0] === 'clean_agent_actions')
     expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
     expect(tool[1].description).toContain('Cancels all pending actions')
   })
 
@@ -125,6 +127,7 @@ describe('MCP Handler', () => {
     const calls = registerToolMock.mock.calls
     const tool = calls.find((call: any) => call[0] === 'list_data')
     expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
     expect(tool[1].description).toContain('Lists data objects')
   })
 })
