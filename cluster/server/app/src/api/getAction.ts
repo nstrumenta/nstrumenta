@@ -16,7 +16,7 @@ const getActionBase: APIEndpoint<GetActionArgs> = async (req, res, args) => {
     }
     return res.status(200).send(doc.data())
   } catch (error) {
-    res.status(500).send(`Something went wrong: ${(error as Error).message}`)
+    res.status(500).json({ error: 'Something went wrong', details: (error as Error).message })
   }
 }
 

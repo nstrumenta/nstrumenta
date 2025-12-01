@@ -58,7 +58,7 @@ const queryCollectionBase: APIEndpoint<QueryCollectionArgs> = async (
 
     return res.status(200).send(docs)
   } catch (error) {
-    res.status(500).send((error as Error)?.message ?? 'Something went wrong')
+    res.status(500).json({ error: (error as Error)?.message ?? 'Something went wrong' })
   }
 }
 

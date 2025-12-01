@@ -30,7 +30,7 @@ const setAgentActionBase: APIEndpoint<SetAgentActionArgs> = async (
     const actionId = await createAgentAction(projectId, agentId, action)
     return res.status(200).send(actionId)
   } catch (error) {
-    res.status(500).send(`Something went wrong: ${(error as Error).message}`)
+    res.status(500).json({ error: 'Something went wrong', details: (error as Error).message })
   }
 }
 

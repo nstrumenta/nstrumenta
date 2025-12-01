@@ -23,7 +23,7 @@ const setActionBase: APIEndpoint<SetActionArgs> = async (req, res, args) => {
     const actionId = await createProjectAction(projectId, action)
     return res.status(200).send(actionId)
   } catch (error) {
-    res.status(500).send(`Something went wrong: ${(error as Error).message}`)
+    res.status(500).json({ error: 'Something went wrong', details: (error as Error).message })
   }
 }
 

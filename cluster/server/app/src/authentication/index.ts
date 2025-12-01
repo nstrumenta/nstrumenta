@@ -107,11 +107,6 @@ function extractApiKey(req: Request): string | undefined {
     }
   }
 
-  const queryKey = req.query['apiKey'];
-  if (typeof queryKey === 'string' && queryKey.trim().length > 0) {
-      return queryKey.trim();
-  }
-
   return undefined
 }
 
