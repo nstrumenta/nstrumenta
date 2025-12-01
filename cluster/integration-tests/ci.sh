@@ -22,9 +22,20 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Generate API Key for CI project
-echo "Generating API Key for project 'ci'..."
-export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://cluster-server-1:5999)
-echo "API Key generated."
+if [ -z "$NSTRUMENTA_API_KEY" ]; then
+    echo "Generating API Key for project 'ci'..."
+    export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://cluster-server-1:5999)
+    echo "API Key generated."
+else
+    echo "Using existing NSTRUMENTA_API_KEY"
+fi
+
+if [ -n "$API_URL" ]; then
+    export NSTRUMENTA_API_URL=$API_URL
+fi
+
+# Ensure cluster_default network exists
+docker network inspect cluster_default >/dev/null 2>&1 || docker network create cluster_default
 
 if [ $# -eq 0 ]; then
     TESTS="cli nodejs-client browser-client"

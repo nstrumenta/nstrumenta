@@ -88,7 +88,6 @@ esac
   });
 
   test('publish', async () => {
-    console.log(`api key: ${process.env.NSTRUMENTA_API_KEY}`);
     const output = await asyncSpawn('nst', 'module publish'.split(' '), {
       cwd: testFolderBase,
       env: process.env,
