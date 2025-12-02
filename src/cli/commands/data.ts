@@ -3,6 +3,7 @@ import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
 import { QueryOptions } from '../../shared';
+import { McpClient } from '../mcp';
 import { asyncSpawn, endpoints, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;
 
@@ -18,24 +19,10 @@ export interface ModuleMeta {
 export interface DataListOptions {}
 
 export const List = async (_: unknown, options: DataListOptions) => {
-  const apiKey = resolveApiKey();
-
-  const config = {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'data' }),
-  };
-
   try {
-    const response = await fetch(endpoints.LIST_STORAGE_OBJECTS, config);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    console.log(JSON.stringify(data, undefined, 2));
+    const mcp = new McpClient();
+    const { objects } = await mcp.listData();
+    console.log(JSON.stringify(objects, undefined, 2));
   } catch (err) {
     console.error('Error:', (err as Error).message);
   }
@@ -155,7 +142,8 @@ export const Upload = async (
       const response = await uploadFile({ filename, tags, overwrite });
       results.push(response);
     } catch (error) {
-      return console.log(`Error uploading ${filename}: ${(error as Error).message}`);
+      console.log(`Error uploading ${filename}: ${(error as Error).message}`);
+      throw error;
     }
   }
 
@@ -222,6 +210,7 @@ export const uploadFile = async ({
     }
   } catch (err) {
     console.error('Error:', (err as Error).message);
+    throw err;
   }
 
   return { filename, remoteFilePath };

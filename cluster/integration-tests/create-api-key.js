@@ -26,6 +26,7 @@ async function createApiKey() {
   // Salt for scrypt
   const salt = crypto.randomBytes(16).toString('hex');
   const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || '';
+  console.error(`Pepper length: ${pepper.length}`);
   
   // Hash the secret part
   const hash = crypto.scryptSync(secretAccessKey, salt + pepper, 64).toString('hex');
@@ -52,16 +53,21 @@ async function createApiKey() {
             members: {
               'ci-user': 'owner'
             },
-            agentType: 'main',
+            agentType: 'ci',
             createdAt: new Date().toISOString(),
             createdBy: 'ci-user',
-            apiKeys: {}
+            apiKeys: {},
+            apiUrl: apiUrl
         });
         console.error(`Project ${projectId} created`);
+    } else {
+        // Update apiUrl and agentType if project exists
+        await firestore.doc(projectPath).update({ apiUrl, agentType: 'ci' });
     }
 
     // Re-fetch to ensure we have the data (or just use what we set)
     const projectData = (await firestore.doc(projectPath).get()).data();
+    console.error('Project Data:', JSON.stringify(projectData, null, 2));
     const apiKeys = projectData.apiKeys || {};
     apiKeys[accessKeyId] = { createdAt };
 

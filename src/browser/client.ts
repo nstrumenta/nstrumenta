@@ -8,7 +8,13 @@ import {
 } from '../shared';
 import { deserializeWireMessage } from '../shared/lib/busMessage';
 
+import { version } from '../shared/version';
+
 export class NstrumentaBrowserClient extends NstrumentaClientBase {
+  constructor() {
+    super(undefined, { name: "nstrumenta-browser", version });
+  }
+
   public async connect(connectOptions?: ConnectOptions): Promise<Connection> {
     return new Promise(async (resolve, reject) => {
       const {

@@ -1,10 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
 
-const { registerToolMock, connectMock } = vi.hoisted(() => {
+const { registerToolMock, connectMock, resourceMock } = vi.hoisted(() => {
   return {
     registerToolMock: vi.fn(),
-    connectMock: vi.fn()
+    connectMock: vi.fn(),
+    resourceMock: vi.fn()
   }
 })
 
@@ -21,11 +22,24 @@ vi.mock('../authentication', () => ({
   withAuth: vi.fn((fn) => fn)
 }))
 
+vi.mock('../api/setAgentAction', () => ({
+  createAgentAction: vi.fn()
+}))
+
+vi.mock('../api/closePendingAgentActions', () => ({
+  cancelAgentActions: vi.fn()
+}))
+
+vi.mock('../api/listStorageObjects', () => ({
+  getDataList: vi.fn()
+}))
+
 vi.mock('@modelcontextprotocol/sdk/server/mcp.js', () => {
   return {
     McpServer: class {
       registerTool = registerToolMock
       connect = connectMock
+      resource = resourceMock
     }
   }
 })
@@ -41,7 +55,9 @@ vi.mock('@modelcontextprotocol/sdk/server/streamableHttp.js', () => {
 
 import { handleMcpRequest } from '../mcp'
 import { auth } from '../authentication'
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+import { createAgentAction } from '../api/setAgentAction'
+import { cancelAgentActions } from '../api/closePendingAgentActions'
+import { getDataList } from '../api/listStorageObjects'
 
 describe('MCP Handler', () => {
   let req: Partial<Request>
@@ -61,8 +77,8 @@ describe('MCP Handler', () => {
       headersSent: false
     }
     next = vi.fn()
-    vi.clearAllMocks()
-    registerToolMock.mockClear()
+    // vi.clearAllMocks() // Don't clear all mocks as it clears registerToolMock
+    // registerToolMock.mockClear() // Don't clear this as it's called at module load time
     connectMock.mockClear()
     closeMock.mockClear()
     handleRequestMock.mockClear()
@@ -89,6 +105,30 @@ describe('MCP Handler', () => {
     expect(connectMock).toHaveBeenCalled()
     expect(auth).toHaveBeenCalled()
     expect(res.status).not.toHaveBeenCalledWith(401)
+  })
+
+  it('should register set_agent_action tool', () => {
+    const calls = registerToolMock.mock.calls
+    const tool = calls.find((call: any) => call[0] === 'set_agent_action')
+    expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
+    expect(tool[1].description).toContain('Sets a generic action')
+  })
+
+  it('should register clean_agent_actions tool', () => {
+    const calls = registerToolMock.mock.calls
+    const tool = calls.find((call: any) => call[0] === 'clean_agent_actions')
+    expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
+    expect(tool[1].description).toContain('Cancels all pending actions')
+  })
+
+  it('should register list_data tool', () => {
+    const calls = registerToolMock.mock.calls
+    const tool = calls.find((call: any) => call[0] === 'list_data')
+    expect(tool).toBeDefined()
+    if (!tool) throw new Error('Tool not found')
+    expect(tool[1].description).toContain('Lists data objects')
   })
 })
 

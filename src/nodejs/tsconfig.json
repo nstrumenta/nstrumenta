@@ -7,10 +7,12 @@
       "ESNext"
     ],
     "declaration": true,
-    "outDir": "../../dist/nodejs",
+    "rootDir": "..",
+    "outDir": "../../dist",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true
   }
 }
