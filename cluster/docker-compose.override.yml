@@ -20,8 +20,11 @@ services:
     volumes:
       - ./server/app/:/app
       - ./credentials/:/credentials
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - NSTRUMENTA_CLOUD_RUN_MODE=local
+      - NST_AGENT_TYPE=ci
     command: sh -c 'npm run dev'
   agent:
     build:

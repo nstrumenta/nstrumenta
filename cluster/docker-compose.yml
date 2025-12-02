@@ -27,3 +27,8 @@ services:
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
     command: 'npm run start:agent'
+  data-job-runner:
+    build:
+      context: ../
+      dockerfile: ./cluster/data-job-runner/Dockerfile
+    image: nstrumenta/data-job-runner:latest

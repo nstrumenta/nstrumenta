@@ -28,11 +28,14 @@ export const resolveApiKey = () => {
 };
 
 export const resolveApiUrl = () => {
+  if (process.env.NSTRUMENTA_API_URL) {
+    return process.env.NSTRUMENTA_API_URL;
+  }
   const apiKey = process.env.NSTRUMENTA_API_KEY;
   return atob(apiKey!.split(':')[1] ?? '').trim();
 };
 
-export const endpoints = getEndpoints(resolveApiKey());
+export const endpoints = getEndpoints(resolveApiKey(), resolveApiUrl());
 
 export async function asyncSpawn(
   cmd: string,

@@ -1,5 +1,5 @@
-export const getEndpoints = (apiKey: string) => {
-  const url = atob(apiKey.split(':')[1] ?? '').trim();
+export const getEndpoints = (apiKey: string, apiUrl?: string) => {
+  const url = apiUrl ? apiUrl : atob(apiKey.split(':')[1] ?? '').trim();
   return {
     ADMIN_UTILS: `${url}/adminUtils`,
     CREATE_PROJECT: `${url}/createProject`,
@@ -11,6 +11,7 @@ export const getEndpoints = (apiKey: string) => {
     REGISTER_AGENT: `${url}/registerAgent`,
     LIST_AGENTS: `${url}/listAgents`,
     SET_ACTION: `${url}/setAction`,
+    GET_ACTION: `${url}/getAction`,
     SET_AGENT_ACTION: `${url}/setAgentAction`,
     GET_AGENT_ID_BY_TAG: `${url}/getAgentIdByTag`,
     CLEAN_AGENT_ACTIONS: `${url}/cleanAgentActions`,
@@ -26,6 +27,8 @@ export const getEndpoints = (apiKey: string) => {
     LIST_STORAGE_OBJECTS: `${url}/listStorageObjects`,
     GET_DATA_MOUNT: `${url}/getDataMount`,
     QUERY_COLLECTION: `${url}/queryCollection`,
+    MCP: `${url}/`,
+    MCP_SSE: `${url}/mcp/messages`,
   };
 };
 

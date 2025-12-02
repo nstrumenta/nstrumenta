@@ -6,6 +6,7 @@
       "dom"
     ],
     "declaration": true,
+    "rootDir": "..",
     "outDir": "../../dist",
     "strict": true,
     "esModuleInterop": true,

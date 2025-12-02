@@ -22,7 +22,7 @@ import {
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
-import { handleMcpRequest } from './mcp'
+import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage, notifyActionUpdate } from './mcp'
 import { registerOAuthRoutes } from './oauth'
 
 const version = require('../package.json').version
@@ -362,6 +362,14 @@ firestore
         firestore
           .collection(`${project.ref.path}/actions`)
           .onSnapshot((actionsSnapshot) => {
+            // Notify MCP subscribers of changes
+            actionsSnapshot.docChanges().forEach((change) => {
+                if (change.type === 'modified' || change.type === 'added') {
+                    const actionId = change.doc.id;
+                    notifyActionUpdate(projectId, actionId);
+                }
+            });
+
             actionsSnapshot.forEach((action) => {
               action.ref.get().then((doc) => {
                 const data = doc.data()
