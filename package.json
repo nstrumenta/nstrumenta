@@ -36,7 +36,7 @@
     "test:vscode-extension": "node --test --experimental-strip-types src/vscode-extension/__tests__/unit/**/*.test.ts",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",
-    "release": "npm run clean; npm run build ; standard-version --release-as patch --bumpFiles package.json src/shared/version.ts"
+    "release": "npm run clean; npm run build ; release-it"
   },
   "repository": {
     "type": "git",
@@ -52,6 +52,7 @@
   },
   "homepage": "https://github.com/nstrumenta/nstrumenta#readme",
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.2",
     "@types/inquirer": "^8.1.1",
     "@types/node": "^22.13.0",
     "@types/semver": "^7.3.9",
@@ -62,6 +63,7 @@
     "dotenv-cli": "^7.2.1",
     "nodemon": "^3.1.4",
     "prettier": "^2.4.1",
+    "release-it": "^19.0.6",
     "standard-version": "^9.3.1",
     "ts-node": "^10.2.1",
     "typescript": "^4.5.4"
