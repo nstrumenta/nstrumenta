@@ -7,18 +7,26 @@ import { MatListModule } from '@angular/material/list';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { NavComponent } from './nav.component';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NavbarAccountComponent } from '../navbar-account/navbar-account.component';
-import { LogoComponent } from '../logo/logo.component';
 import { AuthService } from 'src/app/auth/auth.service';
-import { of } from 'rxjs';
-
-const authServiceStub = {
-  user: of({ uid: 'mock' }),
-};
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { UploadService } from 'src/app/services/upload.service';
+import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
+import { ProjectService } from 'src/app/services/project.service';
+import { VscodeService } from 'src/app/services/vscode.service';
+import { 
+  MockAuthService, 
+  MockFirebaseDataService, 
+  MockUploadService, 
+  MockFolderNavigationService,
+  MockProjectService,
+  MockVscodeService
+} from 'src/app/testing/mocks';
 
 describe('NavComponent', () => {
   let component: NavComponent;
@@ -34,11 +42,19 @@ describe('NavComponent', () => {
         MatListModule,
         MatSidenavModule,
         MatToolbarModule,
+        MatSnackBarModule,
         RouterTestingModule,
         MatMenuModule,
-        NavComponent, NavbarTitleComponent, NavbarAccountComponent, LogoComponent,
+        NavComponent, NavbarTitleComponent, NavbarAccountComponent,
     ],
-    providers: [{ provide: AuthService, useValue: authServiceStub }],
+    providers: [
+      { provide: AuthService, useClass: MockAuthService },
+      { provide: FirebaseDataService, useClass: MockFirebaseDataService },
+      { provide: UploadService, useClass: MockUploadService },
+      { provide: FolderNavigationService, useClass: MockFolderNavigationService },
+      { provide: ProjectService, useClass: MockProjectService },
+      { provide: VscodeService, useClass: MockVscodeService }
+    ],
 }).compileComponents();
   }));
 

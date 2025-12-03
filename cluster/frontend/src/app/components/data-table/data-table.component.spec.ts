@@ -11,13 +11,7 @@ import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataTableComponent } from './data-table.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { signal } from '@angular/core';
-
-const firebaseDataServiceStub = {
-  data: signal([]),
-  setProject: jasmine.createSpy('setProject'),
-  deleteRecord: jasmine.createSpy('deleteRecord')
-};
+import { MockFirebaseDataService } from 'src/app/testing/mocks';
 
 describe('DataTableComponent', () => {
   let component: DataTableComponent;
@@ -37,7 +31,7 @@ describe('DataTableComponent', () => {
         RouterTestingModule,
         DataTableComponent, FileSizePipe,
     ],
-    providers: [MatDialog, { provide: FirebaseDataService, useValue: firebaseDataServiceStub }],
+    providers: [MatDialog, { provide: FirebaseDataService, useClass: MockFirebaseDataService }],
 }).compileComponents();
   }));
 

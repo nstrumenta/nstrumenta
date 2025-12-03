@@ -12,23 +12,27 @@ import {
   Firestore,
   addDoc,
   collection,
-  collectionData,
   deleteDoc,
   doc,
-  docData,
   onSnapshot,
   orderBy,
   query,
   setDoc,
   updateDoc,
-} from '@angular/fire/firestore';
+  getFirestore,
+  DocumentData,
+  CollectionReference,
+  Query,
+  DocumentReference,
+} from 'firebase/firestore';
 import {
-  Storage,
+  FirebaseStorage,
   UploadMetadata,
   getDownloadURL,
   ref,
   uploadBytesResumable,
-} from '@angular/fire/storage';
+  getStorage,
+} from 'firebase/storage';
 import {
   BehaviorSubject,
   Observable,
@@ -55,8 +59,8 @@ import { ProjectSettings } from '../models/projectSettings.model';
   providedIn: 'root',
 })
 export class FirebaseDataService {
-  private firestore = inject(Firestore);
-  private storage = inject(Storage);
+  private firestore: Firestore;
+  private storage: FirebaseStorage;
   private destroyRef = inject(DestroyRef);
   private injector = inject(Injector);
 
@@ -96,27 +100,30 @@ export class FirebaseDataService {
   private projectSettingsObservable$: Observable<unknown>;
 
   constructor() {
+    this.firestore = getFirestore();
+    this.storage = getStorage();
+    
     // Create all Firebase observables during injection context
 
     this.modulesObservable$ = this.currentProjectId.pipe(
       switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/projects/${projectId}/modules`), {
-            idField: 'id',
-          })
-        );
+        return runInInjectionContext(this.injector, () => {
+          const modulesCollection = collection(this.firestore, `/projects/${projectId}/modules`);
+          const modulesQuery = query(modulesCollection);
+          return this.collectionData(modulesQuery);
+        });
       })
     );
 
     this.dataObservable$ = this.currentProjectId.pipe(
       switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/projects/${projectId}/data`), {
-            idField: 'key',
-          })
-        );
+        return runInInjectionContext(this.injector, () => {
+          const dataCollection = collection(this.firestore, `/projects/${projectId}/data`);
+          const dataQuery = query(dataCollection);
+          return this.collectionData(dataQuery);
+        });
       })
     );
 
@@ -126,7 +133,7 @@ export class FirebaseDataService {
         return runInInjectionContext(this.injector, () => {
           const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
           const orderedRecordQuery = query(recordCollection, orderBy('lastModified', 'desc'));
-          return collectionData(orderedRecordQuery, { idField: 'key' });
+          return this.collectionData(orderedRecordQuery);
         });
       })
     );
@@ -137,7 +144,7 @@ export class FirebaseDataService {
         return runInInjectionContext(this.injector, () => {
           const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
           const orderedActionsQuery = query(actionsCollection, orderBy('created', 'desc'));
-          return collectionData(orderedActionsQuery, { idField: 'id' });
+          return this.collectionData(orderedActionsQuery);
         });
       })
     );
@@ -154,7 +161,7 @@ export class FirebaseDataService {
             agentActionsCollection,
             orderBy('created', 'desc')
           );
-          return collectionData(orderedAgentActionsQuery, { idField: 'id' });
+          return this.collectionData(orderedAgentActionsQuery);
         }).pipe(
           catchError((error) => {
             console.error(
@@ -173,42 +180,44 @@ export class FirebaseDataService {
     this.repositoriesObservable$ = this.currentProjectId.pipe(
       switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/projects/${projectId}/repositories`), {
-            idField: 'key',
-          })
-        );
+        return runInInjectionContext(this.injector, () => {
+          const repositoriesCollection = collection(this.firestore, `/projects/${projectId}/repositories`);
+          const repositoriesQuery = query(repositoriesCollection);
+          return this.collectionData(repositoriesQuery);
+        });
       })
     );
 
     this.agentsObservable$ = this.currentProjectId.pipe(
       switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/projects/${projectId}/agents`), {
-            idField: 'id',
-          })
-        );
+        return runInInjectionContext(this.injector, () => {
+          const agentsCollection = collection(this.firestore, `/projects/${projectId}/agents`);
+          const agentsQuery = query(agentsCollection);
+          return this.collectionData(agentsQuery);
+        });
       })
     );
 
     this.machinesObservable$ = this.currentProjectId.pipe(
       switchMap((projectId) => {
         if (!projectId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/projects/${projectId}/machines`), {
-            idField: 'name',
-          })
-        );
+        return runInInjectionContext(this.injector, () => {
+          const machinesCollection = collection(this.firestore, `/projects/${projectId}/machines`);
+          const machinesQuery = query(machinesCollection);
+          return this.collectionData(machinesQuery);
+        });
       })
     );
 
     this.userProjectsObservable$ = this.currentUserId.pipe(
       switchMap((userId) => {
         if (!userId) return of([]);
-        return runInInjectionContext(this.injector, () =>
-          collectionData(collection(this.firestore, `/users/${userId}/projects`), { idField: 'id' })
-        ).pipe(
+        return runInInjectionContext(this.injector, () => {
+          const projectsCollection = collection(this.firestore, `/users/${userId}/projects`);
+          const projectsQuery = query(projectsCollection);
+          return this.collectionData(projectsQuery);
+        }).pipe(
           map((data) => data as Project[]),
           catchError((error) => {
             console.error('Error loading user projects for user:', userId, error);
@@ -222,7 +231,7 @@ export class FirebaseDataService {
       switchMap((projectId) => {
         if (!projectId) return of(null);
         return runInInjectionContext(this.injector, () =>
-          docData(doc(this.firestore, `/projects/${projectId}`))
+          this.docData(doc(this.firestore, `/projects/${projectId}`))
         );
       })
     );
@@ -347,7 +356,8 @@ export class FirebaseDataService {
         this.firestore,
         `/projects/${projectId}/agents/${agentId}/actions`
       );
-      return collectionData(agentActionsCollection, { idField: 'id' });
+      const agentActionsQuery = query(agentActionsCollection);
+      return this.collectionData(agentActionsQuery);
     };
 
     this.currentProjectId
@@ -502,7 +512,7 @@ export class FirebaseDataService {
   // Get single document
   getDocument(projectId: string, collection: string, id: string): Observable<FirebaseDocument> {
     const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
-    return docData(docRef).pipe(map((data) => data as FirebaseDocument));
+    return this.docData(docRef).pipe(map((data) => data as FirebaseDocument));
   }
 
   // Project settings operations
@@ -617,7 +627,7 @@ export class FirebaseDataService {
     return ref(this.storage, path);
   }
 
-  uploadFile(path: string, file: File, metadata?: UploadMetadata) {
+  uploadFile(path: string, file: File | Blob, metadata?: UploadMetadata) {
     const storageRef = this.getStorageRef(path);
     return uploadBytesResumable(storageRef, file, metadata);
   }
@@ -628,7 +638,38 @@ export class FirebaseDataService {
   }
 
   // Helper method to get storage instance (for components that need direct access)
-  getStorage(): Storage {
+  getStorage(): FirebaseStorage {
     return this.storage;
+  }
+
+  // Helper to convert Firestore snapshots to observables (replaces collectionData from rxfire)
+  private collectionData<T>(query: Query<DocumentData>): Observable<T[]> {
+    return new Observable(subscriber => {
+      const unsubscribe = onSnapshot(query, 
+        snapshot => {
+          const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+          subscriber.next(data);
+        },
+        error => subscriber.error(error)
+      );
+      return () => unsubscribe();
+    });
+  }
+
+  // Helper to convert Firestore doc snapshots to observables (replaces docData from rxfire)
+  private docData<T>(docRef: DocumentReference<DocumentData>): Observable<T | undefined> {
+    return new Observable(subscriber => {
+      const unsubscribe = onSnapshot(docRef,
+        snapshot => {
+          if (snapshot.exists()) {
+            subscriber.next({ id: snapshot.id, ...snapshot.data() } as T);
+          } else {
+            subscriber.next(undefined);
+          }
+        },
+        error => subscriber.error(error)
+      );
+      return () => unsubscribe();
+    });
   }
 }

@@ -62,12 +62,16 @@ export class DataDetailComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((doc) => {
         console.log(doc);
-  const storage = this.firebaseDataService.getStorage();
         const filePath = doc.filePath as string;
         const fileName = doc.name as string;
         const fileSize = doc.size as number;
         
-        getDownloadURL(ref(storage, filePath))
+        if (!fileName || !filePath) {
+          console.warn('Missing fileName or filePath in document', doc);
+          return;
+        }
+        
+        this.firebaseDataService.getDownloadUrl(filePath)
           .then(async (url) => {
             if (
               fileName.toLowerCase().endsWith('.mov') ||

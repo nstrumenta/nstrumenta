@@ -6,10 +6,10 @@ import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http'
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ErrorHandler } from '@angular/core';
-import { initializeApp, provideFirebaseApp } from '@angular/fire/app';
-import { getAuth, provideAuth } from '@angular/fire/auth';
-import { getFirestore, provideFirestore } from '@angular/fire/firestore';
-import { getStorage, provideStorage } from '@angular/fire/storage';
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { AppComponent } from './app/app.component';
@@ -52,6 +52,12 @@ if (environment.production) {
   enableProdMode();
 }
 
+// Initialize Firebase
+const app = initializeApp(environment.firebase);
+const auth = getAuth(app);
+const firestore = getFirestore(app);
+const storage = getStorage(app);
+
 bootstrapApplication(AppComponent, {
   providers: [
     provideZoneChangeDetection(),provideRouter(
@@ -64,12 +70,6 @@ bootstrapApplication(AppComponent, {
     ),
     provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(BrowserAnimationsModule),
-    
-    // Firebase providers
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
-    provideStorage(() => getStorage()),
     
     // Services
     AuthService,

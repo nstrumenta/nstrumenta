@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { AddItemDialogComponent } from './add-item-dialog.component';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MockMatDialogRef } from 'src/app/testing/mocks';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('AddItemDialogComponent', () => {
   let component: AddItemDialogComponent;
@@ -8,8 +10,12 @@ describe('AddItemDialogComponent', () => {
 
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-    imports: [AddItemDialogComponent],
-}).compileComponents();
+      imports: [AddItemDialogComponent, NoopAnimationsModule],
+      providers: [
+        { provide: MAT_DIALOG_DATA, useValue: {} },
+        { provide: MatDialogRef, useClass: MockMatDialogRef }
+      ]
+    }).compileComponents();
   }));
 
   beforeEach(() => {

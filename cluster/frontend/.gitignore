@@ -43,4 +43,4 @@ Thumbs.db
 src/assets/js/sandbox-client.js
 
 # environment firebaseConfig
-src/environments/firebaseConfig.js
+src/environments/firebaseConfig.jssrc/firebaseConfig.json

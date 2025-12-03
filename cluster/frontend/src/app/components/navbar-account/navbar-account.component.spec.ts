@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
-
 import { NavbarAccountComponent } from './navbar-account.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
@@ -9,6 +8,10 @@ import { AuthService } from 'src/app/auth/auth.service';
 
 const AuthServiceStub = {
   user: of({ uid: 'mock', email: 'mock@example.com' }),
+  user$: of({ uid: 'mock', email: 'mock@example.com' }),
+  setUser: () => {},
+  login: () => Promise.resolve(),
+  logout: () => Promise.resolve()
 };
 
 describe('NavbarAccountComponent', () => {
@@ -18,7 +21,9 @@ describe('NavbarAccountComponent', () => {
   beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
     imports: [MatMenuModule, MatFormFieldModule, RouterTestingModule, NavbarAccountComponent],
-    providers: [{ provide: AuthService, useValue: AuthServiceStub }],
+    providers: [
+      { provide: AuthService, useValue: AuthServiceStub }
+    ],
 }).compileComponents();
   }));
 

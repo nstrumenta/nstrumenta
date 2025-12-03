@@ -1,7 +1,7 @@
 // Consolidated Firebase data models for the application
 
 import { Action } from './action.model';
-import { DocumentData } from '@angular/fire/firestore';
+import { DocumentData } from 'firebase/firestore';
 
 export interface Agent extends DocumentData {
   id?: string;
