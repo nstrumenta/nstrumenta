@@ -2,7 +2,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Storage, ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
+import { UploadMetadata } from 'firebase/storage';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
@@ -57,11 +57,6 @@ export class RecordComponent implements OnInit {
   private authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
   private breakpointObserver = inject(BreakpointObserver);
-  
-  // Get storage instance from Firebase service
-  private get storage(): Storage {
-    return this.firebaseDataService.getStorage();
-  }
   private destroyRef = inject(DestroyRef);
 
   constructor() {
@@ -894,8 +889,7 @@ export class RecordComponent implements OnInit {
           const projectDataPath = '/projects/' + this.projectId + '/data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
-          const storageRef = ref(this.storage, filePath);
-          await uploadBytesResumable(storageRef, recordedBlob);
+          await this.firebaseDataService.uploadFile(filePath, recordedBlob);
           console.log('Video upload completed');
         }
       }
@@ -1024,8 +1018,7 @@ export class RecordComponent implements OnInit {
       const metadata: UploadMetadata = {
         contentDisposition: 'attachment; filename=' + mcapFileName,
       };
-      const dataFileRef = ref(this.storage, dataFilePath);
-      await uploadBytesResumable(dataFileRef, blob, metadata);
+      await this.firebaseDataService.uploadFile(dataFilePath, blob, metadata);
       //create experiment.json
       const videos = this.videoToggle
         ? [
@@ -1041,9 +1034,8 @@ export class RecordComponent implements OnInit {
         dataFilePath,
         videos,
       };
-      const experimentRef = ref(this.storage, experimentFilepath);
-      await uploadBytesResumable(
-        experimentRef,
+      await this.firebaseDataService.uploadFile(
+        experimentFilepath,
         new Blob([JSON.stringify(experiment)], { type: 'application/json' })
       );
     }

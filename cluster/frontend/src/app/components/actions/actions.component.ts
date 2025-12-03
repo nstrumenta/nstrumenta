@@ -29,7 +29,7 @@ interface FileDocument {
     imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ActionsComponent implements OnInit {
-  displayedColumns = ['select', 'task', 'status', 'created', 'completed'];
+  displayedColumns = ['select', 'task', 'status', 'lastModified', 'error'];
   dataSource: MatTableDataSource<Action>;
   selection = new SelectionModel<Action>(true, []);
   dataPath: string;

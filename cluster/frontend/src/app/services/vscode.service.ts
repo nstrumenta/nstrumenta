@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { ref, uploadBytesResumable, UploadMetadata } from '@angular/fire/storage';
+import { UploadMetadata } from 'firebase/storage';
 import { Observable, Observer, Subject } from 'rxjs';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
@@ -95,24 +95,18 @@ export class VscodeService {
                     // Parse project configuration if needed
                     // const nst_project = filePath.endsWith('nst_project.json') ? JSON.parse(fileTextItem.text) : null;
 
-                    const storage = this.firebaseDataService.getStorage();
-                    const storageRef = ref(storage, filePath);
-                    const uploadTask = uploadBytesResumable(
-                      storageRef,
+                    this.firebaseDataService.uploadFile(
+                      filePath,
                       new Blob([fileTextItem.text]),
                       metadata as UploadMetadata
-                    );
-
-                    uploadTask.on('state_changed', 
-                      null, // progress callback
-                      null, // error callback
-                      () => { // complete callback
-                        resolve({
-                          storagePath: filePath,
-                          path: filename,
-                        });
-                      }
-                    );
+                    ).then(() => {
+                      resolve({
+                        storagePath: filePath,
+                        path: filename,
+                      });
+                    }).catch(error => {
+                      console.error('Upload error:', error);
+                    });
                   })
                 );
               });

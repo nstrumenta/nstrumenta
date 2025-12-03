@@ -1,13 +1,14 @@
 {
   "name": "nstrumenta-app",
-  "version": "1.7.17",
+  "version": "4.0.0",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --host 0.0.0.0 --port 5008",
     "build": "ng build --configuration production",
-    "serve:dist": "http-server ./dist --port 5008",
+    "serve:dist": "http-server ./dist --port 5008 --proxy http://localhost:5008? -c-1 --host localhost",
     "release": "node release.js",
-    "test": "ng test",
+    "test": "ng test --watch=false",
+    "test:watch": "ng test",
     "lint": "ng lint"
   },
   "browserslist": [
@@ -26,7 +27,6 @@
     "@angular/common": "^21.0.2",
     "@angular/compiler": "^21.0.2",
     "@angular/core": "^21.0.2",
-    "@angular/fire": "^20.0.1",
     "@angular/forms": "^21.0.2",
     "@angular/material": "^21.0.1",
     "@angular/platform-browser": "^21.0.2",
@@ -35,6 +35,7 @@
     "@mcap/core": "^2.1.7",
     "@sentry/browser": "^8.40.0",
     "core-js": "^3.39.0",
+    "firebase": "^12.6.0",
     "idb-keyval": "^6.2.1",
     "rxjs": "^7.8.1",
     "ts-md5": "^1.3.1",
@@ -52,6 +53,7 @@
     "@types/uuid": "^10.0.0",
     "@types/web-bluetooth": "^0.0.20",
     "angular-eslint": "20.2.0",
+    "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9.33.0",
     "firebase-tools": "^14.17.0",
     "http-server": "^14.1.1",

@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { Auth, GithubAuthProvider, User, signInWithPopup, user } from '@angular/fire/auth';
+import { User } from 'firebase/auth';
 import { Router, RouterLink } from '@angular/router';
 import { Observable, Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -15,25 +15,25 @@ import { MatIcon } from '@angular/material/icon';
     imports: [MatMenu, MatMenuItem, RouterLink, MatIconButton, MatMenuTrigger, MatIcon, MatButton]
 })
 export class NavbarAccountComponent {
-  auth = inject(Auth);
   private authService = inject(AuthService);
   private router = inject(Router);
 
   subscriptions = new Array<Subscription>();
   loggedIn = false;
   user$: Observable<User | null>;
+  currentUser: User | null = null;
   userSubscription: Subscription;
 
   constructor() {
-    this.user$ = user(this.auth);
+    this.user$ = this.authService.user$;
     this.userSubscription = this.user$.subscribe((aUser: User | null) => {
       this.loggedIn = aUser ? true : false;
-      this.authService.setUser(aUser);
+      this.currentUser = aUser;
     });
   }
 
   async logout() {
-    await this.auth.signOut();
+    await this.authService.logout();
     this.loggedIn = false;
     this.router.navigate(['/'], {
       queryParamsHandling: 'preserve'
@@ -41,6 +41,6 @@ export class NavbarAccountComponent {
   }
 
   async login() {
-    return await signInWithPopup(this.auth, new GithubAuthProvider());
+    return await this.authService.login();
   }
 }
