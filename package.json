@@ -75,7 +75,6 @@
     "nodemon": "^3.1.4",
     "prettier": "^2.4.1",
     "release-it": "^19.0.6",
-    "standard-version": "^9.3.1",
     "ts-node": "^10.2.1",
     "typescript": "^5.6.0"
   },

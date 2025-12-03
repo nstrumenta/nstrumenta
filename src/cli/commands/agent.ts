@@ -11,8 +11,9 @@ export const Start = async function (options: {
   port: string;
   tag?: string;
   debug?: boolean;
+  noBackplane?: boolean;
 }): Promise<void> {
-  const { port, tag, debug } = options;
+  const { port, tag, debug, noBackplane } = options;
   const apiKey = resolveApiKey();
 
   const server = new NstrumentaServer({
@@ -20,6 +21,7 @@ export const Start = async function (options: {
     port: port ?? 8088,
     tag: tag ? tag : process.env.HOST_INSTANCE_ID,
     debug,
+    connectToBackplane: !noBackplane,
   });
 
   await server.run();
