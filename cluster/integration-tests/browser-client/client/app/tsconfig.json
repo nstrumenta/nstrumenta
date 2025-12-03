@@ -13,13 +13,16 @@
       "strict": true,
       "forceConsistentCasingInFileNames": true,
       "noFallthroughCasesInSwitch": true,
-      "module": "es2022",
-      "moduleResolution": "node",
+      "module": "ESNext",
+      "moduleResolution": "bundler",
       "resolveJsonModule": true,
-      "jsx": "react-jsx"
+      "isolatedModules": true,
+      "noEmit": true
     },
     "include": [
-      "src"
+      "src",
+      "*.test.ts",
+      "playwright.config.ts"
     ]
   }
   

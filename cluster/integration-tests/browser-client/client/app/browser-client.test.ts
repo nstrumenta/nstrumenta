@@ -1,34 +1,24 @@
+import { test, expect } from '@playwright/test';
+
 const apiKey = process.env.NSTRUMENTA_API_KEY;
 const wsUrl = process.env.NSTRUMENTA_WS_URL;
 
-describe('Page with browser client', () => {
-  beforeAll(async () => {
-    await page.goto(`http://localhost:3000?wsUrl=${wsUrl}&apiKey=${apiKey}`);
+test.describe('Page with browser client', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`/?wsUrl=${wsUrl}&apiKey=${apiKey}`);
   });
 
-  it('loads', async () => {
-    expect.assertions(1);
-    const text = await page.evaluate(() => document.body.textContent);
+  test('loads', async ({ page }) => {
+    const text = await page.textContent('body');
     expect(text).toContain('nstrumenta');
   });
 
-  it('connects and gets status', async () => {
-    await page.waitForFunction(
-      (text: string) =>
-        (document.querySelector('#status') as HTMLSpanElement).innerText.includes(text),
-      { timeout: 10000 },
-      '_status'
-    );
+  test('connects and gets status', async ({ page }) => {
+    await expect(page.locator('#status')).toContainText('_status', { timeout: 10000 });
   });
 
-  it('shows timestamp when button pressed', async () => {
+  test('shows timestamp when button pressed', async ({ page }) => {
     await page.click('#ping-button');
-
-    await page.waitForFunction(
-      (text: string) =>
-        (document.querySelector('#ping-result') as HTMLSpanElement).innerText.includes(text),
-      { timeout: 10000 },
-      'delta'
-    );
+    await expect(page.locator('#ping-result')).toContainText('delta', { timeout: 10000 });
   });
 });
