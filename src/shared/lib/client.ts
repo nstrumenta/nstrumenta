@@ -101,7 +101,7 @@ export abstract class NstrumentaClientBase {
   public listeners: Map<string, Array<ListenerCallback>>;
   public subscriptions: Map<string, Map<string, SubscriptionCallback>>;
   public reconnection: Reconnection = { hasVerified: false, attempts: 0, timeout: null };
-  public messageBuffer: Array<ArrayBufferLike>;
+  public messageBuffer: Array<ArrayBufferLike | Buffer | Uint8Array>;
   public storage: StorageService;
   private datalogs: Map<string, Array<string>>;
   public clientId: string | null = null;
@@ -155,7 +155,7 @@ export abstract class NstrumentaClientBase {
     this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
   }
 
-  private bufferedSend(message: ArrayBufferLike) {
+  private bufferedSend(message: ArrayBufferLike | Buffer | Uint8Array) {
     // buffers messages sent before initial connection
     if (!(this.ws?.readyState === this.ws?.OPEN)) {
       console.log('adding to messageBuffer, length:', this.messageBuffer.length);
@@ -297,7 +297,7 @@ export abstract class NstrumentaClientBase {
 
   public async subscribeToAction(projectId: string, actionId: string, callback: (data: any) => void) {
       const uri = `projects://${projectId}/actions/${actionId}`;
-      await this.subscribeToMcpResource(uri, async (u) => {
+      await this.subscribeToMcpResource(uri, async (_u) => {
           const result = await this.mcp!.request({
               method: "resources/read",
               params: { uri }

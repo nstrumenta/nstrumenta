@@ -15,14 +15,13 @@ describe('NodeJS client', () => {
         await new Promise((resolve, reject) => {
           console.debug('instantiating nstClient');
           const nstClient = new NstrumentaClient();
-          nstClient.addListener('open', () => {
+          nstClient.addListener('open', async () => {
             console.debug('client open');
-            nstClient.shutdown();
+            await nstClient.shutdown();
             return resolve(true);
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
-            nstClient.shutdown();
             return reject();
           });
           console.debug('calling nstClient.connect');
@@ -40,15 +39,14 @@ describe('NodeJS client', () => {
           const nstClient = new NstrumentaClient();
           nstClient.addListener('open', () => {
             console.debug('client open');
-            nstClient.addSubscription('_status', (status) => {
+            nstClient.addSubscription('_status', async (status) => {
               console.log({ status });
-              nstClient.shutdown();
+              await nstClient.shutdown();
               return resolve(status);
             });
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
-            nstClient.shutdown();
             return reject();
           });
           console.debug('calling nstClient.connect');
@@ -67,12 +65,11 @@ describe('NodeJS client', () => {
             console.debug('client open');
             const ping = await nstClient.ping();
             console.log(ping);
-            nstClient.shutdown();
+            await nstClient.shutdown();
             return resolve(ping);
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
-            nstClient.shutdown();
             return reject();
           });
           console.debug('calling nstClient.connect');
@@ -94,17 +91,14 @@ describe('NodeJS client', () => {
             console.debug('client open');
             const logName = `${Date.now()}.log`;
             await nstClient.startLog(logName, ['a', 'b']);
-
-            // wait for log to start
-            setTimeout(() => {
-              [1, 2, 3, 4, 5].forEach((i) => {
-                nstClient.send('a', { message: `${i} a` });
-                nstClient.send('b', { message: `${i} b` });
-              });
-              nstClient.finishLog(logName);
-              nstClient.shutdown();
-              return resolve(true);
-            }, 1000);
+            
+            [1, 2, 3, 4, 5].forEach((i) => {
+              nstClient.send('a', { message: `${i} a` });
+              nstClient.send('b', { message: `${i} b` });
+            });
+            await nstClient.finishLog(logName);
+            await nstClient.shutdown();
+            return resolve(true);
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
@@ -154,16 +148,13 @@ describe('NodeJS client', () => {
               ],
             });
 
-            // wait for log to start
-            setTimeout(() => {
-              [1, 2, 3, 4, 5].forEach((i) => {
-                nstClient.send('a', { value: i, timestamp: i });
-                nstClient.send('b', { value: i + 2, timestamp: i });
-              });
-              nstClient.finishLog(logName);
-              nstClient.shutdown();
-              return resolve(true);
-            }, 100);
+            [1, 2, 3, 4, 5].forEach((i) => {
+              nstClient.send('a', { value: i, timestamp: i });
+              nstClient.send('b', { value: i + 2, timestamp: i });
+            });
+            await nstClient.finishLog(logName);
+            await nstClient.shutdown();
+            return resolve(true);
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
@@ -213,16 +204,13 @@ describe('NodeJS client', () => {
               ],
             });
 
-            // wait for log to start
-            setTimeout(() => {
-              [1, 2, 3, 4, 5].forEach((i) => {
-                nstClient.send('a', { value: i, timestamp: { sec: 100, nsec: i } });
-                nstClient.send('b', { value: i + 2, timestamp: { sec: 100, nsec: i } });
-              });
-              nstClient.finishLog(logName);
-              nstClient.shutdown();
-              return resolve(true);
-            }, 100);
+            [1, 2, 3, 4, 5].forEach((i) => {
+              nstClient.send('a', { value: i, timestamp: { sec: 100, nsec: i } });
+              nstClient.send('b', { value: i + 2, timestamp: { sec: 100, nsec: i } });
+            });
+            await nstClient.finishLog(logName);
+            await nstClient.shutdown();
+            return resolve(true);
           });
           nstClient.addListener('close', () => {
             console.debug('client closed');
@@ -239,32 +227,41 @@ describe('NodeJS client', () => {
   });
   describe('data', () => {
     test('query', async () => {
-      // Init
       const nstClient = new NstrumentaClient();
       await nstClient.connect({
         wsUrl: process.env.NSTRUMENTA_WS_URL,
       });
 
       const filename = `data-query-${testId}.txt`;
-      // Set up test data
       await nstClient.storage.upload({
         filename,
         data: Buffer.from('hello world') as unknown as Blob,
         meta: { testId },
       });
-      await new Promise((res) => setTimeout(res, 5000));
 
-      // Assert
-      const queryData = await nstClient.storage.query({
-        field: 'name',
-        comparison: '==',
-        compareValue: filename,
-      });
+      let retries = 0;
+      const maxRetries = 10;
+      let queryData;
+      
+      while (retries < maxRetries) {
+        queryData = await nstClient.storage.query({
+          field: 'name',
+          comparison: '==',
+          compareValue: filename,
+        });
+        
+        if (queryData && queryData.length > 0) {
+          break;
+        }
+        
+        retries++;
+        await new Promise((res) => setTimeout(res, 100));
+      }
 
       expect(queryData).toBeDefined();
       expect(queryData.length).toBeGreaterThan(0);
 
       await nstClient.shutdown();
-    }, 30000);
+    });
   });
 });
