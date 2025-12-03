@@ -44,3 +44,4 @@ src/assets/js/sandbox-client.js
 
 # environment firebaseConfig
 src/environments/firebaseConfig.js
+src/firebaseConfig.json
