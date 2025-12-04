@@ -7,6 +7,11 @@ const init = async () => {
     return;
   }
 
+  // Read connection parameters from URL query string
+  const urlParams = new URLSearchParams(window.location.search);
+  const wsUrl = urlParams.get('wsUrl');
+  const apiKey = urlParams.get('apiKey');
+
   const outputTextAreaElement = document.getElementById('outputTextArea') as HTMLTextAreaElement;
   const healthElement = document.getElementById('health');
   const statusElement = document.getElementById('status');
@@ -29,7 +34,7 @@ const init = async () => {
     //   pingResult!.innerText = `delta: ${ping.receiveTimestamp! - ping.sendTimestamp!}`;
     // });
 
-    client.addSubscription('_nstrumenta', (message) => {
+    client.addSubscription('_nstrumenta', (message: any) => {
       switch (message.type) {
         case 'health':
           healthElement!.innerText = new Date(Date.now()).toLocaleString();
@@ -39,13 +44,13 @@ const init = async () => {
           break;
       }
     });
-    client.addSubscription('_status', (message) => {
+    client.addSubscription('_status', (message: any) => {
       const { agentId } = message;
       statusElement!.innerText = JSON.stringify(message);
 
       if (agentId && !agentLogSubscription) {
         agentLogSubscription = true;
-        client.addSubscription(`_${agentId}/stdout`, (buffer) => {
+        client.addSubscription(`_${agentId}/stdout`, (buffer: any) => {
           const message = new TextDecoder().decode(buffer);
           outputTextAreaElement.textContent += `${message}\n`;
         });
@@ -53,7 +58,7 @@ const init = async () => {
     });
   });
 
-  await client.connect();
+  await client.connect({ wsUrl: wsUrl!, apiKey: apiKey! });
 };
 
 document.addEventListener('readystatechange', init);

@@ -112,7 +112,7 @@ export class NstrumentaServer {
     this.listeners = new Map();
     console.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
-    if (options.connectToBackplane != false) {
+    if (options.connectToBackplane === true) {
       this.backplaneClient = new NstrumentaClient();
     }
     this.allowCrossProjectApiKey = options.allowCrossProjectApiKey;

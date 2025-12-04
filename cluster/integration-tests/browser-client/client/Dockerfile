@@ -1,5 +1,8 @@
 FROM node:24.1.0-bookworm-slim
 
+# Build argument to force cache invalidation in CI
+ARG CACHE_BUST
+
 # Install system dependencies for Playwright's Chromium browser
 RUN apt-get update && \
     apt-get install -y \
@@ -38,34 +41,44 @@ RUN groupadd --gid $USER_GID $USERNAME \
   && chmod 0440 /etc/sudoers.d/$USERNAME \
   && rm -rf /var/lib/apt/lists/*
 
-# Copy nstrumenta and change owner
-# Context is top level of nstrumenta repo
-COPY . /home/$USERNAME/nstrumenta/
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME/nstrumenta
-
-# Copy test app
-COPY ./cluster/integration-tests/browser-client/client/app /home/$USERNAME/projectRoot/cluster/integration-tests/browser-client/client/app/
-RUN chown -R $USERNAME:$USERNAME /home/$USERNAME/projectRoot
-
 USER $USERNAME
-
-# Install nstrumenta
 WORKDIR /home/$USERNAME/nstrumenta
-RUN npm install
-RUN npm run build
 
-# Install test app
-WORKDIR /home/$USERNAME/projectRoot/cluster/integration-tests/browser-client/client/app
-RUN npm install
+# Copy only package files first for better caching
+# Context is top level of nstrumenta repo
+COPY --chown=$USERNAME:$USERNAME package*.json ./
+COPY --chown=$USERNAME:$USERNAME agent-admin-page/package*.json ./agent-admin-page/
+COPY --chown=$USERNAME:$USERNAME cluster/server/app/package*.json ./cluster/server/app/
+COPY --chown=$USERNAME:$USERNAME src/vscode-extension/package*.json ./src/vscode-extension/
 
-# Symlink nstrumenta directly
-RUN rm -rf ./node_modules/nstrumenta
-RUN ln -s ~/nstrumenta ./node_modules/nstrumenta
+# Install nstrumenta dependencies (cached unless package files change)
+RUN --mount=type=cache,target=/home/$USERNAME/.npm,uid=$USER_UID \
+    npm install
 
-# Install Playwright browsers
+# Install Playwright browsers early (cached unless package files change)
+# Must be in final image for runtime use (~300MB)
 RUN npx playwright install chromium --with-deps
 
-# Build the Vite app
+# Now copy source code and build
+COPY --chown=$USERNAME:$USERNAME . .
+RUN npm run build
+
+# Setup test app directory
+WORKDIR /home/$USERNAME/projectRoot/cluster/integration-tests/browser-client/client/app
+COPY --chown=$USERNAME:$USERNAME ./cluster/integration-tests/browser-client/client/app/package*.json ./
+
+# Install test app dependencies (cached unless test app package files change)
+RUN --mount=type=cache,target=/home/$USERNAME/.npm,uid=$USER_UID \
+    npm install
+
+# Copy test app source
+COPY --chown=$USERNAME:$USERNAME ./cluster/integration-tests/browser-client/client/app/ ./
+
+# Symlink nstrumenta directly
+RUN rm -rf ./node_modules/nstrumenta && \
+    ln -s ~/nstrumenta ./node_modules/nstrumenta
+
+# Build the Vite app (Playwright already installed earlier)
 RUN npm run build
 
 ENTRYPOINT ["npm", "run", "test"]

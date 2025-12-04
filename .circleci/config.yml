@@ -156,6 +156,9 @@ jobs:
           command: >
             echo 'export NSTRUMENTA_BACKPLANE_URL=`gcloud run services describe --region=us-west1 ${TEST_BACKPLANE} --format=json | jq -r .status.address.url`'
             >> $BASH_ENV
+      - run:
+          name: set CI environment for cache busting
+          command: echo "export CI=true" >> $BASH_ENV
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client

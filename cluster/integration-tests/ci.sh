@@ -44,7 +44,13 @@ else
 fi
 for TEST_SERVICE in $TESTS; do
     cd $TEST_SERVICE
-    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --build --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -q "${TEST_SERVICE} exited with code 0"; then
+    # Pass CACHE_BUST to force rebuild in CI, while allowing local caching
+    CACHE_BUST_ARG=""
+    if [ -n "$CI" ]; then
+        CACHE_BUST_ARG="--build-arg CACHE_BUST=$(date +%s)"
+    fi
+    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml build $CACHE_BUST_ARG && \
+       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -q "${TEST_SERVICE} exited with code 0"; then
         echo exited with code 0
         docker compose down
     else
