@@ -101,6 +101,8 @@ jobs:
       - image: nstrumenta/toolchain
     working_directory: ~/project/integration-tests/
     steps:
+      - checkout:
+          path: ~/project
       - attach_workspace:
           at: ~/project
       - setup_remote_docker
