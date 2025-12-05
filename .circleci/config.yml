@@ -17,7 +17,13 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - .
+            - dist
+            - node_modules
+            - integration-tests
+            - package.json
+            - package-lock.json
+            - tsconfig.json
+            - src
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
@@ -130,10 +136,19 @@ jobs:
           command: >
             echo 'export API_URL=`gcloud run services describe --region=us-west1 ${TEST_SERVER} --format=json | jq -r .status.address.url`'
             >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - integration-tests-node_modules-{{ .Branch }}-{{ checksum "integration-tests/package.json" }}
       - run:
           name: install dependencies for key generation
-          command: npm install
+          command: |
+            ls -la
+            npm install
           working_directory: ~/project/integration-tests
+      - save_cache:
+          key: integration-tests-node_modules-{{ .Branch }}-{{ checksum "integration-tests/package.json" }}
+          paths:
+            - ~/project/integration-tests/node_modules
       - run:
           name: create api key with test server url
           command: |
