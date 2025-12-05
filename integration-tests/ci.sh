@@ -45,6 +45,10 @@ docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network crea
 
 # Create tarball of the current package
 echo "Packing nstrumenta..."
+if [ ! -d "../dist" ]; then
+    echo "Dist folder not found, building..."
+    (cd .. && npm run build)
+fi
 (cd .. && npm pack)
 
 if [ $# -eq 0 ]; then

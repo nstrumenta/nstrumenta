@@ -14,6 +14,10 @@ jobs:
           command: npm i
       - run:
           command: npm run build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
@@ -97,8 +101,8 @@ jobs:
       - image: nstrumenta/toolchain
     working_directory: ~/project/integration-tests/
     steps:
-      - checkout:
-          path: ~/project
+      - attach_workspace:
+          at: ~/project
       - setup_remote_docker
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
