@@ -138,7 +138,7 @@ jobs:
             >> $BASH_ENV
       - restore_cache:
           keys:
-            - integration-tests-node_modules-{{ .Branch }}-{{ checksum "integration-tests/package.json" }}
+            - integration-tests-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           name: install dependencies for key generation
           command: |
@@ -146,7 +146,7 @@ jobs:
             npm install
           working_directory: ~/project/integration-tests
       - save_cache:
-          key: integration-tests-node_modules-{{ .Branch }}-{{ checksum "integration-tests/package.json" }}
+          key: integration-tests-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - ~/project/integration-tests/node_modules
       - run:

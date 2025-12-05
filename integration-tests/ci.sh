@@ -47,6 +47,10 @@ docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network crea
 echo "Packing nstrumenta..."
 if [ ! -d "../dist" ]; then
     echo "Dist folder not found, building..."
+    if [ ! -d "../node_modules" ]; then
+         echo "Root node_modules not found, installing..."
+         (cd .. && npm install)
+    fi
     (cd .. && npm run build)
 fi
 (cd .. && npm pack)
