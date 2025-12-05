@@ -76,9 +76,16 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - restore_cache:
+          keys:
+            - server-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           name: Install Dependencies
           command: npm install
+      - save_cache:
+          key: server-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
+          paths:
+            - node_modules
       - run:
           name: Run Tests
           command: npm test
@@ -89,6 +96,9 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - restore_cache:
+          keys:
+            - nstrumenta-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run: npm install
       - run: npm test
   test-vscode-extension:
@@ -98,6 +108,9 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - restore_cache:
+          keys:
+            - nstrumenta-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run: npm install
       - run: npm run build:vscode-extension
       - run: npm run test:vscode-extension
@@ -141,10 +154,7 @@ jobs:
             - integration-tests-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run:
           name: install dependencies for key generation
-          command: |
-            ls -la
-            npm install
-          working_directory: ~/project/integration-tests
+          command: npm install
       - save_cache:
           key: integration-tests-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
@@ -219,6 +229,7 @@ workflows:
       - run-tests:
           requires:
             - build-ci-images
+            - build
       - build-and-push-images:
           filters:
             tags:
