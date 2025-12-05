@@ -112,7 +112,7 @@ export const createCloudDataJobService = ({
           'run',
           '--rm',
           '--network',
-          'cluster_default',
+          'nstrumenta_default',
           '-e',
           `NSTRUMENTA_API_KEY=${apiKey.key}`,
           '-e',
@@ -161,6 +161,10 @@ export const createCloudDataJobService = ({
       await firestore
         .doc(actionPath)
         .set({ status: 'error', error: String(error) }, { merge: true })
+      if (process.env.CI || process.env.TEST_ID) {
+        console.log('Test environment detected, exiting process')
+        process.exit(1)
+      }
     } finally {
       //revoke temp apiKey
       await apiKeyService.removeTempKey(apiKey.key)

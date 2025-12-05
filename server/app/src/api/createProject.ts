@@ -50,7 +50,6 @@ const createProjectBase = async (
       members: {
         [userId]: 'owner'
       },
-      agentType: 'main',
       createdAt: new Date().toISOString(),
       createdBy: userId
     }

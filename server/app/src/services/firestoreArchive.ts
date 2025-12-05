@@ -43,7 +43,6 @@ export interface ArchiveService {
 }
 
 export interface RootProjectDocument {
-  agentType: 'development' | 'production'
   members: object
   name: string
   archive?: string

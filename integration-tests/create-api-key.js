@@ -53,7 +53,6 @@ async function createApiKey() {
             members: {
               'ci-user': 'owner'
             },
-            agentType: 'ci',
             createdAt: new Date().toISOString(),
             createdBy: 'ci-user',
             apiKeys: {},
@@ -61,8 +60,8 @@ async function createApiKey() {
         });
         console.error(`Project ${projectId} created`);
     } else {
-        // Update apiUrl and agentType if project exists
-        await firestore.doc(projectPath).update({ apiUrl, agentType: 'ci' });
+        // Update apiUrl if project exists
+        await firestore.doc(projectPath).update({ apiUrl });
     }
 
     // Re-fetch to ensure we have the data (or just use what we set)

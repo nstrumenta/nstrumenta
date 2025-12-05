@@ -92,8 +92,6 @@ server.listen(port, '0.0.0.0', () => {
   console.log('listening on *:', port)
 })
 
-const agentType = process.env.NST_AGENT_TYPE || 'main'
-console.log('agentType: ', agentType)
 console.log('project_id: ', serviceAccount.project_id)
 
 const firestore = new Firestore({
@@ -333,11 +331,10 @@ async function buildFromGithub(actionPath: string, data: any) {
     .set({ lastModified: Date.now(), status: 'complete' }, { merge: true })
 }
 
-// subscribe to all projects with matching agentType
+// subscribe to all projects
 let projectActionSubscriptions: Map<string, Function> = new Map()
 firestore
   .collection('projects')
-  .where('agentType', '==', agentType)
   .onSnapshot((projectsSnapshot) => {
     let projectIds: string[] = []
     projectsSnapshot.forEach(async (project) => {

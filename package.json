@@ -24,6 +24,10 @@
     "./browser": {
       "types": "./dist/browser-esm/browser/client.d.ts",
       "import": "./dist/browser-esm/browser/client.js"
+    },
+    "./cli/commands/module": {
+      "types": "./dist/cli/commands/module.d.ts",
+      "default": "./dist/cli/commands/module.js"
     }
   },
   "bin": {

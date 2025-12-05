@@ -17,7 +17,7 @@ jobs:
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
-    working_directory: ~/project/cluster/frontend
+    working_directory: ~/project/frontend
     steps:
       - checkout:
           path: ~/project
@@ -32,15 +32,15 @@ jobs:
       - save_cache:
           key: frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/cluster/frontend/node_modules'
+            - '~/project/frontend/node_modules'
       - save_cache:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/cluster/frontend/dist'
+            - '~/project/frontend/dist'
   build-functions:
     docker:
       - image: nstrumenta/toolchain
-    working_directory: ~/project/cluster/functions
+    working_directory: ~/project/functions
     steps:
       - checkout:
           path: ~/project
@@ -54,15 +54,15 @@ jobs:
       - save_cache:
           key: functions-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/cluster/functions/node_modules'
+            - '~/project/functions/node_modules'
       - save_cache:
           key: functions-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/cluster/functions/dist'
+            - '~/project/functions/dist'
   test-server:
     docker:
       - image: nstrumenta/toolchain
-    working_directory: ~/project/cluster/server/app
+    working_directory: ~/project/server/app
     steps:
       - checkout:
           path: ~/project
@@ -95,7 +95,7 @@ jobs:
     resource_class: large
     docker:
       - image: nstrumenta/toolchain
-    working_directory: ~/project/cluster/integration-tests/
+    working_directory: ~/project/integration-tests/
     steps:
       - checkout:
           path: ~/project
@@ -117,7 +117,6 @@ jobs:
             --allow-unauthenticated
             --region=us-west1
             --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest
-            --set-env-vars "NST_AGENT_TYPE=ci"
             --set-env-vars "IMAGE_REPOSITORY=${IMAGE_REPOSITORY}"
             --set-env-vars "IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}"
       - run:
@@ -140,6 +139,11 @@ jobs:
       - run:
           name: set CI environment for cache busting
           command: echo "export CI=true" >> $BASH_ENV
+      - run:
+          name: Run CLI tests (Local Cloud Run Mode)
+          command: |
+            export NSTRUMENTA_CLOUD_RUN_MODE=local
+            API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./ci.sh cli
       - run: ./ci.sh cli
       - run: ./ci.sh nodejs-client
       - run: ./ci.sh browser-client

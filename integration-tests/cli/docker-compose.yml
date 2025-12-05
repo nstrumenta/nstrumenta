@@ -7,12 +7,27 @@ services:
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL:-http://cluster-server-1:5999}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL:-http://nstrumenta-server:5999}
       - IMAGE_REPOSITORY=${IMAGE_REPOSITORY}
       - IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}
     networks:
-      - cluster_default
+      - nstrumenta_default
+  server:
+    container_name: nstrumenta-server
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    environment:
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
+      - CI=${CI}
+      - TEST_ID=${TEST_ID}
+      - NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nstrumenta_default
 
 networks:
-  cluster_default:
+  nstrumenta_default:
     external: true

@@ -12,8 +12,6 @@ RUN export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s` \
     && apt-get update \
     && apt-get install -y gcsfuse fuse
 
-#install nstrumenta
-RUN npm i -g nstrumenta
 # context is top level of nstrumenta repo
 COPY . /nstrumenta/
 WORKDIR /nstrumenta
@@ -21,9 +19,10 @@ RUN npm install
 RUN npm run build:cli
 RUN npm link
 
-COPY ./cluster/data-job-runner/app /app
+COPY ./data-job-runner/app /app
 WORKDIR /app
 RUN npm i
+RUN npm link nstrumenta
 RUN npm run build
 
 CMD [ "node", "dist/index.js" ]

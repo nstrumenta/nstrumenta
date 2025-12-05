@@ -5,7 +5,6 @@ export interface ApiKeyInfo {
 }
 
 export interface ProjectSettings {
-  agentType?: 'master';
   name?: string;
   members?: Record<string, ProjectRoles>;
   apiKeys?: Record<string, ApiKeyInfo>;
