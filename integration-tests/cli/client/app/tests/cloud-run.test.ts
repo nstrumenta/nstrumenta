@@ -64,7 +64,7 @@ create)
     echo creating $2
     nst -v
     echo "Hello World!" > $2
-    nst data upload $2
+    nst data upload --overwrite $2
     ;;
 *)
     echo 'usage: ./script.sh [create] filename'
