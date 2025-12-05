@@ -131,6 +131,7 @@ jobs:
       - run:
           name: install dependencies for key generation
           command: npm install
+          working_directory: ~/project/integration-tests
       - run:
           name: create api key with test server url
           command: |
@@ -148,9 +149,15 @@ jobs:
           command: |
             export NSTRUMENTA_CLOUD_RUN_MODE=local
             API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./ci.sh cli
-      - run: ./ci.sh cli
-      - run: ./ci.sh nodejs-client
-      - run: ./ci.sh browser-client
+      - run:
+          name: Run CLI tests (Remote Cloud Run Mode)
+          command: ./ci.sh cli
+      - run:
+          name: Run Node.js Client tests
+          command: ./ci.sh nodejs-client
+      - run:
+          name: Run Browser Client tests
+          command: ./ci.sh browser-client
       - run:
           name: delete test-server
           command: >
