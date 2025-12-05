@@ -2,6 +2,12 @@
 TEST_ID_BASE=${TEST_ID_BASE:-$(uuidgen)}
 echo "TEST_ID_BASE= $TEST_ID_BASE"
 
+if [ -z "$NSTRUMENTA_CLOUD_RUN_MODE" ] && [ -z "$CI" ]; then
+    export NSTRUMENTA_CLOUD_RUN_MODE=local
+fi
+
+echo "NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE:-remote}"
+
 # Load the environment variables from the specified ENVFILE
 if [[ $ENVFILE ]]; then
     echo "Loading from envfile: $ENVFILE"
