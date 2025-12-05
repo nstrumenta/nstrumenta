@@ -1,4 +1,4 @@
-import { NstrumentaBrowserClient } from 'nstrumenta/browser';
+import { NstrumentaBrowserClient } from 'nstrumenta';
 
 const client = new NstrumentaBrowserClient();
 

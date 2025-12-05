@@ -28,24 +28,24 @@ services:
     command: sh -c 'npm run dev'
   agent:
     build:
-      context: ../
-      dockerfile: ./cluster/agent/Dockerfile
+      context: .
+      dockerfile: ./agent/Dockerfile
     ports:
       - 8088:8088
       - 9230:9230
     privileged: true
     volumes:
-      - ../:/app
+      - .:/app
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
     command: sh -c 'npm run dev'
   developer:
     build:
-      context: ../
-      dockerfile: ./cluster/developer/Dockerfile
+      context: .
+      dockerfile: ./developer/Dockerfile
     privileged: true
     volumes:
-      - ../:/nstrumenta
+      - .:/nstrumenta
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
     command: tail -f /dev/null

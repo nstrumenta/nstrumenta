@@ -20,8 +20,8 @@ services:
     command: 'npm run start'
   agent:
     build:
-      context: ../
-      dockerfile: ./cluster/agent/Dockerfile
+      context: .
+      dockerfile: ./agent/Dockerfile
     ports:
       - 8088:8088
     environment:
@@ -29,6 +29,6 @@ services:
     command: 'npm run start:agent'
   data-job-runner:
     build:
-      context: ../
-      dockerfile: ./cluster/data-job-runner/Dockerfile
+      context: .
+      dockerfile: ./data-job-runner/Dockerfile
     image: nstrumenta/data-job-runner:latest

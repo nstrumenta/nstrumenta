@@ -2,8 +2,8 @@ services:
   cli:
     container_name: cli
     build:
-      context: ../../..
-      dockerfile: ./cluster/integration-tests/cli/client/Dockerfile
+      context: ../..
+      dockerfile: ./integration-tests/cli/client/Dockerfile
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}

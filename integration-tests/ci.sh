@@ -37,6 +37,10 @@ fi
 # Ensure cluster_default network exists
 docker network inspect cluster_default >/dev/null 2>&1 || docker network create cluster_default
 
+# Create tarball of the current package
+echo "Packing nstrumenta..."
+(cd .. && npm pack)
+
 if [ $# -eq 0 ]; then
     TESTS="cli nodejs-client browser-client"
 else

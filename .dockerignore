@@ -7,4 +7,10 @@
 .nst
 
 # Credentials and secrets
-cluster/credentials/
+credentials/
+**/credentials/*.env
+**/credentials/*.json
+
+# Merged from cluster/.dockerignore
+**/cache
+**/.firebase

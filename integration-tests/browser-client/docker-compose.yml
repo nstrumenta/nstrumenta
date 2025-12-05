@@ -1,21 +1,21 @@
 services:
-  nodejs-client:
-    container_name: nodejs-client
+  browser-client:
+    container_name: browser-client
     build:
-      context: ../../..
-      dockerfile: ./cluster/integration-tests/nodejs-client/client/Dockerfile
+      context: ../..
+      dockerfile: ./integration-tests/browser-client/client/Dockerfile
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
       - NSTRUMENTA_WS_URL=ws://agent:8088
-      - NSTRUMENTA_WAIT_ON=http://agent:8088
+      - WAIT_ON_URL=http://agent:8088
     networks:
       - cluster_default
   agent:
     container_name: agent
     build:
-      context: ../../..
-      dockerfile: ./cluster/agent/Dockerfile
+      context: ../..
+      dockerfile: ./agent/Dockerfile
     environment:
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}

@@ -4,8 +4,19 @@
   "description": "cli tool for nstrumenta",
   "main": "dist/nodejs/index.js",
   "types": "dist/nodejs/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "browser": [
+        "dist/browser-esm/browser/client.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
+      "browser": {
+        "types": "./dist/browser-esm/browser/index.d.ts",
+        "import": "./dist/browser-esm/browser/index.js"
+      },
       "types": "./dist/nodejs/index.d.ts",
       "import": "./dist/nodejs/index.js",
       "require": "./dist/nodejs/index.js"
@@ -30,19 +41,19 @@
     "build:cli": "tsc --project ./src/cli",
     "build:nodejs": "tsc --project ./src/nodejs",
     "build:browser": "tsc --project ./src/browser",
-    "build:server": "(cd cluster/server/app ; rm -rf node_modules ; npm i ; npm run build)",
+    "build:server": "(cd server/app ; rm -rf node_modules ; npm i ; npm run build)",
     "build:vscode-extension": "(cd src/vscode-extension ; rm -rf node_modules ; npm i ; npm run compile)",
     "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server ; npm run build:vscode-extension",
     "build:all": "npm run build && npm run build:functions && npm run build:data-job-runner && npm run build:frontend",
-    "build:functions": "(cd cluster/functions ; npm install ; npm run build)",
-    "build:data-job-runner": "(cd cluster/data-job-runner/app ; npm install ; npm run build)",
-    "build:frontend": "(cd cluster/frontend ; npm install ; npm run build)",
+    "build:functions": "(cd functions ; npm install ; npm run build)",
+    "build:data-job-runner": "(cd data-job-runner/app ; npm install ; npm run build)",
+    "build:frontend": "(cd frontend ; npm install ; npm run build)",
     "watch": "nodemon --exec 'npm run build' --watch ./src",
     "watch:link": "nodemon --exec 'npm run build:browser && npm link' --watch ./src",
     "watch:vscode-extension": "tsc --watch --project ./src/vscode-extension",
     "dev": "nodemon -- module list",
     "dev:agent": "nodemon -- agent start",
-    "dev:local.env": "dotenv -e ./cluster/credentials/local.env -- bash -c 'nodemon -- services list'",
+    "dev:local.env": "dotenv -e ./credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
     "test": "node --test --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
     "test:cli": "NSTRUMENTA_API_KEY=test:aHR0cDovL2xvY2FsaG9zdDo4MDgw ts-node src/cli/__tests__/mcp.test.ts",

@@ -22,6 +22,6 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
-    "nstrumenta": "file:../../../../.."
+    "nstrumenta": "file:../../../../"
   }
 }

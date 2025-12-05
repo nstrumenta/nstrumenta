@@ -5,6 +5,7 @@ const wsUrl = process.env.NSTRUMENTA_WS_URL;
 
 test.describe('Page with browser client', () => {
   test.beforeEach(async ({ page }) => {
+    page.on('console', msg => console.log(`BROWSER LOG: ${msg.text()}`));
     await page.goto(`/?wsUrl=${wsUrl}&apiKey=${apiKey}`);
   });
 
@@ -18,6 +19,7 @@ test.describe('Page with browser client', () => {
   });
 
   test('shows timestamp when button pressed', async ({ page }) => {
+    await expect(page.locator('#status')).toContainText('_status', { timeout: 10000 });
     await page.click('#ping-button');
     await expect(page.locator('#ping-result')).toContainText('delta', { timeout: 10000 });
   });
