@@ -1,6 +1,6 @@
 # integration tests
 
-docker-compose files in subfolders, each of which can test e.g. a specific client or configurations of agents, backplane, cli features, and web-app features
+docker-compose files in subfolders, each of which can test e.g. a specific client or configurations of agents, cli features, and web-app features
 
 ### Running a test suite
 

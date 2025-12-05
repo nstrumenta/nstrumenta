@@ -16,6 +16,16 @@ export async function createAgentAction(projectId: string, agentId: string, acti
     .collection(actionPath)
     .doc(actionId)
     .create({ createdAt: Date.now(), lastModified: Date.now(), ...action })
+  
+  // Notify SSE clients about the new action
+  try {
+    const { notifyAgentActionsUpdate } = await import('../mcp.js')
+    await notifyAgentActionsUpdate(projectId, agentId)
+  } catch (error) {
+    // Ignore notification errors
+    console.warn('Failed to notify action update:', error)
+  }
+  
   return actionId
 }
 

@@ -61,6 +61,35 @@ server.resource(
     }
 );
 
+server.resource(
+    "agent-actions",
+    "projects://{projectId}/agents/{agentId}/actions",
+    async (uri, params: any) => {
+        const { projectId, agentId } = params;
+        try {
+            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            const snapshot = await firestore.collection(actionsPath)
+                .where('status', '==', 'pending')
+                .get();
+            
+            const actions = snapshot.docs.map((doc) => ({
+                actionId: doc.id,
+                ...doc.data(),
+            }));
+
+            return {
+                contents: [{
+                    uri: uri.href,
+                    mimeType: "application/json",
+                    text: JSON.stringify(actions, null, 2)
+                }]
+            };
+        } catch (error) {
+            throw new Error(`Failed to read agent actions resource: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+);
+
 server.registerTool(
     'list_modules',
     {
@@ -435,6 +464,114 @@ server.registerTool(
     },
 );
 
+server.registerTool(
+    'get_agent_actions',
+    {
+        title: 'Get Agent Actions',
+        description: 'Gets pending actions for an agent (replaces backplane polling).',
+        inputSchema: {
+            agentId: z.string().describe('ID of the agent'),
+            status: z
+                .string()
+                .optional()
+                .default('pending')
+                .describe('Filter by action status (pending, complete, started, error)'),
+        },
+        outputSchema: {
+            actions: z
+                .array(
+                    z.object({
+                        actionId: z.string(),
+                        task: z.string(),
+                        status: z.string(),
+                        data: z.any(),
+                        createdAt: z.number().optional(),
+                        lastModified: z.number().optional(),
+                    }),
+                )
+                .describe('Array of actions for this agent'),
+        },
+    },
+    async ({ agentId, status }) => {
+        try {
+            const projectId = getProjectId();
+            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            let query = firestore.collection(actionsPath);
+            
+            if (status) {
+                query = query.where('status', '==', status) as any;
+            }
+            
+            const snapshot = await query.get();
+            const actions = snapshot.docs.map((doc) => ({
+                actionId: doc.id,
+                ...doc.data(),
+            }));
+
+            return {
+                content: [{ type: 'text', text: JSON.stringify(actions, null, 2) }],
+                structuredContent: { actions },
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to get agent actions: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'update_agent_action',
+    {
+        title: 'Update Agent Action',
+        description: 'Updates the status of an agent action (replaces backplane status updates).',
+        inputSchema: {
+            agentId: z.string().describe('ID of the agent'),
+            actionId: z.string().describe('ID of the action'),
+            status: z
+                .string()
+                .describe('New status (started, complete, error)'),
+            error: z
+                .string()
+                .optional()
+                .describe('Error message if status is error'),
+        },
+        outputSchema: {
+            success: z.boolean(),
+        },
+    },
+    async ({ agentId, actionId, status, error }) => {
+        try {
+            const projectId = getProjectId();
+            const actionPath = `projects/${projectId}/agents/${agentId}/actions/${actionId}`;
+            const updateData: any = {
+                status,
+                lastModified: Date.now(),
+            };
+            
+            if (error) {
+                updateData.error = error;
+            }
+            
+            await firestore.doc(actionPath).update(updateData);
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Action ${actionId} updated to status: ${status}`,
+                    },
+                ],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to update agent action: ${message}`);
+        }
+    },
+);
+
 // Express handler with auth
 export async function handleMcpRequest(req: Request, res: Response) {
     try {
@@ -538,6 +675,20 @@ export async function notifyActionUpdate(projectId: string, actionId: string) {
             // Ignore "Not connected" error as it just means no clients are listening
             if ((error as Error).message !== 'Not connected') {
                 console.error('Error sending resource update:', error);
+            }
+        }
+    }
+}
+
+export async function notifyAgentActionsUpdate(projectId: string, agentId: string) {
+    const uri = `projects://${projectId}/agents/${agentId}/actions`;
+    if (server.server) {
+        try {
+            await server.server.sendResourceUpdated({ uri });
+        } catch (error) {
+            // Ignore "Not connected" error as it just means no clients are listening
+            if ((error as Error).message !== 'Not connected') {
+                console.error('Error sending agent actions update:', error);
             }
         }
     }

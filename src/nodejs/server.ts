@@ -17,7 +17,6 @@ import {
   Unsubscribe,
 } from '../shared';
 
-import { Run } from '../cli/commands/module';
 import {
   BusMessageType,
   deserializeWireMessage,
@@ -34,42 +33,12 @@ export type ServerStatus = {
   subscribedChannels: { [key: string]: { count: number } };
   activeChannels: { [key: string]: { timestamp: number } };
   children: number;
-  agentId?: string;
 };
-
-export interface CommandRunModuleData {
-  module: string;
-  actionId: string;
-  args?: string[];
-  version?: string;
-}
-
-export interface CommandStopModuleData {
-  module: string;
-}
-
-export type AgentActionStatus = 'pending' | 'complete';
-
-export type BackplaneCommand =
-  | {
-      task: 'runModule';
-      actionId: string;
-      status: AgentActionStatus;
-      data: CommandRunModuleData;
-    }
-  | {
-      task: 'stopModule';
-      actionId: string;
-      status: AgentActionStatus;
-      data: CommandStopModuleData;
-    };
 
 export interface NstrumentaServerOptions {
   apiKey: string;
   port?: string;
-  tag?: string;
   debug?: boolean;
-  connectToBackplane?: boolean;
   allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection?: boolean;
 }
@@ -96,7 +65,6 @@ type TrackRecording = {
 
 export class NstrumentaServer {
   options: NstrumentaServerOptions;
-  backplaneClient?: NstrumentaClient;
   allowCrossProjectApiKey?: boolean;
   allowUnverifiedConnection: boolean;
   listeners: Map<NstrumentaClientEvent, Array<ListenerCallback>>;
@@ -112,9 +80,6 @@ export class NstrumentaServer {
     this.listeners = new Map();
     console.log(`starting NstrumentaServer`);
     this.run = this.run.bind(this);
-    if (options.connectToBackplane === true) {
-      this.backplaneClient = new NstrumentaClient();
-    }
     this.allowCrossProjectApiKey = options.allowCrossProjectApiKey;
     this.allowUnverifiedConnection =
       options.allowUnverifiedConnection !== undefined ? options.allowUnverifiedConnection : false;
@@ -148,84 +113,6 @@ export class NstrumentaServer {
     await mkdir(cwdNstDir, { recursive: true });
 
     console.log(`nstrumenta working directory: ${cwdNstDir}`);
-    if (this.backplaneClient) {
-      try {
-        //get backplane url
-        const data = this.options.tag ? { tag: this.options.tag } : undefined;
-        console.log(endpoints.REGISTER_AGENT, data);
-        let response = await fetch(endpoints.REGISTER_AGENT, {
-          method: 'post',
-          headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-          body: JSON.stringify(data),
-        });
-        const { backplaneUrl, agentId, actionsCollectionPath } = (await response.json()) as {
-          backplaneUrl: string;
-          agentId: string;
-          actionsCollectionPath: string;
-        };
-
-        this.status.agentId = agentId;
-        if (backplaneUrl) {
-          this.backplaneClient.addListener('open', () => {
-            console.log(`Connected to backplane ${backplaneUrl}`);
-            this.backplaneClient?.addSubscription(agentId, async (message: BackplaneCommand) => {
-              if (debug) {
-                console.log(message);
-              }
-              const { task, actionId } = message;
-              switch (task) {
-                case 'runModule':
-                  if (!message.data || !message.data.module) {
-                    console.log('Aborting: runModule command needs to specify data.module');
-                    return;
-                  }
-                  const {
-                    data: { module: moduleName, args, version },
-                  } = message;
-
-                  console.log('running module', moduleName, version);
-                  this.backplaneClient?.send(`actions/${actionId}`, {
-                    status: 'started',
-                    timestamp: Date.now(),
-                  });
-                  Run(moduleName, { moduleVersion: version, commandArgs: args })
-                    .then(() => {
-                      this.backplaneClient?.send(`actions/${actionId}`, {
-                        status: 'complete',
-                        timestamp: Date.now(),
-                      });
-                    })
-                    .catch((err) => {
-                      this.backplaneClient?.send(`actions/${actionId}`, {
-                        status: 'error',
-                        error: (err as Error).message,
-                        timestamp: Date.now(),
-                      });
-                    });
-
-                  break;
-                default:
-                  console.log('message from backplane', message);
-              }
-            });
-            this.backplaneClient?.send('_nstrumenta', {
-              command: 'registerAgent',
-              agentId,
-              actionsCollectionPath,
-              tag: this.options.tag,
-            });
-          });
-
-          await this.backplaneClient.connect({
-            apiKey,
-            nodeWebSocket: WebSocket as any,
-            wsUrl: backplaneUrl,
-          });
-        }
-      } catch (err) {
-        console.warn('failed to connect to backplane', err);
-      }
-    }
 
     const app = express();
     app.set('views', __dirname + '/../..');

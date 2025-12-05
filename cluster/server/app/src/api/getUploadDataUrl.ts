@@ -1,5 +1,7 @@
 import { APIEndpoint, withAuth } from '../authentication'
 import { generateV4UploadSignedUrl } from '../shared/utils'
+import { firestore } from '../authentication/ServiceAccount'
+import crypto from 'crypto'
 
 export interface GetUploadDataArgs {
   projectId: string
@@ -48,6 +50,21 @@ const getUploadDataUrlBase: APIEndpoint<GetUploadDataArgs> = async (
       origin,
       overwrite,
     )
+
+    // Simulate Cloud Function: Write metadata to Firestore
+    // This is needed for local testing where Cloud Functions are not running
+    if (process.env.NODE_ENV !== 'production') {
+      const hash = crypto.createHash('sha256').update(filePath).digest('hex')
+      const docRef = firestore.collection(storagePathBase).doc(hash)
+      await docRef.set({
+        name: name,
+        filePath: filePath,
+        size: size,
+        lastModified: Date.now(),
+        ...metadata,
+      })
+    }
+
     return res
       .status(200)
       .send({ uploadUrl, remoteFilePath: filePath, ...metadata })

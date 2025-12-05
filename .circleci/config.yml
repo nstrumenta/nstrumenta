@@ -106,8 +106,6 @@ jobs:
       - run: echo "export IMAGE_VERSION_TAG=${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
       - run: echo "export SERVER_IMAGE=${IMAGE_REPOSITORY}/server:${IMAGE_VERSION_TAG}" >> $BASH_ENV
       - run: echo "export TEST_SERVER=test-server-${CIRCLE_SHA1}" >> $BASH_ENV
-      - run: echo "export BACKPLANE_IMAGE=${IMAGE_REPOSITORY}/backplane:${IMAGE_VERSION_TAG}" >> $BASH_ENV
-      - run: echo "export TEST_BACKPLANE=test-backplane-${CIRCLE_SHA1}" >> $BASH_ENV
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run:
@@ -140,23 +138,6 @@ jobs:
             fi
             echo "export NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> "$BASH_ENV"
       - run:
-          name: deploy test-backplane
-          command: >
-            gcloud run deploy ${TEST_BACKPLANE}
-            --image=${BACKPLANE_IMAGE} 
-            --port=8089 
-            --allow-unauthenticated
-            --region=us-west1
-            --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest
-            --set-env-vars "NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}"
-            --set-env-vars "IMAGE_REPOSITORY=${IMAGE_REPOSITORY}"
-            --set-env-vars "IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}"
-      - run:
-          name: get NSTRUMENTA_BACKPLANE_URL from test backplane
-          command: >
-            echo 'export NSTRUMENTA_BACKPLANE_URL=`gcloud run services describe --region=us-west1 ${TEST_BACKPLANE} --format=json | jq -r .status.address.url`'
-            >> $BASH_ENV
-      - run:
           name: set CI environment for cache busting
           command: echo "export CI=true" >> $BASH_ENV
       - run: ./ci.sh cli
@@ -166,11 +147,6 @@ jobs:
           name: delete test-server
           command: >
             gcloud run services delete --region=us-west1 ${TEST_SERVER}
-          when: always
-      - run:
-          name: delete test-backplane
-          command: >
-            gcloud run services delete --region=us-west1 ${TEST_BACKPLANE}
           when: always
   build-ci-images:
     resource_class: large

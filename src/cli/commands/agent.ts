@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
 import { Command } from 'commander';
 import * as path from 'path';
+import { AgentClient } from '../../nodejs/agentClient';
 import { NstrumentaServer } from '../../nodejs/server';
 
 import { McpClient } from '../mcp';
@@ -11,18 +12,30 @@ export const Start = async function (options: {
   port: string;
   tag?: string;
   debug?: boolean;
-  backplane?: boolean;
 }): Promise<void> {
-  const { port, tag, debug, backplane } = options;
+  const { port, tag, debug } = options;
   const apiKey = resolveApiKey();
 
+  // Start the local WebSocket server for sensor data
   const server = new NstrumentaServer({
     apiKey,
     port: port ?? 8088,
-    tag: tag ? tag : process.env.HOST_INSTANCE_ID,
     debug,
-    connectToBackplane: backplane !== false,
   });
+
+  // If tag is provided, also start the agent client
+  if (tag || process.env.HOST_INSTANCE_ID) {
+    const agentClient = new AgentClient({
+      apiKey,
+      tag: tag || process.env.HOST_INSTANCE_ID,
+      debug,
+    });
+    
+    // Connect agent in parallel with server startup
+    agentClient.connect().catch((err) => {
+      console.error('Agent client connection failed:', err);
+    });
+  }
 
   await server.run();
 };

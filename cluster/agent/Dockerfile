@@ -19,4 +19,4 @@ RUN npm run build:cli
 
 EXPOSE 8088
 
-CMD ["npx","node","./dist/cli/index.js","agent","start","--no-backplane"]
+CMD ["npx","node","./dist/cli/index.js","agent","start"]

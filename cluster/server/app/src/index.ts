@@ -22,7 +22,7 @@ import {
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
-import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage, notifyActionUpdate } from './mcp'
+import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage, notifyActionUpdate, notifyAgentActionsUpdate } from './mcp'
 import { registerOAuthRoutes } from './oauth'
 
 const version = require('../package.json').version
@@ -77,8 +77,10 @@ Object.keys(functions).map((fn) => {
   app.get(`/${fn}`, (functions as Record<string, any>)[fn])
 })
 
-// MCP endpoint
+// MCP endpoints
 app.post('/', mcpLimiter, handleMcpRequest)
+app.get('/mcp/sse', handleMcpSseRequest)
+app.post('/mcp/messages', handleMcpSseMessage)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')

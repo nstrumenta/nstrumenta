@@ -68,7 +68,6 @@ export type Reconnection = {
 };
 
 export const getToken = async (apiKey: string): Promise<string> => {
-  console.log('getToken', { apiKey, endpoint: getEndpoints(apiKey).GET_TOKEN });
   const headers = {
     'x-api-key': apiKey,
     'Content-Type': 'application/json',
