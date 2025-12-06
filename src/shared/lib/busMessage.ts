@@ -26,7 +26,7 @@ export type DeserializedMessage = {
 export const makeBusMessageFromJsonObject = (
   channel: string,
   object: Record<string, unknown>
-): ArrayBuffer => {
+): Buffer => {
   return new ByteBuffer()
     .writeUint32(BusMessageType.Json)
     .writeIString(channel)
@@ -35,11 +35,15 @@ export const makeBusMessageFromJsonObject = (
     .toBuffer();
 };
 
-export const makeBusMessageFromBuffer = (channel: string, buffer: ArrayBufferLike): ArrayBuffer => {
+export const makeBusMessageFromBuffer = (channel: string, buffer: ArrayBufferLike | Buffer | Uint8Array): Buffer => {
+  const bufferToAppend = buffer instanceof ArrayBuffer || buffer instanceof SharedArrayBuffer
+    ? new Uint8Array(buffer)
+    : buffer;
+  
   const busMessageBuffer = new ByteBuffer()
     .writeUint32(BusMessageType.Buffer)
     .writeIString(channel)
-    .append(buffer)
+    .append(bufferToAppend)
     .flip()
     .toBuffer();
 

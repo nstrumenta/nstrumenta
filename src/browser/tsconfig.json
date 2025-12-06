@@ -1,16 +1,21 @@
 {
   "compilerOptions": {
-    "target": "ES6",
-    "module": "commonjs",
+    "target": "ES2020",
+    "module": "ES2020",
     "lib": [
-      "dom"
+      "dom",
+      "ES2020"
     ],
     "declaration": true,
-    "rootDir": "..",
-    "outDir": "../../dist",
+    "outDir": "../../dist/browser-esm",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler"
   },
+  "include": [
+    "**/*.ts",
+    "../shared/**/*.ts"
+  ]
 }

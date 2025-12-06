@@ -5,3 +5,4 @@ export {
   makeBusMessageFromJsonObject,
 } from './busMessage';
 export * from './client';
+export type { NstrumentaClientEvent } from './client';

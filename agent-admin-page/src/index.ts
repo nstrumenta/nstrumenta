@@ -1,5 +1,5 @@
-import { NstrumentaBrowserClient } from 'nstrumenta/dist/browser/client';
-import { NstrumentaClientEvent } from '../../dist/shared';
+import { NstrumentaBrowserClient } from 'nstrumenta/browser';
+import type { NstrumentaClientEvent } from 'nstrumenta';
 
 const client = new NstrumentaBrowserClient();
 
@@ -16,7 +16,8 @@ const init = async () => {
     client.addSubscription('__event', (message) => {
       switch (message.event as NstrumentaClientEvent) {
         case 'health':
-          document.getElementById('health').innerText = new Date(Date.now()).toLocaleString();
+          const healthEl = document.getElementById('health');
+          if (healthEl) healthEl.innerText = new Date(Date.now()).toLocaleString();
           break;
         default:
           break;
@@ -24,7 +25,8 @@ const init = async () => {
     });
     client.addSubscription('_status', (message) => {
       const { agentId } = message;
-      document.getElementById('status').innerText = JSON.stringify(message);
+      const statusEl = document.getElementById('status');
+      if (statusEl) statusEl.innerText = JSON.stringify(message);
       if (agentId && !agentLogSubscription) {
         agentLogSubscription = true;
         client.addSubscription(`_${agentId}/stdout`, (buffer) => {
@@ -46,7 +48,7 @@ const init = async () => {
   const apiLocalStore = localStorage.getItem('apiKey');
   const apiKey = apiKeyParam ? apiKeyParam : apiLocalStore;
 
-  await client.connect({ apiKey, wsUrl });
+  await client.connect({ apiKey: apiKey || undefined, wsUrl });
 };
 
 document.addEventListener('readystatechange', init);

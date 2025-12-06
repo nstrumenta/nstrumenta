@@ -42,7 +42,7 @@ export const Send = async (url: string, { channel }: { channel: string }) => {
     ws.send(token);
 
     process.nextTick(function () {
-      process.stdin.on('data', (buffer) => {
+      process.stdin.on('data', (buffer: Buffer) => {
         ws.send(makeBusMessageFromBuffer(channel, buffer));
       });
     });

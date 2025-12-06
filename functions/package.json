@@ -1,0 +1,24 @@
+{
+  "name": "nstrumenta-functions",
+  "version": "2.4.0",
+  "description": "cloud functions for nstrumenta",
+  "main": "./dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc --project ./",
+    "makeZip": "npm run build && zip -r ../../terraform/storageObjectFunctions.zip .",
+    "format": "prettier -w ./src",
+    "dev": "nodemon"
+  },
+  "author": "Tyler Bryant",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@google-cloud/firestore": "^8.0.0",
+    "@google-cloud/functions-framework": "^3.3.0",
+    "@google-cloud/storage": "^6.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.6.0"
+  }
+}

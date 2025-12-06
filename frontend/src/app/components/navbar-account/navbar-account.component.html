@@ -1,0 +1,19 @@
+@if (loggedIn ) {
+  <div>
+    <mat-menu #appMenu="matMenu">
+      <button mat-menu-item [routerLink]="['/account/profile']" queryParamsHandling="preserve">Settings</button>
+      <button mat-menu-item (click)="logout()">Sign out</button>
+    </mat-menu>
+    <button mat-icon-button [matMenuTriggerFor]="appMenu">
+      @if (currentUser?.photoURL) {
+        <img class="png-icon" style="width: 24px; height: 24px;"
+          [src]="currentUser?.photoURL" alt="User profile photo" />
+      }
+      @if (!currentUser?.photoURL) {
+        <mat-icon>account_circle</mat-icon>
+      }
+    </button>
+  </div>
+} @else {
+  <button mat-button (click)="login()"> Sign in</button>
+}

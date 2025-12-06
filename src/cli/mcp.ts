@@ -114,4 +114,25 @@ export class McpClient {
   async listData(type: string = 'data'): Promise<{ objects: any[] }> {
     return this.callTool('list_data', { type });
   }
+
+  async getAgentActions(agentId: string, status: string = 'pending'): Promise<{ actions: any[] }> {
+    return this.callTool('get_agent_actions', {
+      agentId,
+      status,
+    });
+  }
+
+  async updateAgentAction(
+    agentId: string,
+    actionId: string,
+    status: string,
+    error?: string
+  ): Promise<{ success: boolean }> {
+    return this.callTool('update_agent_action', {
+      agentId,
+      actionId,
+      status,
+      error,
+    });
+  }
 }

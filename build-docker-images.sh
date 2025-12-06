@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+cd "$(dirname "$0")"
+
 if [ -n "$DOCKER_TAG" ]; then
     echo "using DOCKER_TAG=$DOCKER_TAG"
 else
@@ -34,11 +36,11 @@ docker buildx build \
     --platform linux/arm64,linux/amd64 \
     --tag nstrumenta/agent:$DOCKER_TAG \
     --tag nstrumenta/agent:latest \
-    -f ./cluster/agent/Dockerfile \
+    -f ./agent/Dockerfile \
     .
 
 # server
-pushd cluster/server
+pushd server
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
@@ -55,7 +57,7 @@ docker buildx build \
     --build-arg BASE_TAG=latest \
     --tag nstrumenta/data-job-runner:$DOCKER_TAG \
     --tag nstrumenta/data-job-runner:latest \
-    -f ./cluster/data-job-runner/Dockerfile \
+    -f ./data-job-runner/Dockerfile \
     .
 
 # developer
@@ -65,5 +67,5 @@ docker buildx build \
     --build-arg BASE_TAG=latest \
     --tag nstrumenta/developer:$DOCKER_TAG \
     --tag nstrumenta/developer:latest \
-    -f ./cluster/developer/Dockerfile \
+    -f ./developer/Dockerfile \
     .
