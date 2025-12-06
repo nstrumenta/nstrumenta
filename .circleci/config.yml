@@ -172,6 +172,11 @@ jobs:
           name: set CI environment for cache busting
           command: echo "export CI=true" >> $BASH_ENV
       - run:
+          name: Authenticate Docker for artifact registry and pull data-job-runner image
+          command: |
+            gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev
+            docker pull ${IMAGE_REPOSITORY}/data-job-runner:${IMAGE_VERSION_TAG}
+      - run:
           name: Run CLI tests (Local Cloud Run Mode)
           command: |
             export NSTRUMENTA_CLOUD_RUN_MODE=local
