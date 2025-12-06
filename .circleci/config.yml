@@ -27,6 +27,7 @@ jobs:
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
+    resource_class: large
     working_directory: ~/project/frontend
     steps:
       - checkout:
@@ -42,11 +43,11 @@ jobs:
       - save_cache:
           key: frontend-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/frontend/node_modules'
+            - node_modules
       - save_cache:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
-            - '~/project/frontend/dist'
+            - dist
   build-functions:
     docker:
       - image: nstrumenta/toolchain
