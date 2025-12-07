@@ -90,11 +90,14 @@ describe('MCP Handler', () => {
     await handleMcpRequest(req as Request, res as Response)
 
     expect(res.status).toHaveBeenCalledWith(401)
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: expect.objectContaining({
-        message: 'Invalid key'
-      })
-    }))
+    expect(res.json).toHaveBeenCalledWith({
+      jsonrpc: '2.0',
+      error: {
+        code: -32001,
+        message: expect.stringContaining('Authentication required')
+      },
+      id: null
+    })
   })
 
   it('should process request if authentication succeeds', async () => {

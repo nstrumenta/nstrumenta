@@ -58,6 +58,13 @@ app.use(cors())
 import rateLimit from 'express-rate-limit'
 
 // Rate limiters for different endpoints
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per 15 minutes for general API endpoints
+  standardHeaders: true,
+  legacyHeaders: false,
+})
+
 const mcpLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 50, // 50 requests per 15 minutes
@@ -69,18 +76,18 @@ registerOAuthRoutes(app)
 
 Object.keys({ ...functions }).map((fn) => {
   // console.log(`register POST listener [${fn}]`)
-  app.post(`/${fn}`, ({ ...functions } as Record<string, any>)[fn])
+  app.post(`/${fn}`, apiLimiter, ({ ...functions } as Record<string, any>)[fn])
 })
 
 Object.keys(functions).map((fn) => {
   // console.log(`register GET listener [${fn}]`)
-  app.get(`/${fn}`, (functions as Record<string, any>)[fn])
+  app.get(`/${fn}`, apiLimiter, (functions as Record<string, any>)[fn])
 })
 
 // MCP endpoints
 app.post('/', mcpLimiter, handleMcpRequest)
-app.get('/mcp/sse', handleMcpSseRequest)
-app.post('/mcp/messages', handleMcpSseMessage)
+app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
+app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
 
 app.get('/', (req, res) => {
   res.status(200).send('server is running')
