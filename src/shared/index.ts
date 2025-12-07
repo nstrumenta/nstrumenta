@@ -1,4 +1,3 @@
-export * from './client-utils';
 export * from './lib/index';
 
 export interface QueryOptions {
@@ -18,5 +17,3 @@ export interface QueryOptions {
     | 'not-in';
   compareValue?: string;
 }
-
-export * from './rpc';

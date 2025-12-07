@@ -7,10 +7,19 @@ import semver from 'semver';
 import tar from 'tar';
 import { Module, ModuleExtended } from './commands/module';
 
-import { getClientEndpoints, resolveApiKey, resolveApiUrl } from '../shared/client-utils';
+// Inline API key and URL resolution
+export const resolveApiKey = (): string => {
+  const apiKey = process.env.NSTRUMENTA_API_KEY || process.env.NST_API_KEY;
+  if (!apiKey) {
+    console.warn('Warning: NSTRUMENTA_API_KEY environment variable not set');
+    return '';
+  }
+  return apiKey;
+};
 
-// Re-export client utilities for backward compatibility
-export { resolveApiKey, resolveApiUrl };
+export const resolveApiUrl = (): string | undefined => {
+  return process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
+};
 
 const prompt = Inquirer.createPromptModule();
 
@@ -18,8 +27,34 @@ export interface Keys {
   [key: string]: string;
 }
 
-// Use shared endpoints
-export const endpoints = getClientEndpoints();
+// Get server URL from environment or decode from API key
+const getServerUrl = (): string => {
+  const apiUrl = resolveApiUrl();
+  if (apiUrl) return apiUrl;
+  
+  const apiKey = resolveApiKey();
+  if (!apiKey) return '';
+  
+  return Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
+};
+
+export const serverUrl = getServerUrl();
+
+// Endpoint helper for backward compatibility
+export const endpoints = {
+  GET_PROJECT_DOWNLOAD_URL: `${serverUrl}/getProjectDownloadUrl`,
+  LIST_MODULES: `${serverUrl}/listModules`,
+  GET_AGENT_ID_BY_TAG: `${serverUrl}/getAgentIdByTag`,
+  GET_CLOUD_RUN_SERVICES: `${serverUrl}/getCloudRunServices`,
+  GET_MACHINES: `${serverUrl}/getMachines`,
+  GET_DATA_MOUNT: `${serverUrl}/getDataMount`,
+  GET_UPLOAD_DATA_URL: `${serverUrl}/getUploadDataUrl`,
+  QUERY_COLLECTION: `${serverUrl}/queryCollection`,
+  GET_PROJECT: `${serverUrl}/getProject`,
+  SET_ACTION: `${serverUrl}/setAction`,
+  GET_ACTION: `${serverUrl}/getAction`,
+  GET_UPLOAD_URL: `${serverUrl}/getUploadUrl`,
+};
 
 export async function asyncSpawn(
   cmd: string,

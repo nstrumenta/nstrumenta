@@ -1,6 +1,8 @@
-import { getClientEndpoints } from '../shared/client-utils';
-
-const endpoints = getClientEndpoints();
+// Extract base URL from API key by decoding base64 portion
+const getServerUrl = (apiKey: string): string => {
+  const urlOverride = process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
+  return urlOverride || Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
+};
 
 export type ModuleRunner = (
   moduleName: string,
@@ -21,8 +23,11 @@ export class AgentClient {
   private agentId?: string;
   private moduleRunner?: ModuleRunner;
 
+  private serverUrl: string;
+
   constructor(options: AgentClientOptions) {
     this.apiKey = options.apiKey;
+    this.serverUrl = getServerUrl(options.apiKey);
     this.tag = options.tag;
     this.debug = options.debug || false;
     this.moduleRunner = options.moduleRunner;
@@ -47,8 +52,8 @@ export class AgentClient {
 
     try {
       const data = { tag: this.tag };
-      console.log(endpoints.REGISTER_AGENT, data);
-      const response = await fetch(endpoints.REGISTER_AGENT, {
+      console.log(`${this.serverUrl}/registerAgent`, data);
+      const response = await fetch(`${this.serverUrl}/registerAgent`, {
         method: 'post',
         headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },
         body: JSON.stringify(data),
@@ -80,8 +85,7 @@ export class AgentClient {
 
     try {
       // Connect to SSE endpoint
-      const baseUrl = endpoints.MCP.replace(/\/$/, '');
-      const sseUrl = `${baseUrl}/mcp/sse`;
+      const sseUrl = `${this.serverUrl}/mcp/sse`;
       const response = await fetch(sseUrl, {
         method: 'GET',
         headers: {
@@ -169,8 +173,7 @@ export class AgentClient {
     if (!sessionId) return;
 
     try {
-      const baseUrl = endpoints.MCP.replace(/\/$/, '');
-      const response = await fetch(`${baseUrl}/mcp/messages?sessionId=${sessionId}`, {
+      const response = await fetch(`${this.serverUrl}/mcp/messages?sessionId=${sessionId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -196,7 +199,7 @@ export class AgentClient {
     if (!this.agentId) return;
 
     try {
-      const response = await fetch(endpoints.MCP, {
+      const response = await fetch(`${this.serverUrl}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -267,7 +270,7 @@ export class AgentClient {
     if (!this.agentId) return;
 
     try {
-      const response = await fetch(endpoints.MCP, {
+      const response = await fetch(`${this.serverUrl}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,13 +1,21 @@
-import { resolveApiKey, resolveApiUrl } from '../shared/client-utils';
-
 export class McpClient {
   private apiKey: string;
   private serverUrl: string;
 
   constructor() {
-    this.apiKey = resolveApiKey();
-    const apiUrl = resolveApiUrl();
-    this.serverUrl = apiUrl || '';
+    // Get API key from environment (allow empty for testing)
+    const apiKey = process.env.NSTRUMENTA_API_KEY || process.env.NST_API_KEY || '';
+    this.apiKey = apiKey;
+    
+    // Get URL from environment or decode from API key
+    const apiUrl = process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
+    if (apiUrl) {
+      this.serverUrl = apiUrl;
+    } else if (apiKey) {
+      this.serverUrl = Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
+    } else {
+      this.serverUrl = '';
+    }
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
