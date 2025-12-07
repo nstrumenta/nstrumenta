@@ -20,7 +20,6 @@ import { ListMachines } from './commands/machines';
 import { ListServices, StartService } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, ProjectId } from './commands/project';
-import { Send, Subscribe } from './commands/pubsub';
 import { version } from '../shared/version';
 
 export const nstrumentaVersion = version;
@@ -51,13 +50,6 @@ servicesCommand
   .description('start cloud run service')
   .action(StartService);
 
-program
-  .command('send')
-  .argument('[host]', 'websocket host')
-  .option('-c,--channel <channel>', 'channel to send')
-  .description('send to host on channel')
-  .action(Send);
-
 const projectCommand = program.command('project');
 projectCommand.command('id').alias('name').description('print project id').action(ProjectId);
 projectCommand
@@ -65,14 +57,6 @@ projectCommand
   .alias('describe')
   .description('Read project info')
   .action(ProjectInfo);
-
-program
-  .command('subscribe')
-  .argument('[host]', 'websocket host')
-  .option('<channel>', 'channel for subscription')
-  .option('-m,--message-only', 'parses json and prints only message')
-  .description('subscribe to host on channel')
-  .action(Subscribe);
 
 const moduleCommand = program.command('module');
 moduleCommand

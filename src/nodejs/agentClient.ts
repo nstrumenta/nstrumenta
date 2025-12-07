@@ -1,10 +1,17 @@
-import { endpoints } from '../cli/utils';
-import { Run } from '../cli/commands/module';
+import { getClientEndpoints } from '../shared/client-utils';
+
+const endpoints = getClientEndpoints();
+
+export type ModuleRunner = (
+  moduleName: string,
+  options: { moduleVersion?: string; commandArgs?: string[] }
+) => Promise<void>;
 
 export interface AgentClientOptions {
   apiKey: string;
   tag?: string;
   debug?: boolean;
+  moduleRunner?: ModuleRunner;
 }
 
 export class AgentClient {
@@ -12,11 +19,13 @@ export class AgentClient {
   private tag?: string;
   private debug: boolean;
   private agentId?: string;
+  private moduleRunner?: ModuleRunner;
 
   constructor(options: AgentClientOptions) {
     this.apiKey = options.apiKey;
     this.tag = options.tag;
     this.debug = options.debug || false;
+    this.moduleRunner = options.moduleRunner;
   }
 
   public async connect() {
@@ -233,8 +242,13 @@ export class AgentClient {
 
           // Run the module
           try {
-            await Run(moduleName, { moduleVersion: version, commandArgs: args });
-            await this.updateActionStatus(actionId, 'complete');
+            if (this.moduleRunner) {
+              await this.moduleRunner(moduleName, { moduleVersion: version, commandArgs: args });
+              await this.updateActionStatus(actionId, 'complete');
+            } else {
+              await this.updateActionStatus(actionId, 'error', 'No module runner configured');
+              console.error('AgentClient: moduleRunner not configured, cannot run modules');
+            }
           } catch (err) {
             await this.updateActionStatus(actionId, 'error', (err as Error).message);
           }

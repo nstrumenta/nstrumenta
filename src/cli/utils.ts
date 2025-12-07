@@ -7,7 +7,10 @@ import semver from 'semver';
 import tar from 'tar';
 import { Module, ModuleExtended } from './commands/module';
 
-import { getEndpoints } from '../shared';
+import { getClientEndpoints, resolveApiKey, resolveApiUrl } from '../shared/client-utils';
+
+// Re-export client utilities for backward compatibility
+export { resolveApiKey, resolveApiUrl };
 
 const prompt = Inquirer.createPromptModule();
 
@@ -15,27 +18,8 @@ export interface Keys {
   [key: string]: string;
 }
 
-export const resolveApiKey = () => {
-  const apiKey = process.env.NSTRUMENTA_API_KEY;
-
-  if (!apiKey) {
-    throw new Error(
-      'nstrumenta api key is not set, set the NSTRUMENTA_API_KEY environment variable'
-    );
-  }
-
-  return apiKey;
-};
-
-export const resolveApiUrl = () => {
-  if (process.env.NSTRUMENTA_API_URL) {
-    return process.env.NSTRUMENTA_API_URL;
-  }
-  const apiKey = process.env.NSTRUMENTA_API_KEY;
-  return atob(apiKey!.split(':')[1] ?? '').trim();
-};
-
-export const endpoints = getEndpoints(resolveApiKey(), resolveApiUrl());
+// Use shared endpoints
+export const endpoints = getClientEndpoints();
 
 export async function asyncSpawn(
   cmd: string,

@@ -6,7 +6,7 @@ import { NstrumentaServer } from '../../nodejs/server';
 
 import { McpClient } from '../mcp';
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
-import { Module } from './module';
+import { Module, Run } from './module';
 
 export const Start = async function (options: {
   port: string;
@@ -29,6 +29,7 @@ export const Start = async function (options: {
       apiKey,
       tag: tag || process.env.HOST_INSTANCE_ID,
       debug,
+      moduleRunner: Run, // Inject the CLI module runner
     });
     
     // Connect agent in parallel with server startup

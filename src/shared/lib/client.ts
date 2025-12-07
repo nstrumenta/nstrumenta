@@ -5,25 +5,12 @@ import { v4 as randomUUID } from 'uuid';
 import type WebSocket from 'ws';
 import {
   Ping,
-  QueryOptions,
   RPC,
-  StartRecording,
-  StopRecording,
-  Subscribe,
-  Unsubscribe,
-  getEndpoints,
-  makeBusMessageFromJsonObject,
-} from '../index';
-import { makeBusMessageFromBuffer } from './busMessage';
+} from '../rpc';
+import type { QueryOptions } from '../index';
+import { getEndpoints } from '../client-utils';
+import type { LogConfig } from './types';
 import { z } from 'zod';
-
-export interface LogConfig {
-  header: Mcap0Types.Header;
-  channels: Array<{
-    schema: { title: string; type: 'object'; properties: Record<string, unknown> };
-    channel: Omit<Mcap0Types.Channel, 'id' | 'schemaId' | 'metadata'>;
-  }>;
-}
 
 export type ListenerCallback = (event?: any) => void;
 export type SubscriptionCallback = (message?: any) => void;
@@ -42,20 +29,22 @@ export type NstrumentaClientEvent =
 
 export interface ConnectOptions {
   nodeWebSocket?: new (url: string) => WebSocketLike;
-  wsUrl: string;
+  wsUrl?: string;
   apiKey?: string;
   verify?: boolean;
   id?: string;
 }
 
-export enum ClientStatus {
-  INIT = 0,
-  READY = 1,
-  CONNECTED = 2,
-  DISCONNECTED = 3,
-  CONNECTING = 4,
-  ERROR = 5,
-}
+export const ClientStatus = {
+  INIT: 0,
+  READY: 1,
+  CONNECTED: 2,
+  DISCONNECTED: 3,
+  CONNECTING: 4,
+  ERROR: 5,
+} as const;
+
+export type ClientStatus = (typeof ClientStatus)[keyof typeof ClientStatus];
 
 export interface Connection {
   status: ClientStatus;
@@ -146,35 +135,23 @@ export abstract class NstrumentaClientBase {
     return Math.min(Math.pow(attempts, 2) * 1000, 30 * 60 * 1000);
   }
 
+  // DEPRECATED: WebSocket methods - kept as stubs for backward compatibility
+  // Use McpClient or AgentClient for new code
   public send(channel: string, message: Record<string, unknown>) {
-    this.bufferedSend(makeBusMessageFromJsonObject(channel, message));
+    console.warn('send() is deprecated - WebSocket support removed. Use McpClient instead.');
   }
 
   public sendBuffer(channel: string, buffer: ArrayBufferLike) {
-    this.bufferedSend(makeBusMessageFromBuffer(channel, buffer));
+    console.warn('sendBuffer() is deprecated - WebSocket support removed. Use McpClient instead.');
   }
 
   private bufferedSend(message: ArrayBufferLike | Buffer | Uint8Array) {
-    // buffers messages sent before initial connection
-    if (!(this.ws?.readyState === this.ws?.OPEN)) {
-      console.log('adding to messageBuffer, length:', this.messageBuffer.length);
-      this.messageBuffer.push(message);
-    } else {
-      this.ws?.send(message);
-    }
+    console.warn('bufferedSend() is deprecated - WebSocket support removed.');
   }
 
   public addSubscription = async (channel: string, callback: SubscriptionCallback) => {
-    const { subscriptionId } = await this.callRPC<Subscribe>('subscribe', { channel });
-    console.log(`Nstrumenta client subscribe <${channel}> subscriptionId:${subscriptionId}`);
-    const channelSubscriptions = this.subscriptions.get(channel) || new Map();
-    channelSubscriptions.set(subscriptionId, callback);
-    this.subscriptions.set(channel, channelSubscriptions);
-
-    return async () => {
-      await this.callRPC<Unsubscribe>('unsubscribe', { channel, subscriptionId });
-      this.subscriptions.get(channel)?.delete(subscriptionId);
-    };
+    console.warn('addSubscription() is deprecated - WebSocket support removed. Use AgentClient resource subscriptions instead.');
+    return async () => {};
   };
 
   public addListener(eventType: NstrumentaClientEvent, callback: ListenerCallback) {
@@ -239,21 +216,23 @@ export abstract class NstrumentaClientBase {
     });
   }
 
+  // DEPRECATED: Recording methods - WebSocket support removed
   public async startLog(name: string, channels: string[], config?: LogConfig) {
-    this.send('_nstrumenta', { command: 'startLog', name, channels, config });
+    console.warn('startLog() is deprecated - WebSocket support removed.');
   }
 
   public async startRecording(name: string, channels: string[], config?: LogConfig) {
-    return this.callRPC<StartRecording>('startRecording', { name, channels, config });
+    console.warn('startRecording() is deprecated - WebSocket support removed.');
+    return Promise.resolve({});
   }
 
   public async stopRecording(name: string) {
-    return this.callRPC<StopRecording>('stopRecording', { name });
+    console.warn('stopRecording() is deprecated - WebSocket support removed.');
+    return Promise.resolve({});
   }
 
   public async finishLog(name: string) {
-    console.log('finish log');
-    this.send('_nstrumenta', { command: 'finishLog', name });
+    console.warn('finishLog() is deprecated - WebSocket support removed.');
   }
 
   public async connectMcp() {
@@ -358,22 +337,9 @@ export abstract class NstrumentaClientBase {
 
   async callRPC<T extends RPC>(type: T['type'], requestPayload: T['request']) {
     console.log('callRPC', type, requestPayload);
-    const rpcId = randomUUID();
-    const rpcChannelBase = `__rpc/${type}/${rpcId}`;
-    const requestChannel = `${rpcChannelBase}/request`;
-    const responseChannel = `${rpcChannelBase}/response`;
-    return new Promise<T['response']>(async (r) => {
-      // first subscribe to the responseChannel
-      const channelSubscriptions = this.subscriptions.get(responseChannel) || new Map();
-      channelSubscriptions.set(rpcId, (response: Subscribe['response']) => {
-        channelSubscriptions?.delete(rpcId);
-        r(response);
-      });
-      this.subscriptions.set(responseChannel, channelSubscriptions);
-
-      // then send on requestChannel
-      this.ws?.send(makeBusMessageFromJsonObject(requestChannel, requestPayload));
-    });
+    // DEPRECATED: WebSocket RPC removed
+    console.warn('callRPC() is deprecated - WebSocket support removed.');
+    return Promise.reject(new Error('WebSocket support removed - use McpClient or AgentClient'));
   }
 }
 

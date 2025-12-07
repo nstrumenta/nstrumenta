@@ -60,7 +60,7 @@
     "dev:local.env": "dotenv -e ./credentials/local.env -- bash -c 'nodemon -- services list'",
     "start:agent": "npx node ./dist/cli/index.js agent start",
     "test": "npm run test:client && npm run test:server",
-    "test:client": "node --test --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",
+    "test:client": "node --test --experimental-strip-types src/cli/__tests__/**/*.test.ts src/nodejs/__tests__/**/*.test.ts src/shared/__tests__/**/*.test.ts",
     "test:server": "cd server/app && npm test",
     "test:cli": "NSTRUMENTA_API_KEY=test:aHR0cDovL2xvY2FsaG9zdDo4MDgw ts-node src/cli/__tests__/mcp.test.ts",
     "test:watch": "node --test --watch --experimental-strip-types src/nodejs/__tests__/**/*.test.ts",

@@ -1,4 +1,4 @@
-import { resolveApiKey, resolveApiUrl } from './utils';
+import { resolveApiKey, resolveApiUrl } from '../shared/client-utils';
 
 export class McpClient {
   private apiKey: string;
@@ -6,7 +6,8 @@ export class McpClient {
 
   constructor() {
     this.apiKey = resolveApiKey();
-    this.serverUrl = resolveApiUrl();
+    const apiUrl = resolveApiUrl();
+    this.serverUrl = apiUrl || '';
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
