@@ -90,39 +90,85 @@ export class MCPClient {
     return toolResult.content?.[0]?.text ? JSON.parse(toolResult.content[0].text) : toolResult as T;
   }
 
-  async listModules(): Promise<Module[]> {
-    return this.callTool<Module[]>('list_modules', {});
+  async listModules(filter?: string): Promise<{ modules: Module[] }> {
+    return this.callTool('list_modules', { filter });
   }
 
-  async publishModule(modulePath: string): Promise<{ success: boolean; version?: string }> {
-    return this.callTool('publish_module', { modulePath });
+  async runModule(
+    agentId: string,
+    moduleName: string,
+    options: { version?: string; args?: string[] } = {}
+  ): Promise<{ actionId: string }> {
+    return this.callTool('run_module', {
+      agentId,
+      moduleName,
+      moduleVersion: options.version,
+      args: options.args,
+    });
   }
 
-  async runModule(moduleName: string, args?: Record<string, any>): Promise<{ jobId: string }> {
-    return this.callTool('run_module', { moduleName, args: args || {} });
+  async listAgents(): Promise<{ agents: [string, any][] }> {
+    return this.callTool('list_agents', {});
   }
 
-  async listData(prefix?: string): Promise<DataItem[]> {
-    return this.callTool<DataItem[]>('list_data', { prefix: prefix || '' });
+  async hostModule(
+    moduleName: string,
+    options: { version?: string; args?: string[] } = {}
+  ): Promise<{ actionId: string }> {
+    return this.callTool('host_module', {
+      moduleName,
+      moduleVersion: options.version,
+      args: options.args,
+    });
   }
 
-  async getData(path: string): Promise<{ url: string }> {
-    return this.callTool('get_data', { path });
+  async cloudRun(
+    moduleName: string,
+    options: { version?: string; args?: string[]; image?: string } = {}
+  ): Promise<{ actionId: string }> {
+    return this.callTool('cloud_run', {
+      moduleName,
+      moduleVersion: options.version,
+      args: options.args,
+      image: options.image,
+    });
   }
 
-  async uploadData(localPath: string, remotePath: string): Promise<{ success: boolean }> {
-    return this.callTool('upload_data', { localPath, remotePath });
+  async setAgentAction(agentId: string, action: string): Promise<{ actionId: string }> {
+    return this.callTool('set_agent_action', {
+      agentId,
+      action,
+    });
   }
 
-  async listAgents(): Promise<Agent[]> {
-    return this.callTool<Agent[]>('list_agents', {});
+  async cleanAgentActions(agentId: string): Promise<{ success: boolean }> {
+    return this.callTool('clean_agent_actions', {
+      agentId,
+    });
   }
 
-  async startAgent(agentId: string): Promise<{ success: boolean }> {
-    return this.callTool('agent_start', { agentId });
+  async listData(type: string = 'data'): Promise<{ objects: DataItem[] }> {
+    return this.callTool('list_data', { type });
   }
 
-  async getProjectInfo(): Promise<ProjectInfo> {
-    return this.callTool<ProjectInfo>('project_info', {});
+  async getAgentActions(agentId: string, status: string = 'pending'): Promise<{ actions: any[] }> {
+    return this.callTool('get_agent_actions', {
+      agentId,
+      status,
+    });
+  }
+
+  async updateAgentAction(
+    agentId: string,
+    actionId: string,
+    status: string,
+    error?: string
+  ): Promise<{ success: boolean }> {
+    return this.callTool('update_agent_action', {
+      agentId,
+      actionId,
+      status,
+      error,
+    });
   }
 }

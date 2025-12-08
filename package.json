@@ -47,7 +47,7 @@
     "build:agent": "tsc --project ./agent",
     "build:browser": "tsc --project ./browser",
     "build:server": "(cd server/app ; rm -rf node_modules ; npm i ; npm run build)",
-    "build:vscode-extension": "(cd src/vscode-extension ; rm -rf node_modules ; npm i ; npm run compile)",
+    "build:vscode-extension": "(cd vscode-extension ; rm -rf node_modules ; npm i ; npm run compile)",
     "build": "npm run build:lib ; npm run build:cli ; npm run build:agent ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server ; npm run build:vscode-extension",
     "build:all": "npm run build && npm run build:functions && npm run build:data-job-runner && npm run build:frontend",
     "build:functions": "(cd functions ; npm install ; npm run build)",

@@ -61,14 +61,14 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const modules = await mcpClient.listModules();
+        const result = await mcpClient.listModules();
         
-        if (modules.length === 0) {
+        if (!result.modules || result.modules.length === 0) {
           vscode.window.showInformationMessage('No modules found');
           return;
         }
 
-        const items = modules.map(m => `${m.name} (v${m.version})`);
+        const items = result.modules.map(m => `${m.name} (v${m.version})`);
         vscode.window.showQuickPick(items, {
           placeHolder: 'Available modules',
           canPickMany: false
@@ -85,6 +85,15 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       try {
+        const agentId = await vscode.window.showInputBox({
+          prompt: 'Enter agent ID',
+          placeHolder: 'agent-id'
+        });
+
+        if (!agentId) {
+          return;
+        }
+
         const moduleName = await vscode.window.showInputBox({
           prompt: 'Enter module name to run',
           placeHolder: 'module-name'
@@ -94,34 +103,10 @@ export async function activate(context: vscode.ExtensionContext) {
           return;
         }
 
-        const result = await mcpClient.runModule(moduleName);
-        vscode.window.showInformationMessage(`Module started: ${result.jobId}`);
+        const result = await mcpClient.runModule(agentId, moduleName);
+        vscode.window.showInformationMessage(`Module started: ${result.actionId}`);
       } catch (error) {
         vscode.window.showErrorMessage(`Failed to run module: ${error}`);
-      }
-    }),
-
-    vscode.commands.registerCommand('nstrumenta.module.publish', async () => {
-      if (!mcpClient) {
-        vscode.window.showWarningMessage('Please set API key first');
-        return;
-      }
-
-      try {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-          vscode.window.showErrorMessage('No workspace folder open');
-          return;
-        }
-
-        const modulePath = workspaceFolders[0].uri.fsPath;
-        const result = await mcpClient.publishModule(modulePath);
-        
-        vscode.window.showInformationMessage(
-          `Module published successfully${result.version ? ` (v${result.version})` : ''}`
-        );
-      } catch (error) {
-        vscode.window.showErrorMessage(`Failed to publish module: ${error}`);
       }
     }),
 
@@ -132,14 +117,14 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const dataItems = await mcpClient.listData();
+        const result = await mcpClient.listData();
         
-        if (dataItems.length === 0) {
+        if (!result.objects || result.objects.length === 0) {
           vscode.window.showInformationMessage('No data files found');
           return;
         }
 
-        const items = dataItems.map(d => `${d.path} (${d.size} bytes)`);
+        const items = result.objects.map(d => `${d.path} (${d.size} bytes)`);
         vscode.window.showQuickPick(items, {
           placeHolder: 'Data files',
           canPickMany: false
@@ -156,14 +141,14 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       try {
-        const agents = await mcpClient.listAgents();
+        const result = await mcpClient.listAgents();
         
-        if (agents.length === 0) {
+        if (!result.agents || result.agents.length === 0) {
           vscode.window.showInformationMessage('No agents found');
           return;
         }
 
-        const items = agents.map(a => `${a.name || a.id} - ${a.status}`);
+        const items = result.agents.map(([id, data]) => `${data.name || id} - ${data.status || 'unknown'}`);
         vscode.window.showQuickPick(items, {
           placeHolder: 'Active agents',
           canPickMany: false
