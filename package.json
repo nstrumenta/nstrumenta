@@ -2,12 +2,12 @@
   "name": "nstrumenta",
   "version": "3.1.48",
   "description": "cli tool for nstrumenta",
-  "main": "dist/nodejs/index.js",
-  "types": "dist/nodejs/index.d.ts",
+  "main": "dist/agent/index.js",
+  "types": "dist/agent/index.d.ts",
   "typesVersions": {
     "*": {
       "browser": [
-        "dist/browser-esm/browser/client.d.ts"
+        "dist/browser-esm/browser/index.d.ts"
       ]
     }
   },
@@ -17,13 +17,13 @@
         "types": "./dist/browser-esm/browser/index.d.ts",
         "import": "./dist/browser-esm/browser/index.js"
       },
-      "types": "./dist/nodejs/index.d.ts",
-      "import": "./dist/nodejs/index.js",
-      "require": "./dist/nodejs/index.js"
+      "types": "./dist/agent/index.d.ts",
+      "import": "./dist/agent/index.js",
+      "require": "./dist/agent/index.js"
     },
     "./browser": {
-      "types": "./dist/browser-esm/browser/client.d.ts",
-      "import": "./dist/browser-esm/browser/client.js"
+      "types": "./dist/browser-esm/browser/index.d.ts",
+      "import": "./dist/browser-esm/browser/index.js"
     },
     "./cli/commands/module": {
       "types": "./dist/cli/commands/module.d.ts",
@@ -42,12 +42,13 @@
   "scripts": {
     "clean": "rm -rf dist dist-esm",
     "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
-    "build:cli": "tsc --project ./src/cli",
-    "build:nodejs": "tsc --project ./src/nodejs",
-    "build:browser": "tsc --project ./src/browser",
+    "build:lib": "tsc --project ./lib",
+    "build:cli": "tsc --project ./cli",
+    "build:agent": "tsc --project ./agent",
+    "build:browser": "tsc --project ./browser",
     "build:server": "(cd server/app ; rm -rf node_modules ; npm i ; npm run build)",
     "build:vscode-extension": "(cd src/vscode-extension ; rm -rf node_modules ; npm i ; npm run compile)",
-    "build": "npm run build:cli ; npm run build:nodejs ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server ; npm run build:vscode-extension",
+    "build": "npm run build:lib ; npm run build:cli ; npm run build:agent ; npm run build:browser ; npm run build:agent-admin-page ; npm run build:server ; npm run build:vscode-extension",
     "build:all": "npm run build && npm run build:functions && npm run build:data-job-runner && npm run build:frontend",
     "build:functions": "(cd functions ; npm install ; npm run build)",
     "build:data-job-runner": "(cd data-job-runner/app ; npm install ; npm run build)",

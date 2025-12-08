@@ -2,7 +2,7 @@ import { createWriteStream } from 'fs';
 import { access, mkdir, readFile, rm, stat, writeFile } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
-import { QueryOptions } from '../../shared';
+import { QueryOptions } from '../../lib';
 import { McpClient } from '../mcp';
 import { asyncSpawn, endpoints, resolveApiKey } from '../utils';
 import ErrnoException = NodeJS.ErrnoException;

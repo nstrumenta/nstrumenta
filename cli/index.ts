@@ -20,7 +20,7 @@ import { ListMachines } from './commands/machines';
 import { ListServices, StartService } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, ProjectId } from './commands/project';
-import { version } from '../shared/version';
+import { version } from '../lib/version';
 
 export const nstrumentaVersion = version;
 

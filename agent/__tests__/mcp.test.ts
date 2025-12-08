@@ -1,6 +1,6 @@
 import { describe, it, mock } from 'node:test';
 import assert from 'node:assert';
-import type { ModuleExtended } from '../../cli/commands/module.js';
+import type { ModuleExtended } from '../../cli/commands/module';
 
 describe('MCP Server', () => {
   describe('list_modules tool', () => {

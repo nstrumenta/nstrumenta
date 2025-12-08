@@ -2,18 +2,19 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "nodenext",
     "lib": [
       "ESNext"
     ],
     "declaration": true,
-    "rootDir": "..",
-    "outDir": "../../dist",
+    "outDir": "../dist",
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "exclude": ["../**/__tests__/**"]
+  "exclude": [
+    "**/__tests__/**/*"
+  ]
 }

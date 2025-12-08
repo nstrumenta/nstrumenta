@@ -1,8 +1,8 @@
 import { spawn } from 'child_process';
 import { Command } from 'commander';
 import * as path from 'path';
-import { AgentClient } from '../../nodejs/agentClient';
-import { NstrumentaServer } from '../../nodejs/server';
+import { AgentClient } from '../../agent/client';
+import { NstrumentaServer } from '../../server/server';
 
 import { McpClient } from '../mcp';
 import { endpoints, getVersionFromPath, inquiryForSelectModule, resolveApiKey } from '../utils';
