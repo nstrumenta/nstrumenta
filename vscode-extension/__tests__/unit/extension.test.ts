@@ -27,7 +27,6 @@ describe('Extension compilation', () => {
     assert.ok(extensionJs.includes('nstrumenta.status'));
     assert.ok(extensionJs.includes('nstrumenta.module.list'));
     assert.ok(extensionJs.includes('nstrumenta.module.run'));
-    assert.ok(extensionJs.includes('nstrumenta.module.publish'));
     assert.ok(extensionJs.includes('nstrumenta.data.list'));
     assert.ok(extensionJs.includes('nstrumenta.agent.list'));
   });

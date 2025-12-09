@@ -166,7 +166,6 @@ export const uploadFile = async ({
   tags?: string[];
   overwrite?: boolean;
 }): Promise<UploadResponse> => {
-  const apiKey = resolveApiKey();
   let fileBuffer;
   let size;
   let url;
@@ -176,34 +175,24 @@ export const uploadFile = async ({
   size = fileBuffer.length;
   const name = filename.split('/').pop();
 
-  const config = {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name,
-      size,
-      metadata: { tags },
-      overwrite,
-    }),
-  };
-
   try {
-    let response = await fetch(endpoints.GET_UPLOAD_DATA_URL, config);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = (await response.json()) as { uploadUrl: string; remoteFilePath: string };
-    url = data.uploadUrl;
-    remoteFilePath = data.remoteFilePath;
+    const mcp = new McpClient();
+    const result = await mcp.callTool('get_upload_data_url', {
+      name: name || filename,
+      size,
+      tags: tags ? JSON.stringify(tags) : undefined,
+      overwrite: overwrite || false,
+    });
+    
+    url = result.uploadUrl;
+    remoteFilePath = result.filePath;
 
     const putConfig = {
       method: 'PUT',
       body: fileBuffer,
     };
 
-    response = await fetch(url, putConfig);
+    const response = await fetch(url, putConfig);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

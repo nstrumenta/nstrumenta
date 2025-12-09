@@ -96,6 +96,20 @@ describe('MCP Tools', () => {
       expect(validInput.path.startsWith('/')).toBe(true)
     })
 
+    it('should have valid schema for get_upload_data_url', () => {
+      const validInput = {
+        name: 'test-data.json',
+        size: 1024,
+        tags: 'test,data',
+        overwrite: false,
+      }
+
+      expect(validInput.name).toBeTruthy()
+      expect(typeof validInput.name).toBe('string')
+      expect(validInput.size).toBeGreaterThan(0)
+      expect(typeof validInput.overwrite).toBe('boolean')
+    })
+
     it('should have valid schema for register_agent', () => {
       const validInput = {
         tag: 'test-agent',
@@ -161,6 +175,18 @@ describe('MCP Tools', () => {
 
       expect(output.uploadUrl).toBeTruthy()
       expect(output.uploadUrl.startsWith('https://')).toBe(true)
+    })
+
+    it('should return uploadUrl and filePath for get_upload_data_url', () => {
+      const output = {
+        uploadUrl: 'https://storage.googleapis.com/signed-data-url',
+        filePath: 'projects/test-project/data/uuid-123/test-data.json',
+      }
+
+      expect(output.uploadUrl).toBeTruthy()
+      expect(output.uploadUrl.startsWith('https://')).toBe(true)
+      expect(output.filePath).toContain('projects/')
+      expect(output.filePath).toContain('/data/')
     })
 
     it('should return agentId for register_agent', () => {

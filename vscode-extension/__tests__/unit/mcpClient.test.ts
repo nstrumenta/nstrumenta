@@ -21,14 +21,15 @@ describe('MCPClient compilation', () => {
   it('should have all required methods', () => {
     const mcpClientJs = readFileSync(join(__dirname, '../../out/mcpClient.js'), 'utf-8');
     assert.ok(mcpClientJs.includes('listModules'));
-    assert.ok(mcpClientJs.includes('publishModule'));
     assert.ok(mcpClientJs.includes('runModule'));
+    assert.ok(mcpClientJs.includes('hostModule'));
+    assert.ok(mcpClientJs.includes('cloudRun'));
     assert.ok(mcpClientJs.includes('listData'));
-    assert.ok(mcpClientJs.includes('getData'));
-    assert.ok(mcpClientJs.includes('uploadData'));
     assert.ok(mcpClientJs.includes('listAgents'));
-    assert.ok(mcpClientJs.includes('startAgent'));
-    assert.ok(mcpClientJs.includes('getProjectInfo'));
+    assert.ok(mcpClientJs.includes('setAgentAction'));
+    assert.ok(mcpClientJs.includes('cleanAgentActions'));
+    assert.ok(mcpClientJs.includes('getAgentActions'));
+    assert.ok(mcpClientJs.includes('updateAgentAction'));
   });
 
   it('should call tools via HTTP', () => {

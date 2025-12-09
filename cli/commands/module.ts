@@ -350,31 +350,22 @@ export const publishModule = async (module: ModuleExtended) => {
 
   // then, get an upload url to put the tarball into storage
   try {
-    const apiKey = resolveApiKey();
-    const response = await fetch(endpoints.GET_UPLOAD_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
+    const mcp = new McpClient();
+    const result = await mcp.callTool('get_upload_url', {
+      path: remoteFileLocation,
+      metadata: {
+        size: size.toString(),
+        version,
+        name,
+        ...module,
       },
-      body: JSON.stringify({
-        path: remoteFileLocation,
-        size,
-        meta: module,
-      }),
     });
-
-    if (!response.ok) {
-      if (response.status === 409) {
-        console.log(`Conflict: version ${version} exists, using server version`);
-        return fileName;
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = (await response.json()) as { uploadUrl: string };
-    url = data.uploadUrl;
+    url = result.uploadUrl;
   } catch (e) {
+    if (e instanceof Error && e.message.includes('exists')) {
+      console.log(`Conflict: version ${version} exists, using server version`);
+      return fileName;
+    }
     let message = `can't upload ${name}`;
     if (e instanceof Error) {
       message = `${message} [${e.message}]`;
