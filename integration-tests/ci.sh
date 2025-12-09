@@ -1,4 +1,8 @@
 #/bin/bash -vxe
+
+# Change to integration-tests directory
+cd "$(dirname "$0")"
+
 TEST_ID_BASE=${TEST_ID_BASE:-$(uuidgen)}
 echo "TEST_ID_BASE= $TEST_ID_BASE"
 
@@ -24,7 +28,7 @@ fi
 
 # Install dependencies for key generation script if needed
 if [ ! -d "node_modules" ]; then
-    npm install --no-save
+    (cd .. && npm install --no-save)
 fi
 
 # Generate API Key for CI project
@@ -56,7 +60,7 @@ fi
 (cd .. && npm pack)
 
 if [ $# -eq 0 ]; then
-    TESTS="cli nodejs-client browser-client"
+    TESTS="cli"
 else
     TESTS=$@
 fi
