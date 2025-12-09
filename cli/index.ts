@@ -10,14 +10,12 @@ import {
 import {
   Get as GetData,
   List as ListData,
-  Mount as MountData,
   QueryData,
   QueryModules,
-  Unmount as UnmountData,
   Upload as UploadData,
 } from './commands/data';
 import { ListMachines } from './commands/machines';
-import { ListServices, StartService } from './commands/services';
+import { ListServices } from './commands/services';
 import { CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, ProjectId } from './commands/project';
 import { version } from '../lib/version';
@@ -41,14 +39,6 @@ servicesCommand
   .alias('ls')
   .description('List cloud run servies for current project')
   .action(ListServices);
-
-servicesCommand
-  .command('start')
-  .argument('[imageName]', 'docker image for service', 'nstrumenta/agent')
-  .option('--containerCommand <containerCommand>', 'command used to launch container')
-  .option('--containerPort <containerPort>', 'application port in container')
-  .description('start cloud run service')
-  .action(StartService);
 
 const projectCommand = program.command('project');
 projectCommand.command('id').alias('name').description('print project id').action(ProjectId);
@@ -150,10 +140,7 @@ dataCommand
   .description('List data files within project')
   .action(ListData);
 dataCommand
-  .command('mount')
-  .description('mount data to local filesystem (requires gcsfuse)')
-  .action(MountData);
-dataCommand.command('unmount').description('unmount previously mounted data').action(UnmountData);
+
 dataCommand
   .command('upload')
   .option('-t, --tags <tags...>')

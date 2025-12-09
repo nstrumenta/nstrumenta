@@ -13,7 +13,12 @@ import { getDataList } from './api/listStorageObjects';
 import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
-import { createProjectAction } from './api/setAction';
+
+async function createProjectAction(projectId: string, action: any): Promise<string> {
+    const actionDoc = firestore.collection(`${projectId}/actions`).doc();
+    await actionDoc.set(action);
+    return actionDoc.id;
+}
 
 const server = new McpServer({
   name: 'nstrumenta',
@@ -1250,20 +1255,8 @@ export async function handleMcpSseMessage(req: Request, res: Response) {
     await transport.handlePostMessage(req, res, req.body);
 }
 
-export async function notifyActionUpdate(projectId: string, actionId: string) {
-    const uri = `projects://${projectId}/actions/${actionId}`;
-    if (server.server) {
-        try {
-            await server.server.sendResourceUpdated({ uri });
-        } catch (error) {
-            // Ignore "Not connected" error as it just means no clients are listening
-            if ((error as Error).message !== 'Not connected') {
-                console.error('Error sending resource update:', error);
-            }
-        }
-    }
-}
-
+// Notify MCP SSE subscribers of agent action updates
+// Called directly by running jobs/services when they update status
 export async function notifyAgentActionsUpdate(projectId: string, agentId: string) {
     const uri = `projects://${projectId}/agents/${agentId}/actions`;
     if (server.server) {

@@ -27,35 +27,6 @@ export interface Keys {
   [key: string]: string;
 }
 
-// Get server URL from environment or decode from API key
-const getServerUrl = (): string => {
-  const apiUrl = resolveApiUrl();
-  if (apiUrl) return apiUrl;
-  
-  const apiKey = resolveApiKey();
-  if (!apiKey) return '';
-  
-  return Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
-};
-
-export const serverUrl = getServerUrl();
-
-// Endpoint helper for backward compatibility
-export const endpoints = {
-  GET_PROJECT_DOWNLOAD_URL: `${serverUrl}/getProjectDownloadUrl`,
-  LIST_MODULES: `${serverUrl}/listModules`,
-  GET_AGENT_ID_BY_TAG: `${serverUrl}/getAgentIdByTag`,
-  GET_CLOUD_RUN_SERVICES: `${serverUrl}/getCloudRunServices`,
-  GET_MACHINES: `${serverUrl}/getMachines`,
-  GET_DATA_MOUNT: `${serverUrl}/getDataMount`,
-  GET_UPLOAD_DATA_URL: `${serverUrl}/getUploadDataUrl`,
-  QUERY_COLLECTION: `${serverUrl}/queryCollection`,
-  GET_PROJECT: `${serverUrl}/getProject`,
-  SET_ACTION: `${serverUrl}/setAction`,
-  GET_ACTION: `${serverUrl}/getAction`,
-  GET_UPLOAD_URL: `${serverUrl}/getUploadUrl`,
-};
-
 export async function asyncSpawn(
   cmd: string,
   args?: string[],
@@ -120,24 +91,13 @@ export const getFolderFromStorage = async (moduleTarName: string, options: { api
   } catch {
     console.log(`get ${moduleTarName} from storage`);
 
-    // get the download url
+    // get the download url using MCP
     let url: string = '';
-    const downloadUrlConfig = {
-      headers: { 'x-api-key': apiKey, 'content-type': 'application/json' },
-    };
-    const downloadUrlData = { path: `modules/${moduleTarName}` };
     try {
-      const downloadUrlResponse = await fetch(endpoints.GET_PROJECT_DOWNLOAD_URL, {
-        method: 'POST',
-        headers: downloadUrlConfig.headers,
-        body: JSON.stringify(downloadUrlData),
-      });
-
-      if (!downloadUrlResponse.ok) {
-        throw new Error(`HTTP error! status: ${downloadUrlResponse.status}`);
-      }
-
-      url = await downloadUrlResponse.text();
+      const { McpClient } = await import('./mcp');
+      const mcp = new McpClient();
+      const result = await mcp.getDownloadUrl(`modules/${moduleTarName}`);
+      url = result.url;
     } catch (error) {
       throw new Error(error as string);
     }
@@ -185,16 +145,11 @@ export const getModuleFromStorage = async ({
   name: string;
   version?: string;
 }): Promise<ModuleExtended> => {
-  const apiKey = resolveApiKey();
+  const { McpClient } = await import('./mcp');
+  const mcp = new McpClient();
+  const { modules } = await mcp.listModules();
 
-  const response = await fetch(endpoints.LIST_MODULES, {
-    method: 'POST',
-    headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json' },
-  });
-
-  const data = await response.json();
-
-  const serverModules = (data as Module[])
+  const serverModules = (modules as Module[])
     .map((module) => module.name)
     .filter((moduleName) => moduleName?.startsWith(name))
     .map((match) => {

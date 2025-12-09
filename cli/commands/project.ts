@@ -1,40 +1,13 @@
-import { endpoints, resolveApiKey } from '../utils';
+import { McpClient } from '../mcp';
 
 export const Info = async () => {
-  const apiKey = resolveApiKey();
-
-  const response = await fetch(endpoints.GET_PROJECT, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'content-type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  console.log(data);
+  const mcp = new McpClient();
+  const { project } = await mcp.getProject();
+  console.log(project);
 };
 
 export const ProjectId = async () => {
-  const apiKey = resolveApiKey();
-
-  const response = await fetch(endpoints.GET_PROJECT, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'content-type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  const data = (await response.json()) as { id: string };
-  console.log(data.id);
+  const mcp = new McpClient();
+  const { project } = await mcp.getProject();
+  console.log(project.id);
 };

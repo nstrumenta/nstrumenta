@@ -144,4 +144,43 @@ export class McpClient {
       error,
     });
   }
+
+  async getProject(): Promise<{ project: { id: string; [key: string]: any } }> {
+    return this.callTool('get_project', {});
+  }
+
+  async getMachines(): Promise<{ machines: any[] }> {
+    return this.callTool('get_machines', {});
+  }
+
+  async getCloudRunServices(): Promise<{ services: any[] }> {
+    return this.callTool('get_cloud_run_services', {});
+  }
+
+  async queryCollection(collection: string, field: string, value: any): Promise<{ results: any[] }> {
+    return this.callTool('query_collection', {
+      collection,
+      field,
+      value,
+    });
+  }
+
+  async getDownloadUrl(path: string): Promise<{ url: string }> {
+    return this.callTool('get_download_url', { path });
+  }
+
+  async getDataMetadata(path: string): Promise<{ metadata: any }> {
+    return this.callTool('get_data_metadata', { path });
+  }
+
+  async setDataMetadata(path: string, metadata: any): Promise<{ success: boolean }> {
+    return this.callTool('set_data_metadata', {
+      path,
+      metadata,
+    });
+  }
+
+  async registerAgent(tag?: string): Promise<{ agentId: string }> {
+    return this.callTool('register_agent', { tag });
+  }
 }

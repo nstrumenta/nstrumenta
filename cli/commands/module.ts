@@ -5,13 +5,10 @@ import tar from 'tar';
 import { McpClient } from '../mcp';
 import {
   asyncSpawn,
-  endpoints,
   getModuleFromStorage,
   getNearestConfigJson,
   getNstDir,
   getVersionFromPath,
-  resolveApiKey,
-  resolveApiUrl,
 } from '../utils';
 
 const blue = (text: string) => {
@@ -103,37 +100,6 @@ export const CloudRun = async function (
   }
 };
 
-
-export const SetAction = async (options: { action: string; tag?: string }) => {
-  const { action: actionString, tag } = options;
-  const action = JSON.parse(actionString);
-  const apiKey = resolveApiKey();
-
-  try {
-    const response = await fetch(endpoints.SET_ACTION, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-      },
-      body: JSON.stringify({ action }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const actionId = await response.text();
-    console.log(`created action: ${actionId} `, action);
-    return actionId;
-  } catch (err) {
-    console.error('Error:', (err as Error).message);
-    process.exit(1);
-  }
-};
-
-
-
 export type ModuleTypes = 'sandbox' | 'web' | 'nodejs' | 'script' | 'algorithm';
 
 export interface Module {
@@ -188,30 +154,21 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
 };
 
 const waitForModule = async (name: string, version: string) => {
-  const apiKey = resolveApiKey();
   const maxRetries = 20;
   const interval = 1000;
   console.log(`Waiting for module ${name} version ${version} to be indexed...`);
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const response = await fetch(endpoints.LIST_MODULES, {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'content-type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        const modules = (await response.json()) as Module[];
-        const match = modules.find(
-          (m) =>
-            m.name === `${name}-${version}.tar.gz` ||
-            (m.name.startsWith(name) && getVersionFromPath(m.name) === version)
-        );
-        if (match) {
-          console.log(`Module ${name} version ${version} is ready.`);
-          return;
-        }
+      const mcp = new McpClient();
+      const { modules } = await mcp.listModules();
+      const match = modules.find(
+        (m: any) =>
+          m.name === `${name}-${version}.tar.gz` ||
+          (m.name.startsWith(name) && getVersionFromPath(m.name) === version)
+      );
+      if (match) {
+        console.log(`Module ${name} version ${version} is ready.`);
+        return;
       }
     } catch (e) {
       console.log('Error checking module status:', e);
@@ -222,37 +179,7 @@ const waitForModule = async (name: string, version: string) => {
 };
 
 const waitForAction = async (actionId: string) => {
-  const apiKey = resolveApiKey();
-  const maxRetries = 300; // 5 minutes for cloud run
-  const interval = 2000;
-  console.log(`Waiting for action ${actionId} to complete...`);
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const response = await fetch(endpoints.GET_ACTION, {
-        method: 'POST',
-        headers: {
-          'x-api-key': apiKey,
-          'content-type': 'application/json',
-        },
-        body: JSON.stringify({ actionId }),
-      });
-      if (response.ok) {
-        const action = (await response.json()) as { status: string; error?: string };
-        if (action.status === 'complete') {
-          console.log(`Action ${actionId} completed.`);
-          return;
-        }
-        if (action.status === 'error') {
-          throw new Error(`Action ${actionId} failed: ${action.error}`);
-        }
-        console.log(`Action status: ${action.status}`);
-      }
-    } catch (e) {
-      console.log('Error checking action status:', e);
-    }
-    await new Promise((resolve) => setTimeout(resolve, interval));
-  }
-  throw new Error(`Timeout waiting for action ${actionId} to complete.`);
+  console.log(`Action ${actionId} created. Check status via MCP resources.`);
 };
 
 export const Publish = async () => {

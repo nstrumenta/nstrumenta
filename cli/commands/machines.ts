@@ -1,4 +1,4 @@
-import { endpoints, resolveApiKey } from '../utils';
+import { McpClient } from '../mcp';
 
 export interface Machine {
   name: string;
@@ -12,27 +12,10 @@ export interface Machine {
 }
 
 export const GetMachines = async () => {
-  const apiKey = resolveApiKey();
-  const headers = {
-    'x-api-key': apiKey,
-    'Content-Type': 'application/json',
-  };
-
-  const config = {
-    method: 'POST',
-    headers: headers,
-    body: JSON.stringify({}),
-  };
-
   try {
-    const response = await fetch(endpoints.GET_MACHINES, config);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data: Array<Machine> = (await response.json()) as Array<Machine>;
-    return data;
+    const mcp = new McpClient();
+    const { machines } = await mcp.getMachines();
+    return machines as Array<Machine>;
   } catch (error) {
     console.error(`Something went wrong: ${(error as Error).message}`);
     return [];
@@ -41,8 +24,8 @@ export const GetMachines = async () => {
 
 export const ListMachines = async () => {
   try {
-    const response = await GetMachines();
-    console.log(response);
+    const machines = await GetMachines();
+    console.log(machines);
   } catch (error) {
     console.error(error);
   }

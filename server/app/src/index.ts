@@ -14,7 +14,6 @@ import {
   writeFileSync,
 } from 'fs'
 import { mkdir, readFile } from 'fs/promises'
-import * as functions from './api'
 import {
   bucketName,
   serviceAccount,
@@ -22,7 +21,7 @@ import {
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
-import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage, notifyActionUpdate, notifyAgentActionsUpdate } from './mcp'
+import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage } from './mcp'
 import { registerOAuthRoutes } from './oauth'
 
 const version = require('../package.json').version
@@ -74,17 +73,7 @@ const mcpLimiter = rateLimit({
 
 registerOAuthRoutes(app)
 
-Object.keys({ ...functions }).map((fn) => {
-  // console.log(`register POST listener [${fn}]`)
-  app.post(`/${fn}`, apiLimiter, ({ ...functions } as Record<string, any>)[fn])
-})
-
-Object.keys(functions).map((fn) => {
-  // console.log(`register GET listener [${fn}]`)
-  app.get(`/${fn}`, apiLimiter, (functions as Record<string, any>)[fn])
-})
-
-// MCP endpoints
+// MCP JSON-RPC 2.0 endpoints
 app.post('/', mcpLimiter, handleMcpRequest)
 app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
 app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
@@ -337,131 +326,3 @@ async function buildFromGithub(actionPath: string, data: any) {
     .doc(actionPath)
     .set({ lastModified: Date.now(), status: 'complete' }, { merge: true })
 }
-
-// subscribe to all projects
-let projectActionSubscriptions: Map<string, Function> = new Map()
-firestore
-  .collection('projects')
-  .onSnapshot((projectsSnapshot) => {
-    let projectIds: string[] = []
-    projectsSnapshot.forEach(async (project) => {
-      projectIds.push(project.ref.path.split('/')[1])
-    })
-    // unsubscribe to previous if needed
-    projectActionSubscriptions.forEach((unsubscribe, projectId) => {
-      if (!projectIds.includes(projectId)) {
-        console.log(`unsubscribe watching for actions ${projectId}`)
-        unsubscribe()
-        projectActionSubscriptions.delete(projectId)
-      }
-    })
-
-    projectsSnapshot.forEach(async (project) => {
-      const projectId = project.ref.path.split('/')[1]
-      if (projectActionSubscriptions.has(projectId)) {
-        return
-      }
-      console.log(`watching for actions ${projectId}`)
-      // watch for actions
-      projectActionSubscriptions.set(
-        projectId,
-        firestore
-          .collection(`${project.ref.path}/actions`)
-          .onSnapshot((actionsSnapshot) => {
-            // Notify MCP subscribers of changes
-            actionsSnapshot.docChanges().forEach((change) => {
-                if (change.type === 'modified' || change.type === 'added') {
-                    const actionId = change.doc.id;
-                    notifyActionUpdate(projectId, actionId);
-                }
-            });
-
-            actionsSnapshot.forEach((action) => {
-              action.ref.get().then((doc) => {
-                const data = doc.data()
-                if (data?.status != null && data.status === 'pending') {
-                  switch (data.task) {
-                    case 'buildFromGithub':
-                      buildFromGithub(doc.ref.path, data)
-                      break
-                    case 'buildFromFolder':
-                      buildFromFolder(doc.ref.path, data)
-                      break
-                    case 'archiveProject':
-                      archiveService.archiveProject(
-                        doc.ref.path,
-                        data as ActionData,
-                      )
-                      break
-                    case 'duplicateProject':
-                      archiveService.duplicateProject(
-                        doc.ref.path,
-                        data as ActionData,
-                      )
-                      break
-                    case 'deployCloudAgent':
-                      cloudAgentService.deployCloudAgent(
-                        doc.ref.path,
-                        data as ActionData,
-                        apiKeyService,
-                      )
-                      break
-                    case 'deleteDeployedCloudAgent':
-                      cloudAgentService.deleteDeployedCloudAgent(
-                        doc.ref.path,
-                        data as ActionData,
-                      )
-                      break
-                    case 'cloudRun':
-                      try {
-                        cloudDataJobService.createJob(
-                          doc.ref.path,
-                          projectId,
-                          data as ActionData,
-                        )
-                      } catch (err) {
-                        console.error(err)
-                      }
-                      break
-                    case 'startCloudRunService':
-                      try {
-                        cloudDataJobService.createService(
-                          doc.ref.path,
-                          projectId,
-                          data as ActionData,
-                        )
-                      } catch (err) {
-                        console.error(err)
-                      }
-                      break
-                    case 'hostModule':
-                      try {
-                        cloudAdminService.hostModule(
-                          doc.ref.path,
-                          projectId,
-                          data as ActionData,
-                        )
-                      } catch (err) {
-                        console.error(err)
-                      }
-                      break
-                    case 'revokeApiKey':
-                      apiKeyService.revokeApiKey(
-                        doc.ref.path,
-                        projectId,
-                        data as ActionData,
-                      )
-                      break
-                    default:
-                      const unrecognizedMessage = `unrecognized server task:${data?.task}`
-                      console.log(unrecognizedMessage)
-                      doc.ref.set({ status: unrecognizedMessage })
-                      break
-                  }
-                }
-              })
-            })
-          }),
-      )
-    })
-  })
