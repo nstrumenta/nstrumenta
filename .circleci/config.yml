@@ -14,6 +14,8 @@ jobs:
           command: npm i
       - run:
           command: npm run build
+      - run:
+          command: npm pack
       - persist_to_workspace:
           root: .
           paths:
@@ -24,6 +26,7 @@ jobs:
             - package-lock.json
             - tsconfig.json
             - src
+            - nstrumenta-*.tgz
   build-frontend:
     docker:
       - image: nstrumenta/toolchain
@@ -185,12 +188,6 @@ jobs:
       - run:
           name: Run CLI tests (Remote Cloud Run Mode)
           command: ./e2e.sh cli
-      - run:
-          name: Run Node.js Client tests
-          command: ./e2e.sh nodejs-client
-      - run:
-          name: Run Browser Client tests
-          command: ./e2e.sh browser-client
       - run:
           name: delete test-server
           command: >

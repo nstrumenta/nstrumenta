@@ -54,13 +54,17 @@ fi
 # Ensure nstrumenta_default network exists
 docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network create nstrumenta_default
 
-# Always build fresh for e2e tests to avoid stale tarball issues
-echo "Building fresh CLI and server for e2e tests..."
-(cd .. && npm run build:cli && npm run build:server)
-echo "Removing old tarballs..."
-rm -f ../nstrumenta-*.tgz
-echo "Packing nstrumenta..."
-(cd .. && npm pack)
+# Build and pack unless CI flag is set (CI uses persisted artifacts from build job)
+if [ -z "$CI" ]; then
+    echo "Building fresh CLI and server for e2e tests..."
+    (cd .. && npm run build:cli && npm run build:server)
+    echo "Removing old tarballs..."
+    rm -f ../nstrumenta-*.tgz
+    echo "Packing nstrumenta..."
+    (cd .. && npm pack)
+else
+    echo "Skipping build (using cached artifacts from CI workspace)"
+fi
 
 if [ $# -eq 0 ]; then
     TESTS="cli"
