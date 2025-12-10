@@ -55,7 +55,6 @@ export const auth: AuthFunction = async (req, res) => {
 
     const secretAccessKey = rawKey.substring(16)
     const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || ''
-    console.log(`Auth: checking key ${docId}, pepper length: ${pepper.length}`);
 
     const hashBuffer = (await new Promise((resolve, reject) => {
       crypto.scrypt(

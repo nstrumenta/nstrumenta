@@ -149,6 +149,10 @@ export class McpClient {
     return this.callTool('get_project', {});
   }
 
+  async notifyResourceUpdate(uri: string): Promise<{ success: boolean }> {
+    return this.callTool('notify_resource_update', { uri });
+  }
+
   async getMachines(): Promise<{ machines: any[] }> {
     return this.callTool('get_machines', {});
   }
@@ -182,5 +186,40 @@ export class McpClient {
 
   async registerAgent(tag?: string): Promise<{ agentId: string }> {
     return this.callTool('register_agent', { tag });
+  }
+
+  async getUploadUrl(
+    path: string,
+    metadata?: Record<string, any>
+  ): Promise<{ uploadUrl: string }> {
+    return this.callTool('get_upload_url', {
+      path,
+      metadata,
+    });
+  }
+
+  async getUploadDataUrl(
+    name: string,
+    overwrite?: boolean
+  ): Promise<{ uploadUrl: string; filePath: string }> {
+    return this.callTool('get_upload_data_url', {
+      name,
+      overwrite,
+    });
+  }
+
+  async indexModule(params: {
+    path: string;
+    name: string;
+    version: string;
+    size?: string;
+    type?: string;
+    entry?: string;
+  }): Promise<{ success: boolean }> {
+    return this.callTool('index_module', params);
+  }
+
+  async watchAction(actionId: string, timeout?: number): Promise<{ status: string; error?: string }> {
+    return this.callTool('watch_action', { actionId, timeout });
   }
 }

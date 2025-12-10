@@ -74,8 +74,7 @@ export async function asyncSpawn(
   return childProcess;
 }
 
-export const getFolderFromStorage = async (moduleTarName: string, options: { apiKey: string }) => {
-  const { apiKey } = options;
+export const getFolderFromStorage = async (moduleTarName: string) => {
   const nstDir = await getNstDir(process.cwd());
   const file = `${nodePath.join(nstDir, moduleTarName)}`;
   const extractFolder = nodePath.join(nstDir, moduleTarName.replace('.tar.gz', ''));
@@ -94,7 +93,7 @@ export const getFolderFromStorage = async (moduleTarName: string, options: { api
     // get the download url using MCP
     let url: string = '';
     try {
-      const { McpClient } = await import('./mcp');
+      const { McpClient } = await import('./mcp.js');
       const mcp = new McpClient();
       const result = await mcp.getDownloadUrl(`modules/${moduleTarName}`);
       url = result.url;
@@ -145,7 +144,7 @@ export const getModuleFromStorage = async ({
   name: string;
   version?: string;
 }): Promise<ModuleExtended> => {
-  const { McpClient } = await import('./mcp');
+  const { McpClient } = await import('./mcp.js');
   const mcp = new McpClient();
   const { modules } = await mcp.listModules();
 
@@ -169,7 +168,7 @@ export const getModuleFromStorage = async ({
 
   const path = `${name}-${version}.tar.gz`;
 
-  const folder = await getFolderFromStorage(path, { apiKey });
+  const folder = await getFolderFromStorage(path);
 
   let moduleConfig: Module;
   try {

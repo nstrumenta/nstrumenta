@@ -1,4 +1,11 @@
-#/bin/bash -vxe
+#!/bin/bash -e
+
+# Check if Docker is running early
+if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: Docker is not running."
+    echo "Please start Docker Desktop or run 'sudo dockerd' in the background."
+    exit 1
+fi
 
 # Change to integration-tests directory
 cd "$(dirname "$0")"
@@ -47,16 +54,12 @@ fi
 # Ensure nstrumenta_default network exists
 docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network create nstrumenta_default
 
-# Create tarball of the current package
+# Always build fresh for e2e tests to avoid stale tarball issues
+echo "Building fresh CLI and server for e2e tests..."
+(cd .. && npm run build:cli && npm run build:server)
+echo "Removing old tarballs..."
+rm -f ../nstrumenta-*.tgz
 echo "Packing nstrumenta..."
-if [ ! -d "../dist" ]; then
-    echo "Dist folder not found, building..."
-    if [ ! -d "../node_modules" ]; then
-         echo "Root node_modules not found, installing..."
-         (cd .. && npm install)
-    fi
-    (cd .. && npm run build)
-fi
 (cd .. && npm pack)
 
 if [ $# -eq 0 ]; then

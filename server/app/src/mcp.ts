@@ -15,7 +15,7 @@ import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {
-    const actionDoc = firestore.collection(`${projectId}/actions`).doc();
+    const actionDoc = firestore.collection(`projects/${projectId}/actions`).doc();
     await actionDoc.set(action);
     return actionDoc.id;
 }
@@ -448,6 +448,137 @@ server.registerTool(
 );
 
 server.registerTool(
+    'update_action_status',
+    {
+        title: 'Update Action Status',
+        description: 'Updates the status of a project action (used by cloud run jobs).',
+        inputSchema: {
+            actionId: z.string().describe('ID of the action to update'),
+            status: z.string().describe('New status (pending, running, complete, error)'),
+            error: z.string().optional().describe('Error message if status is error'),
+            progress: z.number().optional().describe('Progress percentage (0-100)'),
+            logs: z.array(z.string()).optional().describe('Log messages'),
+        },
+        outputSchema: {
+            success: z.boolean().describe('Whether update succeeded'),
+        },
+    },
+    async ({ actionId, status, error, progress, logs }) => {
+        try {
+            const projectId = getProjectId();
+            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            
+            const updateData: Record<string, any> = {
+                status,
+                lastUpdated: Date.now(),
+            };
+            
+            if (error !== undefined) updateData.error = error;
+            if (progress !== undefined) updateData.progress = progress;
+            if (logs !== undefined) updateData.logs = logs;
+            
+            await firestore.doc(actionPath).update(updateData);
+
+            return {
+                content: [{ type: 'text', text: `Action ${actionId} updated to ${status}` }],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to update action status: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'watch_action',
+    {
+        title: 'Watch Action',
+        description: 'Watches a project action for status updates via streaming.',
+        inputSchema: {
+            actionId: z.string().describe('ID of the action to watch'),
+            timeout: z.number().optional().describe('Timeout in milliseconds (default: 600000)'),
+        },
+        outputSchema: {
+            status: z.string().describe('Final status of the action'),
+            error: z.string().optional().describe('Error message if failed'),
+        },
+    },
+    async ({ actionId, timeout = 600000 }) => {
+        try {
+            const projectId = getProjectId();
+            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            
+            return new Promise((resolve, reject) => {
+                const startTime = Date.now();
+                let lastStatus = '';
+                
+                const checkAction = async () => {
+                    try {
+                        const doc = await firestore.doc(actionPath).get();
+                        if (!doc.exists) {
+                            reject(new Error(`Action ${actionId} not found`));
+                            return;
+                        }
+                        
+                        const data = doc.data();
+                        const status = data?.status || 'unknown';
+                        
+                        // Send progress updates
+                        if (status !== lastStatus) {
+                            lastStatus = status;
+                            console.log(`Action ${actionId} status: ${status}`);
+                        }
+                        
+                        // Check for completion
+                        if (status === 'complete' || status === 'success') {
+                            resolve({
+                                content: [{
+                                    type: 'text',
+                                    text: `Action completed successfully`
+                                }],
+                                structuredContent: { status: 'complete' }
+                            });
+                            return;
+                        }
+                        
+                        if (status === 'error' || status === 'failed') {
+                            resolve({
+                                content: [{
+                                    type: 'text',
+                                    text: `Action failed: ${data?.error || 'Unknown error'}`
+                                }],
+                                structuredContent: { 
+                                    status: 'error',
+                                    error: data?.error || 'Unknown error'
+                                }
+                            });
+                            return;
+                        }
+                        
+                        // Check timeout
+                        if (Date.now() - startTime > timeout) {
+                            reject(new Error(`Timeout waiting for action ${actionId} after ${timeout}ms`));
+                            return;
+                        }
+                        
+                        // Continue polling
+                        setTimeout(checkAction, 2000);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                checkAction();
+            });
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to watch action: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
     'set_agent_action',
     {
         title: 'Set Agent Action',
@@ -754,6 +885,55 @@ server.registerTool(
 );
 
 server.registerTool(
+    'index_module',
+    {
+        title: 'Index Module',
+        description: 'Indexes a module in Firestore after successful upload to cloud storage.',
+        inputSchema: {
+            path: z.string().describe('Storage path of the module file'),
+            name: z.string().describe('Module name'),
+            version: z.string().describe('Module version'),
+            size: z.string().optional().describe('File size in bytes'),
+            type: z.string().optional().describe('Module type (nodejs, script, etc)'),
+            entry: z.string().optional().describe('Entry point'),
+        },
+        outputSchema: {
+            success: z.boolean().describe('Whether indexing succeeded'),
+        },
+    },
+    async ({ path, name, version, size, type, entry }) => {
+        try {
+            const projectId = getProjectId();
+            const modulesPath = `projects/${projectId}/modules`;
+            const moduleDoc = firestore.collection(modulesPath).doc();
+            
+            // Filter out undefined values to avoid Firestore errors
+            const moduleData: Record<string, any> = {
+                name,
+                version,
+                path,
+                lastModified: Date.now(),
+                createdAt: Date.now(),
+            };
+            
+            if (size !== undefined) moduleData.size = parseInt(size, 10);
+            if (type !== undefined) moduleData.type = type;
+            if (entry !== undefined) moduleData.entry = entry;
+            
+            await moduleDoc.set(moduleData);
+
+            return {
+                content: [{ type: 'text', text: 'Module indexed successfully' }],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to index module: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
     'get_upload_url',
     {
         title: 'Get Upload URL',
@@ -805,13 +985,13 @@ server.registerTool(
             const projectId = getProjectId();
             const { generateV4UploadSignedUrl } = require('./shared/utils');
             const { v4: uuid } = require('uuid');
-            const { storage } = require('./authentication/ServiceAccount');
+            const { storage, bucketName } = require('./authentication/ServiceAccount');
             
             const timestamp = Date.now();
             const dataId = uuid();
             const filePath = `projects/${projectId}/data/${dataId}/${name}`;
             
-            const bucket = storage.bucket();
+            const bucket = storage.bucket(bucketName);
             const file = bucket.file(filePath);
             
             if (!overwrite) {
@@ -1255,18 +1435,35 @@ export async function handleMcpSseMessage(req: Request, res: Response) {
     await transport.handlePostMessage(req, res, req.body);
 }
 
-// Notify MCP SSE subscribers of agent action updates
-// Called directly by running jobs/services when they update status
-export async function notifyAgentActionsUpdate(projectId: string, agentId: string) {
-    const uri = `projects://${projectId}/agents/${agentId}/actions`;
+// Notify MCP SSE subscribers of resource updates
+export async function notifyResourceUpdate(uri: string) {
     if (server.server) {
         try {
             await server.server.sendResourceUpdated({ uri });
         } catch (error) {
             // Ignore "Not connected" error as it just means no clients are listening
             if ((error as Error).message !== 'Not connected') {
-                console.error('Error sending agent actions update:', error);
+                console.error('Error sending resource update:', error);
             }
         }
     }
+}
+
+// Notify MCP SSE subscribers of agent action updates
+// Called directly by running jobs/services when they update status
+export async function notifyAgentActionsUpdate(projectId: string, agentId: string) {
+    const uri = `projects://${projectId}/agents/${agentId}/actions`;
+    await notifyResourceUpdate(uri);
+}
+
+// Notify about module updates
+export async function notifyModuleUpdate(projectId: string, moduleName: string) {
+    const uri = `modules/${moduleName}`;
+    await notifyResourceUpdate(uri);
+}
+
+// Notify about data updates
+export async function notifyDataUpdate(projectId: string, filePath: string) {
+    const uri = `data/${filePath}`;
+    await notifyResourceUpdate(uri);
 }

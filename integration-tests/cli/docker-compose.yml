@@ -12,6 +12,9 @@ services:
       - IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}
     networks:
       - nstrumenta_default
+    depends_on:
+      server:
+        condition: service_healthy
   server:
     container_name: nstrumenta-server
     build:
@@ -27,6 +30,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - nstrumenta_default
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5999/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
 
 networks:
   nstrumenta_default:

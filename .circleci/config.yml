@@ -181,16 +181,16 @@ jobs:
           name: Run CLI tests (Local Cloud Run Mode)
           command: |
             export NSTRUMENTA_CLOUD_RUN_MODE=local
-            API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./ci.sh cli
+            API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./e2e.sh cli
       - run:
           name: Run CLI tests (Remote Cloud Run Mode)
-          command: ./ci.sh cli
+          command: ./e2e.sh cli
       - run:
           name: Run Node.js Client tests
-          command: ./ci.sh nodejs-client
+          command: ./e2e.sh nodejs-client
       - run:
           name: Run Browser Client tests
-          command: ./ci.sh browser-client
+          command: ./e2e.sh browser-client
       - run:
           name: delete test-server
           command: >

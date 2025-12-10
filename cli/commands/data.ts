@@ -1,5 +1,5 @@
 import { createWriteStream } from 'fs';
-import { access, mkdir, stat } from 'fs/promises';
+import { access, mkdir, readFile, stat } from 'fs/promises';
 import { pipeline as streamPipeline } from 'stream';
 import { promisify } from 'util';
 import { QueryOptions } from '../../lib';
@@ -92,12 +92,10 @@ export const uploadFile = async ({
 
   try {
     const mcp = new McpClient();
-    const result = await mcp.callTool('get_upload_data_url', {
-      name: name || filename,
-      size,
-      tags: tags ? JSON.stringify(tags) : undefined,
-      overwrite: overwrite || false,
-    });
+    const result = await mcp.getUploadDataUrl(
+      name || filename,
+      overwrite || false
+    );
     
     url = result.uploadUrl;
     remoteFilePath = result.filePath;
@@ -127,6 +125,12 @@ export const query = async ({
   limit,
   collection,
 }: QueryOptions): Promise<Array<Record<string, unknown>>> => {
+  if (!collection) {
+    throw new Error('collection parameter is required');
+  }
+  if (!field) {
+    throw new Error('field parameter is required');
+  }
   try {
     const mcp = new McpClient();
     const { results } = await mcp.queryCollection(collection, field, compareValue);

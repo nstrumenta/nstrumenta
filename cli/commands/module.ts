@@ -153,33 +153,21 @@ const readModuleConfigs = async (moduleMetas: ModuleMeta[]): Promise<ModuleExten
   return Promise.all(promises);
 };
 
-const waitForModule = async (name: string, version: string) => {
-  const maxRetries = 20;
-  const interval = 1000;
-  console.log(`Waiting for module ${name} version ${version} to be indexed...`);
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      const mcp = new McpClient();
-      const { modules } = await mcp.listModules();
-      const match = modules.find(
-        (m: any) =>
-          m.name === `${name}-${version}.tar.gz` ||
-          (m.name.startsWith(name) && getVersionFromPath(m.name) === version)
-      );
-      if (match) {
-        console.log(`Module ${name} version ${version} is ready.`);
-        return;
-      }
-    } catch (e) {
-      console.log('Error checking module status:', e);
-    }
-    await new Promise((resolve) => setTimeout(resolve, interval));
-  }
-  throw new Error(`Timeout waiting for module ${name} version ${version} to be indexed.`);
-};
-
 const waitForAction = async (actionId: string) => {
-  console.log(`Action ${actionId} created. Check status via MCP resources.`);
+  console.log(`Action ${actionId} created. Watching for completion...`);
+  try {
+    const mcp = new McpClient();
+    const result = await mcp.watchAction(actionId, 600000);
+    if (result.status === 'complete') {
+      console.log('✓ Action completed successfully');
+    } else if (result.status === 'error') {
+      console.error(`✗ Action failed: ${result.error}`);
+      process.exit(1);
+    }
+  } catch (err) {
+    console.error(`Error watching action: ${(err as Error).message}`);
+    process.exit(1);
+  }
 };
 
 export const Publish = async () => {
@@ -208,6 +196,7 @@ export const Publish = async () => {
   console.log(`publishing:`, modules);
 
   try {
+    // Publish modules in parallel
     const promises = modules.map((module) =>
       publishModule({
         ...module,
@@ -216,10 +205,7 @@ export const Publish = async () => {
     const results = await Promise.all(promises);
 
     console.log(results);
-
-    for (const module of modules) {
-      await waitForModule(module.name, module.version);
-    }
+    console.log('Module publish complete - modules are being indexed');
   } catch (err) {
     console.error((err as Error).message);
     process.exit(1);
@@ -278,15 +264,15 @@ export const publishModule = async (module: ModuleExtended) => {
   // then, get an upload url to put the tarball into storage
   try {
     const mcp = new McpClient();
-    const result = await mcp.callTool('get_upload_url', {
-      path: remoteFileLocation,
-      metadata: {
+    const result = await mcp.getUploadUrl(
+      `/${remoteFileLocation}`,
+      {
+        ...module,
         size: size.toString(),
         version,
         name,
-        ...module,
-      },
-    });
+      }
+    );
     url = result.uploadUrl;
   } catch (e) {
     if (e instanceof Error && e.message.includes('exists')) {
@@ -304,6 +290,7 @@ export const publishModule = async (module: ModuleExtended) => {
 
   // start the request, return promise
   try {
+    const mcp = new McpClient();
     const response = await fetch(url, {
       method: 'PUT',
       body: fileBuffer,
@@ -312,8 +299,19 @@ export const publishModule = async (module: ModuleExtended) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    // Index the module in Firestore after successful upload
+    await mcp.indexModule({
+      path: remoteFileLocation,
+      name,
+      version,
+      size: size.toString(),
+      type: module.nstrumentaModuleType,
+      entry: module.entry,
+    });
   } catch (error) {
     console.error(`Error uploading file: ${(error as Error).message}`);
+    throw error;
   }
   return fileName;
 };

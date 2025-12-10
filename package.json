@@ -68,6 +68,8 @@
     "test:coverage": "node --test --experimental-test-coverage --experimental-strip-types agent/__tests__/**/*.test.ts",
     "test:vscode-extension": "node --test --experimental-strip-types vscode-extension/__tests__/unit/**/*.test.ts",
     "test:all": "npm run test:client && npm run test:server && npm run test:vscode-extension",
+    "test:e2e": "./integration-tests/e2e.sh",
+    "test:e2e:quick": "rm -f nstrumenta-*.tgz && ./integration-tests/e2e.sh",
     "profile": "npm run build:cli ; npx 0x --output-dir profile ./dist/cli/index.js agent start --tag=local",
     "format": "prettier -w ./",
     "release": "npm run clean; npm run build ; release-it"

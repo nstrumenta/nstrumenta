@@ -1,7 +1,10 @@
 {
     "compilerOptions": {
-        "moduleResolution": "node",
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
         "esModuleInterop": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "types": ["node", "vitest/globals"]
     }
 }

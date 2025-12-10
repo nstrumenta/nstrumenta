@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { randomUUID } from 'node:crypto';
 import { asyncSpawn } from '../utils/AsyncSpawn';
-import { pollNstrumenta } from '../utils/PollNstrumenta';
 
 const testId = process.env.TEST_ID || randomUUID();
 
@@ -73,13 +72,10 @@ describe('web', () => {
     });
     console.log(output);
     expect(output).not.toContain('Request failed');
-
-    const result = await pollNstrumenta({
-      matchString: moduleName,
-      interval: 1_000,
-      timeout: 8_000,
-      command: `module list --filter ${moduleName}`,
-    });
+    expect(output).toContain('complete'); // Module upload completed
+    
+    // Verify module is available
+    const result = await asyncSpawn('nst', `module list --filter ${moduleName}`.split(' '), { quiet: true });
     expect(result).toEqual(expect.stringMatching(moduleName));
   }, 10_000);
 

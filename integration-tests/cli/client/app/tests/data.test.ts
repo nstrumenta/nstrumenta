@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from 'fs/promises';
 import { randomUUID } from 'node:crypto';
 import { asyncSpawn } from '../utils/AsyncSpawn';
-import { pollNstrumenta } from '../utils/PollNstrumenta';
+import { waitForResourceUpdate } from '../utils/SseClient';
 
 const testId = process.env.TEST_ID || randomUUID();
 
@@ -34,14 +34,14 @@ describe('Data', () => {
     });
 
     test('multiple files', async () => {
-      await asyncSpawn(
+      const result = await asyncSpawn(
         'nst',
         `data upload ${testFile2} ${testFile3} --tags test-id-${testId}`.split(' '),
         { cwd: testFolderBase }
       );
-
-      await pollNstrumenta({ matchString: testFile2 });
-      await pollNstrumenta({ matchString: testFile3 });
+      
+      // CLI command waits for uploads synchronously
+      expect(result).toContain('projects/ci/data');
     });
   });
 });

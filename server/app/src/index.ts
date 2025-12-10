@@ -73,14 +73,14 @@ const mcpLimiter = rateLimit({
 
 registerOAuthRoutes(app)
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', version })
+})
+
 // MCP JSON-RPC 2.0 endpoints
 app.post('/', mcpLimiter, handleMcpRequest)
 app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
 app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
-
-app.get('/', (req, res) => {
-  res.status(200).send('server is running')
-})
 
 const server = require('http').Server(app)
 
