@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.0.1](/compare/v4.0.0...v4.0.1) (2025-12-11)
+
+
+### Bug Fixes
+
+* disable npm publish in release-it due to passkey 2FA incompatibility 90601d1
+* resolve jws vulnerability in frontend and functions fe266d8
+* update requests and esbuild to resolve security vulnerabilities e3fe524
+
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
 ## [4.0.0](https://github.com/nstrumenta/nstrumenta/compare/v3.1.48...v4.0.0) (2025-12-11)
