@@ -28,7 +28,8 @@ const uploadDataBase = async (
 
   try {
     const timestamp = Date.now()
-    const normalizedFolder = folder ? folder.replace(/^\/+|\/+$/g, '') : ''
+    // Use non-backtracking approach to strip leading/trailing slashes
+    const normalizedFolder = folder ? folder.replace(/^\/+/, '').replace(/\/+$/, '') : ''
     const folderPath = normalizedFolder ? `${normalizedFolder}/` : ''
     const filePath = `projects/${projectId}/data/${folderPath}${name}`
 

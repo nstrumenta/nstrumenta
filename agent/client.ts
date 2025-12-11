@@ -52,7 +52,6 @@ export class AgentClient {
 
     try {
       const data = { tag: this.tag };
-      console.log(`${this.serverUrl}/registerAgent`, data);
       const response = await fetch(`${this.serverUrl}/registerAgent`, {
         method: 'post',
         headers: { 'x-api-key': this.apiKey, 'content-type': 'application/json' },

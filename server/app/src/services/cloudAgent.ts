@@ -63,7 +63,8 @@ export const createCloudAgentService = ({
     options?: { cwd?: string },
     errCB?: (code: number) => void,
   ) {
-    console.log(`spawn [${cmd} ${args?.join(' ')}]`)
+    const safeArgs = args?.map(arg => arg.includes('NSTRUMENTA_API_KEY') || arg.length > 40 ? '[REDACTED]' : arg)
+    console.log(`spawn [${cmd} ${safeArgs?.join(' ')}]`)
     const process = spawn(cmd, args || [], options)
 
     let output = ''

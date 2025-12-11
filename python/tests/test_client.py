@@ -235,7 +235,6 @@ class TestClientIntegration(unittest.TestCase):
     def test_get_project(self):
         client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
         data = client.get_project()
-        print(data)
         self.assertTrue(data)
 
     @unittest.skipUnless(os.getenv('NSTRUMENTA_API_KEY'), "API key required for integration tests")
@@ -287,7 +286,6 @@ class TestClientIntegration(unittest.TestCase):
     def test_list_modules(self):
         client = NstrumentaClient(os.getenv('NSTRUMENTA_API_KEY'))
         data = client.list_modules()
-        print(data)
         self.assertTrue(isinstance(data, list))
 
 

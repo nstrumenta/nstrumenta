@@ -27,7 +27,7 @@ const getAgentIdByTagBase: APIEndpoint<GetAgentIdByTagArgs> = async (
       .status(200)
       .send(machines.docs.map((doc: QueryDocumentSnapshot) => doc.id)[0])
   } catch (error) {
-    return res.status(400).send((error as Error).message)
+    return res.status(400).json({ error: 'Failed to get agent ID' })
   }
 }
 

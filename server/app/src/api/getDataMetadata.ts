@@ -38,7 +38,7 @@ const getDataMetadataBase: APIEndpoint<GetDataMetadataArgs> = async (
 
     return res.status(200).send(resultsMetadata)
   } catch (error) {
-    return res.status(400).send((error as Error).message)
+    return res.status(400).json({ error: 'Failed to get metadata' })
   }
 }
 

@@ -30,7 +30,7 @@ const updateAgentBase: APIEndpoint<UpdateAgentArgs> = async (
     return res.status(200).send(properties)
   } catch (error) {
     console.error(error)
-    res.status(404).send(`Error updating agent ${(error as Error).message}`)
+    res.status(404).json({ error: 'Failed to update agent' })
   }
 }
 

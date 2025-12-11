@@ -35,7 +35,7 @@ export const auth: AuthFunction = async (req, res) => {
     if (rawKey.length === 48 && /^[0-9a-f]+$/i.test(rawKey)) {
       docId = rawKey.substring(0, 16)
     } else {
-      console.log('Auth failed: invalid key format', rawKey);
+      console.log('Auth failed: invalid key format');
       return { authenticated: false, message: 'invalid key format', projectId: '' }
     }
 
@@ -44,12 +44,12 @@ export const auth: AuthFunction = async (req, res) => {
     ).data()
 
     if (docData == undefined) {
-      console.log('Auth failed: key not found in firestore', docId);
+      console.log('Auth failed: key not found in firestore');
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
     if (!docData.salt || !docData.hash) {
-      console.log('Auth failed: invalid key data in firestore', docId);
+      console.log('Auth failed: invalid key data in firestore');
       return { authenticated: false, message: 'invalid key data', projectId: '' }
     }
 

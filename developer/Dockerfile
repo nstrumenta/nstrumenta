@@ -13,6 +13,6 @@ WORKDIR /workspace
 
 RUN ln -s /usr/bin/python3 /usr/bin/python
 
-COPY cluster/developer/requirements.txt .
+COPY developer/requirements.txt .
 
 RUN pip install -r requirements.txt

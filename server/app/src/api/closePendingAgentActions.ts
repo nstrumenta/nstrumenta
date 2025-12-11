@@ -31,7 +31,7 @@ const closePendingAgentActionsBase: APIEndpoint<
     await cancelAgentActions(projectId, agentId)
     return res.status(200).send()
   } catch (error) {
-    res.status(500).send(`Something went wrong: ${(error as Error).message}`)
+    res.status(500).json({ error: 'Failed to close pending actions' })
   }
 }
 
