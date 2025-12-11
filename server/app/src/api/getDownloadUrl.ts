@@ -42,9 +42,9 @@ const getDownloadUrlBase =
         error.message &&
         error.message === `file doesn't exist`
       ) {
-        return res.status(404).send(error.message)
+        return res.status(404).json({ error: 'File not found' })
       }
-      res.status(500).send(`Something went wrong`)
+      res.status(500).json({ error: 'Something went wrong' })
     }
   }
 export const getDownloadUrl = withAuth(getDownloadUrlBase('modules/'))

@@ -36,7 +36,7 @@ const verifyTokenBase: APIEndpoint<verifyTokenArgs> = async (
       throw new TypeError('wrong projectId in token')
     return res.status(200).send()
   } catch (e) {
-    return res.status(401).send(e)
+    return res.status(401).json({ error: 'Unauthorized' })
   }
 }
 

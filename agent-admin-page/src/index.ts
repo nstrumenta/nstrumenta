@@ -10,19 +10,6 @@ const init = async () => {
   const healthEl = document.getElementById('health');
   const statusEl = document.getElementById('status');
 
-  // Get API key from URL params or localStorage
-  const params = new URL(window.location.href).searchParams;
-  const apiKeyParam = params.get('apiKey');
-  if (apiKeyParam) {
-    localStorage.setItem('apiKey', apiKeyParam);
-  }
-  const apiKey = apiKeyParam || localStorage.getItem('apiKey');
-
-  if (!apiKey) {
-    if (statusEl) statusEl.innerText = 'No API key provided';
-    return;
-  }
-
   // Simple health check using MCP HTTP endpoint
   try {
     const response = await fetch('/health');

@@ -69,7 +69,7 @@ const setDataMetadataBase: APIEndpoint<SetDataMetadataArgs> = async (
 
     return res.status(200).send(updatedMetadata)
   } catch (error) {
-    return res.status(400).send((error as Error).message)
+    return res.status(400).json({ error: 'Failed to update metadata' })
   }
 }
 

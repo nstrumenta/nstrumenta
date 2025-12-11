@@ -46,7 +46,10 @@ export const createCloudDataJobService = ({
     options?: { cwd?: string; quiet?: boolean },
     errCB?: (code: number) => void,
   ) {
-    if (!options?.quiet) console.log(`${cmd} ${args?.join(' ')}`)
+    if (!options?.quiet) {
+      const safeArgs = args?.map(arg => arg.includes('NSTRUMENTA_API_KEY') || arg.length > 40 ? '[REDACTED]' : arg)
+      console.log(`${cmd} ${safeArgs?.join(' ')}`)
+    }
     const process = spawn(cmd, args || [], options)
 
     let output = ''
@@ -66,9 +69,6 @@ export const createCloudDataJobService = ({
       }
 
       throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
-    }
-    if (!options?.quiet) {
-      console.log(`${cmd} ${args?.join(' ')}`, output, error)
     }
     return output
   }
