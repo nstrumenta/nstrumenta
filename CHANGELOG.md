@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/nstrumenta/nstrumenta/compare/v3.1.48...v4.0.0) (2025-12-11)
+
+### Features
+
+* migrate CLI agent and data commands to MCP ([#207](https://github.com/nstrumenta/nstrumenta/pull/207)) ([ab4b785](https://github.com/nstrumenta/nstrumenta/commit/ab4b785))
+* enable npm and PyPI publishing in release process
+* add Python packaging tools to devcontainer
+* unified version management across monorepo
+
 ### [3.1.48](https://github.com/nstrumenta/nstrumenta/compare/v3.1.47...v3.1.48) (2025-11-30)
 
 
