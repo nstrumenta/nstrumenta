@@ -1,0 +1,42 @@
+services:
+  cli:
+    container_name: cli
+    build:
+      context: ../..
+      dockerfile: ./integration-tests/cli/client/Dockerfile
+    environment:
+      - TEST_ID=${TEST_ID}
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL:-http://nstrumenta-server:5999}
+      - IMAGE_REPOSITORY=${IMAGE_REPOSITORY}
+      - IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}
+    networks:
+      - nstrumenta_default
+    depends_on:
+      server:
+        condition: service_healthy
+  server:
+    container_name: nstrumenta-server
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    environment:
+      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
+      - CI=${CI}
+      - TEST_ID=${TEST_ID}
+      - NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - nstrumenta_default
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5999/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+networks:
+  nstrumenta_default:
+    external: true
