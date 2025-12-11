@@ -2,10 +2,10 @@
   "git": {
     "commitMessage": "chore: release v${version}",
     "tagName": "v${version}",
-    "requireCleanWorkingDir": false
+    "requireCleanWorkingDir": true
   },
   "npm": {
-    "publish": false
+    "publish": true
   },
   "github": {
     "release": false
@@ -17,6 +17,7 @@
     }
   },
   "hooks": {
-    "after:bump": "sed -i \"s/export const version = '.*';/export const version = '${version}';/\" src/shared/version.ts"
+    "after:bump": "sed -i \"s/export const version = '.*';/export const version = '${version}';/\" lib/version.ts && sed -i \"s/version='.*'/version='${version}'/\" python/setup.py",
+    "after:release": "cd python && python3 setup.py sdist bdist_wheel && twine upload dist/*"
   }
 }
