@@ -2,11 +2,8 @@
 
 cd "$(dirname "$0")"
 
-# Agent uses official Node.js image with ARG
-NODE_VERSION=24.12.0
-
 # agent
-docker build --build-arg NODE_VERSION=$NODE_VERSION -t $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG -f ./agent/Dockerfile .
+docker build -t $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG -f ./agent/Dockerfile .
 docker push $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG
 
 # data-job-runner uses nstrumenta/base (no NODE_VERSION arg needed)

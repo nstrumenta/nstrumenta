@@ -178,6 +178,11 @@ jobs:
           name: set CI environment for cache busting
           command: echo "export CI=true" >> $BASH_ENV
       - run:
+          name: Install Docker CLI
+          command: |
+            curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-24.0.7.tgz | tar xz -C /tmp
+            mv /tmp/docker/docker /usr/local/bin/docker
+      - run:
           name: Authenticate Docker for artifact registry and pull data-job-runner image
           command: |
             gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev

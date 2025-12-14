@@ -2,9 +2,6 @@
 
 cd "$(dirname "$0")"
 
-# Node.js version for production images (agent, server)
-NODE_VERSION=24.12.0
-
 if [ -n "$DOCKER_TAG" ]; then
     echo "using DOCKER_TAG=$DOCKER_TAG"
 else
@@ -39,7 +36,6 @@ fi
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
-    --build-arg NODE_VERSION=$NODE_VERSION \
     --tag nstrumenta/agent:$DOCKER_TAG \
     --tag nstrumenta/agent:latest \
     -f ./agent/Dockerfile \
@@ -49,7 +45,6 @@ docker buildx build \
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
-    --build-arg NODE_VERSION=$NODE_VERSION \
     --tag nstrumenta/server:$DOCKER_TAG \
     --tag nstrumenta/server:latest \
     -f ./server/Dockerfile \
