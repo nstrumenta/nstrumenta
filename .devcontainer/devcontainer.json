@@ -2,17 +2,6 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "forwardPorts": [5999, 9229],
-  "portsAttributes": {
-    "5999": {
-      "label": "API Server",
-      "onAutoForward": "notify"
-    },
-    "9229": {
-      "label": "Node Debugger",
-      "onAutoForward": "silent"
-    }
-  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -29,9 +18,7 @@
   "runArgs": [
     "--privileged",
     "--env-file",
-    "./credentials/local.env",
-    "-p",
-    "5999:5999"
+    "./credentials/local.env"
   ],
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"

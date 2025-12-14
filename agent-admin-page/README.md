@@ -1,3 +1,3 @@
-# agent-admin-page src
+# agent-admin-page
 
-to be served by agent on /
+Vite/React admin UI served by the agent at `/`.

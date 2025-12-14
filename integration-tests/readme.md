@@ -1,27 +1,15 @@
-# integration tests
+# Integration Tests
 
-docker-compose files in subfolders, each of which can test e.g. a specific client or configurations of agents, cli features, and web-app features
+End-to-end tests for CLI, agents, and web features using Docker Compose.
 
-### Running a test suite
-
-run docker-compose from a folder containing a docker-compose.yml file. Have TEST_ID and NSTRUMENTA_API_KEY variables set, these will be pulled into the containers via the docker-compose file in the folder and will be used in CI testing.
-
-https://nstrumenta.com/projects/integration-tests/overview
+## Running Tests
 
 ```shell
-nodejs-client % TEST_ID=`uuidgen` NSTRUMENTA_API_KEY=[apikey] docker compose up --build
-```
-
-## running with environment file
-
-```shell
+# Run all tests with local credentials
 ENVFILE=../credentials/local.env ./e2e.sh
+
+# Run specific test suite
+ENVFILE=../credentials/local.env ./e2e.sh cli
 ```
 
-with dotenv for running dev
-
-```shell
-npx dotenv -e ../../../../credentials/local.env -- bash -c 'echo $NSTRUMENTA_API_KEY'
-```
-
-### write tests in ts-jest
+Tests are written with Vitest. Each subfolder contains a `docker-compose.yml` that spins up the necessary services.

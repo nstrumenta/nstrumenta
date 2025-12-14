@@ -1,51 +1,21 @@
 # Frontend
 
-angular app to manage projects, browse data, etc.
+Angular web application for project management, data visualization, and real-time sensor monitoring.
 
-## dev
-```shell
-npm i
-```
+## Development
 
 ```shell
+npm install
 npm run serve
 ```
 
-open browser to 0.0.0.0:5000 or use vscode to launch
-firebase project needs 0.0.0.0 added to authorized domains https://console.firebase.google.com/project/[*project id*]/authentication/settings
+Open http://localhost:5008. Add `localhost` to Firebase authorized domains.
 
-
-
-
-## deploy to firebase hosting
-
-### install deps including firebase cli
-```shell
-npm i
-```
-
-### login
-```shell
-npx firebase login
-```
-
-### setting up hosting
-build and deploy with (replace project id with your own): 
-
-set firebase project env var
-```shell
-export FIREBASE_PROJECT_ID=[firebase project id]
-```
+## Deploy to Firebase Hosting
 
 ```shell
+export FIREBASE_PROJECT_ID=<your-project-id>
 node fetchFirebaseConfigJson.js && npm run build && ./deployFirebase.sh
-```
-
-## one time setting cors on bucket
-
-### gcloud auth with user account
-```
-gcloud auth login
 ```
 
 ### setCors on bucket (needs login) 

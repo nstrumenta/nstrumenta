@@ -10,7 +10,7 @@ fi
 # Change to integration-tests directory
 cd "$(dirname "$0")"
 
-TEST_ID_BASE=${TEST_ID_BASE:-$(uuidgen)}
+TEST_ID_BASE=${TEST_ID_BASE:-$(node -p "crypto.randomUUID()")}
 echo "TEST_ID_BASE= $TEST_ID_BASE"
 
 if [ -z "$NSTRUMENTA_CLOUD_RUN_MODE" ] && [ -z "$CI" ]; then
