@@ -17,7 +17,7 @@
     }
   },
   "hooks": {
-    "after:bump": "sed -i \"s/export const version = '.*';/export const version = '${version}';/\" lib/version.ts && sed -i \"s/version='.*'/version='${version}'/\" python/setup.py",
+    "after:bump": "sed -i \"s/export const version = '.*';/export const version = '${version}';/\" lib/version.ts && sed -i \"s/version='.*'/version='${version}'/\" python/setup.py && npm run build",
     "after:release": "cd python && python3 setup.py sdist bdist_wheel && twine upload dist/*"
   }
 }

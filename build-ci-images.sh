@@ -13,8 +13,6 @@ docker push $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG
 docker build -t $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG -f ./data-job-runner/Dockerfile .
 docker push $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG
 
-# server uses official Node.js image with ARG
-pushd server
-docker build --build-arg NODE_VERSION=$NODE_VERSION -t $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG .
+# server
+docker build -t $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG -f ./server/Dockerfile .
 docker push $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG
-popd

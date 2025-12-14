@@ -16,6 +16,14 @@ jobs:
           command: npm run build
       - run:
           command: npm pack
+      - run:
+          name: Build and pack server
+          command: |
+            cd server/app
+            npm install
+            npm run build
+            npm pack
+            mv nst-server-*.tgz ../..
       - persist_to_workspace:
           root: .
           paths:
@@ -27,6 +35,7 @@ jobs:
             - tsconfig.json
             - src
             - nstrumenta-*.tgz
+            - nst-server-*.tgz
   build-frontend:
     docker:
       - image: nstrumenta/base:latest
@@ -201,6 +210,8 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - attach_workspace:
+          at: ~/project
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
@@ -228,7 +239,9 @@ workflows:
       - test-vscode-extension
       - build-frontend
       - build-functions
-      - build-ci-images
+      - build-ci-images:
+          requires:
+            - build
       - run-tests:
           requires:
             - build-ci-images

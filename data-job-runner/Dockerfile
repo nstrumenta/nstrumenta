@@ -6,9 +6,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install pre-built nstrumenta CLI
-COPY nstrumenta-*.tgz /tmp/
-RUN npm install -g /tmp/nstrumenta-*.tgz && \
-    rm /tmp/nstrumenta-*.tgz
+COPY nstrumenta-*.tgz /tmp/nstrumenta.tgz
+RUN npm install -g /tmp/nstrumenta.tgz && \
+    rm /tmp/nstrumenta.tgz
 
 # Install and build data-job-runner
 WORKDIR /app
