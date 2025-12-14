@@ -59,9 +59,11 @@ if [ -z "$CI" ]; then
     echo "Building fresh CLI and server for e2e tests..."
     (cd .. && npm run build:cli && npm run build:server)
     echo "Removing old tarballs..."
-    rm -f ../nstrumenta-*.tgz
+    rm -f ../nstrumenta-*.tgz ../server/app/nst-server-*.tgz
     echo "Packing nstrumenta..."
     (cd .. && npm pack)
+    echo "Packing server..."
+    (cd ../server/app && npm pack && mv nst-server-*.tgz ../..)
 else
     echo "Skipping build (using cached artifacts from CI workspace)"
 fi

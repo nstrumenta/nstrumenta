@@ -18,8 +18,8 @@ services:
   server:
     container_name: nstrumenta-server
     build:
-      context: ../../server
-      dockerfile: Dockerfile
+      context: ../..
+      dockerfile: ./server/Dockerfile
     environment:
       - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}

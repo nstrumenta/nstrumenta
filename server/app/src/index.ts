@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Firestore } from '@google-cloud/firestore'
 import { CreateApiKeyService } from './services/ApiKeyService'
 import { createCloudAgentService } from './services/cloudAgent'

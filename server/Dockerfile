@@ -1,20 +1,13 @@
 FROM nstrumenta/base:latest
 
 # Install pre-built nstrumenta CLI
-COPY nstrumenta-*.tgz /tmp/
-RUN npm install -g /tmp/nstrumenta-*.tgz && \
-    rm /tmp/nstrumenta-*.tgz
+COPY nstrumenta-*.tgz /tmp/nstrumenta.tgz
+RUN npm install -g /tmp/nstrumenta.tgz && \
+    rm /tmp/nstrumenta.tgz
 
-# Install and build server
-WORKDIR /app
-COPY ./server/app/package*.json ./
-RUN npm ci --only=production
+# Install pre-built server app
+COPY nst-server-*.tgz /tmp/nst-server.tgz
+RUN npm install -g /tmp/nst-server.tgz && \
+    rm /tmp/nst-server.tgz
 
-COPY ./server/app/tsconfig.json ./
-COPY ./server/app/src ./src
-RUN npm install typescript @tsconfig/node16 --no-save && \
-    npm run build && \
-    npm uninstall typescript @tsconfig/node16 && \
-    npm cache clean --force
-
-CMD ["node", "dist/index.js"]
+CMD ["nst-server"]
