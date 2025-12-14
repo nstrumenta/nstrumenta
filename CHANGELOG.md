@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.0.5](/compare/v4.0.4...v4.0.5) (2025-12-14)
+
+
+### Bug Fixes
+
+* **ci:** revert to nstrumenta/developer image with docker cli install, remove unused NODE_VERSION arg 0e347de
+* resolve integration-tests dependencies and build script security 4834fee
+
 ## [4.0.4](/compare/v4.0.3...v4.0.4) (2025-12-14)
 
 ## [4.0.3](/compare/v4.0.2...v4.0.3) (2025-12-14)
