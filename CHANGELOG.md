@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.0.6](/compare/v4.0.5...v4.0.6) (2025-12-14)
+
+
+### Bug Fixes
+
+* optimize CI pipeline to reuse built images instead of rebuilding 8d6dad0
+
 ## [4.0.5](/compare/v4.0.4...v4.0.5) (2025-12-14)
 
 

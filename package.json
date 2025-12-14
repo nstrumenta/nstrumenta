@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "description": "cli tool for nstrumenta",
   "main": "dist/agent/index.js",
   "types": "dist/agent/index.d.ts",
