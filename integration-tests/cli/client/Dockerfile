@@ -1,4 +1,5 @@
-FROM node:24.1.0-bookworm-slim
+ARG NODE_VERSION=24.12.0
+FROM node:${NODE_VERSION}-bookworm-slim
 
 WORKDIR /app
 

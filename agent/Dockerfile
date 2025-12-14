@@ -1,22 +1,10 @@
-FROM node:24.1.0-bookworm-slim
+FROM nstrumenta/base:latest
 
-# Build argument to force cache invalidation in CI
-ARG CACHE_BUST
-
-WORKDIR /app
-
-# Copy only package files first for better caching
-# Context is top level of nstrumenta repo
-COPY package*.json ./
-
-# Install dependencies (cached unless package.json changes)
-RUN --mount=type=cache,target=/root/.npm \
-    npm install
-
-# Copy source code and build
-COPY . .
-RUN npm run build:cli
+# Install pre-built nstrumenta CLI
+COPY nstrumenta-*.tgz /tmp/
+RUN npm install -g /tmp/nstrumenta-*.tgz && \
+    rm /tmp/nstrumenta-*.tgz
 
 EXPOSE 8088
 
-CMD ["npx","node","./dist/cli/index.js","agent","start"]
+CMD ["nstrumenta", "agent", "start"]

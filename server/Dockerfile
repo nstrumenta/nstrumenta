@@ -1,11 +1,20 @@
-ARG BASE_TAG=latest
-FROM nstrumenta/toolchain:${BASE_TAG}
-COPY ./app /app/
+FROM nstrumenta/base:latest
 
+# Install pre-built nstrumenta CLI
+COPY nstrumenta-*.tgz /tmp/
+RUN npm install -g /tmp/nstrumenta-*.tgz && \
+    rm /tmp/nstrumenta-*.tgz
+
+# Install and build server
 WORKDIR /app
-RUN npm install
-RUN npm run build
+COPY ./server/app/package*.json ./
+RUN npm ci --only=production
 
-EXPOSE 9229
+COPY ./server/app/tsconfig.json ./
+COPY ./server/app/src ./src
+RUN npm install typescript @tsconfig/node16 --no-save && \
+    npm run build && \
+    npm uninstall typescript @tsconfig/node16 && \
+    npm cache clean --force
 
-CMD ["npm", "start"]
+CMD ["node", "dist/index.js"]

@@ -1,2 +1,0 @@
-mcap==1.2.1
-nstrumenta==0.1.3

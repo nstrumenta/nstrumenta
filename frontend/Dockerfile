@@ -1,4 +1,5 @@
-FROM node:20
+ARG NODE_VERSION=24.12.0
+FROM node:${NODE_VERSION}
 
 RUN npm i -g @angular/cli@14.1.2
 WORKDIR /app

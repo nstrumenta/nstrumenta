@@ -1,28 +1,23 @@
-ARG BASE_TAG=latest
-FROM nstrumenta/toolchain:${BASE_TAG}
+FROM nstrumenta/base:latest
 
-#install ffmpeg
-RUN apt-get -y update --allow-releaseinfo-change
-RUN apt-get install -y ffmpeg curl gnupg lsb-release ca-certificates
+# Install ffmpeg for media processing
+RUN apt-get update && \
+    apt-get install -y ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
 
-# install gcsfuse
-RUN export GCSFUSE_REPO=gcsfuse-`lsb_release -c -s` \
-    && echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt $GCSFUSE_REPO main" | tee /etc/apt/sources.list.d/gcsfuse.list \
-    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
-    && apt-get update \
-    && apt-get install -y gcsfuse fuse
+# Install pre-built nstrumenta CLI
+COPY nstrumenta-*.tgz /tmp/
+RUN npm install -g /tmp/nstrumenta-*.tgz && \
+    rm /tmp/nstrumenta-*.tgz
 
-# context is top level of nstrumenta repo
-COPY . /nstrumenta/
-WORKDIR /nstrumenta
-RUN npm install
-RUN npm run build:cli
-RUN npm link
-
-COPY ./data-job-runner/app /app
+# Install and build data-job-runner
 WORKDIR /app
-RUN npm i
-RUN npm link nstrumenta
-RUN npm run build
+COPY ./data-job-runner/app/package*.json ./
+RUN npm ci --only=production
 
-CMD [ "node", "dist/index.js" ]
+COPY ./data-job-runner/app/tsconfig.json ./
+COPY ./data-job-runner/app/src ./src
+RUN npm run build && \
+    npm cache clean --force
+
+CMD ["node", "dist/index.js"]

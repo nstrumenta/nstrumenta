@@ -2,6 +2,9 @@
 
 cd "$(dirname "$0")"
 
+# Node.js version for production images (agent, server)
+NODE_VERSION=24.12.0
+
 if [ -n "$DOCKER_TAG" ]; then
     echo "using DOCKER_TAG=$DOCKER_TAG"
 else
@@ -10,7 +13,7 @@ else
     DOCKER_TAG=$PACKAGE_VERSION
 fi
 
-#toolchain tag
+#toolchain tag - DEPRECATED, now using Node.js directly
 BASE_TAG=latest
 
 # login to docker
@@ -34,6 +37,7 @@ fi
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
+    --build-arg NODE_VERSION=$NODE_VERSION \
     --tag nstrumenta/agent:$DOCKER_TAG \
     --tag nstrumenta/agent:latest \
     -f ./agent/Dockerfile \
@@ -44,27 +48,25 @@ pushd server
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
-    --build-arg BASE_TAG=latest \
+    --build-arg NODE_VERSION=$NODE_VERSION \
     --tag nstrumenta/server:$DOCKER_TAG \
     --tag nstrumenta/server:latest \
     .
 popd
 
-# data-job-runner
+# data-job-runner uses nstrumenta/base
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
-    --build-arg BASE_TAG=latest \
     --tag nstrumenta/data-job-runner:$DOCKER_TAG \
     --tag nstrumenta/data-job-runner:latest \
     -f ./data-job-runner/Dockerfile \
     .
 
-# developer
+# developer uses nstrumenta/base
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
-    --build-arg BASE_TAG=latest \
     --tag nstrumenta/developer:$DOCKER_TAG \
     --tag nstrumenta/developer:latest \
     -f ./developer/Dockerfile \
