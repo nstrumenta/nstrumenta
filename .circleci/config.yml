@@ -226,14 +226,6 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      - run:
-          name: Check if release tag
-          command: |
-            if [[ ! "$CIRCLE_TAG" =~ ^v.* ]]; then
-              echo "Not a release tag (CIRCLE_TAG='$CIRCLE_TAG'), skipping image push"
-              circleci step halt
-            fi
-            echo "Release tag detected: $CIRCLE_TAG"
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
@@ -260,21 +252,51 @@ jobs:
           done
 
 workflows:
+  version: 2
   -ci:
     jobs:
-      - build
-      - test-server
-      - test-nodejs
-      - test-vscode-extension
-      - build-frontend
-      - build-functions
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - test-server:
+          filters:
+            tags:
+              only: /.*/
+      - test-nodejs:
+          filters:
+            tags:
+              only: /.*/
+      - test-vscode-extension:
+          filters:
+            tags:
+              only: /.*/
+      - build-frontend:
+          filters:
+            tags:
+              only: /.*/
+      - build-functions:
+          filters:
+            tags:
+              only: /.*/
       - build-ci-images:
           requires:
             - build
+          filters:
+            tags:
+              only: /.*/
       - run-tests:
           requires:
             - build-ci-images
             - build
+          filters:
+            tags:
+              only: /.*/
       - push-to-docker-hub:
           requires:
             - run-tests
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
