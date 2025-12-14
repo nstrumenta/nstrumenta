@@ -48,41 +48,45 @@ function initializeIcons() {
   };
 }
 
-if (environment.production) {
-  enableProdMode();
-}
+fetch('/firebaseConfig.json')
+  .then((res) => res.json())
+  .then((config) => {
+    if (environment.production) {
+      enableProdMode();
+    }
 
-// Initialize Firebase
-const app = initializeApp(environment.firebase);
-const auth = getAuth(app);
-const firestore = getFirestore(app);
-const storage = getStorage(app);
+    // Initialize Firebase
+    const app = initializeApp(config);
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+    const storage = getStorage(app);
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    provideZoneChangeDetection(),provideRouter(
-      routes,
-      withComponentInputBinding(),
-      withRouterConfig({
-        paramsInheritanceStrategy: 'always',
-        onSameUrlNavigation: 'reload'
-      })
-    ),
-    provideHttpClient(withInterceptorsFromDi()),
-    importProvidersFrom(BrowserAnimationsModule),
-    
-    // Services
-    AuthService,
-    VscodeService,
-    MatIconRegistry,
-    MatSnackBar,
-    
-    // Error handler
-    { provide: ErrorHandler, useClass: SentryErrorHandler },
-    
-    // Initialize icons after app bootstrap
-    { provide: ENVIRONMENT_INITIALIZER, useFactory: initializeIcons, multi: true },
-  ]
-}).catch((err) => console.log(err));
+    bootstrapApplication(AppComponent, {
+      providers: [
+        provideZoneChangeDetection(),provideRouter(
+          routes,
+          withComponentInputBinding(),
+          withRouterConfig({
+            paramsInheritanceStrategy: 'always',
+            onSameUrlNavigation: 'reload'
+          })
+        ),
+        provideHttpClient(withInterceptorsFromDi()),
+        importProvidersFrom(BrowserAnimationsModule),
+        
+        // Services
+        AuthService,
+        VscodeService,
+        MatIconRegistry,
+        MatSnackBar,
+        
+        // Error handler
+        { provide: ErrorHandler, useClass: SentryErrorHandler },
+        
+        // Initialize icons after app bootstrap
+        { provide: ENVIRONMENT_INITIALIZER, useFactory: initializeIcons, multi: true },
+      ]
+    }).catch((err) => console.log(err));
+  });
 // Ensure bootstrap errors are visible
 // Note: we use console.error so production logging tools and Sentry can capture this consistently

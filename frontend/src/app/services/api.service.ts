@@ -57,8 +57,7 @@ export class ApiService {
     try {
       // Fetch the API URL from the nstrumentaDeployment configuration
       // This matches the pattern used in the server's ApiKeyService
-      const configUrl = `https://storage.googleapis.com/${environment.firebase.projectId}-config/nstrumentaDeployment.json`;
-      const config = await fetch(configUrl);
+      const config = await fetch('/nstrumentaDeployment.json');
       const deployment = await config.json() as { apiUrl: string };
       this.apiUrlCache = deployment.apiUrl;
       return deployment.apiUrl;

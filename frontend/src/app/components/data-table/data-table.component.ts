@@ -368,8 +368,9 @@ export class DataTableComponent implements OnInit {
   async handleModuleAction(moduleAction, fileDocument) {
     console.log(moduleAction, fileDocument);
     if (moduleAction.url) {
+      const config = await fetch('/firebaseConfig.json').then(res => res.json());
       window.open(
-        `${moduleAction.url}?org=${environment.firebase.projectId}&experiment=${fileDocument.filePath}`
+        `${moduleAction.url}?org=${config.projectId}&experiment=${fileDocument.filePath}`
       );
     } else {
       function getVersionFromPath(path: string) {

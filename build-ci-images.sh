@@ -13,3 +13,6 @@ docker push $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG
 # server
 docker build -t $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG -f ./server/Dockerfile .
 docker push $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG
+# frontend
+docker build -t $IMAGE_REPOSITORY/frontend:$IMAGE_VERSION_TAG -f ./frontend/Dockerfile .
+docker push $IMAGE_REPOSITORY/frontend:$IMAGE_VERSION_TAG

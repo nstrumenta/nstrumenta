@@ -67,3 +67,12 @@ docker buildx build \
     --tag nstrumenta/developer:latest \
     -f ./developer/Dockerfile \
     .
+
+# frontend
+docker buildx build \
+    $BUILDX_ARGS \
+    --platform linux/arm64,linux/amd64 \
+    --tag nstrumenta/frontend:$DOCKER_TAG \
+    --tag nstrumenta/frontend:latest \
+    -f ./frontend/Dockerfile \
+    .

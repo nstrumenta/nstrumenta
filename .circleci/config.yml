@@ -60,6 +60,10 @@ jobs:
           key: frontend-dist-{{ .Branch }}-{{ checksum "package.json" }}
           paths:
             - dist
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist
   build-functions:
     docker:
       - image: nstrumenta/base:latest
@@ -242,7 +246,7 @@ jobs:
           echo "Pulling and retagging images for version $PACKAGE_VERSION"
           
           # Pull CI images and retag for Docker Hub
-          for image in agent server data-job-runner; do
+          for image in agent server data-job-runner frontend; do
             echo "Processing $image..."
             docker pull $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG
             docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:$PACKAGE_VERSION
@@ -282,6 +286,7 @@ workflows:
       - build-ci-images:
           requires:
             - build
+            - build-frontend
           filters:
             tags:
               only: /.*/

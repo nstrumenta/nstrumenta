@@ -1,9 +1,7 @@
-ARG NODE_VERSION=24.12.0
-FROM node:${NODE_VERSION}
+FROM google/cloud-sdk:alpine
 
-RUN npm i -g @angular/cli@14.1.2
-WORKDIR /app
-COPY frontend .
-COPY credentials/firebaseConfig.js /credentials/firebaseConfig.js
-RUN npm install
-RUN npm run build
+COPY frontend/dist /app/dist
+COPY frontend/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

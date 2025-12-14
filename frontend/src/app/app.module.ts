@@ -173,7 +173,7 @@ export class SentryErrorHandler implements ErrorHandler {
         MatIconRegistry,
         MatSnackBar,
         { provide: ErrorHandler, useClass: SentryErrorHandler },
-        provideFirebaseApp(() => initializeApp(environment.firebase)),
+        // provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideAuth(() => getAuth()),
         provideFirestore(() => getFirestore()),
         provideStorage(() => getStorage()),
