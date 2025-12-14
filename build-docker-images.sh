@@ -18,7 +18,9 @@ BASE_TAG=latest
 
 # login to docker
 if [ -n "$DOCKER_HUB_ACCESS_TOKEN" ]; then
+    set +x
     echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    set -x
 fi
 
 # to push BUILDX_ARGS="--push"
@@ -44,15 +46,14 @@ docker buildx build \
     .
 
 # server
-pushd server
 docker buildx build \
     $BUILDX_ARGS \
     --platform linux/arm64,linux/amd64 \
     --build-arg NODE_VERSION=$NODE_VERSION \
     --tag nstrumenta/server:$DOCKER_TAG \
     --tag nstrumenta/server:latest \
+    -f ./server/Dockerfile \
     .
-popd
 
 # data-job-runner uses nstrumenta/base
 docker buildx build \
