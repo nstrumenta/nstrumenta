@@ -226,7 +226,30 @@ jobs:
     steps:
       - checkout:
           path: ~/project
-      - run: ./build-docker-images.sh
+      - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-west1-docker.pkg.dev
+      - run: echo "export IMAGE_REPOSITORY=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server" >> $BASH_ENV
+      - run: echo "export IMAGE_VERSION_TAG=${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
+      - run: |
+          set +x
+          echo "$DOCKER_HUB_ACCESS_TOKEN" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+          set -x
+      - run: |
+          PACKAGE_VERSION=$(cat package.json | jq -r '.version')
+          echo "Pulling and retagging images for version $PACKAGE_VERSION"
+          
+          # Pull CI images and retag for Docker Hub
+          for image in agent server data-job-runner; do
+            echo "Processing $image..."
+            docker pull $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:$PACKAGE_VERSION
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:latest
+            docker push nstrumenta/$image:$PACKAGE_VERSION
+            docker push nstrumenta/$image:latest
+          done
 
 workflows:
   -ci:
@@ -245,6 +268,8 @@ workflows:
             - build-ci-images
             - build
       - build-and-push-images:
+          requires:
+            - build-ci-images
           filters:
             tags:
               only: /^v.*/
