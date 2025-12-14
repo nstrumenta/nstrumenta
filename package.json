@@ -41,7 +41,7 @@
   ],
   "scripts": {
     "clean": "rm -rf dist dist-esm",
-    "build:agent-admin-page": "(cd agent-admin-page ; npm run build)",
+    "build:agent-admin-page": "(cd agent-admin-page ; npm i ; npm run build)",
     "build:lib": "tsc --project ./lib",
     "build:cli": "tsc --project ./cli",
     "build:browser": "tsc --project ./browser",
