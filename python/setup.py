@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='nstrumenta',
-    version='4.0.6',
+    version='4.0.7',
     packages=find_packages(),
     install_requires=[
         'requests',
