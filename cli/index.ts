@@ -171,6 +171,37 @@ dataCommand
   .description('Download data by name, tags, or date range')
   .action(GetData);
 
+const dataJobCommand = program.command('data-job');
+dataJobCommand
+  .command('run')
+  .description('Run module from ACTION_DATA environment variable (for Cloud Run jobs)')
+  .action(async () => {
+    const actionData = process.env.ACTION_DATA;
+    if (!actionData) {
+      console.log('ACTION_DATA environment variable not present');
+      process.exit(1);
+    }
+
+    const data = JSON.parse(Buffer.from(actionData, 'base64').toString());
+    let moduleName = data.data.module.name;
+    let version = data.data.module.version;
+    const args = data.data.args;
+
+    if (moduleName.endsWith('.tar.gz')) {
+      const versionMatch = /(\d+)\.(\d+)\.(\d+)(?:-[\w\d\.]+)?/.exec(moduleName);
+      if (versionMatch) {
+        const extractedVersion = versionMatch[0];
+        moduleName = moduleName.replace(`-${extractedVersion}.tar.gz`, '');
+        if (!version) {
+          version = extractedVersion;
+        }
+      }
+    }
+
+    console.log({ moduleName, version, args });
+    await Run(moduleName, { moduleVersion: version, commandArgs: args });
+  });
+
 program.parse(process.argv);
 
 const options = program.opts();
