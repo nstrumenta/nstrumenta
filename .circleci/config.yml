@@ -218,7 +218,7 @@ jobs:
       - run: echo "export IMAGE_REPOSITORY=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server" >> $BASH_ENV
       - run: echo "export IMAGE_VERSION_TAG=${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
       - run: ./build-ci-images.sh
-  build-and-push-images:
+  push-to-docker-hub:
     resource_class: arm.large
     machine:
       image: ubuntu-2204:2024.11.1
@@ -226,6 +226,14 @@ jobs:
     steps:
       - checkout:
           path: ~/project
+      - run:
+          name: Check if release tag
+          command: |
+            if [[ ! "$CIRCLE_TAG" =~ ^v.* ]]; then
+              echo "Not a release tag (CIRCLE_TAG='$CIRCLE_TAG'), skipping image push"
+              circleci step halt
+            fi
+            echo "Release tag detected: $CIRCLE_TAG"
       - run: echo $GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
       - run: echo "export GOOGLE_PROJECT_ID=`cat ${HOME}/gcloud-service-key.json | jq -r .project_id`" >> $BASH_ENV
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
@@ -267,11 +275,6 @@ workflows:
           requires:
             - build-ci-images
             - build
-      - build-and-push-images:
+      - push-to-docker-hub:
           requires:
-            - build-ci-images
-          filters:
-            tags:
-              only: /^v.*/
-            branches:
-              ignore: /.*/
+            - run-tests
