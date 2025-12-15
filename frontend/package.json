@@ -6,7 +6,6 @@
     "start": "ng serve --host 0.0.0.0 --port 5008",
     "build": "ng build --configuration production",
     "serve:dist": "http-server ./dist --port 5008 --proxy http://localhost:5008? -c-1 --host localhost",
-    "release": "node release.js",
     "test": "ng test --watch=false",
     "test:watch": "ng test",
     "lint": "ng lint"
