@@ -147,7 +147,7 @@ jobs:
       - run: echo "export IMAGE_REPOSITORY=us-west1-docker.pkg.dev/${GOOGLE_PROJECT_ID}/server" >> $BASH_ENV
       - run: echo "export IMAGE_VERSION_TAG=${CIRCLE_SHA1}${CIRCLE_BRANCH}" >> $BASH_ENV
       - run: echo "export SERVER_IMAGE=${IMAGE_REPOSITORY}/server:${IMAGE_VERSION_TAG}" >> $BASH_ENV
-      - run: echo "export TEST_SERVER=test-server-${CIRCLE_SHA1}" >> $BASH_ENV
+      - run: echo "export TEST_SERVER=test-server-${CIRCLE_SHA1:0:7}-${CIRCLE_BUILD_NUM}" >> $BASH_ENV
       - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
       - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
       - run:
@@ -202,7 +202,7 @@ jobs:
       - run:
           name: delete test-server
           command: >
-            gcloud run services delete --region=us-west1 ${TEST_SERVER}
+            gcloud run services delete --quiet --region=us-west1 ${TEST_SERVER}
           when: always
   build-ci-images:
     resource_class: large
