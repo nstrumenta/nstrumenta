@@ -61,9 +61,9 @@ jobs:
           paths:
             - dist
       - persist_to_workspace:
-          root: .
+          root: ..
           paths:
-            - dist
+            - frontend/dist
   build-functions:
     docker:
       - image: nstrumenta/base:latest
