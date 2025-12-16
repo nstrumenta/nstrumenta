@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { of, BehaviorSubject, Subject } from 'rxjs';
 import { signal } from '@angular/core';
 
@@ -50,7 +52,7 @@ export class MockFolderNavigationService {
 
 export class MockAuth {
   signOut() { return Promise.resolve(); }
-  onIdTokenChanged(callback) {
+  onIdTokenChanged(callback: any) {
     callback(null);
     return () => {};
   }
@@ -62,6 +64,9 @@ export class MockAuthService {
   user$ = this.user.asObservable();
   setUser() {}
   login() { return Promise.resolve(); }
+  loginWithGoogle() { return Promise.resolve(); }
+  loginWithEmail(_email: string, _password: string) { return Promise.resolve(); }
+  registerWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   logout() { return Promise.resolve(); }
   getAuth() { return {} as any; }
 }
@@ -87,14 +92,14 @@ export class MockActivatedRoute {
   queryParams = of({});
   snapshot = {
     paramMap: {
-      get: (key: string) => 'test-value'
+      get: (_key: string) => 'test-value'
     },
     queryParamMap: {
-      get: (key: string) => 'test-value'
+      get: (_key: string) => 'test-value'
     }
   };
 }
 
 export class MockMatDialogRef {
-  close() {}
+  close(_result?: any) {}
 }

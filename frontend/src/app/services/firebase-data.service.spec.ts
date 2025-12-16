@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { FirebaseDataService } from './firebase-data.service';
@@ -34,14 +35,13 @@ describe('FirebaseDataService', () => {
         path: 'test-path'
       } as any);
 
-      const querySpy = jasmine.createSpy('query').and.callFake((collectionRef: any, ...queryConstraints: any[]) => {
+      const querySpy = jasmine.createSpy('query').and.callFake((collectionRef: any, ..._queryConstraints: any[]) => {
         // Validate that query is called with a collection reference
         expect(collectionRef).toBeDefined();
         expect(collectionRef.type).toBe('collection');
         return {
           type: 'query',
           _query: collectionRef,
-          constraints: queryConstraints
         } as any;
       });
 

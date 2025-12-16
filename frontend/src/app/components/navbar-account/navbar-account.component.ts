@@ -7,6 +7,8 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatDialog } from '@angular/material/dialog';
+import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 
 @Component({
     selector: 'app-navbar-account',
@@ -17,6 +19,7 @@ import { MatIcon } from '@angular/material/icon';
 export class NavbarAccountComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private dialog = inject(MatDialog);
 
   subscriptions = new Array<Subscription>();
   loggedIn = false;
@@ -40,7 +43,9 @@ export class NavbarAccountComponent {
     });
   }
 
-  async login() {
-    return await this.authService.login();
+  login() {
+    this.dialog.open(LoginDialogComponent, {
+      width: '400px'
+    });
   }
 }

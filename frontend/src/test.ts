@@ -21,9 +21,9 @@ const testFirebaseConfig = {
 
 try {
   initializeApp(testFirebaseConfig);
-} catch (error: any) {
+} catch (error: unknown) {
   // Ignore if already initialized
-  if (!error.message?.includes('duplicate-app')) {
+  if (error instanceof Error && !error.message?.includes('duplicate-app')) {
     console.error('Firebase initialization error:', error);
   }
 }

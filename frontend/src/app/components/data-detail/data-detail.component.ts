@@ -2,7 +2,6 @@ import { Component, OnInit, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
-import { getDownloadURL, ref } from 'firebase/storage';
 import { Observable } from 'rxjs';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { AsyncPipe } from '@angular/common';

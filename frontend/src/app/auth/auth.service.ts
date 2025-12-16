@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, User, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth } from 'firebase/auth';
+import { Auth, User, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
@@ -7,13 +7,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 })
 export class AuthService {
   private auth: Auth;
-  private githubProvider: GithubAuthProvider;
+  private googleProvider: GoogleAuthProvider;
   user = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null>;
 
   constructor() {
     this.auth = getAuth();
-    this.githubProvider = new GithubAuthProvider();
+    this.googleProvider = new GoogleAuthProvider();
     this.user$ = this.user.asObservable();
 
     // Listen to auth state changes
@@ -26,8 +26,21 @@ export class AuthService {
     this.user.next(user);
   }
 
+  async loginWithGoogle(): Promise<void> {
+    await signInWithPopup(this.auth, this.googleProvider);
+  }
+
+  async loginWithEmail(email: string, password: string): Promise<void> {
+    await signInWithEmailAndPassword(this.auth, email, password);
+  }
+
+  async registerWithEmail(email: string, password: string): Promise<void> {
+    await createUserWithEmailAndPassword(this.auth, email, password);
+  }
+
+  // Deprecated: use loginWithGoogle instead
   async login(): Promise<void> {
-    await signInWithPopup(this.auth, this.githubProvider);
+    return this.loginWithGoogle();
   }
 
   async logout(): Promise<void> {
