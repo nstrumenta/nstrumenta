@@ -1,5 +1,12 @@
 # Changelog
 
+# [4.1.0](/compare/v4.0.11...v4.1.0) (2025-12-16)
+
+
+### Features
+
+* add email/password authentication and terraform improvements (#212) 743be1a, closes #212
+
 ## [4.0.11](/compare/v4.0.10...v4.0.11) (2025-12-15)
 
 ## [4.0.10](/compare/v4.0.9...v4.0.10) (2025-12-15)
