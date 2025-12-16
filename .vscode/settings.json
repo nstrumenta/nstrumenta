@@ -46,5 +46,6 @@
         "wget": false,
         "xargs": false,
         "eval": false
-    }
+    },
+    "chat.agent.thinking.collapsedTools": "all"
 }

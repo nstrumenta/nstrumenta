@@ -57,9 +57,9 @@ fetch('/firebaseConfig.json')
 
     // Initialize Firebase
     const app = initializeApp(config);
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-    const storage = getStorage(app);
+    getAuth(app);
+    getFirestore(app);
+    getStorage(app);
 
     bootstrapApplication(AppComponent, {
       providers: [

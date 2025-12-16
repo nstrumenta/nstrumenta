@@ -21,7 +21,6 @@ import {
   updateDoc,
   getFirestore,
   DocumentData,
-  CollectionReference,
   Query,
   DocumentReference,
 } from 'firebase/firestore';
