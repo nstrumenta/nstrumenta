@@ -12,16 +12,53 @@ variable "image_version_tag" {
   default = "latest"
 }
 
+variable "frontend_image_version_tag" {
+  description = "The version tag of the image for the frontend"
+  type        = string
+  default     = "latest"
+}
+
 variable "location_id" {
   type    = string
   default = "us-west1"
+}
+
+variable "google_project_id" {
+  description = "The ID of the Google Cloud project. If not provided, one will be generated."
+  type        = string
+  default     = null
+}
+
+variable "support_email" {
+  description = "Email address to show on the OAuth Consent Screen (must be a user in the org)"
+  type        = string
+}
+
+variable "dns_hub_project_id" {
+  description = "The GCP Project ID that hosts the app.nstrumenta.com zone"
+  type        = string
+  default     = "nstrumenta-hub"
+}
+
+variable "dns_hub_zone_name" {
+  description = "The name of the Managed Zone resource in the hub project"
+  type        = string
+  default     = "app-nstrumenta-com"
+}
+
+resource "random_id" "project_suffix" {
+  byte_length = 4
+}
+
+locals {
+  project_id = var.google_project_id != null ? var.google_project_id : "nst-${terraform.workspace}-${random_id.project_suffix.hex}"
 }
 
 # Creates a new Google Cloud project.
 resource "google_project" "fs" { # fs = Firestore + Storage
   provider        = google-beta.no_user_project_override
   name            = terraform.workspace
-  project_id      = terraform.workspace
+  project_id      = local.project_id
   org_id          = var.org_id
   billing_account = var.billing_account
 
@@ -50,7 +87,9 @@ resource "google_project_service" "fs" {
     "cloudbuild.googleapis.com",
     "eventarc.googleapis.com",
     "pubsub.googleapis.com",
-    "compute.googleapis.com"
+    "compute.googleapis.com",
+    "identitytoolkit.googleapis.com",
+    "iap.googleapis.com"
   ])
   service = each.key
 
@@ -63,6 +102,54 @@ resource "google_firebase_project" "fs" {
   provider = google-beta
   project  = google_project.fs.project_id
 
+}
+
+# Configures Identity Platform (Firebase Auth)
+resource "google_identity_platform_config" "auth" {
+  provider = google-beta
+  project  = google_project.fs.project_id
+  
+  authorized_domains = [
+    "localhost",
+    "${terraform.workspace}.app.nstrumenta.com",
+    "${google_project.fs.project_id}.firebaseapp.com",
+    "${google_project.fs.project_id}.web.app",
+  ]
+
+  sign_in {
+    email {
+      enabled = true
+    }
+  }
+  depends_on = [
+    google_project_service.fs
+  ]
+}
+
+# Configure OAuth Brand (Consent Screen)
+resource "google_iap_brand" "project_brand" {
+  provider          = google-beta
+  support_email     = var.support_email
+  application_title = "Nstrumenta ${terraform.workspace}"
+  project           = google_project.fs.project_id
+  depends_on        = [google_project_service.fs]
+}
+
+# Create OAuth Client
+resource "google_iap_client" "project_client" {
+  provider     = google-beta
+  display_name = "Nstrumenta Web Client"
+  brand        = google_iap_brand.project_brand.name
+}
+
+resource "google_identity_platform_default_supported_idp_config" "google" {
+  provider      = google-beta
+  project       = google_project.fs.project_id
+  enabled       = true
+  idp_id        = "google.com"
+  client_id     = google_iap_client.project_client.client_id
+  client_secret = google_iap_client.project_client.secret
+  depends_on    = [google_identity_platform_config.auth]
 }
 
 #### Set up Firestore before default Cloud Storage bucket ####
@@ -144,6 +231,8 @@ resource "google_firebase_storage_bucket" "fb_app" {
   bucket_id = google_app_engine_application.fb_app.default_bucket
 }
 
+
+
 # Creates a ruleset of Cloud Storage Security Rules from a local file.
 resource "google_firebaserules_ruleset" "fb_app" {
   provider = google-beta
@@ -187,13 +276,6 @@ data "google_firebase_web_app_config" "web_app" {
   provider   = google-beta
   web_app_id = google_firebase_web_app.web_app.app_id
   project    = google_project.fs.project_id
-}
-
-resource "google_firebase_hosting_site" "web_app" {
-  provider = google-beta
-  project  = google_project.fs.project_id
-  site_id  = "${terraform.workspace}-frontend"
-  app_id   = google_firebase_web_app.web_app.app_id
 }
 
 data "google_app_engine_default_service_account" "default" {
@@ -271,20 +353,231 @@ resource "google_storage_bucket_object" "nstrumenta_deployment" {
 resource "google_dns_managed_zone" "managed_zone" {
   project     = google_project.fs.project_id
   name        = terraform.workspace
-  dns_name    = "${terraform.workspace}.nstrumenta.com."
-  description = "Managed DNS Zone for Firebase"
+  dns_name    = "${terraform.workspace}.app.nstrumenta.com."
+  description = "Managed DNS Zone for nstrumenta client"
 }
 
-# Create a DNS record set for Firebase Hosting
-resource "google_dns_record_set" "firebase_dns" {
-  depends_on   = [google_firebase_web_app.web_app]
+# Automate Delegation: Add NS records to the Hub Zone
+resource "google_dns_record_set" "delegation" {
+  project      = var.dns_hub_project_id
+  managed_zone = var.dns_hub_zone_name
+  name         = "${terraform.workspace}.app.nstrumenta.com."
+  type         = "NS"
+  ttl          = 300
+  rrdatas      = google_dns_managed_zone.managed_zone.name_servers
+}
+
+
+
+# Reserve a global static IP for the load balancer
+resource "google_compute_global_address" "frontend" {
+  project = google_project.fs.project_id
+  name    = "frontend-ip"
+}
+
+# Google-managed SSL certificate
+resource "google_compute_managed_ssl_certificate" "frontend" {
+  project = google_project.fs.project_id
+  name    = "frontend-cert"
+
+  managed {
+    domains = [
+      "${terraform.workspace}.app.nstrumenta.com.",
+      "www.${terraform.workspace}.app.nstrumenta.com."
+    ]
+  }
+}
+
+# GCS bucket for frontend static files
+resource "google_storage_bucket" "frontend" {
+  provider      = google-beta
+  project       = google_project.fs.project_id
+  name          = "${google_project.fs.project_id}-frontend"
+  location      = "US"
+  force_destroy = true
+  
+  uniform_bucket_level_access = true
+  
+  website {
+    main_page_suffix = "index.html"
+    not_found_page   = "index.html"
+  }
+}
+
+# Make frontend bucket publicly readable
+resource "google_storage_bucket_iam_member" "frontend_public" {
+  bucket = google_storage_bucket.frontend.name
+  role   = "roles/storage.objectViewer"
+  member = "allUsers"
+}
+
+# Backend bucket for Load Balancer
+resource "google_compute_backend_bucket" "frontend" {
+  project     = google_project.fs.project_id
+  name        = "frontend-backend"
+  bucket_name = google_storage_bucket.frontend.name
+  enable_cdn  = true
+  
+  cdn_policy {
+    cache_mode        = "CACHE_ALL_STATIC"
+    client_ttl        = 3600
+    default_ttl       = 3600
+    max_ttl           = 86400
+    negative_caching  = true
+    serve_while_stale = 86400
+  }
+}
+
+resource "google_compute_backend_bucket" "config" {
+  project     = google_project.fs.project_id
+  name        = "config-backend"
+  bucket_name = google_storage_bucket.config.name
+  enable_cdn  = false
+}
+
+# URL map for Load Balancer
+resource "google_compute_url_map" "frontend" {
+  project         = google_project.fs.project_id
+  name            = "frontend-url-map"
+  default_service = google_compute_backend_bucket.frontend.id
+
+  host_rule {
+    hosts        = ["*"]
+    path_matcher = "allpaths"
+  }
+
+  path_matcher {
+    name            = "allpaths"
+    default_service = google_compute_backend_bucket.frontend.id
+
+    path_rule {
+      paths   = ["/firebaseConfig.json", "/nstrumentaDeployment.json"]
+      service = google_compute_backend_bucket.config.id
+    }
+  }
+}
+
+# Grant the default service account permission to write to the frontend bucket
+resource "google_storage_bucket_iam_member" "frontend_deployer" {
+  bucket = google_storage_bucket.frontend.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# Cloud Run Job to deploy frontend
+resource "google_cloud_run_v2_job" "frontend_deploy" {
+  name     = "frontend-deploy"
+  location = var.location_id
+  project  = google_project.fs.project_id
+
+  template {
+    template {
+      containers {
+        image = "nstrumenta/frontend:${var.frontend_image_version_tag}"
+        env {
+          name  = "GCS_BUCKET"
+          value = google_storage_bucket.frontend.name
+        }
+      }
+      service_account = data.google_app_engine_default_service_account.default.email
+    }
+  }
+  
+  depends_on = [
+    google_storage_bucket.frontend,
+    google_storage_bucket_iam_member.frontend_deployer
+  ]
+}
+
+data "google_client_config" "default" {}
+
+# Trigger the deployment job when the image tag changes
+resource "null_resource" "trigger_frontend_deploy" {
+  triggers = {
+    image_tag = var.frontend_image_version_tag
+    project_id = google_project.fs.project_id
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      curl -X POST \
+      -H "Authorization: Bearer ${data.google_client_config.default.access_token}" \
+      -H "Content-Type: application/json" \
+      https://run.googleapis.com/v2/${google_cloud_run_v2_job.frontend_deploy.id}:run
+    EOT
+  }
+  depends_on = [google_cloud_run_v2_job.frontend_deploy]
+}
+
+# HTTPS proxy
+resource "google_compute_target_https_proxy" "frontend" {
+  project = google_project.fs.project_id
+  name    = "frontend-https-proxy"
+  url_map = google_compute_url_map.frontend.id
+  ssl_certificates = [
+    google_compute_managed_ssl_certificate.frontend.id
+  ]
+}
+
+# Global forwarding rule
+resource "google_compute_global_forwarding_rule" "frontend" {
+  project               = google_project.fs.project_id
+  name                  = "frontend-forwarding-rule"
+  ip_protocol           = "TCP"
+  load_balancing_scheme = "EXTERNAL"
+  port_range            = "443"
+  target                = google_compute_target_https_proxy.frontend.id
+  ip_address            = google_compute_global_address.frontend.id
+}
+
+# HTTP to HTTPS redirect
+resource "google_compute_url_map" "frontend_http_redirect" {
+  project = google_project.fs.project_id
+  name    = "frontend-http-redirect"
+  
+  default_url_redirect {
+    https_redirect         = true
+    redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
+    strip_query            = false
+  }
+}
+
+resource "google_compute_target_http_proxy" "frontend_http_redirect" {
+  project = google_project.fs.project_id
+  name    = "frontend-http-proxy"
+  url_map = google_compute_url_map.frontend_http_redirect.id
+}
+
+resource "google_compute_global_forwarding_rule" "frontend_http" {
+  project               = google_project.fs.project_id
+  name                  = "frontend-http-forwarding-rule"
+  ip_protocol           = "TCP"
+  load_balancing_scheme = "EXTERNAL"
+  port_range            = "80"
+  target                = google_compute_target_http_proxy.frontend_http_redirect.id
+  ip_address            = google_compute_global_address.frontend.id
+}
+
+# DNS A records pointing to Load Balancer IP
+resource "google_dns_record_set" "frontend_root" {
   project      = google_project.fs.project_id
   managed_zone = google_dns_managed_zone.managed_zone.name
-  name         = "www.${terraform.workspace}.nstrumenta.com."
-  type         = "CNAME"
+  name         = "${terraform.workspace}.app.nstrumenta.com."
+  type         = "A"
   ttl          = 300
-  rrdatas      = ["${replace(google_firebase_hosting_site.web_app.default_url, "https://", "")}."]
+  rrdatas      = [google_compute_global_address.frontend.address]
 }
+
+resource "google_dns_record_set" "frontend_www" {
+  project      = google_project.fs.project_id
+  managed_zone = google_dns_managed_zone.managed_zone.name
+  name         = "www.${terraform.workspace}.app.nstrumenta.com."
+  type         = "A"
+  ttl          = 300
+  rrdatas      = [google_compute_global_address.frontend.address]
+}
+
+
 
 
 resource "google_service_account_key" "server" {

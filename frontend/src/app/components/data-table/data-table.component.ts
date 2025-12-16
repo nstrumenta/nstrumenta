@@ -10,7 +10,6 @@ import { map, tap } from 'rxjs/operators';
 import { ServerService } from 'src/app/services/server.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
-import { environment } from 'src/environments/environment';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe, KeyValuePipe } from '@angular/common';

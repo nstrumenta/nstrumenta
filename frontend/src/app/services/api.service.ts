@@ -2,7 +2,6 @@ import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/comm
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
 import { AuthService } from '../auth/auth.service';
 
 export interface CreateProjectRequest {

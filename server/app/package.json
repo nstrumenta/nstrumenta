@@ -1,6 +1,6 @@
 {
   "name": "nst-server",
-  "version": "4.0.0",
+  "version": "4.0.11",
   "description": "server for nstrumenta",
   "bin": {
     "nst-server": "dist/index.js"
