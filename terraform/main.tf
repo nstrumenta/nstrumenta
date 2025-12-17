@@ -6,14 +6,8 @@ variable "org_id" {
   type = string
 }
 
-variable "image_version_tag" {
-  description = "The version tag of the image for the server and data-job-runner"
-  type = string
-  default = "latest"
-}
-
-variable "frontend_image_version_tag" {
-  description = "The version tag of the image for the frontend"
+variable "nstrumenta_version" {
+  description = "The version tag for nstrumenta images (frontend, server, data-job-runner)"
   type        = string
   default     = "latest"
 }
@@ -472,10 +466,14 @@ resource "google_cloud_run_v2_job" "frontend_deploy" {
   template {
     template {
       containers {
-        image = "nstrumenta/frontend:${var.frontend_image_version_tag}"
+        image = "nstrumenta/frontend:${var.nstrumenta_version}"
         env {
           name  = "GCS_BUCKET"
           value = google_storage_bucket.frontend.name
+        }
+        env {
+          name  = "URL_MAP"
+          value = google_compute_url_map.frontend.name
         }
       }
       service_account = data.google_app_engine_default_service_account.default.email
@@ -488,12 +486,19 @@ resource "google_cloud_run_v2_job" "frontend_deploy" {
   ]
 }
 
+# Grant permission to invalidate CDN cache
+resource "google_project_iam_member" "frontend_cache_invalidator" {
+  project = google_project.fs.project_id
+  role    = "roles/compute.loadBalancerAdmin"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 data "google_client_config" "default" {}
 
 # Trigger the deployment job when the image tag changes
 resource "null_resource" "trigger_frontend_deploy" {
   triggers = {
-    image_tag = var.frontend_image_version_tag
+    image_tag = var.nstrumenta_version
     project_id = google_project.fs.project_id
   }
 
@@ -659,7 +664,7 @@ resource "google_cloud_run_v2_service" "default" {
       ports {
         container_port = 5999
       }
-      image = "nstrumenta/server:${var.image_version_tag}"
+      image = "nstrumenta/server:${var.nstrumenta_version}"
 
       resources {
         cpu_idle = true
@@ -707,7 +712,7 @@ resource "google_cloud_run_v2_service" "default" {
       }
       env {
         name  = "IMAGE_VERSION_TAG"
-        value = var.image_version_tag
+        value = var.nstrumenta_version
       }
     }
     scaling {

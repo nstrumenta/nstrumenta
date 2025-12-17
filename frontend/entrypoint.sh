@@ -21,3 +21,12 @@ fi
 gsutil -m rsync -r -d /app/dist gs://$GCS_BUCKET/
 
 echo "Deployment complete."
+
+# Invalidate CDN cache if URL_MAP is set
+if [ -n "$URL_MAP" ]; then
+  echo "Invalidating CDN cache for $URL_MAP"
+  gcloud compute url-maps invalidate-cdn-cache "$URL_MAP" \
+    --path "/*" \
+    --async
+  echo "CDN cache invalidation initiated."
+fi
