@@ -117,7 +117,7 @@ jobs:
           keys:
             - nstrumenta-node_modules-{{ .Branch }}-{{ checksum "package.json" }}
       - run: npm install
-      - run: npm test
+      - run: npm run test:client && npm run test:server
   test-vscode-extension:
     docker:
       - image: nstrumenta/base:latest
