@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Auth, User, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
@@ -8,12 +8,14 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class AuthService {
   private auth: Auth;
   private googleProvider: GoogleAuthProvider;
+  private githubProvider: GithubAuthProvider;
   user = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null>;
 
   constructor() {
     this.auth = getAuth();
     this.googleProvider = new GoogleAuthProvider();
+    this.githubProvider = new GithubAuthProvider();
     this.user$ = this.user.asObservable();
 
     // Listen to auth state changes
@@ -28,6 +30,10 @@ export class AuthService {
 
   async loginWithGoogle(): Promise<void> {
     await signInWithPopup(this.auth, this.googleProvider);
+  }
+
+  async loginWithGithub(): Promise<void> {
+    await signInWithPopup(this.auth, this.githubProvider);
   }
 
   async loginWithEmail(email: string, password: string): Promise<void> {

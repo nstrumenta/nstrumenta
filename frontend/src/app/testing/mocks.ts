@@ -65,6 +65,7 @@ export class MockAuthService {
   setUser() {}
   login() { return Promise.resolve(); }
   loginWithGoogle() { return Promise.resolve(); }
+  loginWithGithub() { return Promise.resolve(); }
   loginWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   registerWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   logout() { return Promise.resolve(); }

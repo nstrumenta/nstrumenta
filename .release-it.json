@@ -18,6 +18,6 @@
   },
   "hooks": {
     "after:bump": "sed -i \"s/export const version = '.*';/export const version = '${version}';/\" lib/version.ts && sed -i \"s/version='.*'/version='${version}'/\" python/setup.py && (cd frontend && npm version ${version} --no-git-tag-version) && (cd server/app && npm version ${version} --no-git-tag-version) && (cd agent-admin-page && npm version ${version} --no-git-tag-version) && (cd vscode-extension && npm version ${version} --no-git-tag-version) && (cd functions && npm version ${version} --no-git-tag-version) && (cd data-job-runner/app && npm version ${version} --no-git-tag-version) && git add . && npm run build",
-    "after:release": "cd python && python3 setup.py sdist bdist_wheel && twine upload dist/*"
+    "after:release": "cd python && rm -rf dist/* && python3 setup.py sdist bdist_wheel && twine upload dist/*"
   }
 }

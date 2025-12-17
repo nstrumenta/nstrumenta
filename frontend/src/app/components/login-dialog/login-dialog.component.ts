@@ -33,9 +33,9 @@ export class LoginDialogComponent {
   isRegistering = false;
   errorMessage = '';
 
-  async googleLogin() {
+  async githubLogin() {
     try {
-      await this.authService.loginWithGoogle();
+      await this.authService.loginWithGithub();
       this.dialogRef.close(true);
     } catch (error: unknown) {
       if (error instanceof Error) {

@@ -45,13 +45,13 @@ describe('LoginDialogComponent', () => {
     expect(title.textContent).toContain('Create Account');
   });
 
-  it('should call loginWithGoogle when google button is clicked', async () => {
-    spyOn(authService, 'loginWithGoogle').and.callThrough();
+  it('should call loginWithGithub when github button is clicked', async () => {
+    spyOn(authService, 'loginWithGithub').and.callThrough();
     spyOn(dialogRef, 'close');
 
-    await component.googleLogin();
+    await component.githubLogin();
 
-    expect(authService.loginWithGoogle).toHaveBeenCalled();
+    expect(authService.loginWithGithub).toHaveBeenCalled();
     expect(dialogRef.close).toHaveBeenCalledWith(true);
   });
 

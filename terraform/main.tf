@@ -40,6 +40,17 @@ variable "dns_hub_project_id" {
   default     = "nstrumenta-hub"
 }
 
+variable "GITHUB_CLIENT_ID" {
+  description = "GitHub OAuth App Client ID"
+  type        = string
+}
+
+variable "GITHUB_CLIENT_SECRET" {
+  description = "GitHub OAuth App Client Secret"
+  type        = string
+  sensitive   = true
+}
+
 variable "dns_hub_zone_name" {
   description = "The name of the Managed Zone resource in the hub project"
   type        = string
@@ -89,7 +100,6 @@ resource "google_project_service" "fs" {
     "pubsub.googleapis.com",
     "compute.googleapis.com",
     "identitytoolkit.googleapis.com",
-    "iap.googleapis.com"
   ])
   service = each.key
 
@@ -126,29 +136,14 @@ resource "google_identity_platform_config" "auth" {
   ]
 }
 
-# Configure OAuth Brand (Consent Screen)
-resource "google_iap_brand" "project_brand" {
-  provider          = google-beta
-  support_email     = var.support_email
-  application_title = "Nstrumenta ${terraform.workspace}"
-  project           = google_project.fs.project_id
-  depends_on        = [google_project_service.fs]
-}
-
-# Create OAuth Client
-resource "google_iap_client" "project_client" {
-  provider     = google-beta
-  display_name = "Nstrumenta Web Client"
-  brand        = google_iap_brand.project_brand.name
-}
-
-resource "google_identity_platform_default_supported_idp_config" "google" {
+# GitHub OAuth configuration
+resource "google_identity_platform_default_supported_idp_config" "github" {
   provider      = google-beta
   project       = google_project.fs.project_id
   enabled       = true
-  idp_id        = "google.com"
-  client_id     = google_iap_client.project_client.client_id
-  client_secret = google_iap_client.project_client.secret
+  idp_id        = "github.com"
+  client_id     = var.GITHUB_CLIENT_ID
+  client_secret = var.GITHUB_CLIENT_SECRET
   depends_on    = [google_identity_platform_config.auth]
 }
 
@@ -378,13 +373,17 @@ resource "google_compute_global_address" "frontend" {
 # Google-managed SSL certificate
 resource "google_compute_managed_ssl_certificate" "frontend" {
   project = google_project.fs.project_id
-  name    = "frontend-cert"
+  name    = "frontend-cert-v2"
 
   managed {
     domains = [
       "${terraform.workspace}.app.nstrumenta.com.",
       "www.${terraform.workspace}.app.nstrumenta.com."
     ]
+  }
+  
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
