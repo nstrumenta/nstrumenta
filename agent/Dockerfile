@@ -1,7 +1,7 @@
 FROM nstrumenta/base:latest
 
 # Install pre-built nstrumenta CLI
-COPY nstrumenta-*.tgz /tmp/nstrumenta.tgz
+COPY build/nstrumenta-*.tgz /tmp/nstrumenta.tgz
 RUN npm install -g /tmp/nstrumenta.tgz && \
     rm /tmp/nstrumenta.tgz
 

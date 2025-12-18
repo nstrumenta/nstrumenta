@@ -102,7 +102,13 @@ function extractApiKey(req: Request): string | undefined {
   if (typeof authHeader === 'string') {
     const [scheme, token] = authHeader.split(' ')
     if (scheme?.toLowerCase() === 'bearer' && token?.trim()) {
-      return token.trim()
+      const trimmedToken = token.trim()
+      // Only treat as API key if it looks like one (48+ chars hex)
+      // This avoids trying to validate Firebase JWT tokens as API keys
+      const rawKey = trimmedToken.split(':')[0]
+      if (rawKey.length >= 48 && /^[0-9a-f]+$/i.test(rawKey)) {
+        return trimmedToken
+      }
     }
   }
 

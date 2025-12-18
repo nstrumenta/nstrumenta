@@ -10,6 +10,15 @@ fi
 # Change to integration-tests directory
 cd "$(dirname "$0")"
 
+# Cleanup function to run on exit
+cleanup() {
+    if [ -n "$CURRENT_TEST_DIR" ] && [ -d "$CURRENT_TEST_DIR" ]; then
+        echo "Cleaning up containers..."
+        (cd "$CURRENT_TEST_DIR" && docker compose down 2>/dev/null || true)
+    fi
+}
+trap cleanup EXIT
+
 TEST_ID_BASE=${TEST_ID_BASE:-$(node -p "crypto.randomUUID()")}
 echo "TEST_ID_BASE= $TEST_ID_BASE"
 
@@ -58,12 +67,14 @@ docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network crea
 if [ -z "$CI" ]; then
     echo "Building fresh CLI and server for e2e tests..."
     (cd .. && npm run build:cli && npm run build:server)
+    echo "Creating build directory..."
+    mkdir -p ../build
     echo "Removing old tarballs..."
-    rm -f ../nstrumenta-*.tgz ../server/app/nst-server-*.tgz
+    rm -f ../build/nstrumenta-*.tgz ../build/nst-server-*.tgz
     echo "Packing nstrumenta..."
-    (cd .. && npm pack)
+    (cd .. && npm pack && mv nstrumenta-*.tgz build/)
     echo "Packing server..."
-    (cd ../server/app && npm pack && mv nst-server-*.tgz ../..)
+    (cd ../server/app && npm pack && mv nst-server-*.tgz ../../build/)
 else
     echo "Skipping build (using cached artifacts from CI workspace)"
 fi
@@ -75,6 +86,7 @@ else
 fi
 for TEST_SERVICE in $TESTS; do
     cd $TEST_SERVICE
+    CURRENT_TEST_DIR="$(pwd)"
     # Pass CACHE_BUST to force rebuild in CI, while allowing local caching
     CACHE_BUST_ARG=""
     if [ -n "$CI" ]; then
@@ -84,6 +96,7 @@ for TEST_SERVICE in $TESTS; do
        TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -q "${TEST_SERVICE} exited with code 0"; then
         echo exited with code 0
         docker compose down
+        CURRENT_TEST_DIR=""
     else
         exit 1
     fi

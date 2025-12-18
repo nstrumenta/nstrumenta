@@ -1,0 +1,14 @@
+{
+  "name": "frontend-e2e-tests",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:playwright": "playwright test",
+    "test:all": "npm run test:playwright"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@playwright/test": "^1.40.0"
+  }
+}

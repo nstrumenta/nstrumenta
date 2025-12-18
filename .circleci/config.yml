@@ -200,6 +200,11 @@ jobs:
           name: Run CLI tests (Remote Cloud Run Mode)
           command: ./e2e.sh cli
       - run:
+          name: Run Frontend tests
+          command: |
+            export NSTRUMENTA_CLOUD_RUN_MODE=local
+            API_URL="" NSTRUMENTA_API_URL="" ./e2e.sh frontend
+      - run:
           name: delete test-server
           command: >
             gcloud run services delete --quiet --region=us-west1 ${TEST_SERVER}
