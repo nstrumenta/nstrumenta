@@ -53,19 +53,35 @@ export class ApiService {
       return apiUrl;
     }
 
-    try {
-      // Fetch the API URL from the nstrumentaDeployment configuration
-      // This matches the pattern used in the server's ApiKeyService
-      const config = await fetch('/nstrumentaDeployment.json');
-      const deployment = await config.json() as { apiUrl: string };
-      this.apiUrlCache = deployment.apiUrl;
-      return deployment.apiUrl;
-    } catch (error) {
-      console.warn('Could not fetch deployment config, falling back to localhost:', error);
-      // Fallback to localhost for development
-      this.apiUrlCache = 'http://localhost:5999';
-      return this.apiUrlCache;
+    // Fetch the API URL from the nstrumentaDeployment configuration
+    // This matches the pattern used in the server's ApiKeyService
+    const response = await fetch('/nstrumentaDeployment.json');
+    
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch deployment configuration: ${response.status} ${response.statusText}. ` +
+        `Please ensure nstrumentaDeployment.json is available at the root of the frontend.`
+      );
     }
+
+    let deployment: { apiUrl: string };
+    try {
+      deployment = await response.json();
+    } catch (error) {
+      throw new Error(
+        `Failed to parse nstrumentaDeployment.json: ${error}. ` +
+        `The file exists but contains invalid JSON.`
+      );
+    }
+
+    if (!deployment.apiUrl) {
+      throw new Error(
+        `Invalid deployment configuration: missing 'apiUrl' property in nstrumentaDeployment.json`
+      );
+    }
+
+    this.apiUrlCache = deployment.apiUrl;
+    return deployment.apiUrl;
   }
 
   async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {
@@ -83,14 +99,41 @@ export class ApiService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`
+      'Authorization': `Bearer ${idToken}`,
+      'Accept': 'application/json, text/event-stream'
     });
 
-    return this.http.post<CreateProjectResponse>(
-      `${apiUrl}/createProject`,
-      request,
+    // Call MCP endpoint with JSON-RPC 2.0
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'create_project',
+        arguments: {
+          name: request.name,
+          projectIdBase: request.projectIdBase
+        }
+      }
+    };
+
+    const response = await this.http.post<any>(
+      apiUrl,
+      mcpRequest,
       { headers }
     ).toPromise();
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to create project');
+    }
+
+    // Extract result from MCP response
+    const result = response.result?.structuredContent || response.result;
+    return {
+      id: result.id,
+      name: result.name,
+      message: result.message
+    };
   }
 
   async createApiKey(request: CreateApiKeyRequest): Promise<CreateApiKeyResponse> {
@@ -108,14 +151,42 @@ export class ApiService {
 
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`
+      'Authorization': `Bearer ${idToken}`,
+      'Accept': 'application/json, text/event-stream'
     });
 
-    return this.http.post<CreateApiKeyResponse>(
-      `${apiUrl}/createApiKey`,
-      request,
+    // Call MCP endpoint with JSON-RPC 2.0
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'create_api_key',
+        arguments: {
+          projectId: request.projectId,
+          apiUrl: request.apiUrl
+        }
+      }
+    };
+
+    const response = await this.http.post<any>(
+      apiUrl,
+      mcpRequest,
       { headers }
     ).toPromise();
+
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to create API key');
+    }
+
+    // Extract result from MCP response
+    const result = response.result?.structuredContent || response.result;
+    return {
+      key: result.key,
+      keyId: result.keyId,
+      createdAt: result.createdAt,
+      message: result.message
+    };
   }
 
   async uploadFile(projectId: string, file: File, folder?: string): Promise<Observable<number>> {
@@ -127,26 +198,37 @@ export class ApiService {
     const idToken = await user.getIdToken();
     const apiUrl = await this.getApiUrl();
 
-    const response = await fetch(`${apiUrl}/uploadData`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`
-      },
-      body: JSON.stringify({
-        projectId,
-        name: file.name,
-        size: file.size,
-        contentType: file.type,
-        folder: folder || ''
-      })
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${idToken}`
     });
 
-    if (!response.ok) {
-      throw new Error(`Failed to get upload URL: ${response.status}`);
+    // Call MCP endpoint to get upload URL
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'get_upload_data_url',
+        arguments: {
+          name: file.name,
+          overwrite: false
+        }
+      }
+    };
+
+    const mcpResponse = await this.http.post<any>(
+      apiUrl,
+      mcpRequest,
+      { headers }
+    ).toPromise();
+
+    if (mcpResponse.error) {
+      throw new Error(mcpResponse.error.message || 'Failed to get upload URL');
     }
 
-    const { uploadUrl } = await response.json() as UploadDataResponse;
+    const result = mcpResponse.result?.structuredContent || mcpResponse.result;
+    const { uploadUrl } = result;
 
     return this.http.put(uploadUrl, file, {
       headers: new HttpHeaders({

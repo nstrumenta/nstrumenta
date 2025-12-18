@@ -24,6 +24,12 @@ jobs:
             npm run build
             npm pack
             mv nst-server-*.tgz ../..
+      - run:
+          name: Move packages to build directory
+          command: |
+            mkdir -p build
+            mv nstrumenta-*.tgz build/
+            mv nst-server-*.tgz build/
       - persist_to_workspace:
           root: .
           paths:
@@ -34,8 +40,7 @@ jobs:
             - package-lock.json
             - tsconfig.json
             - src
-            - nstrumenta-*.tgz
-            - nst-server-*.tgz
+            - build
   build-frontend:
     docker:
       - image: nstrumenta/base:latest
@@ -199,6 +204,11 @@ jobs:
       - run:
           name: Run CLI tests (Remote Cloud Run Mode)
           command: ./e2e.sh cli
+      - run:
+          name: Run Frontend tests
+          command: |
+            export NSTRUMENTA_CLOUD_RUN_MODE=local
+            API_URL="" NSTRUMENTA_API_URL="" ./e2e.sh frontend
       - run:
           name: delete test-server
           command: >

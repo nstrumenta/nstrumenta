@@ -69,20 +69,14 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
             .limit(1)
             .get();
         
-        if (!projectDoc.empty) {
-            const projectId = projectDoc.docs[0].id;
-            return {
-                authenticated: true,
-                projectId,
-                userId: firebaseResult.userId,
-                authType: 'firebase'
-            };
-        }
+        const projectId = projectDoc.empty ? '' : projectDoc.docs[0].id;
         
+        // Allow Firebase auth even without a project (needed for create_project)
         return {
-            authenticated: false,
-            projectId: '',
-            message: 'No project found for authenticated user'
+            authenticated: true,
+            projectId,
+            userId: firebaseResult.userId,
+            authType: 'firebase'
         };
     }
 
@@ -813,7 +807,16 @@ server.registerTool(
                 members: { [userId]: { role: 'owner', addedAt: timestamp } },
             };
 
-            await firestore.collection('projects').doc(projectId).set(projectData);
+            // Use batch to create both project and user project reference atomically
+            const batch = firestore.batch();
+            
+            const projectRef = firestore.collection('projects').doc(projectId);
+            batch.set(projectRef, projectData);
+            
+            const userProjectRef = firestore.collection(`users/${userId}/projects`).doc(projectId);
+            batch.set(userProjectRef, { name });
+            
+            await batch.commit();
 
             return {
                 content: [{
