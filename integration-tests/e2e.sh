@@ -93,7 +93,7 @@ for TEST_SERVICE in $TESTS; do
         CACHE_BUST_ARG="--build-arg CACHE_BUST=$(date +%s)"
     fi
     if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml build $CACHE_BUST_ARG && \
-       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -q "${TEST_SERVICE} exited with code 0"; then
+       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
         echo exited with code 0
         docker compose down
         CURRENT_TEST_DIR=""
