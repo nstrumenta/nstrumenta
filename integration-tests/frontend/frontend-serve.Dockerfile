@@ -12,5 +12,7 @@ WORKDIR /app
 ENV PORT=4200
 EXPOSE 4200
 
-# Serve the static files with SPA fallback to index.html
-CMD http-server -p $PORT -c-1 --cors -P http://localhost:$PORT?
+# Create nstrumentaDeployment.json with environment variable at runtime
+# API_URL defaults to http://nstrumenta-server:5999 if not set
+CMD echo "{\"apiUrl\": \"${API_URL:-http://nstrumenta-server:5999}\"}" > /app/nstrumentaDeployment.json && \
+    http-server -p $PORT -c-1 --cors -P http://localhost:$PORT?

@@ -53,19 +53,35 @@ export class ApiService {
       return apiUrl;
     }
 
-    try {
-      // Fetch the API URL from the nstrumentaDeployment configuration
-      // This matches the pattern used in the server's ApiKeyService
-      const config = await fetch('/nstrumentaDeployment.json');
-      const deployment = await config.json() as { apiUrl: string };
-      this.apiUrlCache = deployment.apiUrl;
-      return deployment.apiUrl;
-    } catch (error) {
-      console.warn('Could not fetch deployment config, falling back to localhost:', error);
-      // Fallback to localhost for development
-      this.apiUrlCache = 'http://localhost:5999';
-      return this.apiUrlCache;
+    // Fetch the API URL from the nstrumentaDeployment configuration
+    // This matches the pattern used in the server's ApiKeyService
+    const response = await fetch('/nstrumentaDeployment.json');
+    
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch deployment configuration: ${response.status} ${response.statusText}. ` +
+        `Please ensure nstrumentaDeployment.json is available at the root of the frontend.`
+      );
     }
+
+    let deployment: { apiUrl: string };
+    try {
+      deployment = await response.json();
+    } catch (error) {
+      throw new Error(
+        `Failed to parse nstrumentaDeployment.json: ${error}. ` +
+        `The file exists but contains invalid JSON.`
+      );
+    }
+
+    if (!deployment.apiUrl) {
+      throw new Error(
+        `Invalid deployment configuration: missing 'apiUrl' property in nstrumentaDeployment.json`
+      );
+    }
+
+    this.apiUrlCache = deployment.apiUrl;
+    return deployment.apiUrl;
   }
 
   async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {

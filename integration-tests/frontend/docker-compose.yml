@@ -30,6 +30,7 @@ services:
       dockerfile: ./integration-tests/frontend/frontend-serve.Dockerfile
     environment:
       - PORT=4200
+      - API_URL=${API_URL:-http://nstrumenta-server:5999}
     networks:
       - nstrumenta_default
     healthcheck:
