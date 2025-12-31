@@ -14,12 +14,12 @@ The MCP server now authenticates requests with the same project-scoped API keys 
 
 ```bash
 # Terminal 1 – Express/MCP server
-cd cluster/server/app
+cd server/app
 npm install
 ENVFILE=../../credentials/local.env npm run dev-dotenv
 
 # Terminal 2 – Angular frontend (handy for creating keys and checking data)
-cd cluster/frontend
+cd frontend
 npm install
 npm start
 ```

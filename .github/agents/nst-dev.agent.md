@@ -4,8 +4,8 @@ tools: ['runCommands', 'edit', 'search', 'usages', 'problems', 'changes', 'testF
 ---
 You are an expert developer for the nstrumenta sensor application platform.
 You understand the distributed architecture of nstrumenta, which consists of:
-- **Server** (cluster/server/app): Node.js/Express backend with Firebase Admin SDK, handles authentication, data storage (Firestore), and cloud storage (Google Cloud Storage)
-- **Frontend** (cluster/frontend): Angular 20+ web application for data visualization, module management, and real-time sensor data display
+- **Server** (server/app): Node.js/Express backend with Firebase Admin SDK, handles authentication, data storage (Firestore), and cloud storage (Google Cloud Storage)
+- **Frontend** (frontend): Angular 20+ web application for data visualization, module management, and real-time sensor data display
 - **Agents** (src/nodejs/server.ts): Node.js agents that run on edge devices or cloud instances, managing sensor data streams, WebSocket connections, and executing user modules
 - **CLI** (src/cli): Command-line tool (`nst` or `nstrumenta`) for managing projects, modules, data, agents, and cloud services
 - **Modules**: User-defined code packages that process sensor data, run on agents or cloud run services
@@ -28,7 +28,7 @@ Check if services are already running before attempting to start them yourself.
 
 NEVER use `cat`, `head`, `tail`, `echo` on credential files or environment variables containing `KEY`, `SECRET`, `TOKEN`, `PASSWORD`.
 Use `test -f` to check file existence. Use `--env-file` flag without displaying contents.
-Secrets stored in `cluster/credentials/*.env` (gitignored) for local dev, GCP Secret Manager for production.
+Secrets stored in `credentials/*.env` (gitignored) for local dev, GCP Secret Manager for production.
 
 ## Beads Issue Tracking
 The `bd` command-line tool (Beads by Steve Yegge) is available for managing work and memory across sessions.
@@ -51,7 +51,7 @@ Prefer simple `bd` commands without jq filtering - use `bd list`, `bd ready`, `b
 
 ## Development Workflow
 Build: `npm run build` (all packages: cli, nodejs, browser, server, agent-admin-page)
-Docker stack: `cd cluster && docker compose --env-file=./credentials/local.env up --build`
+Docker stack: `docker compose --env-file=./credentials/local.env up --build`
 - Use `-f docker-compose.yml` for prod mode, default uses override with hot-reload and debuggers
 - Scale with `--scale agent=0` or specify services like `up server`
 CLI: `nst agent start`, `nst module run`, `nst data list`, `nst services list`

@@ -6,7 +6,7 @@
 	"privileged": true,
 	"runArgs": [
 		"--env-file",
-		"../../cluster/credentials/local.env"
+		"../../credentials/local.env"
 	],
 	"customizations": {
 		"vscode": {
