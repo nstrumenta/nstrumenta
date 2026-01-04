@@ -321,18 +321,7 @@ resource "google_storage_bucket_iam_policy" "data_bucket" {
   policy_data = data.google_iam_policy.data_bucket.policy_data
 }
 
-resource "google_storage_bucket_object" "nstrumenta_deployment" {
-  depends_on = [google_cloud_run_v2_service.default]
-  name       = "nstrumentaDeployment.json"
-  content = jsonencode({
-    # Use Cloud Run default URL until custom domain is verified and configured
-    apiUrl = google_cloud_run_v2_service.default.uri
-    }
-  )
-  bucket        = google_storage_bucket.config.id
-  cache_control = "public, max-age=30"
-}
-
+# Firebase config is stored in the config bucket
 
 # Cloud Run domain mapping for custom domain (handles SSL automatically)
 # Terraform SA (nstrumenta-terraform@macro-coil-194519.iam.gserviceaccount.com) 

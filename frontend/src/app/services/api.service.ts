@@ -53,35 +53,32 @@ export class ApiService {
       return apiUrl;
     }
 
-    // Fetch the API URL from the nstrumentaDeployment configuration
-    // This matches the pattern used in the server's ApiKeyService
-    const response = await fetch('/nstrumentaDeployment.json');
+    // Fetch the API URL from the /config endpoint
+    const response = await fetch('/config');
     
     if (!response.ok) {
       throw new Error(
-        `Failed to fetch deployment configuration: ${response.status} ${response.statusText}. ` +
-        `Please ensure nstrumentaDeployment.json is available at the root of the frontend.`
+        `Failed to fetch config: ${response.status} ${response.statusText}`
       );
     }
 
-    let deployment: { apiUrl: string };
+    let config: { apiUrl: string };
     try {
-      deployment = await response.json();
+      config = await response.json();
     } catch (error) {
       throw new Error(
-        `Failed to parse nstrumentaDeployment.json: ${error}. ` +
-        `The file exists but contains invalid JSON.`
+        `Failed to parse config: ${error}`
       );
     }
 
-    if (!deployment.apiUrl) {
+    if (!config.apiUrl) {
       throw new Error(
-        `Invalid deployment configuration: missing 'apiUrl' property in nstrumentaDeployment.json`
+        `Invalid config: missing 'apiUrl' property`
       );
     }
 
-    this.apiUrlCache = deployment.apiUrl;
-    return deployment.apiUrl;
+    this.apiUrlCache = config.apiUrl;
+    return config.apiUrl;
   }
 
   async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {
@@ -124,11 +121,13 @@ export class ApiService {
     ).toPromise();
 
     if (response.error) {
+      console.error('MCP error response:', response.error);
       throw new Error(response.error.message || 'Failed to create project');
     }
 
     // Extract result from MCP response
     const result = response.result?.structuredContent || response.result;
+    console.log('MCP createProject result:', result);
     return {
       id: result.id,
       name: result.name,

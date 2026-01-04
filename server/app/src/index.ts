@@ -70,25 +70,15 @@ app.get('/health', (req, res) => {
 
 app.get('/config', (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600')
+  const protocol = req.get('x-forwarded-proto') || req.protocol;
+  const host = req.get('x-forwarded-host') || req.get('host');
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: `${serviceAccount.project_id}.firebaseapp.com`,
     projectId: serviceAccount.project_id,
-    appId: process.env.FIREBASE_APP_ID
+    appId: process.env.FIREBASE_APP_ID,
+    apiUrl: `${protocol}://${host}`
   })
-})
-
-app.get('/nstrumentaDeployment.json', async (req, res) => {
-  try {
-    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('nstrumentaDeployment.json')
-    const [content] = await file.download()
-    res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Cache-Control', 'public, max-age=30')
-    res.send(content)
-  } catch (error) {
-    console.error('Error serving nstrumentaDeployment.json:', error)
-    res.status(500).json({ error: 'Failed to load deployment config' })
-  }
 })
 
 // MCP JSON-RPC 2.0 endpoints

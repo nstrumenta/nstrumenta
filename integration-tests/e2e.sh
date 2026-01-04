@@ -10,6 +10,18 @@ fi
 # Change to integration-tests directory
 cd "$(dirname "$0")"
 
+# Load environment variables from integration test credentials file
+if [ -f "../credentials/integration-test.env" ]; then
+  set -a
+  source ../credentials/integration-test.env
+  set +a
+else
+  echo "ERROR: credentials/integration-test.env not found."
+  echo "Integration tests require ci-nst workspace credentials."
+  echo "See credentials/readme.md for setup instructions."
+  exit 1
+fi
+
 # Cleanup function to run on exit
 cleanup() {
     if [ -n "$CURRENT_TEST_DIR" ] && [ -d "$CURRENT_TEST_DIR" ]; then

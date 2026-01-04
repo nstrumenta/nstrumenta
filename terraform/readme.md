@@ -40,7 +40,7 @@ terraform apply
 The Cloud Run service will automatically serve:
 - Frontend app at `https://<workspace>.app.nstrumenta.com/`
 - Backend API at `https://<workspace>.app.nstrumenta.com/`
-- Config files at `/firebaseConfig.json` and `/nstrumentaDeployment.json`
+- Config file at `/firebaseConfig.json` (deployment config now served via `/config` endpoint)
 
 SSL certificates are managed automatically by Cloud Run domain mapping.
 

@@ -11,7 +11,7 @@ import { AsyncPipe, DatePipe } from '@angular/common';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatButton, MatFabButton } from '@angular/material/button';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
 
 // Interface for project data
@@ -45,6 +45,7 @@ export class ProjectListComponent implements OnInit {
   public authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
   private destroyRef = inject(DestroyRef);
+  private router = inject(Router);
 
   constructor() {
     // Set up effect to handle user projects data changes
@@ -83,7 +84,14 @@ export class ProjectListComponent implements OnInit {
   }
 
   newProjectDialog() {
-    this.dialog.open(NewProjectDialogComponent);
+    const dialogRef = this.dialog.open(NewProjectDialogComponent);
+    
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.id) {
+        console.log('Navigating to new project:', result.id);
+        this.router.navigate(['/project', result.id]);
+      }
+    });
   }
 
   onResize() {

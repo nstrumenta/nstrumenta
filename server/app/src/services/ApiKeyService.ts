@@ -30,21 +30,14 @@ export function CreateApiKeyService({
       projectId: string,
       apiUrlParam?: string,
     ) {
-      // apiUrl: payload > projectData > nstrumentaDeployment
-
+      // Get apiUrl from parameter, project data, or use a default
       const projectData = (
         await firestore.doc(`/projects/${projectId}`).get()
       ).data()
       const apiUrl =
         apiUrlParam ??
         projectData?.apiUrl ??
-        (
-          (await (
-            await fetch(
-              `https://storage.googleapis.com/${serviceAccount.project_id}-config/nstrumentaDeployment.json`,
-            )
-          ).json()) as { apiUrl: string }
-        ).apiUrl
+        `https://${serviceAccount.project_id}.web.app` // Fallback to Firebase hosting URL
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 

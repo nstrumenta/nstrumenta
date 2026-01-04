@@ -6,12 +6,20 @@ const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 test.describe('Authentication Flow', () => {
   test('should load the frontend application', async ({ page }) => {
+    // Capture console messages
+    page.on('console', msg => console.log('BROWSER:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+    
     await page.goto(FRONTEND_URL);
     // Wait for Angular app to load
     await expect(page.locator('body')).toBeVisible();
   });
 
   test('should sign in with test user', async ({ page }) => {
+    // Capture console messages
+    page.on('console', msg => console.log('BROWSER:', msg.text()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+    
     await page.goto(FRONTEND_URL);
     
     // Wait for page to fully load

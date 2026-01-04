@@ -86,7 +86,8 @@ fetch('/config')
         // Initialize icons after app bootstrap
         { provide: ENVIRONMENT_INITIALIZER, useFactory: initializeIcons, multi: true },
       ]
-    }).catch((err) => console.log(err));
-  });
+    }).catch((err) => console.error('Bootstrap error:', err));
+  })
+  .catch((err) => console.error('Firebase config error:', err));
 // Ensure bootstrap errors are visible
 // Note: we use console.error so production logging tools and Sentry can capture this consistently
