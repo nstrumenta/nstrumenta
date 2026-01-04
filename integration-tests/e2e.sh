@@ -61,6 +61,14 @@ if [ -z "$NSTRUMENTA_CLOUD_RUN_MODE" ] && [ -z "$CI" ]; then
     export NSTRUMENTA_CLOUD_RUN_MODE=local
 fi
 
+# If running in local mode, ensure we use the local server by unsetting API_URL
+# This prevents accidental usage of remote servers (e.g. from local.env) when running local tests
+if [ "$NSTRUMENTA_CLOUD_RUN_MODE" = "local" ] && [ -n "$API_URL" ]; then
+    echo "WARN: NSTRUMENTA_CLOUD_RUN_MODE is local, but API_URL is set to '$API_URL'."
+    echo "Unsetting API_URL to ensure tests run against the local server container."
+    unset API_URL
+fi
+
 echo "NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE:-remote}"
 
 # Load the environment variables from the specified ENVFILE
