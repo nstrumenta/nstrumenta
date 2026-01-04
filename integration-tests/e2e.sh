@@ -21,7 +21,7 @@ fi
 # Generate a temporary .env file for docker-compose to avoid shell mangling of JSON
 # This works for both Local (sourced from local.env) and CI (env vars)
 # We overwrite integration-test.env in the current directory (gitignored)
-ENV_FILE="integration-test.env"
+ENV_FILE="$(pwd)/integration-test.env"
 cat > "$ENV_FILE" <<EOF
 NST_CI_SERVICE_KEY=$NST_CI_SERVICE_KEY
 NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER
@@ -46,6 +46,10 @@ cleanup() {
     if [ -n "$CURRENT_TEST_DIR" ] && [ -d "$CURRENT_TEST_DIR" ]; then
         echo "Cleaning up containers..."
         (cd "$CURRENT_TEST_DIR" && docker compose down 2>/dev/null || true)
+    fi
+    if [ -f "$ENV_FILE" ]; then
+        echo "Removing temporary env file..."
+        rm -f "$ENV_FILE"
     fi
 }
 trap cleanup EXIT
@@ -132,8 +136,8 @@ for TEST_SERVICE in $TESTS; do
     # ENV_FILE is set earlier to integration-test.env in the integration-tests directory
     # We need to use the absolute path or relative path from the docker-compose file location
     # Since we cd into $TEST_SERVICE, we need to adjust the path
-    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "../integration-test.env" -f docker-compose.yml build $CACHE_BUST_ARG && \
-       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "../integration-test.env" -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
+    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "$ENV_FILE" -f docker-compose.yml build $CACHE_BUST_ARG && \
+       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "$ENV_FILE" -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
         echo exited with code 0
         docker compose down
         CURRENT_TEST_DIR=""
