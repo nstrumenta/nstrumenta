@@ -1,5 +1,7 @@
 # Terraform configuration to set up providers by version.
 terraform {
+  required_version = ">= 1.6.0"
+  
   cloud {
     organization = "nstrumenta"
     workspaces {

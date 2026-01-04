@@ -10,9 +10,8 @@ docker push $IMAGE_REPOSITORY/agent:$IMAGE_VERSION_TAG
 docker build -t $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG -f ./data-job-runner/Dockerfile .
 docker push $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG
 
-# server
+# server (includes frontend static files)
 docker build -t $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG -f ./server/Dockerfile .
 docker push $IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG
-# frontend
-docker build -t $IMAGE_REPOSITORY/frontend:$IMAGE_VERSION_TAG -f ./frontend/Dockerfile .
-docker push $IMAGE_REPOSITORY/frontend:$IMAGE_VERSION_TAG
+
+# Note: Frontend is no longer a separate image - it's included in the server image

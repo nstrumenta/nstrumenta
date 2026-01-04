@@ -1,0 +1,14 @@
+# Exclude terraform cache, state, providers, and artifacts
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform.tfstate.d/
+*.zip
+firebaseConfig.json
+.terraform.lock.hcl
+
+# Exclude dev/IDE files
+.vscode/
+.gitignore
+readme.md
+terraform-devbilling.tfvars

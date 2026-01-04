@@ -256,7 +256,8 @@ jobs:
           echo "Pulling and retagging images for version $PACKAGE_VERSION"
           
           # Pull CI images and retag for Docker Hub
-          for image in agent server data-job-runner frontend; do
+          # Note: frontend is no longer a separate image - it's included in server
+          for image in agent server data-job-runner; do
             echo "Processing $image..."
             docker pull $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG
             docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:$PACKAGE_VERSION

@@ -330,6 +330,7 @@ resource "google_storage_bucket_object" "nstrumenta_deployment" {
   depends_on = [google_cloud_run_v2_service.default]
   name       = "nstrumentaDeployment.json"
   content = jsonencode({
+    # Use Cloud Run default URL until custom domain is verified and configured
     apiUrl = google_cloud_run_v2_service.default.uri
     }
   )
@@ -338,247 +339,31 @@ resource "google_storage_bucket_object" "nstrumenta_deployment" {
 }
 
 
-# Create a Cloud DNS managed zone
-resource "google_dns_managed_zone" "managed_zone" {
-  project     = google_project.fs.project_id
-  name        = terraform.workspace
-  dns_name    = "${terraform.workspace}.app.nstrumenta.com."
-  description = "Managed DNS Zone for nstrumenta client"
+# Cloud Run domain mapping for custom domain (handles SSL automatically)
+# Terraform SA (nstrumenta-terraform@macro-coil-194519.iam.gserviceaccount.com) 
+# is verified in Google Search Console for app.nstrumenta.com
+resource "google_cloud_run_domain_mapping" "frontend" {
+  location = var.location_id
+  name     = "${terraform.workspace}.app.nstrumenta.com"
+  project  = google_project.fs.project_id
+
+  metadata {
+    namespace = google_project.fs.project_id
+  }
+
+  spec {
+    route_name = google_cloud_run_v2_service.default.name
+  }
 }
 
-# Automate Delegation: Add NS records to the Hub Zone
-resource "google_dns_record_set" "delegation" {
+# Create CNAME record directly in hub zone (no per-workspace DNS zone needed)
+resource "google_dns_record_set" "frontend_cname" {
   project      = var.dns_hub_project_id
   managed_zone = var.dns_hub_zone_name
   name         = "${terraform.workspace}.app.nstrumenta.com."
-  type         = "NS"
+  type         = "CNAME"
   ttl          = 300
-  rrdatas      = google_dns_managed_zone.managed_zone.name_servers
-}
-
-
-
-# Reserve a global static IP for the load balancer
-resource "google_compute_global_address" "frontend" {
-  project = google_project.fs.project_id
-  name    = "frontend-ip"
-}
-
-# Google-managed SSL certificate
-resource "google_compute_managed_ssl_certificate" "frontend" {
-  project = google_project.fs.project_id
-  name    = "frontend-cert-v2"
-
-  managed {
-    domains = [
-      "${terraform.workspace}.app.nstrumenta.com.",
-      "www.${terraform.workspace}.app.nstrumenta.com."
-    ]
-  }
-  
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-# GCS bucket for frontend static files
-resource "google_storage_bucket" "frontend" {
-  provider      = google-beta
-  project       = google_project.fs.project_id
-  name          = "${google_project.fs.project_id}-frontend"
-  location      = "US"
-  force_destroy = true
-  
-  uniform_bucket_level_access = true
-  
-  website {
-    main_page_suffix = "index.html"
-    not_found_page   = "index.html"
-  }
-}
-
-# Make frontend bucket publicly readable
-resource "google_storage_bucket_iam_member" "frontend_public" {
-  bucket = google_storage_bucket.frontend.name
-  role   = "roles/storage.objectViewer"
-  member = "allUsers"
-}
-
-# Backend bucket for Load Balancer
-resource "google_compute_backend_bucket" "frontend" {
-  project     = google_project.fs.project_id
-  name        = "frontend-backend"
-  bucket_name = google_storage_bucket.frontend.name
-  enable_cdn  = true
-  
-  cdn_policy {
-    cache_mode        = "CACHE_ALL_STATIC"
-    client_ttl        = 3600
-    default_ttl       = 3600
-    max_ttl           = 86400
-    negative_caching  = true
-    serve_while_stale = 86400
-  }
-}
-
-resource "google_compute_backend_bucket" "config" {
-  project     = google_project.fs.project_id
-  name        = "config-backend"
-  bucket_name = google_storage_bucket.config.name
-  enable_cdn  = false
-}
-
-# URL map for Load Balancer
-resource "google_compute_url_map" "frontend" {
-  project         = google_project.fs.project_id
-  name            = "frontend-url-map"
-  default_service = google_compute_backend_bucket.frontend.id
-
-  host_rule {
-    hosts        = ["*"]
-    path_matcher = "allpaths"
-  }
-
-  path_matcher {
-    name            = "allpaths"
-    default_service = google_compute_backend_bucket.frontend.id
-
-    path_rule {
-      paths   = ["/firebaseConfig.json", "/nstrumentaDeployment.json"]
-      service = google_compute_backend_bucket.config.id
-    }
-  }
-}
-
-# Grant the default service account permission to write to the frontend bucket
-resource "google_storage_bucket_iam_member" "frontend_deployer" {
-  bucket = google_storage_bucket.frontend.name
-  role   = "roles/storage.objectAdmin"
-  member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
-}
-
-# Cloud Run Job to deploy frontend
-resource "google_cloud_run_v2_job" "frontend_deploy" {
-  name     = "frontend-deploy"
-  location = var.location_id
-  project  = google_project.fs.project_id
-
-  template {
-    template {
-      containers {
-        image = "nstrumenta/frontend:${var.nstrumenta_version}"
-        env {
-          name  = "GCS_BUCKET"
-          value = google_storage_bucket.frontend.name
-        }
-        env {
-          name  = "URL_MAP"
-          value = google_compute_url_map.frontend.name
-        }
-      }
-      service_account = data.google_app_engine_default_service_account.default.email
-    }
-  }
-  
-  depends_on = [
-    google_storage_bucket.frontend,
-    google_storage_bucket_iam_member.frontend_deployer
-  ]
-}
-
-# Grant permission to invalidate CDN cache
-resource "google_project_iam_member" "frontend_cache_invalidator" {
-  project = google_project.fs.project_id
-  role    = "roles/compute.loadBalancerAdmin"
-  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
-}
-
-data "google_client_config" "default" {}
-
-# Trigger the deployment job when the image tag changes
-resource "null_resource" "trigger_frontend_deploy" {
-  triggers = {
-    image_tag = var.nstrumenta_version
-    project_id = google_project.fs.project_id
-  }
-
-  provisioner "local-exec" {
-    command = <<EOT
-      curl -X POST \
-      -H "Authorization: Bearer ${data.google_client_config.default.access_token}" \
-      -H "Content-Type: application/json" \
-      https://run.googleapis.com/v2/${google_cloud_run_v2_job.frontend_deploy.id}:run
-    EOT
-  }
-  depends_on = [google_cloud_run_v2_job.frontend_deploy]
-}
-
-# HTTPS proxy
-resource "google_compute_target_https_proxy" "frontend" {
-  project = google_project.fs.project_id
-  name    = "frontend-https-proxy"
-  url_map = google_compute_url_map.frontend.id
-  ssl_certificates = [
-    google_compute_managed_ssl_certificate.frontend.id
-  ]
-}
-
-# Global forwarding rule
-resource "google_compute_global_forwarding_rule" "frontend" {
-  project               = google_project.fs.project_id
-  name                  = "frontend-forwarding-rule"
-  ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL"
-  port_range            = "443"
-  target                = google_compute_target_https_proxy.frontend.id
-  ip_address            = google_compute_global_address.frontend.id
-}
-
-# HTTP to HTTPS redirect
-resource "google_compute_url_map" "frontend_http_redirect" {
-  project = google_project.fs.project_id
-  name    = "frontend-http-redirect"
-  
-  default_url_redirect {
-    https_redirect         = true
-    redirect_response_code = "MOVED_PERMANENTLY_DEFAULT"
-    strip_query            = false
-  }
-}
-
-resource "google_compute_target_http_proxy" "frontend_http_redirect" {
-  project = google_project.fs.project_id
-  name    = "frontend-http-proxy"
-  url_map = google_compute_url_map.frontend_http_redirect.id
-}
-
-resource "google_compute_global_forwarding_rule" "frontend_http" {
-  project               = google_project.fs.project_id
-  name                  = "frontend-http-forwarding-rule"
-  ip_protocol           = "TCP"
-  load_balancing_scheme = "EXTERNAL"
-  port_range            = "80"
-  target                = google_compute_target_http_proxy.frontend_http_redirect.id
-  ip_address            = google_compute_global_address.frontend.id
-}
-
-# DNS A records pointing to Load Balancer IP
-resource "google_dns_record_set" "frontend_root" {
-  project      = google_project.fs.project_id
-  managed_zone = google_dns_managed_zone.managed_zone.name
-  name         = "${terraform.workspace}.app.nstrumenta.com."
-  type         = "A"
-  ttl          = 300
-  rrdatas      = [google_compute_global_address.frontend.address]
-}
-
-resource "google_dns_record_set" "frontend_www" {
-  project      = google_project.fs.project_id
-  managed_zone = google_dns_managed_zone.managed_zone.name
-  name         = "www.${terraform.workspace}.app.nstrumenta.com."
-  type         = "A"
-  ttl          = 300
-  rrdatas      = [google_compute_global_address.frontend.address]
+  rrdatas      = ["ghs.googlehosted.com."]
 }
 
 

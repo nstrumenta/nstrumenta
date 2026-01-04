@@ -1,0 +1,17 @@
+# HCP Terraform uploads from workspace root, then cd's to terraform/
+# Exclude everything except terraform directory
+*
+!terraform/
+!.terraformignore
+
+# Within terraform/, exclude cache and build artifacts (but keep storageObjectFunctions.zip - terraform needs it)
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfstate.d/
+terraform/firebaseConfig.json
+terraform/.vscode/
+terraform/.gitignore
+terraform/readme.md
+terraform/terraform-devbilling.tfvars
+terraform/**/.terraform.lock.hcl

@@ -46,6 +46,36 @@ app.use(cors())
 
 import rateLimit from 'express-rate-limit'
 
+// Serve frontend static files
+app.use(express.static('/app/frontend'))
+
+// Serve config files with appropriate cache headers
+app.get('/firebaseConfig.json', async (req, res) => {
+  try {
+    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('firebaseConfig.json')
+    const [content] = await file.download()
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'public, max-age=300')
+    res.send(content)
+  } catch (error) {
+    console.error('Error serving firebaseConfig.json:', error)
+    res.status(500).json({ error: 'Failed to load firebase config' })
+  }
+})
+
+app.get('/nstrumentaDeployment.json', async (req, res) => {
+  try {
+    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('nstrumentaDeployment.json')
+    const [content] = await file.download()
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'public, max-age=30')
+    res.send(content)
+  } catch (error) {
+    console.error('Error serving nstrumentaDeployment.json:', error)
+    res.status(500).json({ error: 'Failed to load deployment config' })
+  }
+})
+
 // Rate limiters for different endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -71,6 +101,11 @@ app.get('/health', (req, res) => {
 app.post('/', mcpLimiter, handleMcpRequest)
 app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
 app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
+
+// Catch-all route for Angular SPA (must be last)
+app.get('*', (req, res) => {
+  res.sendFile('/app/frontend/index.html')
+})
 
 const server = require('http').Server(app)
 

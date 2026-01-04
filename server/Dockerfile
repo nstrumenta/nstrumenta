@@ -10,4 +10,7 @@ COPY build/nst-server-*.tgz /tmp/nst-server.tgz
 RUN npm install -g /tmp/nst-server.tgz && \
     rm /tmp/nst-server.tgz
 
+# Copy frontend static files
+COPY frontend/dist /app/frontend
+
 CMD ["nst-server"]
