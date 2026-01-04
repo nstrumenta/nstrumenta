@@ -2,7 +2,7 @@
   "name": "nstrumenta-vscode",
   "displayName": "nstrumenta",
   "description": "Integration with https://nstrumenta.com",
-  "version": "4.2.3",
+  "version": "4.2.4",
   "publisher": "nstrumenta",
   "license": "SEE LICENSE IN LICENSE",
   "repository": {
