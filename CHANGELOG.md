@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.2.5](/compare/v4.2.4...v4.2.5) (2026-01-04)
+
+
+### Bug Fixes
+
+* **ci:** use absolute path for generated env file to ensure cleanup and access from subdirs bc4c2fd
+* **ci:** use file-based env vars for e2e tests to handle json credentials c438b05
+* **e2e:** force local server usage when running in local mode by unsetting API_URL 5f5934d
+
 ## [4.2.4](/compare/v4.2.3...v4.2.4) (2026-01-04)
 
 ## [4.2.3](/compare/v4.2.2...v4.2.3) (2026-01-04)

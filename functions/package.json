@@ -1,6 +1,6 @@
 {
   "name": "nstrumenta-functions",
-  "version": "4.2.4",
+  "version": "4.2.5",
   "description": "cloud functions for nstrumenta",
   "main": "./dist/index.js",
   "scripts": {
