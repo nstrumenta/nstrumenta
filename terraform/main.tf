@@ -61,11 +61,12 @@ locals {
 
 # Creates a new Google Cloud project.
 resource "google_project" "fs" { # fs = Firestore + Storage
-  provider        = google-beta.no_user_project_override
-  name            = terraform.workspace
-  project_id      = local.project_id
-  org_id          = var.org_id
-  billing_account = var.billing_account
+  provider         = google-beta.no_user_project_override
+  name             = terraform.workspace
+  project_id       = local.project_id
+  org_id           = var.org_id
+  billing_account  = var.billing_account
+  deletion_policy  = "DELETE"
 
   # Required for the project to display in a list of Firebase projects.
   labels = {
@@ -434,9 +435,10 @@ resource "google_secret_manager_secret_iam_member" "app_engine_pepper" {
 
 # server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
-  name     = "cloudrun-service"
-  location = var.location_id
-  project  = google_project.fs.project_id
+  name               = "cloudrun-service"
+  location           = var.location_id
+  project            = google_project.fs.project_id
+  deletion_protection = false
 
   template {
     service_account = data.google_app_engine_default_service_account.default.email
