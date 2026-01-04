@@ -1,6 +1,6 @@
 {
   "name": "agent-admin-page",
-  "version": "4.1.2",
+  "version": "4.2.1",
   "type": "module",
   "description": "Agent admin page served on /",
   "scripts": {

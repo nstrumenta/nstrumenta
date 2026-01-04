@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.1](/compare/v4.2.0...v4.2.1) (2026-01-04)
+
+
+### Bug Fixes
+
+* allow storageObjectFunctions.zip in terraform uploads 5188aa1
+
 ## [4.1.2](/compare/v4.1.1...v4.1.2) (2025-12-18)
 
 ## [4.1.1](/compare/v4.1.0...v4.1.1) (2025-12-17)
