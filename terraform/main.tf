@@ -9,7 +9,7 @@ variable "org_id" {
 variable "nstrumenta_version" {
   description = "The version tag for nstrumenta images (frontend, server, data-job-runner)"
   type        = string
-  default     = "latest"
+  default     = "4.2.1"
 }
 
 variable "location_id" {
@@ -321,21 +321,6 @@ resource "google_storage_bucket_iam_policy" "data_bucket" {
   policy_data = data.google_iam_policy.data_bucket.policy_data
 }
 
-resource "google_storage_bucket_object" "firebase_config" {
-  name = "firebaseConfig.json"
-  content = jsonencode({
-    projectId         = google_project.fs.project_id
-    appId             = google_firebase_web_app.web_app.app_id
-    apiKey            = data.google_firebase_web_app_config.web_app.api_key
-    authDomain        = data.google_firebase_web_app_config.web_app.auth_domain
-    databaseURL       = lookup(data.google_firebase_web_app_config.web_app, "database_url", "")
-    storageBucket     = lookup(data.google_firebase_web_app_config.web_app, "storage_bucket", "")
-    messagingSenderId = lookup(data.google_firebase_web_app_config.web_app, "messaging_sender_id", "")
-    measurementId     = lookup(data.google_firebase_web_app_config.web_app, "measurement_id", "")
-  })
-  bucket = google_storage_bucket.config.id
-}
-
 resource "google_storage_bucket_object" "nstrumenta_deployment" {
   depends_on = [google_cloud_run_v2_service.default]
   name       = "nstrumentaDeployment.json"
@@ -509,6 +494,14 @@ resource "google_cloud_run_v2_service" "default" {
       env {
         name  = "IMAGE_VERSION_TAG"
         value = var.nstrumenta_version
+      }
+      env {
+        name  = "FIREBASE_API_KEY"
+        value = data.google_firebase_web_app_config.web_app.api_key
+      }
+      env {
+        name  = "FIREBASE_APP_ID"
+        value = google_firebase_web_app.web_app.app_id
       }
     }
     scaling {

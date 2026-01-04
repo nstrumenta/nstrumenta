@@ -367,7 +367,7 @@ export class DataTableComponent implements OnInit {
   async handleModuleAction(moduleAction, fileDocument) {
     console.log(moduleAction, fileDocument);
     if (moduleAction.url) {
-      const config = await fetch('/firebaseConfig.json').then(res => res.json());
+      const config = await fetch('/config').then(res => res.json());
       window.open(
         `${moduleAction.url}?org=${config.projectId}&experiment=${fileDocument.filePath}`
       );

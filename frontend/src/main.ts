@@ -48,7 +48,7 @@ function initializeIcons() {
   };
 }
 
-fetch('/firebaseConfig.json')
+fetch('/config')
   .then((res) => res.json())
   .then((config) => {
     if (environment.production) {

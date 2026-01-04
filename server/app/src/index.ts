@@ -46,36 +46,6 @@ app.use(cors())
 
 import rateLimit from 'express-rate-limit'
 
-// Serve frontend static files
-app.use(express.static('/app/frontend'))
-
-// Serve config files with appropriate cache headers
-app.get('/firebaseConfig.json', async (req, res) => {
-  try {
-    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('firebaseConfig.json')
-    const [content] = await file.download()
-    res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Cache-Control', 'public, max-age=300')
-    res.send(content)
-  } catch (error) {
-    console.error('Error serving firebaseConfig.json:', error)
-    res.status(500).json({ error: 'Failed to load firebase config' })
-  }
-})
-
-app.get('/nstrumentaDeployment.json', async (req, res) => {
-  try {
-    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('nstrumentaDeployment.json')
-    const [content] = await file.download()
-    res.setHeader('Content-Type', 'application/json')
-    res.setHeader('Cache-Control', 'public, max-age=30')
-    res.send(content)
-  } catch (error) {
-    console.error('Error serving nstrumentaDeployment.json:', error)
-    res.status(500).json({ error: 'Failed to load deployment config' })
-  }
-})
-
 // Rate limiters for different endpoints
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -91,16 +61,43 @@ const mcpLimiter = rateLimit({
   legacyHeaders: false,
 })
 
+// API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version })
 })
 
+app.get('/config', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600')
+  res.json({
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: `${serviceAccount.project_id}.firebaseapp.com`,
+    projectId: serviceAccount.project_id,
+    appId: process.env.FIREBASE_APP_ID
+  })
+})
+
+app.get('/nstrumentaDeployment.json', async (req, res) => {
+  try {
+    const file = storage.bucket(`${serviceAccount.project_id}-config`).file('nstrumentaDeployment.json')
+    const [content] = await file.download()
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Cache-Control', 'public, max-age=30')
+    res.send(content)
+  } catch (error) {
+    console.error('Error serving nstrumentaDeployment.json:', error)
+    res.status(500).json({ error: 'Failed to load deployment config' })
+  }
+})
+
 // MCP JSON-RPC 2.0 endpoints
 app.post('/', mcpLimiter, handleMcpRequest)
 app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
 app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
+
+// Serve frontend static files (after API routes)
+app.use(express.static('/app/frontend'))
 
 // Catch-all route for Angular SPA (must be last)
 app.get('*', (req, res) => {
