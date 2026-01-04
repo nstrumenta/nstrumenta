@@ -42,12 +42,15 @@ services:
     build:
       context: ../..
       dockerfile: ./server/Dockerfile
-    env_file:
-      - ../../credentials/integration-test.env
     environment:
       - CI=${CI}
       - TEST_ID=${TEST_ID}
       - NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE}
+      # Server expects GCLOUD_SERVICE_KEY, map from NST_CI_SERVICE_KEY
+      - GCLOUD_SERVICE_KEY=${NST_CI_SERVICE_KEY}
+      - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+      - FIREBASE_APP_ID=${FIREBASE_APP_ID}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

@@ -10,17 +10,36 @@ fi
 # Change to integration-tests directory
 cd "$(dirname "$0")"
 
-# Load environment variables from integration test credentials file
-if [ -f "../credentials/integration-test.env" ]; then
-  set -a
-  source ../credentials/integration-test.env
-  set +a
-else
-  echo "ERROR: credentials/integration-test.env not found."
-  echo "Integration tests require ci-nst workspace credentials."
-  echo "See credentials/readme.md for setup instructions."
+# Verify required variables are set
+if [ -z "$NST_CI_SERVICE_KEY" ] || [ -z "$FIREBASE_API_KEY" ] || [ -z "$FIREBASE_APP_ID" ]; then
+  echo "ERROR: Required environment variables not set"
+  echo "Required: NST_CI_SERVICE_KEY, FIREBASE_API_KEY, FIREBASE_APP_ID"
+  echo "Please ensure they are set in your environment."
   exit 1
 fi
+
+# Generate a temporary .env file for docker-compose to avoid shell mangling of JSON
+# This works for both Local (sourced from local.env) and CI (env vars)
+# We overwrite integration-test.env in the current directory (gitignored)
+ENV_FILE="integration-test.env"
+cat > "$ENV_FILE" <<EOF
+NST_CI_SERVICE_KEY=$NST_CI_SERVICE_KEY
+NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER
+FIREBASE_API_KEY=$FIREBASE_API_KEY
+FIREBASE_APP_ID=$FIREBASE_APP_ID
+TEST_USER_EMAIL=$TEST_USER_EMAIL
+TEST_USER_PASSWORD=$TEST_USER_PASSWORD
+EOF
+echo "Generated env file at $(pwd)/$ENV_FILE"
+
+# Install dependencies for key generation script if needed
+if [ ! -d "node_modules" ]; then
+    echo "Installing integration test dependencies..."
+    npm install
+fi
+
+# Export GCLOUD_SERVICE_KEY for create-api-key.js (it expects this var name)
+export GCLOUD_SERVICE_KEY="$NST_CI_SERVICE_KEY"
 
 # Cleanup function to run on exit
 cleanup() {
@@ -56,8 +75,12 @@ fi
 
 # Install dependencies for key generation script if needed
 if [ ! -d "node_modules" ]; then
-    (cd .. && npm install --no-save)
+    echo "Installing integration test dependencies..."
+    npm install
 fi
+
+# Export GCLOUD_SERVICE_KEY for create-api-key.js (it expects this var name)
+export GCLOUD_SERVICE_KEY="$NST_CI_SERVICE_KEY"
 
 # Generate API Key for CI project
 if [ -z "$NSTRUMENTA_API_KEY" ]; then
@@ -104,8 +127,13 @@ for TEST_SERVICE in $TESTS; do
     if [ -n "$CI" ]; then
         CACHE_BUST_ARG="--build-arg CACHE_BUST=$(date +%s)"
     fi
-    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml build $CACHE_BUST_ARG && \
-       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
+    
+    # Use --env-file to properly pass JSON credentials without shell interpretation
+    # ENV_FILE is set earlier to integration-test.env in the integration-tests directory
+    # We need to use the absolute path or relative path from the docker-compose file location
+    # Since we cd into $TEST_SERVICE, we need to adjust the path
+    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "../integration-test.env" -f docker-compose.yml build $CACHE_BUST_ARG && \
+       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "../integration-test.env" -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
         echo exited with code 0
         docker compose down
         CURRENT_TEST_DIR=""
