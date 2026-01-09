@@ -24,15 +24,13 @@ Get `FIREBASE_API_KEY` and `FIREBASE_APP_ID` from Firebase Console:
 2. Under "Your apps", find the Web app
 3. Copy the `apiKey` and `appId` values
 
-**For integration tests**, include additional variables in local.env:
+**For integration tests**, include additional variables in environment:
 ```env
 NST_CI_SERVICE_KEY={"type":"service_account","project_id":"nst-ci-nst-...",...}
 NSTRUMENTA_API_KEY_PEPPER=<pepper-value>
 TEST_USER_EMAIL=test@example.com
 TEST_USER_PASSWORD=testpassword123
 ```
-
-Use `NST_CI_SERVICE_KEY` for the **ci-nst terraform workspace** (integration testing project). This avoids conflicts with CircleCI's macro-coil parent org credentials. Docker Compose maps this to `GCLOUD_SERVICE_KEY` for the server container.
 
 **To get ci-nst credentials:**
 ```bash
