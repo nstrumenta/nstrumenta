@@ -9,7 +9,7 @@ variable "org_id" {
 variable "nstrumenta_version" {
   description = "The version tag for nstrumenta images (frontend, server, data-job-runner)"
   type        = string
-  default     = "4.2.1"
+  default     = "latest"
 }
 
 variable "location_id" {
