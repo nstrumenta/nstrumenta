@@ -24,12 +24,7 @@
             "tsConfig": "src/tsconfig.app.json",
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              {
-                "glob": "firebaseConfig.json",
-                "input": "src/environments",
-                "output": "/"
-              }
+              "src/assets"
             ],
             "styles": [
               "src/styles.scss"
@@ -115,12 +110,7 @@
             "scripts": [],
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              {
-                "glob": "firebaseConfig.json",
-                "input": "src/environments",
-                "output": "/"
-              }
+              "src/assets"
             ]
           }
         },
