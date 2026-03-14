@@ -25,6 +25,7 @@ const userRoutes: Routes = [
       {
         path: '',
         children: [
+          { path: '', redirectTo: 'data', pathMatch: 'full' },
           { path: 'overview', redirectTo: 'data' },
           { path: 'data', component: DataTableComponent },
           { path: 'data/:dataId', component: DataDetailComponent },

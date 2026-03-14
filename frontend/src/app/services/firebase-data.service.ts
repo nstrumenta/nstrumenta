@@ -53,6 +53,7 @@ import {
   Repository,
 } from '../models/firebase.model';
 import { ProjectSettings } from '../models/projectSettings.model';
+import { ApiService } from './api.service';
 
 @Injectable({
   providedIn: 'root',
@@ -62,6 +63,7 @@ export class FirebaseDataService {
   private storage: FirebaseStorage;
   private destroyRef = inject(DestroyRef);
   private injector = inject(Injector);
+  private apiService = inject(ApiService);
 
   // Use BehaviorSubject for project changes
   private currentProjectId = new BehaviorSubject<string>('');
@@ -626,9 +628,24 @@ export class FirebaseDataService {
     return ref(this.storage, path);
   }
 
-  uploadFile(path: string, file: File | Blob, metadata?: UploadMetadata) {
-    const storageRef = this.getStorageRef(path);
-    return uploadBytesResumable(storageRef, file, metadata);
+  async uploadFile(path: string, file: File | Blob, metadata?: UploadMetadata) {
+    // Flatten metadata for API Service
+    const flatMeta: Record<string, string> = {};
+    if (metadata) {
+      if (metadata.contentType) flatMeta['contentType'] = metadata.contentType;
+      if (metadata.contentDisposition)
+        flatMeta['contentDisposition'] = metadata.contentDisposition;
+      if (metadata.customMetadata) {
+        Object.assign(flatMeta, metadata.customMetadata);
+      }
+    }
+
+    const progress$ = await this.apiService.uploadFileToPath(
+      path,
+      file,
+      flatMeta
+    );
+    return progress$.toPromise();
   }
 
   async getDownloadUrl(path: string): Promise<string> {

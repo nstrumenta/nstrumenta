@@ -174,12 +174,12 @@ export class McpClient {
   }
 
   async getDataMetadata(path: string): Promise<{ metadata: any }> {
-    return this.callTool('get_data_metadata', { path });
+    return this.callTool('get_data_metadata', { dataId: path });
   }
 
   async setDataMetadata(path: string, metadata: any): Promise<{ success: boolean }> {
     return this.callTool('set_data_metadata', {
-      path,
+      dataId: path,
       metadata,
     });
   }

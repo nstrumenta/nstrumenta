@@ -949,14 +949,14 @@ server.registerTool(
             uploadUrl: z.string().describe('Signed URL for upload'),
         },
     },
-    async ({ path: originalPath, metadata }) => {
+    async ({ path: originalPath, metadata }, { _meta }) => {
         try {
             const projectId = getProjectId();
             const { generateV4UploadSignedUrl } = require('./shared/utils');
             
             const path = originalPath.replace(/^(\/)*/, '/');
             const storagePathBase = `projects/${projectId}`;
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata);
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, '*');
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1004,7 +1004,7 @@ server.registerTool(
                 }
             }
             
-            const uploadUrl = await generateV4UploadSignedUrl(filePath);
+            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, '*');
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1365,6 +1365,14 @@ async function dispatchMcpRequest(req: Request, res: Response) {
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
     });
+
+    // Hack: The MCP SDK StreamableHTTPServerTransport is very strict about Accept headers.
+    // It requires 'text/event-stream' even if we are just doing a simple JSON-RPC call.
+    // We patch it here to ensure the SDK is happy.
+    const accept = req.headers['accept'] || '';
+    if (accept.includes('application/json') && !accept.includes('text/event-stream')) {
+        req.headers['accept'] = `${accept}, text/event-stream`;
+    }
 
     res.on('close', () => {
         transport.close();

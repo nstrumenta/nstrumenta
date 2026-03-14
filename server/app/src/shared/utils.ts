@@ -8,23 +8,35 @@ export async function generateV4UploadSignedUrl(
   metadata?: Record<string, string>,
   origin?: string,
   overwrite?: boolean,
+  contentType: string = 'application/octet-stream',
+  contentDisposition?: string,
 ) {
   const file = storage.bucket(bucketName).file(fileName)
 
   const extensionHeaders: Record<string, string> = {}
   if (metadata) {
     Object.keys(metadata).forEach((key) => {
+      // Don't prefix standard headers if they are passed in metadata
+      if (
+        key.toLowerCase() === 'content-disposition' ||
+        key.toLowerCase() === 'content-type'
+      ) {
+        return
+      }
       extensionHeaders[`x-goog-meta-${key}`] = metadata[key]
     })
   }
 
   // These options will allow temporary uploading of the file with outgoing
-  // Content-Type: application/octet-stream header.
+  // Content-Type header.
+  const finalContentType =
+    metadata?.['contentType'] || metadata?.['content-type'] || contentType
+
   const options: GetSignedUrlConfig = {
     version: 'v4',
     action: 'resumable',
     expires: Date.now() + 15 * 60 * 1000, // 15 minutes
-    contentType: 'application/octet-stream',
+    contentType: finalContentType,
     extensionHeaders,
   }
 
@@ -43,10 +55,16 @@ export async function generateV4UploadSignedUrl(
   let location
 
   const headers: Record<string, string> = {
-    'content-type': 'application/octet-stream',
+    'content-type': finalContentType,
     'x-goog-resumable': 'start',
     ...(origin ? { origin } : {}),
     ...extensionHeaders,
+  }
+
+  if (contentDisposition) {
+    headers['Content-Disposition'] = contentDisposition
+  } else if (metadata && metadata['contentDisposition']) {
+    headers['Content-Disposition'] = metadata['contentDisposition']
   }
 
   // add metadata in headers like

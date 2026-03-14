@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
-    "test:playwright": "playwright test",
+    "test:playwright": "playwright test tests/upload.spec.js",
     "test:all": "npm run test:playwright"
   },
   "devDependencies": {
