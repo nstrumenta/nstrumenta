@@ -1,26 +1,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { generateV4UploadSignedUrl } from '../utils'
 
-// Mock dependencies
-const mockFile = {
-  exists: vi.fn(),
-  getSignedUrl: vi.fn(),
-  generateSignedPostPolicyV4: vi.fn(),
-}
+const { mockFile, mockBucket, mockStorage } = vi.hoisted(() => {
+  const mockFile = {
+    exists: vi.fn(),
+    getSignedUrl: vi.fn(),
+    generateSignedPostPolicyV4: vi.fn(),
+  }
+  const mockBucket = {
+    file: vi.fn(() => mockFile),
+  }
+  const mockStorage = {
+    bucket: vi.fn(() => mockBucket),
+  }
+  return { mockFile, mockBucket, mockStorage }
+})
 
-const mockBucket = {
-  file: vi.fn(() => mockFile),
-}
-
-const mockStorage = {
-  bucket: vi.fn(() => mockBucket),
-}
-
-// Mock ServiceAccount
 vi.mock('../../authentication/ServiceAccount', () => ({
   storage: mockStorage,
   bucketName: 'test-bucket',
 }))
+
+import { generateV4UploadSignedUrl } from '../utils'
 
 describe('generateV4UploadSignedUrl', () => {
   const mockFetch = vi.fn()
@@ -85,9 +85,11 @@ describe('generateV4UploadSignedUrl', () => {
     )
     
     // Should pass other metadata as extension headers
+    // contentType is used for the Content-Type header but also kept as x-goog-meta
     expect(mockFile.getSignedUrl).toHaveBeenCalledWith(
       expect.objectContaining({
         extensionHeaders: {
+          'x-goog-meta-contentType': 'image/png',
           'x-goog-meta-customKey': 'customValue',
         },
       })
