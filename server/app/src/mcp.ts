@@ -3,7 +3,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
-import { z } from 'zod';
+import { z } from 'zod/v4';
 import { auth } from './authentication';
 import { firebaseAuth } from './authentication/firebaseAuth';
 import { firestore } from './authentication/ServiceAccount';
@@ -19,11 +19,6 @@ async function createProjectAction(projectId: string, action: any): Promise<stri
     await actionDoc.set(action);
     return actionDoc.id;
 }
-
-const server = new McpServer({
-  name: 'nstrumenta',
-  version: '0.0.1',
-});
 
 type McpRequestContext = {
     projectId: string;
@@ -71,7 +66,6 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         
         const projectId = projectDoc.empty ? '' : projectDoc.docs[0].id;
         
-        // Allow Firebase auth even without a project (needed for create_project)
         return {
             authenticated: true,
             projectId,
@@ -86,6 +80,12 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         message: 'Authentication required: provide either x-api-key or Authorization Bearer token'
     };
 }
+
+function createMcpServer(): McpServer {
+const server = new McpServer({
+  name: 'nstrumenta',
+  version: '0.0.1',
+});
 
 server.resource(
     "action",
@@ -1334,6 +1334,9 @@ server.registerTool(
     },
 );
 
+return server;
+}
+
 // Express handler with unified auth (API key or Firebase)
 export async function handleMcpRequest(req: Request, res: Response) {
     try {
@@ -1361,6 +1364,7 @@ export async function handleMcpRequest(req: Request, res: Response) {
 }
 
 async function dispatchMcpRequest(req: Request, res: Response) {
+    const server = createMcpServer();
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
@@ -1376,6 +1380,7 @@ async function dispatchMcpRequest(req: Request, res: Response) {
 
     res.on('close', () => {
         transport.close();
+        server.close();
     });
 
     await server.connect(transport);
@@ -1406,7 +1411,8 @@ function respondServerError(res: Response) {
 }
 
 // SSE Handling
-const transports = new Map<string, SSEServerTransport>();
+const sseTransports = new Map<string, SSEServerTransport>();
+const sseMcpServers = new Map<string, McpServer>();
 
 export async function handleMcpSseRequest(req: Request, res: Response) {
     try {
@@ -1415,12 +1421,16 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
              return respondUnauthorized(res, authResult.message || 'Authentication required');
         }
         
+        const server = createMcpServer();
         const transport = new SSEServerTransport("/mcp/messages", res);
         const sessionId = transport.sessionId;
-        transports.set(sessionId, transport);
+        sseTransports.set(sessionId, transport);
+        sseMcpServers.set(sessionId, server);
 
         transport.onclose = () => {
-            transports.delete(sessionId);
+            sseTransports.delete(sessionId);
+            sseMcpServers.delete(sessionId);
+            server.close();
         };
 
         await requestContext.run({
@@ -1438,7 +1448,7 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
 
 export async function handleMcpSseMessage(req: Request, res: Response) {
     const sessionId = req.query.sessionId as string;
-    const transport = transports.get(sessionId);
+    const transport = sseTransports.get(sessionId);
     if (!transport) {
         return res.status(404).send("Session not found");
     }
@@ -1448,13 +1458,14 @@ export async function handleMcpSseMessage(req: Request, res: Response) {
 
 // Notify MCP SSE subscribers of resource updates
 export async function notifyResourceUpdate(uri: string) {
-    if (server.server) {
-        try {
-            await server.server.sendResourceUpdated({ uri });
-        } catch (error) {
-            // Ignore "Not connected" error as it just means no clients are listening
-            if ((error as Error).message !== 'Not connected') {
-                console.error('Error sending resource update:', error);
+    for (const [sessionId, server] of sseMcpServers) {
+        if (server.server) {
+            try {
+                await server.server.sendResourceUpdated({ uri });
+            } catch (error) {
+                if ((error as Error).message !== 'Not connected') {
+                    console.error('Error sending resource update:', error);
+                }
             }
         }
     }
