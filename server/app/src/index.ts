@@ -28,7 +28,6 @@ export const nstrumentaImageVersionTag =
 console.log(
   `Starting server ${version} \nIMAGE_REPOSITORY: ${nstrumentaImageRepository} \nIMAGE_VERSION_TAG: ${nstrumentaImageVersionTag}`,
 )
-const compute = require('@google-cloud/compute')
 
 export interface ActionData {
   payload: { projectId: string; [key: string]: any }
@@ -39,6 +38,7 @@ export interface ActionData {
 const port = process.env.API_PORT ?? 5999
 
 const app = express()
+app.set('trust proxy', true)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -90,7 +90,7 @@ app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
 app.use(express.static('/app/frontend'))
 
 // Catch-all route for Angular SPA (must be last)
-app.get('*', (req, res) => {
+app.get('/{*path}', apiLimiter, (req, res) => {
   res.sendFile('/app/frontend/index.html')
 })
 
@@ -113,21 +113,17 @@ const firestore = new Firestore({
 
 const bucket = storage.bucket(bucketName)
 
-const computeClient = new compute.InstancesClient(serviceAccount)
-
 // Wire services to their dependencies
 
 const archiveService = createArchiveService({ firestore })
 const cloudAgentService = createCloudAgentService({
   firestore,
-  compute: computeClient,
   spawn,
   storage,
 })
 const apiKeyService = CreateApiKeyService({ firestore })
 const cloudDataJobService = createCloudDataJobService({
   firestore,
-  compute: computeClient,
   spawn,
   storage,
 })

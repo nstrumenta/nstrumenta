@@ -22,7 +22,6 @@ const buildResourceName = (actionPath: string) => {
 
 export interface CloudAgentServiceDependencies {
   firestore: Firestore
-  compute: any
   spawn: (
     command: string,
     args: string[],

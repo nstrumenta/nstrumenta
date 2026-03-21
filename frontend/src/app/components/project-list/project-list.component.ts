@@ -89,7 +89,14 @@ export class ProjectListComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       if (result?.id) {
         console.log('Navigating to new project:', result.id);
-        this.router.navigate(['/project', result.id]);
+        this.router.navigate(['/projects', result.id]).then(success => {
+          console.log('Navigation success:', success);
+          if (success) {
+            (window as any)._projectNavigationComplete = true;
+          }
+        }).catch(err => {
+          console.error('Navigation error:', err);
+        });
       }
     });
   }

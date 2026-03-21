@@ -24,7 +24,6 @@ export interface CloudDataJobService {
 }
 
 export interface CloudDataJobServiceDependencies {
-  compute: any
   firestore: Firestore
   spawn: (
     command: string,

@@ -20,11 +20,6 @@ async function createProjectAction(projectId: string, action: any): Promise<stri
     return actionDoc.id;
 }
 
-const server = new McpServer({
-  name: 'nstrumenta',
-  version: '0.0.1',
-});
-
 type McpRequestContext = {
     projectId: string;
     userId?: string;
@@ -71,7 +66,6 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         
         const projectId = projectDoc.empty ? '' : projectDoc.docs[0].id;
         
-        // Allow Firebase auth even without a project (needed for create_project)
         return {
             authenticated: true,
             projectId,
@@ -86,6 +80,12 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         message: 'Authentication required: provide either x-api-key or Authorization Bearer token'
     };
 }
+
+function createMcpServer(): McpServer {
+const server = new McpServer({
+  name: 'nstrumenta',
+  version: '0.0.1',
+});
 
 server.resource(
     "action",
@@ -949,14 +949,14 @@ server.registerTool(
             uploadUrl: z.string().describe('Signed URL for upload'),
         },
     },
-    async ({ path: originalPath, metadata }) => {
+    async ({ path: originalPath, metadata }, { _meta }) => {
         try {
             const projectId = getProjectId();
             const { generateV4UploadSignedUrl } = require('./shared/utils');
             
             const path = originalPath.replace(/^(\/)*/, '/');
             const storagePathBase = `projects/${projectId}`;
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata);
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, '*');
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1004,7 +1004,7 @@ server.registerTool(
                 }
             }
             
-            const uploadUrl = await generateV4UploadSignedUrl(filePath);
+            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, '*');
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1107,27 +1107,19 @@ server.registerTool(
     },
     async () => {
         try {
-            const projectId = getProjectId();
-            const compute = require('@google-cloud/compute');
             const { serviceAccount } = require('./authentication/ServiceAccount');
-            
-            const computeClient = new compute.InstancesClient(serviceAccount);
-            const project = serviceAccount.project_id;
-            
-            const aggListRequest = computeClient.aggregatedListAsync({ project });
-            const machines: any[] = [];
-            
-            for await (const [zone, instancesObject] of aggListRequest) {
-                const instances = instancesObject.instances || [];
-                for (const instance of instances) {
-                    machines.push({
-                        name: instance.name,
-                        zone,
-                        status: instance.status,
-                        machineType: instance.machineType,
-                    });
-                }
-            }
+            const { GoogleAuth } = require('google-auth-library');
+            const { listComputeInstances } = require('./shared/computeInstances');
+
+            const auth = new GoogleAuth({
+                credentials: {
+                    client_email: serviceAccount.client_email,
+                    private_key: serviceAccount.private_key,
+                },
+                scopes: ['https://www.googleapis.com/auth/compute.readonly'],
+            });
+            const client = await auth.getClient();
+            const machines = await listComputeInstances(serviceAccount.project_id, client);
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(machines, null, 2) }],
@@ -1334,6 +1326,9 @@ server.registerTool(
     },
 );
 
+return server;
+}
+
 // Express handler with unified auth (API key or Firebase)
 export async function handleMcpRequest(req: Request, res: Response) {
     try {
@@ -1361,13 +1356,23 @@ export async function handleMcpRequest(req: Request, res: Response) {
 }
 
 async function dispatchMcpRequest(req: Request, res: Response) {
+    const server = createMcpServer();
     const transport = new StreamableHTTPServerTransport({
         sessionIdGenerator: undefined,
         enableJsonResponse: true,
     });
 
+    // Hack: The MCP SDK StreamableHTTPServerTransport is very strict about Accept headers.
+    // It requires 'text/event-stream' even if we are just doing a simple JSON-RPC call.
+    // We patch it here to ensure the SDK is happy.
+    const accept = req.headers['accept'] || '';
+    if (accept.includes('application/json') && !accept.includes('text/event-stream')) {
+        req.headers['accept'] = `${accept}, text/event-stream`;
+    }
+
     res.on('close', () => {
         transport.close();
+        server.close();
     });
 
     await server.connect(transport);
@@ -1398,7 +1403,8 @@ function respondServerError(res: Response) {
 }
 
 // SSE Handling
-const transports = new Map<string, SSEServerTransport>();
+const sseTransports = new Map<string, SSEServerTransport>();
+const sseMcpServers = new Map<string, McpServer>();
 
 export async function handleMcpSseRequest(req: Request, res: Response) {
     try {
@@ -1407,12 +1413,16 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
              return respondUnauthorized(res, authResult.message || 'Authentication required');
         }
         
+        const server = createMcpServer();
         const transport = new SSEServerTransport("/mcp/messages", res);
         const sessionId = transport.sessionId;
-        transports.set(sessionId, transport);
+        sseTransports.set(sessionId, transport);
+        sseMcpServers.set(sessionId, server);
 
         transport.onclose = () => {
-            transports.delete(sessionId);
+            sseTransports.delete(sessionId);
+            sseMcpServers.delete(sessionId);
+            server.close();
         };
 
         await requestContext.run({
@@ -1430,7 +1440,7 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
 
 export async function handleMcpSseMessage(req: Request, res: Response) {
     const sessionId = req.query.sessionId as string;
-    const transport = transports.get(sessionId);
+    const transport = sseTransports.get(sessionId);
     if (!transport) {
         return res.status(404).send("Session not found");
     }
@@ -1440,13 +1450,14 @@ export async function handleMcpSseMessage(req: Request, res: Response) {
 
 // Notify MCP SSE subscribers of resource updates
 export async function notifyResourceUpdate(uri: string) {
-    if (server.server) {
-        try {
-            await server.server.sendResourceUpdated({ uri });
-        } catch (error) {
-            // Ignore "Not connected" error as it just means no clients are listening
-            if ((error as Error).message !== 'Not connected') {
-                console.error('Error sending resource update:', error);
+    for (const [sessionId, server] of sseMcpServers) {
+        if (server.server) {
+            try {
+                await server.server.sendResourceUpdated({ uri });
+            } catch (error) {
+                if ((error as Error).message !== 'Not connected') {
+                    console.error('Error sending resource update:', error);
+                }
             }
         }
     }

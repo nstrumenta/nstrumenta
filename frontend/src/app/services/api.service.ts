@@ -188,7 +188,12 @@ export class ApiService {
     };
   }
 
-  async uploadFile(projectId: string, file: File, folder?: string): Promise<Observable<number>> {
+
+  async uploadFileToPath(
+    path: string,
+    file: File | Blob,
+    metadata?: Record<string, string>
+  ): Promise<Observable<number>> {
     const user = this.authService.user.value;
     if (!user) {
       throw new Error('User must be authenticated to upload files');
@@ -197,30 +202,35 @@ export class ApiService {
     const idToken = await user.getIdToken();
     const apiUrl = await this.getApiUrl();
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`
-    });
+    // Explicitly construct headers to ensure HttpClient respects them
+    const headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${idToken}`)
+      .set('Accept', 'application/json, text/event-stream');
 
-    // Call MCP endpoint to get upload URL
+    const contentType = file.type || 'application/octet-stream';
+    const finalMetadata = { ...metadata };
+    if (!finalMetadata['contentType'] && !finalMetadata['content-type']) {
+      finalMetadata['contentType'] = contentType;
+    }
+
+    // Call MCP endpoint to get generic upload URL
     const mcpRequest = {
       jsonrpc: '2.0',
       id: Math.random().toString(36).substring(7),
       method: 'tools/call',
       params: {
-        name: 'get_upload_data_url',
+        name: 'get_upload_url',
         arguments: {
-          name: file.name,
-          overwrite: false
-        }
-      }
+          path, // "data/filename.mcap"
+          metadata: finalMetadata,
+        },
+      },
     };
 
-    const mcpResponse = await this.http.post<any>(
-      apiUrl,
-      mcpRequest,
-      { headers }
-    ).toPromise();
+    const mcpResponse = await this.http
+      .post<any>(apiUrl, mcpRequest, { headers })
+      .toPromise();
 
     if (mcpResponse.error) {
       throw new Error(mcpResponse.error.message || 'Failed to get upload URL');
@@ -229,35 +239,35 @@ export class ApiService {
     const result = mcpResponse.result?.structuredContent || mcpResponse.result;
     const { uploadUrl } = result;
 
-    return this.http.put(uploadUrl, file, {
-      headers: new HttpHeaders({
-        'Content-Type': file.type || 'application/octet-stream'
-      }),
-      reportProgress: true,
-      observe: 'events'
-    }).pipe(
-      map((event: HttpEvent<unknown>) => {
-        if (event.type === HttpEventType.UploadProgress) {
-          return event.total ? Math.round((100 * event.loaded) / event.total) : 0;
-        } else if (event.type === HttpEventType.Response) {
-          return 100;
-        }
-        return 0;
-      }),
-      // Catch CORS errors from Cloud Storage signed URLs
-      // The upload completes successfully, but the browser blocks the response
-      catchError((error) => {
-        // Status 0 or 'Unknown Error' means CORS blocked the response
-        // but the upload likely succeeded
-        if (error.status === 0) {
-          // Return 100% progress to indicate completion
-          return of(100);
-        }
-        // Re-throw actual errors
-        throw error;
-      }),
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
+    return this.http
+      .put(uploadUrl, file, {
+        headers: new HttpHeaders({
+          'Content-Type': contentType,
+        }),
+        reportProgress: true,
+        observe: 'events',
+      })
+      .pipe(
+        map((event: HttpEvent<unknown>) => {
+          if (event.type === HttpEventType.UploadProgress) {
+            return event.total
+              ? Math.round((100 * event.loaded) / event.total)
+              : 0;
+          } else if (event.type === HttpEventType.Response) {
+            return 100;
+          }
+          return 0;
+        }),
+        catchError((error) => {
+          // Status 0 or 'Unknown Error' means CORS blocked the response
+          // but the upload likely succeeded
+          if (error.status === 0) {
+            return of(100);
+          }
+          throw error;
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
 }

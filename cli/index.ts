@@ -12,6 +12,7 @@ import {
   List as ListData,
   QueryData,
   QueryModules,
+  SetMetadata,
   Upload as UploadData,
 } from './commands/data';
 import { ListMachines } from './commands/machines';
@@ -148,6 +149,13 @@ dataCommand
   .argument('<filename...>', 'filename(s) to upload')
   .description('Upload file to project data')
   .action(UploadData);
+
+dataCommand
+  .command('set-metadata')
+  .argument('<path>', 'file path or dataId')
+  .argument('<metadata>', 'metadata JSON string')
+  .description('Set metadata for a data file')
+  .action(SetMetadata);
 dataCommand
   .command('query')
   .description('query data with field, comparison, compareValue')

@@ -263,6 +263,23 @@ resource "google_firebaserules_release" "fb_app" {
   project      = google_project.fs.project_id
 }
 
+# Add CORS configuration to the default App Engine bucket
+resource "google_storage_bucket" "default" {
+  provider = google-beta
+  name     = google_app_engine_application.fb_app.default_bucket
+  location = var.location_id
+  project  = google_project.fs.project_id
+
+  cors {
+    origin          = ["*"]
+    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
+
+  uniform_bucket_level_access = true
+}
+
 # web app
 resource "google_firebase_web_app" "web_app" {
   depends_on   = [google_app_engine_application.fb_app]
