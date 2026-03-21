@@ -118,7 +118,7 @@ test.describe('File Upload', () => {
     // Set up response listener BEFORE triggering the upload.
     // The upload flow is: POST to MCP for signed URL, then PUT to storage.googleapis.com.
     const uploadResponsePromise = page.waitForResponse(
-      response => response.url().includes('storage.googleapis.com') && response.request().method() === 'PUT',
+      response => new URL(response.url()).hostname.endsWith('.googleapis.com') && response.request().method() === 'PUT',
       { timeout: 30000 }
     );
 

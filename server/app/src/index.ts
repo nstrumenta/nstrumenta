@@ -90,7 +90,7 @@ app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
 app.use(express.static('/app/frontend'))
 
 // Catch-all route for Angular SPA (must be last)
-app.get('/{*path}', (req, res) => {
+app.get('/{*path}', apiLimiter, (req, res) => {
   res.sendFile('/app/frontend/index.html')
 })
 
