@@ -3,7 +3,7 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
-import { z } from 'zod/v4';
+import { z } from 'zod';
 import { auth } from './authentication';
 import { firebaseAuth } from './authentication/firebaseAuth';
 import { firestore } from './authentication/ServiceAccount';
