@@ -28,7 +28,6 @@ export const nstrumentaImageVersionTag =
 console.log(
   `Starting server ${version} \nIMAGE_REPOSITORY: ${nstrumentaImageRepository} \nIMAGE_VERSION_TAG: ${nstrumentaImageVersionTag}`,
 )
-const compute = require('@google-cloud/compute')
 
 export interface ActionData {
   payload: { projectId: string; [key: string]: any }
@@ -114,21 +113,17 @@ const firestore = new Firestore({
 
 const bucket = storage.bucket(bucketName)
 
-const computeClient = new compute.InstancesClient(serviceAccount)
-
 // Wire services to their dependencies
 
 const archiveService = createArchiveService({ firestore })
 const cloudAgentService = createCloudAgentService({
   firestore,
-  compute: computeClient,
   spawn,
   storage,
 })
 const apiKeyService = CreateApiKeyService({ firestore })
 const cloudDataJobService = createCloudDataJobService({
   firestore,
-  compute: computeClient,
   spawn,
   storage,
 })

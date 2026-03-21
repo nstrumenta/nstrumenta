@@ -491,4 +491,69 @@ describe('McpClient', () => {
       assert.ok(body.params.arguments);
     });
   });
+
+  describe('retry on 503', () => {
+    it('should retry up to 3 times on 503 then succeed', async () => {
+      let callCount = 0;
+      const mockFetch = mock.fn(async () => {
+        callCount++;
+        if (callCount <= 2) {
+          return {
+            ok: false,
+            status: 503,
+            text: async () => 'Service Unavailable',
+          } as Response;
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            result: {
+              structuredContent: { modules: [] },
+            },
+          }),
+        } as Response;
+      });
+      global.fetch = mockFetch as any;
+
+      const client = new McpClient();
+      const result = await client.listModules();
+
+      assert.strictEqual(callCount, 3);
+      assert.deepStrictEqual(result.modules, []);
+    });
+
+    it('should throw after exhausting all retries on 503', async () => {
+      const mockFetch = mock.fn(async () => ({
+        ok: false,
+        status: 503,
+        text: async () => 'Service Unavailable',
+      } as Response));
+      global.fetch = mockFetch as any;
+
+      const client = new McpClient();
+      await assert.rejects(
+        async () => await client.listModules(),
+        /MCP request failed: 503/
+      );
+
+      assert.strictEqual((mockFetch as any).mock.calls.length, 3);
+    });
+
+    it('should not retry on non-503 errors', async () => {
+      const mockFetch = mock.fn(async () => ({
+        ok: false,
+        status: 401,
+        text: async () => 'Unauthorized',
+      } as Response));
+      global.fetch = mockFetch as any;
+
+      const client = new McpClient();
+      await assert.rejects(
+        async () => await client.listModules(),
+        /MCP request failed: 401/
+      );
+
+      assert.strictEqual((mockFetch as any).mock.calls.length, 1);
+    });
+  });
 });

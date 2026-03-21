@@ -18,7 +18,6 @@
   "author": "Tyler Bryant",
   "license": "UNLICENSED",
   "dependencies": {
-    "@google-cloud/compute": "^6.9.0",
     "@google-cloud/firestore": "^8.3.0",
     "@google-cloud/storage": "^7.19.0",
     "@modelcontextprotocol/sdk": "^1.27.1",

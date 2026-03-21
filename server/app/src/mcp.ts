@@ -1107,27 +1107,19 @@ server.registerTool(
     },
     async () => {
         try {
-            const projectId = getProjectId();
-            const compute = require('@google-cloud/compute');
             const { serviceAccount } = require('./authentication/ServiceAccount');
-            
-            const computeClient = new compute.InstancesClient(serviceAccount);
-            const project = serviceAccount.project_id;
-            
-            const aggListRequest = computeClient.aggregatedListAsync({ project });
-            const machines: any[] = [];
-            
-            for await (const [zone, instancesObject] of aggListRequest) {
-                const instances = instancesObject.instances || [];
-                for (const instance of instances) {
-                    machines.push({
-                        name: instance.name,
-                        zone,
-                        status: instance.status,
-                        machineType: instance.machineType,
-                    });
-                }
-            }
+            const { GoogleAuth } = require('google-auth-library');
+            const { listComputeInstances } = require('./shared/computeInstances');
+
+            const auth = new GoogleAuth({
+                credentials: {
+                    client_email: serviceAccount.client_email,
+                    private_key: serviceAccount.private_key,
+                },
+                scopes: ['https://www.googleapis.com/auth/compute.readonly'],
+            });
+            const client = await auth.getClient();
+            const machines = await listComputeInstances(serviceAccount.project_id, client);
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(machines, null, 2) }],
