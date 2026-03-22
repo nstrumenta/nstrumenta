@@ -20,6 +20,7 @@
     "./credentials/local.env"
   ],
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${localEnv:HOME}/.config/gcloud,target=/root/.config/gcloud,type=bind"
   ]
 }

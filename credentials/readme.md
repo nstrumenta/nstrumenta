@@ -4,14 +4,14 @@ Local credentials for development (gitignored).
 
 ## Prerequisites
 
-Authenticate with Application Default Credentials (one-time):
+Authenticate with Application Default Credentials (one-time on your host machine):
 
 ```shell
 gcloud auth application-default login
 gcloud config set project <your-gcp-project-id>
 ```
 
-No service account key files are needed.
+No service account key files are needed. The devcontainer mounts `~/.config/gcloud` from your host, so ADC is available automatically inside the container.
 
 ## Required Files
 
