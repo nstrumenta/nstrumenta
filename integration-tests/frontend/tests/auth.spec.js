@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
@@ -10,7 +9,7 @@ test.describe('Authentication Flow', () => {
     page.on('console', msg => console.log('BROWSER:', msg.text()));
     page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
     
-    await page.goto(FRONTEND_URL);
+    await page.goto('/');
     // Wait for Angular app to load
     await expect(page.locator('body')).toBeVisible();
   });
@@ -20,7 +19,7 @@ test.describe('Authentication Flow', () => {
     page.on('console', msg => console.log('BROWSER:', msg.text()));
     page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
     
-    await page.goto(FRONTEND_URL);
+    await page.goto('/');
     
     // Wait for page to fully load
     await page.waitForLoadState('networkidle');

@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
+
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
@@ -12,19 +14,17 @@ export default defineConfig({
     ['html', { open: 'never', outputFolder: 'playwright-report' }]
   ],
   use: {
-    baseURL: process.env.FRONTEND_URL || 'http://localhost:4200',
+    baseURL: process.env.FRONTEND_URL || 'http://localhost:5999',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        ...(chromiumExecutablePath ? { executablePath: chromiumExecutablePath } : {}),
+      },
     },
   ],
-  webServer: process.env.FRONTEND_URL ? undefined : {
-    command: 'npm run start',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-  },
 });

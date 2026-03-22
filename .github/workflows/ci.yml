@@ -161,9 +161,10 @@ jobs:
   e2e:
     needs: [build-ci-images, build]
     runs-on: ubuntu-latest
-    container: nstrumenta/base:latest
+    container: nstrumenta/ci:latest
     env:
       CI: true
+      API_URL: http://localhost:5999
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
@@ -173,40 +174,27 @@ jobs:
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
           service_account: ${{ env.CI_SERVICE_ACCOUNT }}
-      - run: gcloud --quiet config set project $CI_PROJECT_ID
-      - name: Fetch non-credential secrets
+      - uses: google-github-actions/get-secretmanager-secrets@v2
+        id: secrets
+        with:
+          secrets: |
+            nstrumenta_api_key_pepper:${{ env.CI_PROJECT_ID }}/NSTRUMENTA_API_KEY_PEPPER
+      - name: Start test server
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+          NSTRUMENTA_API_KEY_PEPPER: ${{ steps.secrets.outputs.nstrumenta_api_key_pepper }}
+          FIREBASE_API_KEY: ${{ vars.CI_FIREBASE_API_KEY }}
+          FIREBASE_APP_ID: ${{ vars.CI_FIREBASE_APP_ID }}
+          IMAGE_VERSION_TAG: ${{ env.IMAGE_VERSION_TAG }}
         run: |
-          NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$CI_PROJECT_ID)
-          echo "::add-mask::$NSTRUMENTA_API_KEY_PEPPER"
-          echo "NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER" >> $GITHUB_ENV
-      - name: Get Firebase config from Cloud Run env
-        run: |
-          FIREBASE_API_KEY=$(gcloud run services describe cloudrun-service --region=us-west1 --format='value(spec.template.spec.containers[0].env.filter("name:FIREBASE_API_KEY").value)')
-          echo "FIREBASE_API_KEY=$FIREBASE_API_KEY" >> $GITHUB_ENV
-          FIREBASE_APP_ID=$(gcloud run services describe cloudrun-service --region=us-west1 --format='value(spec.template.spec.containers[0].env.filter("name:FIREBASE_APP_ID").value)')
-          echo "FIREBASE_APP_ID=$FIREBASE_APP_ID" >> $GITHUB_ENV
-      - name: Deploy test server
-        run: |
-          TEST_SERVER=test-server-${{ github.run_id }}
-          echo "TEST_SERVER=$TEST_SERVER" >> $GITHUB_ENV
-          IMAGE_REPOSITORY=us-west1-docker.pkg.dev/$CI_PROJECT_ID/server
-          echo "IMAGE_REPOSITORY=$IMAGE_REPOSITORY" >> $GITHUB_ENV
-          gcloud run deploy $TEST_SERVER \
-            --image=$IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG \
-            --port=5999 \
-            --allow-unauthenticated \
-            --region=us-west1 \
-            --memory=1Gi \
-            --min-instances=1 \
-            --set-env-vars "GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID" \
-            --set-env-vars "IMAGE_REPOSITORY=$IMAGE_REPOSITORY" \
-            --set-env-vars "IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG" \
-            --set-secrets "NSTRUMENTA_API_KEY_PEPPER=NSTRUMENTA_API_KEY_PEPPER:latest" \
-            --set-env-vars "FIREBASE_API_KEY=$FIREBASE_API_KEY" \
-            --set-env-vars "FIREBASE_APP_ID=$FIREBASE_APP_ID"
-          API_URL=$(gcloud run services describe --region=us-west1 $TEST_SERVER --format='value(status.address.url)')
-          echo "API_URL=$API_URL" >> $GITHUB_ENV
-      - name: Generate API key
+          npm install -g ./build/nst-server-*.tgz
+          nst-server &
+          echo "Waiting for server..."
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:5999/health && break || sleep 2
+          done
+          echo "Server ready"
+      - name: Generate API key and test user
         working-directory: integration-tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
@@ -215,6 +203,12 @@ jobs:
           NSTRUMENTA_API_KEY=$(node create-api-key.js ci $API_URL)
           echo "::add-mask::$NSTRUMENTA_API_KEY"
           echo "NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> $GITHUB_ENV
+          TEST_USER_JSON=$(node create-test-user.js)
+          TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
+          TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
+          echo "::add-mask::$TEST_USER_PASSWORD"
+          echo "TEST_USER_EMAIL=$TEST_USER_EMAIL" >> $GITHUB_ENV
+          echo "TEST_USER_PASSWORD=$TEST_USER_PASSWORD" >> $GITHUB_ENV
       - name: Install CLI
         run: npm install -g ./build/nstrumenta-*.tgz
       - name: Run CLI tests
@@ -228,14 +222,17 @@ jobs:
       - name: Run MCP integration tests
         working-directory: integration-tests/frontend
         env:
-          API_URL: ${{ env.API_URL }}
           NSTRUMENTA_API_KEY: ${{ env.NSTRUMENTA_API_KEY }}
         run: |
           npm install
           npx vitest run mcp-client.test.js
-      - name: Delete test server
-        if: always()
-        run: gcloud run services delete --quiet --region=us-west1 $TEST_SERVER || true
+      - name: Run Playwright tests
+        working-directory: integration-tests/frontend
+        env:
+          FRONTEND_URL: ${{ env.API_URL }}
+          TEST_USER_EMAIL: ${{ env.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ env.TEST_USER_PASSWORD }}
+        run: npx playwright test
 
   push-to-docker-hub:
     needs: [e2e]

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
+
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD
 
@@ -11,7 +11,7 @@ if (!TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
 }
 
 async function signIn(page) {
-  await page.goto(FRONTEND_URL);
+  await page.goto('/');
   
   // Click the "Sign in" button in the navbar
   // Using try/catch to handle case where we might be logged in (though unlikely in fresh test)
@@ -34,7 +34,7 @@ async function signIn(page) {
   await expect(page.locator('button[mat-icon-button]').first()).toBeVisible({ timeout: 10000 });
   
   // Navigate to projects page
-  await page.goto(`${FRONTEND_URL}/projects`);
+  await page.goto('/projects');
 }
 
 test.describe('File Upload', () => {

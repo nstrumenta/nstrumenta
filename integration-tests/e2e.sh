@@ -36,7 +36,7 @@ TEST_ID=${TEST_ID:-$(node -p "crypto.randomUUID()")}
 export TEST_ID
 
 if [ $# -eq 0 ]; then
-    TESTS="cli frontend"
+    TESTS="cli frontend playwright"
 else
     TESTS="$@"
 fi
@@ -54,6 +54,21 @@ for TEST_SUITE in $TESTS; do
             cd frontend
             npm install
             npx vitest run mcp-client.test.js
+            cd ..
+            ;;
+        playwright)
+            cd frontend
+            npm install
+            cd ..
+            TEST_USER_JSON=$(GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT} node create-test-user.js)
+            TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
+            TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
+            cd frontend
+            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-/usr/bin/chromium} \
+            FRONTEND_URL=${NSTRUMENTA_API_URL:-http://localhost:5999} \
+            TEST_USER_EMAIL=$TEST_USER_EMAIL \
+            TEST_USER_PASSWORD=$TEST_USER_PASSWORD \
+            npx playwright test
             cd ..
             ;;
         *)
