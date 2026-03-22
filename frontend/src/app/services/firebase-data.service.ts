@@ -643,6 +643,7 @@ export class FirebaseDataService {
     const progress$ = await this.apiService.uploadFileToPath(
       path,
       file,
+      undefined,
       flatMeta
     );
     return progress$.toPromise();

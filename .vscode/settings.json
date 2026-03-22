@@ -47,5 +47,10 @@
         "xargs": false,
         "eval": false
     },
-    "chat.agent.thinking.collapsedTools": "all"
+    /* Moves output to the actual Terminal Panel */
+    "chat.tools.terminal.outputLocation": "terminal",
+    /* Stop collapsing AI steps */
+    "chat.agent.thinking.collapsedTools": "off",
+    /* Ensure the panel pops open immediately */
+    "terminal.integrated.focusAfterRun": "terminal"
 }
