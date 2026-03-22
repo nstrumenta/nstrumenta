@@ -175,9 +175,8 @@ jobs:
       - run: gcloud --quiet config set project $CI_PROJECT_ID
       - name: Fetch secrets from Secret Manager
         run: |
-          GCLOUD_SERVICE_KEY=$(gcloud secrets versions access latest --secret=GCLOUD_SERVICE_KEY --project=$CI_PROJECT_ID)
-          echo "::add-mask::$GCLOUD_SERVICE_KEY"
-          echo "GCLOUD_SERVICE_KEY=$GCLOUD_SERVICE_KEY" >> $GITHUB_ENV
+          gcloud secrets versions access latest --secret=GCLOUD_SERVICE_KEY --project=$CI_PROJECT_ID > /tmp/gcloud_service_key.json
+          echo "GCLOUD_SERVICE_KEY_FILE=/tmp/gcloud_service_key.json" >> $GITHUB_ENV
           NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$CI_PROJECT_ID)
           echo "::add-mask::$NSTRUMENTA_API_KEY_PEPPER"
           echo "NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER" >> $GITHUB_ENV
@@ -207,6 +206,8 @@ jobs:
           echo "API_URL=$API_URL" >> $GITHUB_ENV
       - name: Generate API key
         working-directory: integration-tests
+        env:
+          GCLOUD_SERVICE_KEY_FILE: ${{ env.GCLOUD_SERVICE_KEY_FILE }}
         run: |
           npm install
           NSTRUMENTA_API_KEY=$(node create-api-key.js ci $API_URL)
@@ -219,18 +220,18 @@ jobs:
       - name: Run CLI tests (local mode)
         working-directory: integration-tests
         env:
-          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+          NST_CI_SERVICE_KEY_FILE: ${{ env.GCLOUD_SERVICE_KEY_FILE }}
           NSTRUMENTA_CLOUD_RUN_MODE: local
         run: API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./e2e.sh cli
       - name: Run CLI tests (remote mode)
         working-directory: integration-tests
         env:
-          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+          NST_CI_SERVICE_KEY_FILE: ${{ env.GCLOUD_SERVICE_KEY_FILE }}
         run: ./e2e.sh cli
       - name: Run Frontend tests
         working-directory: integration-tests
         env:
-          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+          NST_CI_SERVICE_KEY_FILE: ${{ env.GCLOUD_SERVICE_KEY_FILE }}
           TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
           NSTRUMENTA_CLOUD_RUN_MODE: local

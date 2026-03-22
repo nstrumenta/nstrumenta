@@ -11,9 +11,14 @@ fi
 cd "$(dirname "$0")"
 
 # Verify required variables are set
+# NST_CI_SERVICE_KEY can come from env var OR from NST_CI_SERVICE_KEY_FILE
+if [ -n "$NST_CI_SERVICE_KEY_FILE" ] && [ -f "$NST_CI_SERVICE_KEY_FILE" ]; then
+  NST_CI_SERVICE_KEY=$(cat "$NST_CI_SERVICE_KEY_FILE")
+fi
+
 if [ -z "$NST_CI_SERVICE_KEY" ] || [ -z "$FIREBASE_API_KEY" ] || [ -z "$FIREBASE_APP_ID" ]; then
   echo "ERROR: Required environment variables not set"
-  echo "Required: NST_CI_SERVICE_KEY, FIREBASE_API_KEY, FIREBASE_APP_ID"
+  echo "Required: NST_CI_SERVICE_KEY (or NST_CI_SERVICE_KEY_FILE), FIREBASE_API_KEY, FIREBASE_APP_ID"
   echo "Please ensure they are set in your environment."
   exit 1
 fi
