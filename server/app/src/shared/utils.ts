@@ -1,6 +1,5 @@
 // source: https://github.com/googleapis/nodejs-storage/blob/main/samples/generateV4UploadSignedUrl.js
 import { GetSignedUrlConfig } from '@google-cloud/storage'
-import { spawn } from 'child_process'
 import { bucketName, storage } from '../authentication/ServiceAccount'
 
 export async function generateV4UploadSignedUrl(
@@ -102,35 +101,12 @@ export function getVersionFromPath(path: string) {
   return version
 }
 
-export async function asyncSpawn(
-  cmd: string,
-  args?: string[],
-  options?: { cwd?: string; quiet?: boolean },
-  errCB?: (code: number) => void,
-) {
-  if (!options?.quiet) console.log(`${cmd} ${args?.join(' ')}`)
-  const process = spawn(cmd, args || [], options)
-
-  let output = ''
-  for await (const chunk of process.stdout) {
-    output += chunk
-  }
-  let error = ''
-  for await (const chunk of process.stderr) {
-    error += chunk
-  }
-  const code: number = await new Promise((resolve) => {
-    process.on('close', resolve)
+export async function generateV4ReadSignedUrl(fileName: string) {
+  const file = storage.bucket(bucketName).file(fileName)
+  const [url] = await file.getSignedUrl({
+    version: 'v4',
+    action: 'read',
+    expires: Date.now() + 15 * 60 * 1000,
   })
-  if (code) {
-    if (errCB) {
-      errCB(code)
-    }
-
-    throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
-  }
-  if (!options?.quiet) {
-    console.log(`${cmd} ${args?.join(' ')}`, output, error)
-  }
-  return output
+  return url
 }

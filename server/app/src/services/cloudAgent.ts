@@ -1,14 +1,15 @@
 import { Firestore } from '@google-cloud/firestore'
+import { ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
-import { ChildProcessWithoutNullStreams } from 'child_process'
-import { writeFile } from 'fs/promises'
-import { serviceAccount } from '../authentication/ServiceAccount'
+import { projectId } from '../authentication/ServiceAccount'
 import {
   ActionData,
   nstrumentaImageRepository,
   nstrumentaImageVersionTag,
 } from '../index'
 import { ApiKeyService } from './ApiKeyService'
+
+const REGION = 'us-west1'
 
 const buildResourceName = (actionPath: string) => {
   const projectId = actionPath.split('/')[1]
@@ -22,12 +23,6 @@ const buildResourceName = (actionPath: string) => {
 
 export interface CloudAgentServiceDependencies {
   firestore: Firestore
-  spawn: (
-    command: string,
-    args: string[],
-    options?: any,
-  ) => ChildProcessWithoutNullStreams
-  timeout?: number
   storage: Storage
 }
 
@@ -41,134 +36,82 @@ export interface CloudAgentService {
   deleteDeployedCloudAgent(actionPath: string, data: ActionData): Promise<void>
 }
 
-export interface GCloudDescribeResults {
-  networkInterfaces: [
-    { accessConfigs: [{ natIP: string; [key: string]: unknown }] },
-  ]
-  creationTimestamp: string
-  status: string
-
-  [key: string]: unknown
-}
-
 export const createCloudAgentService = ({
   firestore,
-  spawn,
-  storage,
 }: CloudAgentServiceDependencies): CloudAgentService => {
-  async function asyncSpawn(
-    cmd: string,
-    args?: string[],
-    options?: { cwd?: string },
-    errCB?: (code: number) => void,
-  ) {
-    const safeArgs = args?.map(arg => arg.includes('NSTRUMENTA_API_KEY') || arg.length > 40 ? '[REDACTED]' : arg)
-    console.log(`spawn [${cmd} ${safeArgs?.join(' ')}]`)
-    const process = spawn(cmd, args || [], options)
-
-    let output = ''
-    for await (const chunk of process.stdout) {
-      output += chunk
-    }
-    let error = ''
-    for await (const chunk of process.stderr) {
-      error += chunk
-    }
-    const code: number = await new Promise((resolve) => {
-      process.on('close', resolve)
-    })
-    if (code) {
-      if (errCB) {
-        errCB(code)
-      }
-
-      throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
-    }
-
-    console.log(`spawn ${cmd} output ${output} ${error}`)
-    return output
-  }
-
-  async function gcloudConfig() {
-    const keyfile = './credentials.json'
-    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
-    await asyncSpawn(
-      'gcloud',
-      `auth activate-service-account --key-file ${keyfile}`.split(' '),
-    )
-    await asyncSpawn('gcloud', 'config set disable_prompts true'.split(' '))
-    await asyncSpawn(
-      'gcloud',
-      `config set core/project ${serviceAccount.project_id}`.split(' '),
-    )
-    // TODO pull region from project doc
-    await asyncSpawn('gcloud', `config set run/region us-west1`.split(' '))
-  }
+  const servicesClient = new ServicesClient()
 
   async function deployCloudAgent(
     actionPath: string,
-    data: { payload: { projectId: string }},
+    data: { payload: { projectId: string } },
     apiKeyService: ApiKeyService,
   ) {
     const {
-      payload: { projectId }
+      payload: { projectId: nstProjectId },
     } = data
 
-    // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
 
     const instanceId = buildResourceName(actionPath)
     const imageId = `${nstrumentaImageRepository}/agent:${nstrumentaImageVersionTag}`
 
-    //create apiKey specifically for the cloud agent
-    console.log({ projectId })
-    const apiKey = await apiKeyService.createAndAddApiKey(projectId)
-    let description: GCloudDescribeResults | undefined = undefined
+    console.log({ nstProjectId })
+    const apiKey = await apiKeyService.createAndAddApiKey(nstProjectId)
     try {
-      console.log('[cloudAgent] invoke createCloudAgent')
+      console.log('[cloudAgent] deploying via Cloud Run API')
       if (!apiKey)
         throw new Error('api key not set, unable to createCloudAgent')
 
-      await gcloudConfig()
+      const parent = `projects/${projectId}/locations/${REGION}`
 
-      await asyncSpawn('gcloud', [
-        'run',
-        'deploy',
-        `${instanceId}`,
-        `--image=${imageId}`,
-        '--allow-unauthenticated',
-        '--port=8088',
-        `--service-account=${serviceAccount.client_email}`,
-        '--min-instances=1',
-        '--max-instances=1',
-        '--timeout=3600s',
-        '--no-cpu-throttling',
-        `--set-env-vars=PROJECT_ID=${projectId},HOST_INSTANCE_ID=${instanceId},NSTRUMENTA_API_KEY=${apiKey.key}`,
-      ])
+      const [operation] = await servicesClient.createService({
+        parent,
+        serviceId: instanceId,
+        service: {
+          template: {
+            containers: [
+              {
+                image: imageId,
+                ports: [{ containerPort: 8088 }],
+                env: [
+                  { name: 'PROJECT_ID', value: nstProjectId },
+                  { name: 'HOST_INSTANCE_ID', value: instanceId },
+                  { name: 'NSTRUMENTA_API_KEY', value: apiKey.key },
+                ],
+              },
+            ],
+            scaling: {
+              minInstanceCount: 1,
+              maxInstanceCount: 1,
+            },
+            timeout: { seconds: 3600 },
+          },
+        },
+      })
 
-      description = JSON.parse(
-        await asyncSpawn(
-          'gcloud',
-          `run services describe ${instanceId} --format=json`.split(' '),
-        ),
-      )
+      const [service] = await operation.promise()
+
+      // Allow unauthenticated access
+      await servicesClient.setIamPolicy({
+        resource: `projects/${projectId}/locations/${REGION}/services/${instanceId}`,
+        policy: {
+          bindings: [
+            {
+              role: 'roles/run.invoker',
+              members: ['allUsers'],
+            },
+          ],
+        },
+      })
+
+      const machinePath = `projects/${nstProjectId}/machines/${instanceId}`
+      await firestore.doc(machinePath).set(service)
+      await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
     } catch (err: any) {
       console.log(`failed to deploy cloudAgent ${err.message}`)
       await firestore
         .doc(actionPath)
         .set({ status: 'error', error: err.message }, { merge: true })
-    }
-    const machinePath = `projects/${projectId}/machines/${instanceId}`
-
-    try {
-      if (description) {
-        firestore.doc(machinePath).set(description)
-      }
-      firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
-    } catch (err) {
-      firestore
-        .doc(actionPath)
-        .set({ status: 'error', error: JSON.stringify(err) }, { merge: true })
     }
   }
 
@@ -178,23 +121,19 @@ export const createCloudAgentService = ({
   ) {
     console.log('deleteDeployedCloudAgent', data)
     const {
-      payload: { projectId, instanceId },
+      payload: { projectId: nstProjectId, instanceId },
     } = data
 
-    // mark action as started
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
-    const machineDocPath = `projects/${projectId}/machines/${instanceId}`
+    const machineDocPath = `projects/${nstProjectId}/machines/${instanceId}`
 
     try {
-      await gcloudConfig()
-      await asyncSpawn('gcloud', ['run', 'services', 'delete', `${instanceId}`])
+      const name = `projects/${projectId}/locations/${REGION}/services/${instanceId}`
+      const [operation] = await servicesClient.deleteService({ name })
+      await operation.promise()
 
-      await firestore
-        .doc(machineDocPath)
-        .set({ deleted: true }, { merge: true })
-      await firestore
-        .doc(actionPath)
-        .set({ status: 'complete' }, { merge: true })
+      await firestore.doc(machineDocPath).set({ deleted: true }, { merge: true })
+      await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
     } catch (err) {
       const error = (err as Error)?.message ?? JSON.stringify(err)
       console.log(error)

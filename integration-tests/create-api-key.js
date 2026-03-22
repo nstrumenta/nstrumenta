@@ -1,6 +1,5 @@
 const admin = require('firebase-admin');
 const crypto = require('crypto');
-const fs = require('fs');
 
 if (process.argv.length !== 4) {
   console.log('Usage: node create-api-key.js <projectId> <apiUrl>');
@@ -10,20 +9,8 @@ if (process.argv.length !== 4) {
 const projectId = process.argv[2];
 const apiUrl = process.argv[3];
 
-// Read service key from file (GCLOUD_SERVICE_KEY_FILE) or env var (GCLOUD_SERVICE_KEY)
-let serviceAccountJson;
-if (process.env.GCLOUD_SERVICE_KEY_FILE) {
-  serviceAccountJson = fs.readFileSync(process.env.GCLOUD_SERVICE_KEY_FILE, 'utf8');
-} else if (process.env.GCLOUD_SERVICE_KEY) {
-  serviceAccountJson = process.env.GCLOUD_SERVICE_KEY;
-} else {
-  console.error('ERROR: Set GCLOUD_SERVICE_KEY_FILE or GCLOUD_SERVICE_KEY');
-  process.exit(1);
-}
-const serviceAccount = JSON.parse(serviceAccountJson);
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.applicationDefault()
 });
 
 const firestore = admin.firestore();

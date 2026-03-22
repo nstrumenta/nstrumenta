@@ -1,41 +1,45 @@
 # Integration Tests
 
-End-to-end tests for CLI, agents, frontend, and web features using Docker Compose.
+End-to-end tests for CLI and MCP integration, running directly against a server URL.
 
 ## Running Tests
 
 ```shell
-# Run all tests with local credentials
-ENVFILE=../credentials/local.env ./e2e.sh
+# Run all tests (defaults to http://localhost:5999)
+./e2e.sh
 
 # Run specific test suite
-ENVFILE=../credentials/local.env ./e2e.sh cli
-ENVFILE=../credentials/local.env ./e2e.sh frontend
+./e2e.sh cli
+./e2e.sh frontend
 
-# Run multiple test suites
-ENVFILE=../credentials/local.env ./e2e.sh cli frontend
+# Run against a remote server
+API_URL=https://your-server.run.app ./e2e.sh
+```
+
+Or from the repo root:
+
+```shell
+npm run test:e2e
+npm run test:e2e:cli
+npm run test:e2e:frontend
 ```
 
 ## Test Suites
 
-### CLI Tests (`cli/`)
-Tests the nstrumenta CLI commands against a running server instance.
+### CLI Tests (`cli/client/app/`)
+Tests the nstrumenta CLI commands (module publish, module host, data operations) against a running server.
 
-### Frontend Tests (`frontend/`)
-Tests the frontend application end-to-end:
+### Frontend/MCP Tests (`frontend/`)
 - **MCP client tests**: JSON-RPC 2.0 API integration with API key authentication
-- **Playwright UI tests**: Full browser testing with Firebase authentication
-  - User sign-in flow
-  - Project creation and management
-  - UI navigation
 
 See [frontend/README.md](frontend/README.md) for details.
 
-## Requirements
+## Prerequisites
 
-- Docker and Docker Compose
-- Node.js (for test utilities)
-- Valid Firebase credentials in `../credentials/local.env`
-- Test user credentials for frontend tests
+- Node.js >= 18
+- A running nstrumenta server (local via docker compose, or Cloud Run)
+- `NSTRUMENTA_API_KEY` set, or ADC configured so e2e.sh can generate one
 
-Tests are written with Vitest. Each subfolder contains a `docker-compose.yml` that spins up the necessary services.
+## How It Works
+
+`e2e.sh` generates a temporary API key (via ADC + Firestore), runs the test suites against the server URL, then cleans up. No Docker Compose or container orchestration is needed for the tests themselves.

@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { Firestore } from '@google-cloud/firestore'
 import { CreateApiKeyService } from './services/ApiKeyService'
 import { createCloudAgentService } from './services/cloudAgent'
 import { createArchiveService } from './services/firestoreArchive'
@@ -10,7 +9,8 @@ import express, { Request, Response, NextFunction } from 'express'
 import { mkdir } from 'fs/promises'
 import {
   bucketName,
-  serviceAccount,
+  firestore,
+  projectId,
   storage,
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
@@ -76,8 +76,8 @@ app.get('/config', (req, res) => {
   const host = req.get('x-forwarded-host') || req.get('host');
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: `${serviceAccount.project_id}.firebaseapp.com`,
-    projectId: serviceAccount.project_id,
+    authDomain: `${projectId}.firebaseapp.com`,
+    projectId: projectId,
     appId: process.env.FIREBASE_APP_ID,
     apiUrl: `${protocol}://${host}`
   })
@@ -102,16 +102,7 @@ server.listen(port, '0.0.0.0', () => {
   console.log('listening on *:', port)
 })
 
-console.log('project_id: ', serviceAccount.project_id)
-
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-  timestampsInSnapshots: true,
-})
+console.log('project_id: ', projectId)
 
 const bucket = storage.bucket(bucketName)
 
@@ -120,7 +111,6 @@ const bucket = storage.bucket(bucketName)
 const archiveService = createArchiveService({ firestore })
 const cloudAgentService = createCloudAgentService({
   firestore,
-  spawn,
   storage,
 })
 const apiKeyService = CreateApiKeyService({ firestore })

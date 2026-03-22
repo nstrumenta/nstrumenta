@@ -400,41 +400,6 @@ resource "google_dns_record_set" "frontend_cname" {
 
 
 
-resource "google_service_account_key" "server" {
-  service_account_id = data.google_app_engine_default_service_account.default.id
-}
-
-resource "google_secret_manager_secret_iam_member" "app_engine" {
-  project   = google_project.fs.project_id
-  secret_id = google_secret_manager_secret.server_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
-}
-
-resource "google_secret_manager_secret_iam_member" "compute" {
-  project   = google_project.fs.project_id
-  secret_id = google_secret_manager_secret.server_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
-}
-
-# secret so we can reference the key when starting the cloud service
-resource "google_secret_manager_secret" "server_key" {
-  secret_id = "GCLOUD_SERVICE_KEY"
-  project   = google_project.fs.project_id
-  replication {
-    auto {}
-  }
-}
-
-# secret versions hold the actual secret
-resource "google_secret_manager_secret_version" "server_key" {
-  provider = google-beta
-
-  secret      = google_secret_manager_secret.server_key.id
-  secret_data = base64decode(google_service_account_key.server.private_key)
-}
-
 # Secret for API Key Pepper
 resource "google_secret_manager_secret" "api_key_pepper" {
   secret_id = "NSTRUMENTA_API_KEY_PEPPER"
@@ -472,10 +437,6 @@ resource "google_cloud_run_v2_service" "default" {
 
   template {
     service_account = data.google_app_engine_default_service_account.default.email
-    annotations = {
-      # Force new revision when secret version changes
-      "secret-version" = google_secret_manager_secret_version.server_key.version
-    }
     containers {
       name = "server"
       ports {
@@ -510,13 +471,8 @@ resource "google_cloud_run_v2_service" "default" {
       }
 
       env {
-        name = "GCLOUD_SERVICE_KEY"
-        value_source {
-          secret_key_ref {
-            secret  = "GCLOUD_SERVICE_KEY"
-            version = "latest"
-          }
-        }
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = google_project.fs.project_id
       }
       env {
         name = "NSTRUMENTA_API_KEY_PEPPER"
@@ -587,11 +543,6 @@ resource "google_cloudfunctions2_function" "finalize" {
   location = var.location_id
   project  = google_project.fs.project_id
 
-  labels = {
-    # Force new deployment when secret version changes
-    secret-version = google_secret_manager_secret_version.server_key.version
-  }
-
   build_config {
     runtime     = "nodejs20"
     entry_point = "storageObjectFinalize"
@@ -606,12 +557,6 @@ resource "google_cloudfunctions2_function" "finalize" {
 
   service_config {
     service_account_email = data.google_app_engine_default_service_account.default.email
-    secret_environment_variables {
-      key        = "GCLOUD_SERVICE_KEY"
-      project_id = google_project.fs.project_id
-      secret     = "GCLOUD_SERVICE_KEY"
-      version    = "latest"
-    }
   }
   event_trigger {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
@@ -636,11 +581,6 @@ resource "google_cloudfunctions2_function" "delete" {
   location = var.location_id
   project  = google_project.fs.project_id
 
-  labels = {
-    # Force new deployment when secret version changes
-    secret-version = google_secret_manager_secret_version.server_key.version
-  }
-
   build_config {
     runtime     = "nodejs20"
     entry_point = "storageObjectDelete"
@@ -655,12 +595,6 @@ resource "google_cloudfunctions2_function" "delete" {
 
   service_config {
     service_account_email = data.google_app_engine_default_service_account.default.email
-    secret_environment_variables {
-      key        = "GCLOUD_SERVICE_KEY"
-      project_id = google_project.fs.project_id
-      secret     = "GCLOUD_SERVICE_KEY"
-      version    = "latest"
-    }
   }
   event_trigger {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"

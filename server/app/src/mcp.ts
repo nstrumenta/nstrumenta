@@ -1130,19 +1130,15 @@ server.registerTool(
     },
     async () => {
         try {
-            const { serviceAccount } = require('./authentication/ServiceAccount');
+            const { projectId } = require('./authentication/ServiceAccount');
             const { GoogleAuth } = require('google-auth-library');
             const { listComputeInstances } = require('./shared/computeInstances');
 
             const auth = new GoogleAuth({
-                credentials: {
-                    client_email: serviceAccount.client_email,
-                    private_key: serviceAccount.private_key,
-                },
                 scopes: ['https://www.googleapis.com/auth/compute.readonly'],
             });
             const client = await auth.getClient();
-            const machines = await listComputeInstances(serviceAccount.project_id, client);
+            const machines = await listComputeInstances(projectId, client);
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(machines, null, 2) }],
@@ -1167,14 +1163,12 @@ server.registerTool(
     },
     async () => {
         try {
-            const projectId = getProjectId();
-            const { serviceAccount } = require('./authentication/ServiceAccount');
-            const util = require('util');
-            const exec = util.promisify(require('child_process').exec);
+            const { projectId: gcpProjectId } = require('./authentication/ServiceAccount');
+            const { ServicesClient } = require('@google-cloud/run');
             
-            const cmd = `gcloud run services list --project=${serviceAccount.project_id} --format=json`;
-            const { stdout } = await exec(cmd);
-            const services = JSON.parse(stdout);
+            const servicesClient = new ServicesClient();
+            const parent = `projects/${gcpProjectId}/locations/us-west1`;
+            const [services] = await servicesClient.listServices({ parent });
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(services, null, 2) }],

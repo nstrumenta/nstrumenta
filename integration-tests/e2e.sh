@@ -1,169 +1,65 @@
 #!/bin/bash -e
+# E2E test runner — runs tests directly against a server URL (no docker-compose)
+#
+# Usage:
+#   ./e2e.sh cli          # Run CLI tests
+#   ./e2e.sh frontend     # Run frontend/MCP tests
+#   ./e2e.sh              # Run all tests
+#
+# Prerequisites:
+#   - A running server (local via docker compose, or Cloud Run)
+#   - NSTRUMENTA_API_KEY set (or will be generated via ADC)
+#   - API_URL set (defaults to http://localhost:5999)
 
-# Check if Docker is running early
-if ! docker info >/dev/null 2>&1; then
-    echo "ERROR: Docker is not running."
-    echo "Please start Docker Desktop or run 'sudo dockerd' in the background."
-    exit 1
-fi
-
-# Change to integration-tests directory
 cd "$(dirname "$0")"
 
-# Verify required variables are set
-# NST_CI_SERVICE_KEY can come from env var OR from NST_CI_SERVICE_KEY_FILE
-if [ -n "$NST_CI_SERVICE_KEY_FILE" ] && [ -f "$NST_CI_SERVICE_KEY_FILE" ]; then
-  NST_CI_SERVICE_KEY=$(cat "$NST_CI_SERVICE_KEY_FILE")
-fi
+API_URL=${API_URL:-http://localhost:5999}
+export NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL:-$API_URL}
 
-if [ -z "$NST_CI_SERVICE_KEY" ] || [ -z "$FIREBASE_API_KEY" ] || [ -z "$FIREBASE_APP_ID" ]; then
-  echo "ERROR: Required environment variables not set"
-  echo "Required: NST_CI_SERVICE_KEY (or NST_CI_SERVICE_KEY_FILE), FIREBASE_API_KEY, FIREBASE_APP_ID"
-  echo "Please ensure they are set in your environment."
-  exit 1
-fi
+echo "Running e2e tests against $API_URL"
 
-# Generate a temporary .env file for docker-compose to avoid shell mangling of JSON
-# This works for both Local (sourced from local.env) and CI (env vars)
-# We overwrite integration-test.env in the current directory (gitignored)
-ENV_FILE="$(pwd)/integration-test.env"
-cat > "$ENV_FILE" <<EOF
-NST_CI_SERVICE_KEY=$NST_CI_SERVICE_KEY
-NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER
-FIREBASE_API_KEY=$FIREBASE_API_KEY
-FIREBASE_APP_ID=$FIREBASE_APP_ID
-TEST_USER_EMAIL=$TEST_USER_EMAIL
-TEST_USER_PASSWORD=$TEST_USER_PASSWORD
-EOF
-echo "Generated env file at $(pwd)/$ENV_FILE"
-
-# Install dependencies for key generation script if needed
+# Install dependencies
 if [ ! -d "node_modules" ]; then
-    echo "Installing integration test dependencies..."
     npm install
 fi
 
-# Export GCLOUD_SERVICE_KEY for create-api-key.js (it expects this var name)
-export GCLOUD_SERVICE_KEY="$NST_CI_SERVICE_KEY"
-
-# Cleanup function to run on exit
-cleanup() {
-    if [ -n "$CURRENT_TEST_DIR" ] && [ -d "$CURRENT_TEST_DIR" ]; then
-        echo "Cleaning up containers..."
-        (cd "$CURRENT_TEST_DIR" && docker compose down 2>/dev/null || true)
-    fi
-    if [ -f "$ENV_FILE" ]; then
-        echo "Removing temporary env file..."
-        rm -f "$ENV_FILE"
-    fi
-}
-trap cleanup EXIT
-
-TEST_ID_BASE=${TEST_ID_BASE:-$(node -p "crypto.randomUUID()")}
-echo "TEST_ID_BASE= $TEST_ID_BASE"
-
-if [ -z "$NSTRUMENTA_CLOUD_RUN_MODE" ] && [ -z "$CI" ]; then
-    export NSTRUMENTA_CLOUD_RUN_MODE=local
-fi
-
-# If running in local mode, ensure we use the local server by unsetting API_URL
-# This prevents accidental usage of remote servers (e.g. from local.env) when running local tests
-if [ "$NSTRUMENTA_CLOUD_RUN_MODE" = "local" ] && [ -n "$API_URL" ]; then
-    echo "WARN: NSTRUMENTA_CLOUD_RUN_MODE is local, but API_URL is set to '$API_URL'."
-    echo "Unsetting API_URL to ensure tests run against the local server container."
-    unset API_URL
-fi
-
-echo "NSTRUMENTA_CLOUD_RUN_MODE=${NSTRUMENTA_CLOUD_RUN_MODE:-remote}"
-
-# Load the environment variables from the specified ENVFILE
-if [[ $ENVFILE ]]; then
-    echo "Loading from envfile: $ENVFILE"
-    if [[ -f $ENVFILE ]]; then
-        while IFS= read -r line || [[ -n "$line" ]]; do
-            # Skip comments and empty lines
-            if [[ "$line" =~ ^#.* ]] || [[ -z "$line" ]]; then
-                continue
-            fi
-            export "$line"
-        done <"$ENVFILE"
-    fi
-fi
-
-# Install dependencies for key generation script if needed
-if [ ! -d "node_modules" ]; then
-    echo "Installing integration test dependencies..."
-    npm install
-fi
-
-# Export GCLOUD_SERVICE_KEY for create-api-key.js (it expects this var name)
-export GCLOUD_SERVICE_KEY="$NST_CI_SERVICE_KEY"
-
-# Generate API Key for CI project
+# Generate API Key if not provided
 if [ -z "$NSTRUMENTA_API_KEY" ]; then
     echo "Generating API Key for project 'ci'..."
-    export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://nstrumenta-server:5999)
+    export NSTRUMENTA_API_KEY=$(node create-api-key.js ci "$API_URL")
     echo "API Key generated."
 else
     echo "Using existing NSTRUMENTA_API_KEY"
 fi
 
-if [ -n "$API_URL" ]; then
-    export NSTRUMENTA_API_URL=$API_URL
-fi
-
-# Ensure nstrumenta_default network exists
-docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network create nstrumenta_default
-
-# Build and pack unless CI flag is set (CI uses persisted artifacts from build job)
-if [ -z "$CI" ]; then
-    echo "Building fresh CLI and server for e2e tests..."
-    (cd .. && npm run build:cli && npm run build:server)
-    
-    # Check if frontend is in the list of tests to run
-    # We use grep so we don't worry about regex shell details
-    if echo " $@" | grep -q " frontend" || [ $# -eq 0 ]; then
-        echo "Building frontend for e2e tests..."
-        (cd .. && npm run build:frontend)
-    fi
-
-    echo "Creating build directory..."
-    mkdir -p ../build
-    echo "Removing old tarballs..."
-    rm -f ../build/nstrumenta-*.tgz ../build/nst-server-*.tgz
-    echo "Packing nstrumenta..."
-    (cd .. && npm pack && mv nstrumenta-*.tgz build/)
-    echo "Packing server..."
-    (cd ../server/app && npm pack && mv nst-server-*.tgz ../../build/)
-else
-    echo "Skipping build (using cached artifacts from CI workspace)"
-fi
+TEST_ID=${TEST_ID:-$(node -p "crypto.randomUUID()")}
+export TEST_ID
 
 if [ $# -eq 0 ]; then
-    TESTS="cli"
+    TESTS="cli frontend"
 else
-    TESTS=$@
+    TESTS="$@"
 fi
-for TEST_SERVICE in $TESTS; do
-    cd $TEST_SERVICE
-    CURRENT_TEST_DIR="$(pwd)"
-    # Pass CACHE_BUST to force rebuild in CI, while allowing local caching
-    CACHE_BUST_ARG=""
-    if [ -n "$CI" ]; then
-        CACHE_BUST_ARG="--build-arg CACHE_BUST=$(date +%s)"
-    fi
-    
-    # Use --env-file to properly pass JSON credentials without shell interpretation
-    # ENV_FILE is set earlier to integration-test.env in the integration-tests directory
-    # We need to use the absolute path or relative path from the docker-compose file location
-    # Since we cd into $TEST_SERVICE, we need to adjust the path
-    if TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "$ENV_FILE" -f docker-compose.yml build $CACHE_BUST_ARG && \
-       TEST_ID="$TEST_ID_BASE-$TEST_SERVICE" docker compose --env-file "$ENV_FILE" -f docker-compose.yml up --abort-on-container-exit --exit-code-from $TEST_SERVICE 2>&1 | tee /dev/tty | grep -qE "${TEST_SERVICE}(-[0-9]+)? exited with code 0"; then
-        echo exited with code 0
-        docker compose down
-        CURRENT_TEST_DIR=""
-    else
-        exit 1
-    fi
-    cd ..
+
+for TEST_SUITE in $TESTS; do
+    echo "--- Running $TEST_SUITE tests ---"
+    case $TEST_SUITE in
+        cli)
+            cd cli/client/app
+            npm install
+            npm test
+            cd ../../..
+            ;;
+        frontend)
+            cd frontend
+            npm install
+            npx vitest run mcp-client.test.js
+            cd ..
+            ;;
+        *)
+            echo "Unknown test suite: $TEST_SUITE"
+            exit 1
+            ;;
+    esac
+    echo "--- $TEST_SUITE tests passed ---"
 done

@@ -21,18 +21,22 @@
 ## Running Tests
 
 ```shell
-# All backend tests
+# All unit tests (client + server + frontend)
 npm test
 
-# Server tests
+# Server tests only
 cd server/app && npm test
 
-# Frontend tests
+# Frontend tests only
 cd frontend && npm test
 
-# Integration tests
-cd integration-tests && ENVFILE=../credentials/local.env ./e2e.sh
+# Integration tests (requires a running server)
+npm run test:e2e          # All suites
+npm run test:e2e:cli      # CLI tests only
+npm run test:e2e:frontend # MCP/frontend tests only
 ```
+
+Integration tests run directly against a server URL (default `http://localhost:5999`). Set `API_URL` to point at a different server.
 
 ## Test Structure
 

@@ -51,7 +51,7 @@ Prefer simple `bd` commands without jq filtering - use `bd list`, `bd ready`, `b
 
 ## Development Workflow
 Build: `npm run build` (all packages: cli, nodejs, browser, server, agent-admin-page)
-Docker stack: `docker compose --env-file=./credentials/local.env up --build`
+Docker stack: `source credentials/activate.sh && docker compose up --build`
 - Use `-f docker-compose.yml` for prod mode, default uses override with hot-reload and debuggers
 - Scale with `--scale agent=0` or specify services like `up server`
 CLI: `nst agent start`, `nst module run`, `nst data list`, `nst services list`

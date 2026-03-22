@@ -5,7 +5,6 @@
   "customizations": {
     "vscode": {
       "extensions": [
-        "CircleCI.circleci",
         "ms-azuretools.vscode-docker",
         "eamodio.gitlens",
         "hashicorp.terraform",

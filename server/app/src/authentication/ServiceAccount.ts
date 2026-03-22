@@ -1,23 +1,19 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 
-const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY
-if (serviceKeyJson == undefined) throw new Error('GCLOUD_SERVICE_KEY undefined')
-export const serviceAccount = JSON.parse(serviceKeyJson)
+function detectProjectId(): string {
+  const id = process.env.GOOGLE_CLOUD_PROJECT
+  if (!id) {
+    console.warn(
+      'GOOGLE_CLOUD_PROJECT is not set. Set it via env var or credentials/activate.sh.',
+    )
+    return ''
+  }
+  return id
+}
 
-export const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
+export const projectId = detectProjectId()
 
-export const storage = new Storage({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-})
-export const bucketName = `${serviceAccount.project_id}.appspot.com`
+export const firestore = new Firestore()
+export const storage = new Storage()
+export const bucketName = `${projectId}.appspot.com`

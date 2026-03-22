@@ -8,19 +8,19 @@ Infrastructure-as-code for provisioning nstrumenta deployments.
 
 - **Firebase Project**: Firestore database, Cloud Storage, Firebase Auth
 - **Cloud Run**: Serves both backend API and frontend static files
-- **Cloud Run Domain Mapping**: Custom domains with automatic SSL (no load balancer needed!)
-- **Hub Project**: Shared DNS zone for all workspaces (app.nstrumenta.com)
-- **Cloud Functions**: Storage triggers for data processing
-- **Secret Manager**: Secure credential storage
+- **Firebase Hosting**: CDN for frontend with custom domain support
+- **Hub Project**: Shared DNS zone for workspace subdomains (app.nstrumenta.com)
+- **Cloud Functions**: Storage triggers for Firestore metadata
+- **Secret Manager**: API key pepper storage
+- **Artifact Registry**: Container image storage for CI builds
+- **Workload Identity Federation**: Keyless GitHub Actions authentication
 
 ## Workspaces
 
 | Workspace | Purpose | Domain |
 |-----------|---------|--------|
-| `prod` | Production deployment | `www.nstrumenta.com` (via `custom_domain`) |
+| `prod` | Production deployment | `nstrumenta.com` / `www.nstrumenta.com` |
 | `ci-nst` | CI/CD testing | `ci-nst.app.nstrumenta.com` |
-
-The `app.nstrumenta.com` subdomain pattern is reserved for future enterprise accounts.
 
 ## Setup
 
@@ -30,24 +30,21 @@ terraform init
 terraform workspace new <workspace-name>
 ```
 
-Set variables in Terraform Cloud:
-- `billing_account`: from https://console.cloud.google.com/billing
-- `org_id`: from https://console.cloud.google.com/
+Set variables in Terraform Cloud (org: `nstrumenta`):
+- `billing_account`: GCP billing account ID
+- `org_id`: GCP organization ID
 - `GITHUB_CLIENT_ID`: GitHub OAuth App Client ID
 - `GITHUB_CLIENT_SECRET`: GitHub OAuth App Client Secret (sensitive)
 - `support_email`: Email for OAuth consent screen
-- `custom_domain`: (optional) Override the default `{workspace}.app.nstrumenta.com` domain
+- `custom_domain`: (optional) e.g. `www.nstrumenta.com` for prod
 
-For the `prod` workspace, set `custom_domain = "www.nstrumenta.com"`.
+## DNS
 
-## DNS Setup
+**For `*.app.nstrumenta.com` workspaces:** Automatic via the hub DNS zone (CNAME created by Terraform).
 
-**For `*.app.nstrumenta.com` workspaces:** DNS is automatic via the GCP hub zone.
-
-**For `www.nstrumenta.com` (prod):** Configure in Squarespace DNS:
+**For `nstrumenta.com` (prod):** Configure in domain registrar:
 1. Add CNAME: `www` -> `ghs.googlehosted.com.`
-2. Add redirect: `nstrumenta.com` -> `https://www.nstrumenta.com` (Squarespace handles apex redirects)
-3. Verify `www.nstrumenta.com` in Google Search Console for the Terraform service account
+2. Add redirect: `nstrumenta.com` -> `https://www.nstrumenta.com`
 
 ## Deploy
 
@@ -58,10 +55,15 @@ terraform apply
 
 ## Continuous Delivery
 
-On version tags (`v*`), CircleCI automatically:
-1. Builds and tests
-2. Pushes Docker images to Docker Hub
-3. Runs `terraform apply` against the `prod` workspace with the new version
+On version tags (`v*`), GitHub Actions automatically:
+1. Builds and tests all packages
+2. Pushes Docker images to Artifact Registry, then Docker Hub
+3. Deploys to prod Cloud Run
+4. Deploys frontend to Firebase Hosting
+
+## Authentication
+
+All services use Application Default Credentials (ADC). No service account keys are provisioned or stored. GitHub Actions authenticates via Workload Identity Federation (keyless).
 
 ## Outputs
 
@@ -70,12 +72,8 @@ terraform output project_id
 terraform output domain
 terraform output cloud_run_url
 terraform output nstrumenta_version
-```
-
-## to Rotate Keys:
-```
-terraform taint google_service_account_key.server
-terraform apply
+terraform output workload_identity_provider
+terraform output service_account_email
 ```
 
 ## Hub Setup (One-Time)
@@ -88,17 +86,4 @@ terraform init
 terraform apply
 ```
 
-Then add the provided name servers to your domain registrar (Squarespace, etc.).
-
-## if not using terraform cloud
-### gcloud auth with user account
-```
-gcloud auth application-default login
-```
-
-### gcloud auth with service account
-```
-gcloud auth activate-service-account --key-file [path to key-file]
-```
-
-
+Then add the provided name servers to your domain registrar.

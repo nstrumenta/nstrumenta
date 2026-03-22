@@ -1,6 +1,6 @@
 import { QuerySnapshot } from '@google-cloud/firestore'
 import { APIEndpoint, withAuth } from '../authentication'
-import { firestore, serviceAccount } from '../authentication/ServiceAccount'
+import { firestore } from '../authentication/ServiceAccount'
 
 export interface RegisterAgentArgs {
   projectId: string

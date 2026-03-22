@@ -1,13 +1,29 @@
 import { Firestore } from '@google-cloud/firestore'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { mkdir, readFile, writeFile } from 'fs/promises'
+import { mkdir, readdir, readFile } from 'fs/promises'
+import { join } from 'path'
 import { v4 as uuid } from 'uuid'
-import { bucketName, serviceAccount } from '../authentication/ServiceAccount'
+import { bucketName, projectId } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 
-const adminServiceAccount = serviceAccount
-const GCP_PROJECT = adminServiceAccount.project_id
+const CORS_CONFIG = [
+  {
+    maxAgeSeconds: 3600,
+    method: ['PUT', 'POST', 'GET', 'OPTIONS'],
+    origin: ['*'],
+    responseHeader: [
+      'Access-Control-Allow-Origin',
+      'X-Requested-With',
+      'Content-Type',
+      'Range',
+      'Accept-Ranges',
+      'Content-Range',
+      'Content-Encoding',
+      'Content-Length',
+    ],
+  },
+]
 
 export interface CloudAdminService {
   hostModule(
@@ -25,7 +41,6 @@ export interface CloudAdminServiceDependencies {
     args: string[],
     options?: any,
   ) => ChildProcessWithoutNullStreams
-  timeout?: number
 }
 
 export const createCloudAdminService = ({
@@ -33,49 +48,51 @@ export const createCloudAdminService = ({
   spawn,
   storage,
 }: CloudAdminServiceDependencies): CloudAdminService => {
-  async function asyncSpawn(
-    cmd: string,
-    args?: string[],
-    options?: { cwd?: string; showOutput?: boolean },
-    errCB?: (code: number) => void,
-  ) {
-    console.log(`spawn [${cmd} ${args?.join(' ')}]`)
-    const process = spawn(cmd, args || [], options)
-
-    let output = ''
-    process.stdout.on('data', (chunk: Buffer) => {
-      output += chunk
-      if (options?.showOutput) {
-        console.log(chunk.toString())
-      }
+  async function tarExtract(
+    tarFilePath: string,
+    extractFolder: string,
+  ): Promise<void> {
+    const process = spawn('tar', ['-zxvf', tarFilePath], {
+      cwd: extractFolder,
     })
     let error = ''
-    process.stderr.on('data', (chunk: Buffer) => {
+    for await (const chunk of process.stderr) {
       error += chunk
-      if (options?.showOutput) {
-        console.log(chunk.toString())
-      }
-    })
-
+    }
     const code: number = await new Promise((resolve) => {
       process.on('close', resolve)
     })
     if (code) {
-      if (errCB) {
-        errCB(code)
-      }
+      throw new Error(`tar extract error code ${code}, ${error}`)
+    }
+  }
 
-      throw new Error(`spawned process ${cmd} error code ${code}, ${error}`)
+  async function uploadDirectory(
+    bucket: ReturnType<Storage['bucket']>,
+    localDir: string,
+    prefix: string,
+  ): Promise<void> {
+    const entries = await readdir(localDir, { withFileTypes: true })
+    const uploadPromises: Promise<any>[] = []
+
+    for (const entry of entries) {
+      const localPath = join(localDir, entry.name)
+      const remotePath = prefix ? `${prefix}/${entry.name}` : entry.name
+
+      if (entry.isDirectory()) {
+        uploadPromises.push(uploadDirectory(bucket, localPath, remotePath))
+      } else {
+        uploadPromises.push(
+          bucket.upload(localPath, { destination: remotePath }),
+        )
+      }
     }
 
-    console.log(`spawn ${cmd} output ${output}`)
-    return output
+    await Promise.all(uploadPromises)
   }
 
   function uniqueName(id: string): string {
-    // returns a unique name less than 30 chars
-    // appends part of a uuid to a name, not exceeding 20 chars from the prefix
-    return `${GCP_PROJECT.split('-')[0]}-${id.slice(0, 20)}-${uuid().replaceAll(
+    return `${projectId.split('-')[0]}-${id.slice(0, 20)}-${uuid().replaceAll(
       '-',
       '',
     )}`
@@ -85,79 +102,57 @@ export const createCloudAdminService = ({
 
   async function hostModule(
     actionPath: string,
-    projectId: string,
+    nstProjectId: string,
     data: ActionData,
   ) {
-    console.log({ projectId }, 'hostModule')
+    console.log({ nstProjectId }, 'hostModule')
     try {
-      //mark action as started
       await firestore
         .doc(actionPath)
         .set({ status: 'started' }, { merge: true })
 
-      // check if we need to make a bucket
       const projectData = (
-        await firestore.doc(`/projects/${projectId}`).get()
+        await firestore.doc(`/projects/${nstProjectId}`).get()
       ).data()
 
       let hostingBucket = projectData?.hostingBucket
 
       if (hostingBucket != undefined) {
-        console.log(`hosting bucket ${hostingBucket} exists on ${projectId}`)
+        console.log(`hosting bucket ${hostingBucket} exists on ${nstProjectId}`)
       } else {
-        // mark action as started
-        const hostingBucket = uniqueName(projectId)
-        await firestore
-          .doc(actionPath)
-          .set({ status: 'started' }, { merge: true })
-        const adminKeyFilePath = './credentials.json'
-        process.env['GOOGLE_APPLICATION_CREDENTIALS'] = adminKeyFilePath
-        await writeFile(
-          adminKeyFilePath,
-          JSON.stringify(serviceAccount),
-          'utf-8',
-        )
-        await asyncSpawn(
-          'gcloud',
-          `auth activate-service-account --key-file ${adminKeyFilePath}`.split(
-            ' ',
-          ),
-        )
-        await asyncSpawn(
-          'gcloud',
-          `config set core/project ${serviceAccount.project_id}`.split(' '),
-        )
+        hostingBucket = uniqueName(nstProjectId)
+
         const region = projectData?.region ?? 'europe-west3'
-        await asyncSpawn('gcloud', `config set run/region ${region}`.split(' '))
-        await asyncSpawn(
-          'gcloud',
-          `storage buckets create gs://${hostingBucket} --default-storage-class=standard --uniform-bucket-level-access`.split(
-            ' ',
-          ),
+        console.log(
+          `[cloudAdmin] creating bucket ${hostingBucket} in ${region}`,
         )
-        await asyncSpawn(
-          'gcloud',
-          `storage buckets add-iam-policy-binding gs://${hostingBucket} --member=allUsers --role=roles/storage.objectViewer`.split(
-            ' ',
-          ),
-        )
+
+        await storage.createBucket(hostingBucket, {
+          location: region,
+          storageClass: 'standard',
+          uniformBucketLevelAccess: { enabled: true },
+        })
+
+        const bucket = storage.bucket(hostingBucket)
+
+        await bucket.iam.setPolicy({
+          bindings: [
+            {
+              role: 'roles/storage.objectViewer',
+              members: ['allUsers'],
+            },
+          ],
+        })
+
+        await bucket.setCorsConfiguration(CORS_CONFIG)
 
         await firestore
-          .doc(`/projects/${projectId}`)
+          .doc(`/projects/${nstProjectId}`)
           .set({ hostingBucket }, { merge: true })
-
-        //set cors on the bucket
-        await asyncSpawn(
-          'gcloud',
-          `storage buckets update gs://${hostingBucket} --cors-file=./src/cors.json`.split(
-            ' ',
-          ),
-        )
       }
 
-      // get module / untar / upload
       console.log(data)
-      const {name, moduleDocumentPath} = data.data.module
+      const { name, moduleDocumentPath } = data.data.module
       const moduleName = name.replace('.tar.gz', '')
       const workingDirectory = `${__dirname}/temp/modules`
       const extractFolder = `${workingDirectory}/${moduleName}`
@@ -165,12 +160,10 @@ export const createCloudAdminService = ({
       const tarFilePath = `${workingDirectory}/${name}`
       await storage
         .bucket(bucketName)
-        .file(`projects/${projectId}/modules/${name}`)
+        .file(`projects/${nstProjectId}/modules/${name}`)
         .download({ destination: tarFilePath })
 
-      await asyncSpawn('tar', ['-zxvf', tarFilePath], {
-        cwd: extractFolder,
-      })
+      await tarExtract(tarFilePath, extractFolder)
 
       const nstModule = JSON.parse(
         await readFile(`${extractFolder}/nstrumentaModule.json`, 'utf-8'),
@@ -178,13 +171,11 @@ export const createCloudAdminService = ({
       const entry = nstModule?.entry ?? 'index.html'
       const url = `https://storage.googleapis.com/${hostingBucket}/${moduleName}/${entry}`
 
-      await asyncSpawn(
-        'gsutil',
-        `-m -q cp -r ${moduleName} gs://${hostingBucket}/`.split(' '),
-        {
-          cwd: workingDirectory,
-          showOutput: true,
-        },
+      const hostBucket = storage.bucket(hostingBucket)
+      await uploadDirectory(
+        hostBucket,
+        `${workingDirectory}/${moduleName}`,
+        moduleName,
       )
 
       await firestore
@@ -194,7 +185,6 @@ export const createCloudAdminService = ({
           { merge: true },
         )
 
-      //mark action as complete
       await firestore
         .doc(actionPath)
         .set({ status: 'complete' }, { merge: true })

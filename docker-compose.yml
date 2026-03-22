@@ -16,7 +16,8 @@ services:
     volumes:
       - ./credentials/:/credentials
     environment:
-      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/application_default_credentials.json
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
     command: 'npm run start'
   agent:
     build:

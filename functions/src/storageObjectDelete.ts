@@ -4,25 +4,8 @@ import { CloudFunctionsContext } from '@google-cloud/functions-framework';
 import path from 'path';
 import crypto from 'crypto';
 
-const serviceKeyJson = process.env.GCLOUD_SERVICE_KEY;
-if (serviceKeyJson == undefined) throw new Error('GCLOUD_SERVICE_KEY undefined');
-const serviceAccount = JSON.parse(serviceKeyJson);
-
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-});
-
-export const storage = new Storage({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-});
+const firestore = new Firestore();
+export const storage = new Storage();
 
 function generateHash(input: string): { dirname: string; documentPath: string } {
   const hash = crypto.createHash('sha256').update(input).digest('hex');
