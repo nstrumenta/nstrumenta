@@ -198,3 +198,20 @@ export const Get = async (options: QueryOptions & { output?: string }) => {
   const results = await Promise.all(downloads);
   console.log(JSON.stringify(results, undefined, 2));
 };
+
+export const SetMetadata = async (path: string, metadata: string) => {
+  try {
+    const mcp = new McpClient();
+    let meta: Record<string, unknown>;
+    try {
+      meta = JSON.parse(metadata);
+    } catch (e) {
+      return console.error('Error parsing metadata JSON');
+    }
+    
+    await mcp.setDataMetadata(path, meta);
+    console.log('Metadata set');
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
+};

@@ -114,6 +114,14 @@ docker network inspect nstrumenta_default >/dev/null 2>&1 || docker network crea
 if [ -z "$CI" ]; then
     echo "Building fresh CLI and server for e2e tests..."
     (cd .. && npm run build:cli && npm run build:server)
+    
+    # Check if frontend is in the list of tests to run
+    # We use grep so we don't worry about regex shell details
+    if echo " $@" | grep -q " frontend" || [ $# -eq 0 ]; then
+        echo "Building frontend for e2e tests..."
+        (cd .. && npm run build:frontend)
+    fi
+
     echo "Creating build directory..."
     mkdir -p ../build
     echo "Removing old tarballs..."

@@ -19,48 +19,65 @@ export class McpClient {
   }
 
   private async callTool<T>(toolName: string, args: Record<string, any>): Promise<T> {
-    const response = await fetch(`${this.serverUrl}/`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/event-stream',
-        'x-api-key': this.apiKey,
-      },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        method: 'tools/call',
-        params: {
-          name: toolName,
-          arguments: args,
+    const maxRetries = 3;
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      if (attempt > 0) {
+        const delayMs = 1000 * Math.pow(2, attempt - 1);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+
+      const response = await fetch(`${this.serverUrl}/mcp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/event-stream',
+          'x-api-key': this.apiKey,
         },
-        id: Date.now(),
-      }),
-    });
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'tools/call',
+          params: {
+            name: toolName,
+            arguments: args,
+          },
+          id: Date.now(),
+        }),
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`MCP request failed: ${response.status} ${errorText}`);
+      if (response.status === 503 && attempt < maxRetries - 1) {
+        lastError = new Error(`MCP request failed: ${response.status} ${await response.text()}`);
+        continue;
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`MCP request failed: ${response.status} ${errorText}`);
+      }
+
+      const result = (await response.json()) as any;
+
+      if (result.error) {
+        throw new Error(`MCP error: ${result.error.message || 'Unknown error'}`);
+      }
+
+      const toolResult = result.result;
+      if (toolResult.isError) {
+        throw new Error(`Tool error: ${toolResult.content?.[0]?.text || 'Unknown error'}`);
+      }
+
+      // Return structured content if available, otherwise parse text content
+      if (toolResult.structuredContent) {
+        return toolResult.structuredContent as T;
+      }
+
+      return toolResult.content?.[0]?.text
+        ? JSON.parse(toolResult.content[0].text)
+        : (toolResult as T);
     }
 
-    const result = (await response.json()) as any;
-
-    if (result.error) {
-      throw new Error(`MCP error: ${result.error.message || 'Unknown error'}`);
-    }
-
-    const toolResult = result.result;
-    if (toolResult.isError) {
-      throw new Error(`Tool error: ${toolResult.content?.[0]?.text || 'Unknown error'}`);
-    }
-
-    // Return structured content if available, otherwise parse text content
-    if (toolResult.structuredContent) {
-      return toolResult.structuredContent as T;
-    }
-
-    return toolResult.content?.[0]?.text
-      ? JSON.parse(toolResult.content[0].text)
-      : (toolResult as T);
+    throw lastError || new Error('MCP request failed after retries');
   }
 
   async runModule(
@@ -174,12 +191,12 @@ export class McpClient {
   }
 
   async getDataMetadata(path: string): Promise<{ metadata: any }> {
-    return this.callTool('get_data_metadata', { path });
+    return this.callTool('get_data_metadata', { dataId: path });
   }
 
   async setDataMetadata(path: string, metadata: any): Promise<{ success: boolean }> {
     return this.callTool('set_data_metadata', {
-      path,
+      dataId: path,
       metadata,
     });
   }

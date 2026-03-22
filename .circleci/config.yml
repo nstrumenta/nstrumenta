@@ -162,6 +162,8 @@ jobs:
             --port=5999 
             --allow-unauthenticated
             --region=us-west1
+            --memory=1Gi
+            --min-instances=1
             --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest
             --set-env-vars "IMAGE_REPOSITORY=${IMAGE_REPOSITORY}"
             --set-env-vars "IMAGE_VERSION_TAG=${IMAGE_VERSION_TAG}"
@@ -264,6 +266,36 @@ jobs:
             docker push nstrumenta/$image:$PACKAGE_VERSION
             docker push nstrumenta/$image:latest
           done
+  deploy-prod:
+    docker:
+      - image: nstrumenta/base:latest
+    working_directory: ~/project
+    steps:
+      - checkout:
+          path: ~/project
+      - run: echo $PROD_GCLOUD_SERVICE_KEY > ${HOME}/gcloud-service-key.json
+      - run: echo "export GOOGLE_PROJECT_ID=$(cat ${HOME}/gcloud-service-key.json | jq -r .project_id)" >> $BASH_ENV
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run:
+          name: Deploy new version to prod Cloud Run
+          command: |
+            PACKAGE_VERSION=$(cat package.json | jq -r '.version')
+            echo "Deploying nstrumenta/server:${PACKAGE_VERSION} to prod"
+            gcloud run services update cloudrun-service \
+              --image=nstrumenta/server:${PACKAGE_VERSION} \
+              --region=us-west1 \
+              --update-env-vars="IMAGE_VERSION_TAG=${PACKAGE_VERSION}"
+      - run:
+          name: Deploy frontend to Firebase Hosting
+          command: |
+            cd frontend
+            npm ci
+            npm run build
+            FIREBASE_PROJECT_ID=${GOOGLE_PROJECT_ID} node makeFirebaseDeployConfig.js
+            npx firebase use ${GOOGLE_PROJECT_ID}
+            npx firebase deploy --only hosting
+            rm firebase.json
 
 workflows:
   version: 2
@@ -310,6 +342,14 @@ workflows:
       - push-to-docker-hub:
           requires:
             - run-tests
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - deploy-prod:
+          requires:
+            - push-to-docker-hub
           filters:
             tags:
               only: /^v.*/

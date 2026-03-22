@@ -33,7 +33,10 @@ export class UploadService {
     const uploadId = `${Date.now()}-${file.name}`;
     const normalizedFolder = folder ? folder.replace(/^\/+|\/+$/g, '') : '';
     const folderPath = normalizedFolder ? `${normalizedFolder}/` : '';
-    const expectedPath = `projects/${projectId}/data/${folderPath}${file.name}`;
+    // Construct path relative to project for upload API: data/folder/file.name
+    const uploadPath = `data/${folderPath}${file.name}`;
+    // Expected path in Firestore follows the same structure
+    const expectedPath = `projects/${projectId}/${uploadPath}`;
 
     // Initialize upload task
     this.updateUpload(uploadId, {
@@ -44,8 +47,8 @@ export class UploadService {
     });
 
     try {
-      // Start the upload
-      const progress$ = await this.apiService.uploadFile(projectId, file, folder);
+      // Start the upload using unified uploadFileToPath
+      const progress$ = await this.apiService.uploadFileToPath(uploadPath, file, projectId);
 
       // Subscribe to progress
       progress$.subscribe({

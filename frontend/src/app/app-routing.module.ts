@@ -15,7 +15,6 @@ import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
-import { PricingComponent } from './pages/pricing/pricing.component';
 
 const userRoutes: Routes = [
   {
@@ -25,6 +24,7 @@ const userRoutes: Routes = [
       {
         path: '',
         children: [
+          { path: '', redirectTo: 'data', pathMatch: 'full' },
           { path: 'overview', redirectTo: 'data' },
           { path: 'data', component: DataTableComponent },
           { path: 'data/:dataId', component: DataDetailComponent },
@@ -55,7 +55,6 @@ const userRoutes: Routes = [
     path: '',
     component: HomeComponent,
   },
-  { path: 'subscribe', component: PricingComponent },
   {
     path: 'account',
     component: NavComponent,

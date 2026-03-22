@@ -13,6 +13,12 @@ app.use('/config', createProxyMiddleware({
   logLevel: 'debug'
 }));
 
+app.use('/mcp', createProxyMiddleware({
+  target: API_URL,
+  changeOrigin: true,
+  logLevel: 'debug'
+}));
+
 // Serve static files
 app.use(express.static(path.join(__dirname)));
 

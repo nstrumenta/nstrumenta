@@ -1,0 +1,299 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+
+env:
+  IMAGE_VERSION_TAG: ${{ github.sha }}
+  CI_WIF_PROVIDER: ${{ vars.CI_WIF_PROVIDER }}
+  CI_SERVICE_ACCOUNT: ${{ vars.CI_SERVICE_ACCOUNT }}
+  CI_PROJECT_ID: ${{ vars.CI_PROJECT_ID }}
+  PROD_WIF_PROVIDER: ${{ vars.PROD_WIF_PROVIDER }}
+  PROD_SERVICE_ACCOUNT: ${{ vars.PROD_SERVICE_ACCOUNT }}
+  PROD_PROJECT_ID: ${{ vars.PROD_PROJECT_ID }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run build
+      - run: npm pack
+      - name: Build and pack server
+        run: |
+          cd server/app
+          npm install
+          npm run build
+          npm pack
+          mv nst-server-*.tgz ../..
+      - name: Collect build artifacts
+        run: |
+          mkdir -p build
+          mv nstrumenta-*.tgz build/
+          mv nst-server-*.tgz build/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            dist
+            node_modules
+            integration-tests
+            package.json
+            package-lock.json
+            tsconfig.json
+            src
+            build
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+      - uses: actions/cache@v4
+        with:
+          path: project/frontend/node_modules
+          key: frontend-modules-${{ hashFiles('project/frontend/package.json') }}
+      - name: Install and build
+        working-directory: project/frontend
+        run: |
+          ./use_cache_or_npm_install.sh
+          npm run build
+          ./build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: project/frontend/dist
+
+  build-functions:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: functions/node_modules
+          key: functions-modules-${{ hashFiles('functions/package.json') }}
+      - name: Install and build
+        working-directory: functions
+        run: |
+          ./use_cache_or_npm_install.sh
+          ./build.sh
+
+  test-server:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: server/app/node_modules
+          key: server-modules-${{ hashFiles('server/app/package.json') }}
+      - name: Install and test
+        working-directory: server/app
+        run: |
+          npm install
+          npm test
+
+  test-nodejs:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run test:client && npm run test:server
+
+  test-vscode-extension:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run build:vscode-extension
+      - run: npm run test:vscode-extension
+
+  build-ci-images:
+    needs: [build, build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+      - name: Build and push CI images
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: ./build-ci-images.sh
+
+  e2e:
+    needs: [build-ci-images, build]
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - run: gcloud --quiet config set project $CI_PROJECT_ID
+      - name: Fetch secrets from Secret Manager
+        run: |
+          GCLOUD_SERVICE_KEY=$(gcloud secrets versions access latest --secret=GCLOUD_SERVICE_KEY --project=$CI_PROJECT_ID)
+          echo "::add-mask::$GCLOUD_SERVICE_KEY"
+          echo "GCLOUD_SERVICE_KEY=$GCLOUD_SERVICE_KEY" >> $GITHUB_ENV
+          NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$CI_PROJECT_ID)
+          echo "::add-mask::$NSTRUMENTA_API_KEY_PEPPER"
+          echo "NSTRUMENTA_API_KEY_PEPPER=$NSTRUMENTA_API_KEY_PEPPER" >> $GITHUB_ENV
+      - name: Get Firebase config from Cloud Run env
+        run: |
+          FIREBASE_API_KEY=$(gcloud run services describe cloudrun-service --region=us-west1 --format='value(spec.template.spec.containers[0].env.filter("name:FIREBASE_API_KEY").value)')
+          echo "FIREBASE_API_KEY=$FIREBASE_API_KEY" >> $GITHUB_ENV
+          FIREBASE_APP_ID=$(gcloud run services describe cloudrun-service --region=us-west1 --format='value(spec.template.spec.containers[0].env.filter("name:FIREBASE_APP_ID").value)')
+          echo "FIREBASE_APP_ID=$FIREBASE_APP_ID" >> $GITHUB_ENV
+      - name: Deploy test server
+        run: |
+          TEST_SERVER=test-server-${{ github.run_id }}
+          echo "TEST_SERVER=$TEST_SERVER" >> $GITHUB_ENV
+          IMAGE_REPOSITORY=us-west1-docker.pkg.dev/$CI_PROJECT_ID/server
+          echo "IMAGE_REPOSITORY=$IMAGE_REPOSITORY" >> $GITHUB_ENV
+          gcloud run deploy $TEST_SERVER \
+            --image=$IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG \
+            --port=5999 \
+            --allow-unauthenticated \
+            --region=us-west1 \
+            --memory=1Gi \
+            --min-instances=1 \
+            --set-secrets=GCLOUD_SERVICE_KEY=GCLOUD_SERVICE_KEY:latest \
+            --set-env-vars "IMAGE_REPOSITORY=$IMAGE_REPOSITORY" \
+            --set-env-vars "IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG"
+          API_URL=$(gcloud run services describe --region=us-west1 $TEST_SERVER --format='value(status.address.url)')
+          echo "API_URL=$API_URL" >> $GITHUB_ENV
+      - name: Generate API key
+        working-directory: integration-tests
+        run: |
+          npm install
+          NSTRUMENTA_API_KEY=$(node create-api-key.js ci $API_URL)
+          echo "::add-mask::$NSTRUMENTA_API_KEY"
+          echo "NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> $GITHUB_ENV
+      - name: Authenticate Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+          docker pull $IMAGE_REPOSITORY/data-job-runner:$IMAGE_VERSION_TAG
+      - name: Run CLI tests (local mode)
+        working-directory: integration-tests
+        env:
+          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+          NSTRUMENTA_CLOUD_RUN_MODE: local
+        run: API_URL="" NSTRUMENTA_API_URL="" NSTRUMENTA_API_KEY="" ./e2e.sh cli
+      - name: Run CLI tests (remote mode)
+        working-directory: integration-tests
+        env:
+          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+        run: ./e2e.sh cli
+      - name: Run Frontend tests
+        working-directory: integration-tests
+        env:
+          NST_CI_SERVICE_KEY: ${{ env.GCLOUD_SERVICE_KEY }}
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+          NSTRUMENTA_CLOUD_RUN_MODE: local
+        run: API_URL="" NSTRUMENTA_API_URL="" ./e2e.sh frontend
+      - name: Delete test server
+        if: always()
+        run: gcloud run services delete --quiet --region=us-west1 $TEST_SERVER || true
+
+  push-to-docker-hub:
+    needs: [e2e]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Pull, retag, and push images
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          echo "Pulling and retagging images for version $PACKAGE_VERSION"
+          for image in agent server data-job-runner; do
+            echo "Processing $image..."
+            docker pull $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:$PACKAGE_VERSION
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:latest
+            docker push nstrumenta/$image:$PACKAGE_VERSION
+            docker push nstrumenta/$image:latest
+          done
+
+  deploy-prod:
+    needs: [push-to-docker-hub]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
+          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
+      - run: gcloud --quiet config set project $PROD_PROJECT_ID
+      - name: Deploy to prod Cloud Run
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          echo "Deploying nstrumenta/server:${PACKAGE_VERSION} to prod"
+          gcloud run services update cloudrun-service \
+            --image=nstrumenta/server:${PACKAGE_VERSION} \
+            --region=us-west1 \
+            --update-env-vars="IMAGE_VERSION_TAG=${PACKAGE_VERSION}"
+      - name: Deploy frontend to Firebase Hosting
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+          FIREBASE_PROJECT_ID=$PROD_PROJECT_ID node makeFirebaseDeployConfig.js
+          npx firebase use $PROD_PROJECT_ID
+          npx firebase deploy --only hosting

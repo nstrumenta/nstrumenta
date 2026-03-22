@@ -1,6 +1,6 @@
 # Terraform
 
-Infrastructure-as-code for provisioning new nstrumenta deployments.
+Infrastructure-as-code for provisioning nstrumenta deployments.
 
 ## Architecture
 
@@ -13,14 +13,21 @@ Infrastructure-as-code for provisioning new nstrumenta deployments.
 - **Cloud Functions**: Storage triggers for data processing
 - **Secret Manager**: Secure credential storage
 
-Each workspace gets a custom domain like `dev.app.nstrumenta.com` via direct CNAME in the hub zone.
+## Workspaces
+
+| Workspace | Purpose | Domain |
+|-----------|---------|--------|
+| `prod` | Production deployment | `www.nstrumenta.com` (via `custom_domain`) |
+| `ci-nst` | CI/CD testing | `ci-nst.app.nstrumenta.com` |
+
+The `app.nstrumenta.com` subdomain pattern is reserved for future enterprise accounts.
 
 ## Setup
 
 ```shell
 cd terraform
 terraform init
-terraform workspace new <project-name>
+terraform workspace new <workspace-name>
 ```
 
 Set variables in Terraform Cloud:
@@ -29,6 +36,18 @@ Set variables in Terraform Cloud:
 - `GITHUB_CLIENT_ID`: GitHub OAuth App Client ID
 - `GITHUB_CLIENT_SECRET`: GitHub OAuth App Client Secret (sensitive)
 - `support_email`: Email for OAuth consent screen
+- `custom_domain`: (optional) Override the default `{workspace}.app.nstrumenta.com` domain
+
+For the `prod` workspace, set `custom_domain = "www.nstrumenta.com"`.
+
+## DNS Setup
+
+**For `*.app.nstrumenta.com` workspaces:** DNS is automatic via the GCP hub zone.
+
+**For `www.nstrumenta.com` (prod):** Configure in Squarespace DNS:
+1. Add CNAME: `www` -> `ghs.googlehosted.com.`
+2. Add redirect: `nstrumenta.com` -> `https://www.nstrumenta.com` (Squarespace handles apex redirects)
+3. Verify `www.nstrumenta.com` in Google Search Console for the Terraform service account
 
 ## Deploy
 
@@ -37,12 +56,21 @@ terraform plan
 terraform apply
 ```
 
-The Cloud Run service will automatically serve:
-- Frontend app at `https://<workspace>.app.nstrumenta.com/`
-- Backend API at `https://<workspace>.app.nstrumenta.com/`
-- Config file at `/firebaseConfig.json` (deployment config now served via `/config` endpoint)
+## Continuous Delivery
 
-SSL certificates are managed automatically by Cloud Run domain mapping.
+On version tags (`v*`), CircleCI automatically:
+1. Builds and tests
+2. Pushes Docker images to Docker Hub
+3. Runs `terraform apply` against the `prod` workspace with the new version
+
+## Outputs
+
+```shell
+terraform output project_id
+terraform output domain
+terraform output cloud_run_url
+terraform output nstrumenta_version
+```
 
 ## to Rotate Keys:
 ```
