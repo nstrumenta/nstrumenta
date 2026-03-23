@@ -156,15 +156,12 @@ jobs:
         run: ./build-ci-images.sh
 
   e2e:
-    needs: [build, build-frontend]
+    needs: [build-frontend]
     runs-on: ubuntu-latest
     env:
       CI: true
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: build
       - uses: actions/download-artifact@v4
         with:
           name: frontend
@@ -176,48 +173,6 @@ jobs:
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
           service_account: ${{ env.CI_SERVICE_ACCOUNT }}
-      - uses: google-github-actions/get-secretmanager-secrets@v2
-        id: secrets
-        with:
-          secrets: |
-            nstrumenta_api_key_pepper:${{ env.CI_PROJECT_ID }}/NSTRUMENTA_API_KEY_PEPPER
-      - name: Generate API key
-        working-directory: integration-tests
-        env:
-          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: |
-          npm install
-          NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://localhost:5999)
-          echo "::add-mask::$NSTRUMENTA_API_KEY"
-          echo "NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> $GITHUB_ENV
-      - name: Install CLI
-        run: npm install -g ./build/nstrumenta-*.tgz
-      - name: Run CLI tests
-        env:
-          NSTRUMENTA_API_URL: http://localhost:5999
-          NSTRUMENTA_API_KEY: ${{ env.NSTRUMENTA_API_KEY }}
-          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: |
-          npm install -g ./build/nst-server-*.tgz
-          nst-server &
-          echo "Waiting for server..."
-          for i in $(seq 1 30); do
-            curl -sf http://localhost:5999/health && break || sleep 2
-          done
-          echo "Server ready"
-          cd integration-tests/cli/client/app
-          npm install
-          npm test
-      - name: Run MCP integration tests
-        working-directory: integration-tests/frontend
-        env:
-          NSTRUMENTA_API_KEY: ${{ env.NSTRUMENTA_API_KEY }}
-        run: |
-          npm install
-          npx vitest run mcp-client.test.js
-      - name: Stop native test server
-        if: always()
-        run: pkill -f nst-server || true
       - name: Configure gcloud for Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}

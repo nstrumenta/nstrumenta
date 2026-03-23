@@ -11,6 +11,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+      - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     healthcheck:
@@ -19,6 +20,22 @@ services:
       timeout: 3s
       retries: 30
       start_period: 5s
+
+  cli-tests:
+    build:
+      context: ../
+      dockerfile: server/Dockerfile
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - NSTRUMENTA_API_URL=http://server:5999
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+    volumes:
+      - ./cli:/app/cli-tests
+      - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
+    working_dir: /app/cli-tests/client/app
+    command: sh -c 'npm install && npm test'
 
   playwright:
     image: mcr.microsoft.com/playwright:v1.50.1-jammy
