@@ -180,6 +180,7 @@ jobs:
           mkdir -p $HOME/.config/gcloud
           cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
           gcloud config set project $GOOGLE_CLOUD_PROJECT
+      - uses: docker/setup-buildx-action@v3
       - name: Run Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
