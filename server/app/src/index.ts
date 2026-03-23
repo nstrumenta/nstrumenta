@@ -39,7 +39,7 @@ export interface ActionData {
 const port = process.env.API_PORT ?? 5999
 
 const app = express()
-app.set('trust proxy', true)
+app.set('trust proxy', 1)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 

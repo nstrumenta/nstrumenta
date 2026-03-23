@@ -24,6 +24,7 @@ type McpRequestContext = {
     projectId: string;
     userId?: string;
     authType: 'apiKey' | 'firebase';
+    origin?: string;
 };
 
 const requestContext = new AsyncLocalStorage<McpRequestContext>();
@@ -45,6 +46,11 @@ function getUserId(): string | undefined {
 function getAuthType(): 'apiKey' | 'firebase' {
     const context = requestContext.getStore();
     return context?.authType || 'apiKey';
+}
+
+function getOrigin(): string | undefined {
+    const context = requestContext.getStore();
+    return context?.origin;
 }
 
 type UnifiedAuthResult = 
@@ -979,7 +985,7 @@ server.registerTool(
             
             const path = originalPath.replace(/^(\/)*/, '/');
             const storagePathBase = `projects/${projectId}`;
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, '*');
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1027,7 +1033,7 @@ server.registerTool(
                 }
             }
             
-            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, '*');
+            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1360,7 +1366,8 @@ export async function handleMcpRequest(req: Request, res: Response) {
         await requestContext.run({
             projectId: authResult.projectId,
             userId: authResult.userId,
-            authType: authResult.authType
+            authType: authResult.authType,
+            origin: req.headers.origin,
         }, async () => {
             await dispatchMcpRequest(req, res);
         });

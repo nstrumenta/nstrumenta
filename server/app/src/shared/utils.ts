@@ -1,6 +1,24 @@
 // source: https://github.com/googleapis/nodejs-storage/blob/main/samples/generateV4UploadSignedUrl.js
-import { GetSignedUrlConfig } from '@google-cloud/storage'
-import { bucketName, storage } from '../authentication/ServiceAccount'
+import { GetSignedUrlConfig, Storage } from '@google-cloud/storage'
+import { GoogleAuth, Impersonated } from 'google-auth-library'
+import { bucketName, projectId, storage } from '../authentication/ServiceAccount'
+
+let _signingStorage: Storage | null = null
+
+async function getSigningStorage(): Promise<Storage> {
+  if (_signingStorage) return _signingStorage
+  const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
+  const sourceClient = await auth.getClient()
+  const impersonated = new Impersonated({
+    sourceClient,
+    targetPrincipal: `${projectId}@appspot.gserviceaccount.com`,
+    lifetime: 3600,
+    delegates: [],
+    targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
+  })
+  _signingStorage = new Storage({ authClient: impersonated })
+  return _signingStorage
+}
 
 export async function generateV4UploadSignedUrl(
   fileName: string,
@@ -10,7 +28,8 @@ export async function generateV4UploadSignedUrl(
   contentType: string = 'application/octet-stream',
   contentDisposition?: string,
 ) {
-  const file = storage.bucket(bucketName).file(fileName)
+  const signingStorage = await getSigningStorage()
+  const file = signingStorage.bucket(bucketName).file(fileName)
 
   const extensionHeaders: Record<string, string> = {}
   if (metadata) {
@@ -46,18 +65,16 @@ export async function generateV4UploadSignedUrl(
 
   // Get a v4 signed URL for uploading file
   const [url] = await file.getSignedUrl(options)
-  await file.generateSignedPostPolicyV4({
-    expires: Date.now() + 15 * 60 * 1000,
-  })
   console.log('signedUrl', url)
-
-  let location
 
   const headers: Record<string, string> = {
     'content-type': finalContentType,
     'x-goog-resumable': 'start',
-    ...(origin ? { origin } : {}),
     ...extensionHeaders,
+  }
+
+  if (origin) {
+    headers['Origin'] = origin
   }
 
   if (contentDisposition) {
@@ -66,31 +83,24 @@ export async function generateV4UploadSignedUrl(
     headers['Content-Disposition'] = metadata['contentDisposition']
   }
 
-  // add metadata in headers like
-  // https://stackoverflow.com/questions/58193915/how-do-i-add-metadata-to-a-file-when-uploading-via-a-gcs-signeduploadurl
   if (metadata) {
     Object.keys(metadata).forEach((key) => {
       headers[`x-goog-meta-${key}`] = metadata[key]
     })
   }
 
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: headers,
-    })
+  const response = await fetch(url, { method: 'POST', headers })
+  if (!response.ok) {
+    const body = await response.text().catch(() => '')
+    throw new Error(`GCS resumable upload initiation failed: ${response.status} ${body}`)
+  }
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-
-    location = response.headers.get('location')
-  } catch (e) {
-    console.log('fetch error', e)
+  const location = response.headers.get('location')
+  if (!location) {
+    throw new Error('GCS did not return a resumable upload location')
   }
 
   console.log({ location })
-
   return location
 }
 

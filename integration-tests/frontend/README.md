@@ -1,33 +1,32 @@
 # Frontend E2E Tests
 
-MCP integration tests for the nstrumenta server.
+## Playwright Browser Tests (`tests/`)
 
-## Tests
+Browser-based tests running against the nstrumenta server via Docker Compose.
 
-### MCP Client Tests (`mcp-client.test.js`)
-Tests the MCP JSON-RPC 2.0 integration:
-- Listing modules via `list_modules` tool
-- Listing agents via `list_agents` tool
-- Listing data via `list_data` tool
-- Getting project info via `get_project` tool
-- Authentication error handling
+- `auth.spec.js` - sign-in flow
+- `projects.spec.js` - project CRUD
+- `upload.spec.js` - file upload
 
-## Running Tests
+## MCP Integration Tests (`mcp-client.test.js`)
+
+JSON-RPC 2.0 API tests for the MCP endpoint.
+
+## Running
 
 ```bash
-# From integration-tests/frontend directory
+# From repo root (runs via Docker Compose)
+npm run test:e2e
+
+# MCP tests standalone (requires running server + NSTRUMENTA_API_KEY)
+cd integration-tests/frontend
 npm install
 npx vitest run mcp-client.test.js
 ```
 
-Or via the e2e runner:
-
-```bash
-# From integration-tests directory
-./e2e.sh frontend
-```
-
 ## Environment Variables
 
-- `NSTRUMENTA_API_KEY` - API key for MCP authentication
-- `API_URL` - Server URL (default: http://localhost:5999)
+- `FRONTEND_URL` - Server URL for Playwright (default: http://localhost:5999)
+- `TEST_USER_EMAIL` - Test user email (created by e2e.sh)
+- `TEST_USER_PASSWORD` - Test user password (created by e2e.sh)
+- `NSTRUMENTA_API_KEY` - API key for MCP tests

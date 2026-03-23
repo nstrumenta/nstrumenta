@@ -1,80 +1,31 @@
 #!/bin/bash -e
-# E2E test runner — runs tests directly against a server URL (no docker-compose)
-#
-# Usage:
-#   ./e2e.sh cli          # Run CLI tests
-#   ./e2e.sh frontend     # Run frontend/MCP tests
-#   ./e2e.sh              # Run all tests
-#
-# Prerequisites:
-#   - A running server (local via docker compose, or Cloud Run)
-#   - NSTRUMENTA_API_KEY set (or will be generated via ADC)
-#   - API_URL set (defaults to http://localhost:5999)
+# E2E test runner — Playwright tests in Docker Compose
+# Prerequisites: gcloud auth application-default login && gcloud config set project <project-id>
 
 cd "$(dirname "$0")"
 
-API_URL=${API_URL:-http://localhost:5999}
-export NSTRUMENTA_API_URL=${NSTRUMENTA_API_URL:-$API_URL}
-
-echo "Running e2e tests against $API_URL"
-
-# Install dependencies
-if [ ! -d "node_modules" ]; then
-    npm install
+if [ ! -f "$HOME/.config/gcloud/application_default_credentials.json" ]; then
+    echo "Run: gcloud auth application-default login"
+    exit 1
 fi
 
-# Generate API Key if not provided
-if [ -z "$NSTRUMENTA_API_KEY" ]; then
-    echo "Generating API Key for project 'ci'..."
-    export NSTRUMENTA_API_KEY=$(node create-api-key.js ci "$API_URL")
-    echo "API Key generated."
-else
-    echo "Using existing NSTRUMENTA_API_KEY"
+export GOOGLE_CLOUD_PROJECT=$(gcloud config get-value project 2>/dev/null)
+if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
+    echo "Run: gcloud config set project <project-id>"
+    exit 1
 fi
 
-TEST_ID=${TEST_ID:-$(node -p "crypto.randomUUID()")}
-export TEST_ID
+if [ ! -d "node_modules" ]; then npm install; fi
 
-if [ $# -eq 0 ]; then
-    TESTS="cli frontend playwright"
-else
-    TESTS="$@"
+eval "$(node get-project-config.js)"
+
+if [ ! -d "../frontend/dist" ]; then
+    echo "Building frontend..."
+    (cd ../frontend && npm install && npm run build)
 fi
 
-for TEST_SUITE in $TESTS; do
-    echo "--- Running $TEST_SUITE tests ---"
-    case $TEST_SUITE in
-        cli)
-            cd cli/client/app
-            npm install
-            npm test
-            cd ../../..
-            ;;
-        frontend)
-            cd frontend
-            npm install
-            npx vitest run mcp-client.test.js
-            cd ..
-            ;;
-        playwright)
-            cd frontend
-            npm install
-            cd ..
-            TEST_USER_JSON=$(GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT} node create-test-user.js)
-            TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
-            TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
-            cd frontend
-            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=${PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH:-/usr/bin/chromium} \
-            FRONTEND_URL=${NSTRUMENTA_API_URL:-http://localhost:5999} \
-            TEST_USER_EMAIL=$TEST_USER_EMAIL \
-            TEST_USER_PASSWORD=$TEST_USER_PASSWORD \
-            npx playwright test
-            cd ..
-            ;;
-        *)
-            echo "Unknown test suite: $TEST_SUITE"
-            exit 1
-            ;;
-    esac
-    echo "--- $TEST_SUITE tests passed ---"
-done
+TEST_USER_JSON=$(node create-test-user.js)
+export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
+export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
+
+docker compose -f docker-compose.e2e.yml up --build --abort-on-container-exit --exit-code-from playwright

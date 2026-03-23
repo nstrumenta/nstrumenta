@@ -1,16 +1,24 @@
 FROM nstrumenta/base:latest
 
-# Install pre-built nstrumenta CLI
-COPY build/nstrumenta-*.tgz /tmp/nstrumenta.tgz
-RUN npm install -g /tmp/nstrumenta.tgz && \
-    rm /tmp/nstrumenta.tgz
+WORKDIR /build
 
-# Install pre-built server app
-COPY build/nst-server-*.tgz /tmp/nst-server.tgz
-RUN npm install -g /tmp/nst-server.tgz && \
-    rm /tmp/nst-server.tgz
+# Build CLI
+COPY package*.json ./
+COPY lib/ ./lib/
+COPY cli/ ./cli/
+COPY browser/ ./browser/
+COPY agent/ ./agent/
+COPY agent-admin-page/ ./agent-admin-page/
+COPY server/server.ts ./server/server.ts
+RUN npm install --quiet
+RUN npm run build:lib && npm run build:cli && npm run build:browser
+RUN npm pack && npm install -g nstrumenta-*.tgz
 
-# Copy frontend static files
+# Build server
+COPY server/app/ ./server/app/
+RUN cd server/app && npm ci --quiet && npm run build && npm pack && npm install -g nst-server-*.tgz
+
+# Copy pre-built frontend
 COPY frontend/dist /app/frontend
 
 CMD ["nst-server"]

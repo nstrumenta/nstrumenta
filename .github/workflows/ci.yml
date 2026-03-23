@@ -136,13 +136,10 @@ jobs:
       - run: npm run test:vscode-extension
 
   build-ci-images:
-    needs: [build, build-frontend]
+    needs: [build-frontend]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: build
       - uses: actions/download-artifact@v4
         with:
           name: frontend
@@ -159,17 +156,22 @@ jobs:
         run: ./build-ci-images.sh
 
   e2e:
-    needs: [build-ci-images, build]
+    needs: [build, build-frontend]
     runs-on: ubuntu-latest
-    container: nstrumenta/ci:latest
     env:
       CI: true
-      API_URL: http://localhost:5999
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: build
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -179,13 +181,21 @@ jobs:
         with:
           secrets: |
             nstrumenta_api_key_pepper:${{ env.CI_PROJECT_ID }}/NSTRUMENTA_API_KEY_PEPPER
-      - name: Start test server
+      - name: Generate API key
+        working-directory: integration-tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-          NSTRUMENTA_API_KEY_PEPPER: ${{ steps.secrets.outputs.nstrumenta_api_key_pepper }}
-          FIREBASE_API_KEY: ${{ vars.CI_FIREBASE_API_KEY }}
-          FIREBASE_APP_ID: ${{ vars.CI_FIREBASE_APP_ID }}
-          IMAGE_VERSION_TAG: ${{ env.IMAGE_VERSION_TAG }}
+        run: |
+          npm install
+          NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://localhost:5999)
+          echo "::add-mask::$NSTRUMENTA_API_KEY"
+          echo "NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> $GITHUB_ENV
+      - name: Install CLI
+        run: npm install -g ./build/nstrumenta-*.tgz
+      - name: Run CLI tests
+        env:
+          NSTRUMENTA_API_URL: http://localhost:5999
+          NSTRUMENTA_API_KEY: ${{ env.NSTRUMENTA_API_KEY }}
         run: |
           npm install -g ./build/nst-server-*.tgz
           nst-server &
@@ -194,28 +204,6 @@ jobs:
             curl -sf http://localhost:5999/health && break || sleep 2
           done
           echo "Server ready"
-      - name: Generate API key and test user
-        working-directory: integration-tests
-        env:
-          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: |
-          npm install
-          NSTRUMENTA_API_KEY=$(node create-api-key.js ci $API_URL)
-          echo "::add-mask::$NSTRUMENTA_API_KEY"
-          echo "NSTRUMENTA_API_KEY=$NSTRUMENTA_API_KEY" >> $GITHUB_ENV
-          TEST_USER_JSON=$(node create-test-user.js)
-          TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
-          TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
-          echo "::add-mask::$TEST_USER_PASSWORD"
-          echo "TEST_USER_EMAIL=$TEST_USER_EMAIL" >> $GITHUB_ENV
-          echo "TEST_USER_PASSWORD=$TEST_USER_PASSWORD" >> $GITHUB_ENV
-      - name: Install CLI
-        run: npm install -g ./build/nstrumenta-*.tgz
-      - name: Run CLI tests
-        env:
-          NSTRUMENTA_API_URL: ${{ env.API_URL }}
-          NSTRUMENTA_API_KEY: ${{ env.NSTRUMENTA_API_KEY }}
-        run: |
           cd integration-tests/cli/client/app
           npm install
           npm test
@@ -226,16 +214,21 @@ jobs:
         run: |
           npm install
           npx vitest run mcp-client.test.js
-      - name: Run Playwright tests
-        working-directory: integration-tests/frontend
+      - name: Stop native test server
+        if: always()
+        run: pkill -f nst-server || true
+      - name: Configure gcloud for Playwright tests
         env:
-          FRONTEND_URL: ${{ env.API_URL }}
-          TEST_USER_EMAIL: ${{ env.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD: ${{ env.TEST_USER_PASSWORD }}
-        run: npx playwright test
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+        run: |
+          mkdir -p $HOME/.config/gcloud
+          cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
+          gcloud config set project $GOOGLE_CLOUD_PROJECT
+      - name: Run Playwright tests
+        run: cd integration-tests && ./e2e.sh
 
   push-to-docker-hub:
-    needs: [e2e]
+    needs: [e2e, build-ci-images]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04-arm
     steps:
