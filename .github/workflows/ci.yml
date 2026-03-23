@@ -181,6 +181,8 @@ jobs:
           cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
           gcloud config set project $GOOGLE_CLOUD_PROJECT
       - name: Run Playwright tests
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
         run: cd integration-tests && ./e2e.sh
 
   push-to-docker-hub:
