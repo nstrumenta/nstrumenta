@@ -1,11 +1,17 @@
 #!/bin/bash
 # Activate local dev environment using gh vars as the source of truth
-# Prerequisites: gh auth login
+# Prerequisites: gh auth login, gcloud auth login
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-export GOOGLE_CLOUD_PROJECT=$(gh variable get CI_PROJECT_ID 2>/dev/null)
-if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
-  echo "ERROR: Could not read CI_PROJECT_ID from gh vars. Run: gh auth login"
+CI_PROJECT_ID=$(gh variable get CI_PROJECT_ID 2>/dev/null)
+CI_SERVICE_ACCOUNT=$(gh variable get CI_SERVICE_ACCOUNT 2>/dev/null)
+if [ -z "$CI_PROJECT_ID" ] || [ -z "$CI_SERVICE_ACCOUNT" ]; then
+  echo "ERROR: Could not read CI vars from gh. Run: gh auth login"
   return 1
 fi
+
+export GOOGLE_CLOUD_PROJECT="$CI_PROJECT_ID"
+gcloud config set project "$CI_PROJECT_ID" --quiet
+
+gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"
