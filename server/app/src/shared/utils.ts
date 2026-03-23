@@ -1,24 +1,6 @@
 // source: https://github.com/googleapis/nodejs-storage/blob/main/samples/generateV4UploadSignedUrl.js
-import { GetSignedUrlConfig, Storage } from '@google-cloud/storage'
-import { GoogleAuth, Impersonated } from 'google-auth-library'
-import { bucketName, projectId, storage } from '../authentication/ServiceAccount'
-
-let _signingStorage: Storage | null = null
-
-async function getSigningStorage(): Promise<Storage> {
-  if (_signingStorage) return _signingStorage
-  const auth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] })
-  const sourceClient = await auth.getClient()
-  const impersonated = new Impersonated({
-    sourceClient,
-    targetPrincipal: `${projectId}@appspot.gserviceaccount.com`,
-    lifetime: 3600,
-    delegates: [],
-    targetScopes: ['https://www.googleapis.com/auth/cloud-platform'],
-  })
-  _signingStorage = new Storage({ authClient: impersonated })
-  return _signingStorage
-}
+import { GetSignedUrlConfig } from '@google-cloud/storage'
+import { bucketName, storage } from '../authentication/ServiceAccount'
 
 export async function generateV4UploadSignedUrl(
   fileName: string,
@@ -28,8 +10,7 @@ export async function generateV4UploadSignedUrl(
   contentType: string = 'application/octet-stream',
   contentDisposition?: string,
 ) {
-  const signingStorage = await getSigningStorage()
-  const file = signingStorage.bucket(bucketName).file(fileName)
+  const file = storage.bucket(bucketName).file(fileName)
 
   const extensionHeaders: Record<string, string> = {}
   if (metadata) {
