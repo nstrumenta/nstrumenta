@@ -525,6 +525,11 @@ export class FirebaseDataService {
   }
 
   // User project operations
+  getUserDoc(uid: string): Observable<any> {
+    const docRef = doc(this.firestore, `users/${uid}`);
+    return this.docData(docRef);
+  }
+
   async updateUserProject(projectId: string, projectData: unknown): Promise<void> {
     const currentUserId = this.currentUserId.value;
     if (!currentUserId) return;

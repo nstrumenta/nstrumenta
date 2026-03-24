@@ -10,7 +10,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
@@ -72,13 +73,12 @@ fetch('/config')
           })
         ),
         provideHttpClient(withInterceptorsFromDi()),
-        importProvidersFrom(BrowserAnimationsModule),
+        importProvidersFrom(BrowserAnimationsModule, MatDialogModule, MatSnackBarModule),
         
         // Services
         AuthService,
         VscodeService,
         MatIconRegistry,
-        MatSnackBar,
         
         // Error handler
         { provide: ErrorHandler, useClass: SentryErrorHandler },

@@ -15,11 +15,18 @@ import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
+import { WaitlistGuard } from './guards/waitlist.guard';
+import { WaitlistComponent } from './pages/waitlist/waitlist.component';
 
 const userRoutes: Routes = [
   {
+    path: 'waitlist',
+    component: WaitlistComponent
+  },
+  {
     path: 'projects/:projectId',
     component: NavComponent,
+    canActivate: [WaitlistGuard],
     children: [
       {
         path: '',
@@ -44,6 +51,7 @@ const userRoutes: Routes = [
   {
     path: 'projects',
     component: NavComponent,
+    canActivate: [WaitlistGuard],
     children: [
       {
         path: '',
@@ -58,6 +66,7 @@ const userRoutes: Routes = [
   {
     path: 'account',
     component: NavComponent,
+    canActivate: [WaitlistGuard],
     children: [
       {
         path: '',
@@ -80,4 +89,3 @@ const userRoutes: Routes = [
 
 // Export routes for standalone bootstrap (used in main.ts)
 export { userRoutes as routes };
-

@@ -8,9 +8,10 @@ const createProjectBase = async (
   args: {
     name: string
     projectIdBase?: string
+    orgId?: string
   } & FirebaseAuthResult
 ) => {
-  const { name, projectIdBase: rawProjectIdBase, authenticated, userId } = args
+  const { name, projectIdBase: rawProjectIdBase, orgId, authenticated, userId } = args
 
   try {
     if (!authenticated || !userId) {
@@ -45,13 +46,16 @@ const createProjectBase = async (
     console.log('Creating new project:', { projectId, name, userId })
 
     // Create the project document
-    const newProjectDocument = {
+    const newProjectDocument: any = {
       name,
       members: {
         [userId]: 'owner'
       },
       createdAt: new Date().toISOString(),
       createdBy: userId
+    }
+    if (orgId) {
+      newProjectDocument.orgId = orgId
     }
 
     // Use a batch to ensure both documents are created atomically

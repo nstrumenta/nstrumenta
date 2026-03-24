@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 export interface CreateProjectRequest {
   name: string;
   projectIdBase?: string;
+  orgId?: string;
 }
 
 export interface CreateProjectResponse {
@@ -109,7 +110,8 @@ export class ApiService {
         name: 'create_project',
         arguments: {
           name: request.name,
-          projectIdBase: request.projectIdBase
+          projectIdBase: request.projectIdBase,
+          ...(request.orgId ? { orgId: request.orgId } : {})
         }
       }
     };

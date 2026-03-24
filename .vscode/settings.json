@@ -52,5 +52,8 @@
     /* Stop collapsing AI steps */
     "chat.agent.thinking.collapsedTools": "off",
     /* Ensure the panel pops open immediately */
-    "terminal.integrated.focusAfterRun": "none"
+    "terminal.integrated.focusAfterRun": "none",
+    "chat.agent.thinkingStyle": "collapsedPreview",
+    "chat.checkpoints.showFileChanges": true,
+    "chat.tools.terminal.preventShellHistory": false
 }

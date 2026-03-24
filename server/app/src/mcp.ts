@@ -795,6 +795,7 @@ server.registerTool(
         inputSchema: {
             name: z.string().describe('Project name'),
             projectIdBase: z.string().optional().describe('Optional project ID base'),
+            orgId: z.string().optional().describe('Organization ID this project belongs to'),
         },
         outputSchema: {
             id: z.string().describe('Created project ID'),
@@ -802,7 +803,7 @@ server.registerTool(
             message: z.string(),
         },
     },
-    async ({ name, projectIdBase: rawProjectIdBase }) => {
+    async ({ name, projectIdBase: rawProjectIdBase, orgId }) => {
         try {
             const userId = getUserId();
             if (!userId || getAuthType() !== 'firebase') {
@@ -829,12 +830,15 @@ server.registerTool(
             }
 
             const timestamp = Date.now();
-            const projectData = {
+            const projectData: any = {
                 name,
                 createdAt: timestamp,
                 lastModified: timestamp,
                 members: { [userId]: { role: 'owner', addedAt: timestamp } },
             };
+            if (orgId) {
+                projectData.orgId = orgId;
+            }
 
             // Use batch to create both project and user project reference atomically
             const batch = firestore.batch();

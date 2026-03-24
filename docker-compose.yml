@@ -4,19 +4,20 @@ services:
       context: .
       dockerfile: ./frontend/Dockerfile
     ports:
-      - 5000:5000
+      - 5008:5008
     working_dir: /app
     command: 'npm run serve:dist'
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./server/Dockerfile
     ports:
       - 5999:5999
     volumes:
+      - ~/.config/gcloud:/gcp:ro
       - ./credentials/:/credentials
     environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/credentials/application_default_credentials.json
+      - GOOGLE_APPLICATION_CREDENTIALS=/gcp/application_default_credentials.json
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
     command: 'npm run start'
   agent:

@@ -17,12 +17,15 @@ if (!admin.apps.length) {
 }
 
 const auth = admin.auth();
+const db = admin.firestore();
 
 async function createTestUser() {
   const password = crypto.randomBytes(24).toString('base64url');
+  let uid = null;
 
   try {
     const existing = await auth.getUserByEmail(email);
+    uid = existing.uid;
     await auth.updateUser(existing.uid, { password });
     console.error(`Reset password for existing test user ${email} (uid: ${existing.uid})`);
   } catch (error) {
@@ -33,10 +36,21 @@ async function createTestUser() {
         emailVerified: true,
         displayName: 'CI Playwright',
       });
+      uid = created.uid;
       console.error(`Created test user ${email} (uid: ${created.uid})`);
     } else {
       throw error;
     }
+  }
+
+  // Ensure test user bypasses waitlist
+  if (uid) {
+    await db.collection('users').doc(uid).set({
+      status: 'approved',
+      email: email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    console.error(`Set status to 'approved' in Firestore for uid ${uid}`);
   }
 
   // Output credentials as JSON to stdout (stderr used for logs above)

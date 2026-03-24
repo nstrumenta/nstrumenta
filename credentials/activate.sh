@@ -13,5 +13,12 @@ fi
 export GOOGLE_CLOUD_PROJECT="$CI_PROJECT_ID"
 gcloud config set project "$CI_PROJECT_ID" --quiet
 
-gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
+# Check if application default credentials are valid before forcing a new login
+if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
+  echo "Authenticating application-default credentials..."
+  gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
+else
+  echo "Application default credentials are valid."
+fi
+
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"

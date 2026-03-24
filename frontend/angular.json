@@ -81,7 +81,8 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "buildTarget": "nstrumenta:build"
+            "buildTarget": "nstrumenta:build",
+            "proxyConfig": "proxy.conf.js"
           },
           "configurations": {
             "production": {

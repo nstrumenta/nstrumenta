@@ -27,5 +27,15 @@ export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
 
 docker compose -f docker-compose.e2e.yml up --build -d server
 docker compose -f docker-compose.e2e.yml run --rm cli-tests
+set +e
 docker compose -f docker-compose.e2e.yml run --rm playwright
+PLAYWRIGHT_EXIT_CODE=$?
+set -e
+
 docker compose -f docker-compose.e2e.yml down
+
+if [ $PLAYWRIGHT_EXIT_CODE -ne 0 ]; then
+    echo "❌ Playwright E2E tests failed!"
+    echo "View report: file://$(pwd)/frontend/playwright-report/index.html"
+    exit $PLAYWRIGHT_EXIT_CODE
+fi

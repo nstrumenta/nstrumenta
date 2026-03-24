@@ -26,7 +26,12 @@ test.describe('Authentication Flow', () => {
     
     // Click the "Sign in" button in the navbar
     const signInButton = page.locator('button:has-text("Sign in")');
-    await expect(signInButton).toBeVisible({ timeout: 10000 });
+    try {
+      await expect(signInButton).toBeVisible({ timeout: 10000 });
+    } catch (e) {
+      console.log('PAGE CONTENT at failure:', await page.content());
+      throw e;
+    }
     await signInButton.click();
     
     // Wait for login dialog to appear

@@ -1,19 +1,27 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Firestore, doc, getFirestore, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private auth: Auth;
+  private firestore: Firestore;
   private googleProvider: GoogleAuthProvider;
   private githubProvider: GithubAuthProvider;
+  
   user = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null>;
+  
+  private userStatusSubject = new BehaviorSubject<string | null>(null);
+  userStatus$: Observable<string | null> = this.userStatusSubject.asObservable();
+  private userStatusUnsubscribe?: Unsubscribe;
 
   constructor() {
     this.auth = getAuth();
+    this.firestore = getFirestore();
     this.googleProvider = new GoogleAuthProvider();
     this.githubProvider = new GithubAuthProvider();
     this.user$ = this.user.asObservable();
@@ -21,6 +29,26 @@ export class AuthService {
     // Listen to auth state changes
     onAuthStateChanged(this.auth, (user) => {
       this.user.next(user);
+      
+      // Cleanup previous subscription if it exists
+      if (this.userStatusUnsubscribe) {
+        this.userStatusUnsubscribe();
+      }
+      
+      if (user) {
+        // Assume pending immediately on login
+        this.userStatusSubject.next('pending');
+        
+        const docRef = doc(this.firestore, `users/${user.uid}`);
+        this.userStatusUnsubscribe = onSnapshot(docRef, (snapshot) => {
+          const data = snapshot.data();
+          if (data) {
+             this.userStatusSubject.next(data['status'] || 'pending');
+          }
+        });
+      } else {
+        this.userStatusSubject.next(null);
+      }
     });
   }
 

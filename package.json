@@ -62,7 +62,6 @@
     "test:client": "node --test --experimental-strip-types cli/__tests__/**/*.test.ts agent/__tests__/**/*.test.ts lib/__tests__/**/*.test.ts",
     "test:server": "cd server/app && npm install && npm test",
     "test:frontend": "cd frontend && npm install && npm test",
-    "test:cli": "NSTRUMENTA_API_KEY=test:aHR0cDovL2xvY2FsaG9zdDo4MDgw ts-node cli/__tests__/mcp.test.ts",
     "test:watch": "node --test --watch --experimental-strip-types agent/__tests__/**/*.test.ts",
     "test:coverage": "node --test --experimental-test-coverage --experimental-strip-types agent/__tests__/**/*.test.ts",
     "test:vscode-extension": "node --test --experimental-strip-types vscode-extension/__tests__/unit/**/*.test.ts",
