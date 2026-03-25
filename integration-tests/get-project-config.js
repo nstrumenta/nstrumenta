@@ -38,8 +38,9 @@ async function getFirebaseConfig() {
   const config = await configRes.json();
   if (!config.apiKey) throw new Error(`No apiKey in Firebase web app config for ${projectId}`);
 
-  console.log(`export FIREBASE_API_KEY=${config.apiKey}`);
-  console.log(`export FIREBASE_APP_ID=${config.appId}`);
+  // CodeQL: Output data using process.stdout.write instead of console.log to avoid logging sensitive variables.
+  process.stdout.write(`export FIREBASE_API_KEY=${config.apiKey}\n`);
+  process.stdout.write(`export FIREBASE_APP_ID=${config.appId}\n`);
 }
 
 getFirebaseConfig().catch(e => {

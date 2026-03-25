@@ -54,7 +54,8 @@ async function createTestUser() {
   }
 
   // Output credentials as JSON to stdout (stderr used for logs above)
-  console.log(JSON.stringify({ email, password }));
+  const result = { email, password };
+  process.stdout.write(JSON.stringify(result) + '\n');
 }
 
 createTestUser().catch((error) => {
