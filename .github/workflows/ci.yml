@@ -186,7 +186,57 @@ jobs:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
         run: cd integration-tests && ./e2e.sh
 
-  push-to-docker-hub:
+  # ---------------------------------------------------------------------------
+  # CD: Deploy on merge to main
+  # ---------------------------------------------------------------------------
+
+  deploy-frontend:
+    needs: [build-frontend, test-server, test-nodejs]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
+          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
+      - name: Deploy to Firebase Hosting
+        working-directory: frontend
+        run: |
+          npm ci
+          FIREBASE_PROJECT_ID=$PROD_PROJECT_ID node makeFirebaseDeployConfig.js
+          npx firebase use $PROD_PROJECT_ID
+          npx firebase deploy --only hosting
+
+  deploy-server:
+    needs: [e2e, build-ci-images]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
+          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
+      - run: gcloud --quiet config set project $PROD_PROJECT_ID
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: |
+          gcloud run services update cloudrun-service \
+            --image=$IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG \
+            --region=us-west1 \
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG"
+
+  # ---------------------------------------------------------------------------
+  # Release: Publish versioned artifacts on v* tags
+  # ---------------------------------------------------------------------------
+
+  publish-docker-hub:
     needs: [e2e, build-ci-images]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04-arm
@@ -218,30 +268,56 @@ jobs:
             docker push nstrumenta/$image:latest
           done
 
-  deploy-prod:
-    needs: [push-to-docker-hub]
+  publish-npm:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+      - name: Publish to npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          npm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-pypi:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: google-github-actions/auth@v2
+      - uses: actions/setup-python@v5
         with:
-          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
-          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
-      - run: gcloud --quiet config set project $PROD_PROJECT_ID
-      - name: Deploy to prod Cloud Run
+          python-version: '3.x'
+      - name: Publish to PyPI
+        working-directory: python
         run: |
-          PACKAGE_VERSION=$(jq -r '.version' package.json)
-          echo "Deploying nstrumenta/server:${PACKAGE_VERSION} to prod"
-          gcloud run services update cloudrun-service \
-            --image=nstrumenta/server:${PACKAGE_VERSION} \
-            --region=us-west1 \
-            --update-env-vars="IMAGE_VERSION_TAG=${PACKAGE_VERSION}"
-      - name: Deploy frontend to Firebase Hosting
+          pip install build twine
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+  publish-vscode:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - name: Publish VS Code extension
+        working-directory: vscode-extension
         run: |
-          cd frontend
-          npm ci
-          npm run build
-          FIREBASE_PROJECT_ID=$PROD_PROJECT_ID node makeFirebaseDeployConfig.js
-          npx firebase use $PROD_PROJECT_ID
-          npx firebase deploy --only hosting
+          npm install
+          npx vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
