@@ -285,6 +285,7 @@ resource "google_storage_bucket" "default" {
   provider = google-beta
   name     = google_app_engine_application.fb_app.default_bucket
   location = var.location_id
+  project  = google_project.fs.project_id
 
   cors {
     origin          = ["*"]

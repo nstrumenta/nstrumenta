@@ -28,7 +28,7 @@ export class McpClient {
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
 
-      const response = await fetch(`${this.serverUrl}/mcp`, {
+      const response = await fetch(`${this.serverUrl}/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
