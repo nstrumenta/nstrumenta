@@ -215,3 +215,13 @@ export const SetMetadata = async (path: string, metadata: string) => {
     console.error('Error:', (err as Error).message);
   }
 };
+
+export const GetMetadata = async (path: string) => {
+  try {
+    const mcp = new McpClient();
+    const { metadata } = await mcp.getDataMetadata(path);
+    console.log(JSON.stringify(metadata, undefined, 2));
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+  }
+};
