@@ -140,6 +140,8 @@ resource "google_identity_platform_config" "auth" {
       local.domain,
       "${google_project.fs.project_id}.firebaseapp.com",
       "${google_project.fs.project_id}.web.app",
+      "${google_firebase_hosting_site.frontend.site_id}.firebaseapp.com",
+      "${google_firebase_hosting_site.frontend.site_id}.web.app",
     ],
     var.custom_domain != null ? ["nstrumenta.com", "www.nstrumenta.com"] : [],
   )
