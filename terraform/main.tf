@@ -63,6 +63,12 @@ variable "ci_service_account_email" {
   default     = null
 }
 
+variable "trusted_github_actors" {
+  description = "GitHub usernames allowed to trigger WIF-authenticated CI jobs on pull requests."
+  type        = list(string)
+  default     = []
+}
+
 locals {
   domain                = var.custom_domain != null ? var.custom_domain : "${terraform.workspace}.app.nstrumenta.com"
   is_hub_managed_domain = var.custom_domain == null # only *.app.nstrumenta.com domains are in the hub zone
@@ -665,9 +671,17 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.actor"      = "assertion.actor"
     "attribute.repository" = "assertion.repository"
     "attribute.ref"        = "assertion.ref"
+    "attribute.event_name" = "assertion.event_name"
   }
 
-  attribute_condition = "assertion.repository == 'nstrumenta/nstrumenta'"
+  attribute_condition = join(" ", [
+    "assertion.repository == 'nstrumenta/nstrumenta'",
+    "&& (",
+    "  assertion.ref.startsWith('refs/heads/main')",
+    "  || assertion.ref.startsWith('refs/tags/v')",
+    length(var.trusted_github_actors) > 0 ? "  || assertion.actor in [${join(", ", [for a in var.trusted_github_actors : "'${a}'"])}]" : "",
+    ")",
+  ])
 
   oidc {
     issuer_uri = "https://token.actions.githubusercontent.com"
