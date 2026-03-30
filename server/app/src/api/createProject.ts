@@ -18,52 +18,85 @@ const createProjectBase = async (
       return res.status(401).send('Authentication required')
     }
 
+    const userDoc = await firestore.collection('users').doc(userId).get()
+    const userData = userDoc.data()
+    if (!userData) {
+      return res.status(404).send('User not found')
+    }
+
+    let targetOrgId = orgId
+    let targetOrgSlug = ''
+
+    if (targetOrgId) {
+      const orgDoc = await firestore.collection('organizations').doc(targetOrgId).get()
+      if (!orgDoc.exists) return res.status(404).send('Organization not found')
+      targetOrgSlug = orgDoc.data()?.slug
+    } else {
+      targetOrgId = userData.personalOrgId
+      targetOrgSlug = userData.username
+      if (!targetOrgId || !targetOrgSlug) {
+        return res.status(400).send('User profile setup required before creating projects')
+      }
+    }
+
+    if (!targetOrgSlug) {
+      return res.status(400).send('Organization has no slug defined')
+    }
+
     // Generate project ID base from name if not provided
-    const projectIdBase = rawProjectIdBase || encodeURIComponent(
+    const projectSlugBase = rawProjectIdBase || encodeURIComponent(
       name
         .toLowerCase()
         .replace(/ +/g, '-')
-        .replace(/[^a-z0-9 _-]+/gi, '-')
+        .replace(/[^a-z0-9_-]+/gi, '-')
     )
 
-    // Find a unique project ID by appending random suffixes if needed
+    // Find a unique project slug by appending random suffixes if needed
     let confirmedUnique = false
     let suffix = ''
-    let projectId = projectIdBase
+    let projectSlug = projectSlugBase
+    let existingProjectSlugDoc
 
     while (!confirmedUnique) {
-      const existingProject = await firestore.collection('projects').doc(projectId).get()
+      existingProjectSlugDoc = await firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`).get()
       
-      if (existingProject.exists) {
-        console.log(`Project ID ${projectId} already exists`)
+      if (existingProjectSlugDoc.exists) {
+        console.log(`Project slug ${targetOrgSlug}:${projectSlug} already exists`)
         suffix = uuid().substring(0, 5) // Use first 5 characters of UUID
-        projectId = `${projectIdBase}-${suffix}`
+        projectSlug = `${projectSlugBase}-${suffix}`
       } else {
         confirmedUnique = true
       }
     }
 
-    console.log('Creating new project:', { projectId, name, userId })
+    const projectId = firestore.collection('projects').doc().id
+
+    console.log('Creating new project:', { projectId, projectSlug, targetOrgSlug, name, userId })
 
     // Create the project document
     const newProjectDocument: any = {
       name,
+      slug: projectSlug,
+      orgId: targetOrgId,
+      orgSlug: targetOrgSlug,
       members: {
         [userId]: 'owner'
       },
       createdAt: new Date().toISOString(),
-      createdBy: userId
-    }
-    if (orgId) {
-      newProjectDocument.orgId = orgId
+      createdBy: userId,
+      visibility: 'private'
     }
 
-    // Use a batch to ensure both documents are created atomically
+    // Use a batch to ensure all documents are created atomically
     const batch = firestore.batch()
 
     // Add project to main projects collection
     const projectRef = firestore.collection('projects').doc(projectId)
     batch.set(projectRef, newProjectDocument)
+
+    // Add project-slugs lookup
+    const lookupRef = firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`)
+    batch.set(lookupRef, { projectId })
 
     // Add project reference to user's projects subcollection
     const userProjectRef = firestore.collection(`users/${userId}/projects`).doc(projectId)
@@ -73,6 +106,8 @@ const createProjectBase = async (
 
     return res.status(201).send({
       id: projectId,
+      slug: projectSlug,
+      orgSlug: targetOrgSlug,
       name,
       message: 'Project created successfully'
     })
