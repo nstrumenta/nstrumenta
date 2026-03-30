@@ -9,7 +9,6 @@ Infrastructure-as-code for provisioning nstrumenta deployments.
 - **Firebase Project**: Firestore database, Cloud Storage, Firebase Auth
 - **Cloud Run**: Serves both backend API and frontend static files
 - **Firebase Hosting**: CDN for frontend with custom domain support
-- **Hub Project**: Shared DNS zone for workspace subdomains (app.nstrumenta.com)
 - **Cloud Functions**: Storage triggers for Firestore metadata
 - **Secret Manager**: API key pepper storage
 - **Artifact Registry**: Container image storage for CI builds
@@ -20,7 +19,7 @@ Infrastructure-as-code for provisioning nstrumenta deployments.
 | Workspace | Purpose | Domain |
 |-----------|---------|--------|
 | `prod` | Production deployment | `nstrumenta.com` / `www.nstrumenta.com` |
-| `ci-nst` | CI/CD testing | `ci-nst.app.nstrumenta.com` |
+| `ci-nst` | CI/CD testing | `ci-nst.nstrumenta.com` |
 
 ## Setup
 
@@ -36,15 +35,17 @@ Set variables in Terraform Cloud (org: `nstrumenta`):
 - `GITHUB_CLIENT_ID`: GitHub OAuth App Client ID
 - `GITHUB_CLIENT_SECRET`: GitHub OAuth App Client Secret (sensitive)
 - `support_email`: Email for OAuth consent screen
-- `custom_domain`: (optional) e.g. `www.nstrumenta.com` for prod
+- `custom_domain`: Domain for this workspace (e.g. `nstrumenta.com`, `ci-nst.nstrumenta.com`)
+- `enable_www_redirect`: Set `true` for apex domains that need `www.` redirect (prod only)
 
 ## DNS
 
-**For `*.app.nstrumenta.com` workspaces:** Automatic via the hub DNS zone (CNAME created by Terraform).
+Configure a CNAME in your domain registrar for each workspace:
 
-**For `nstrumenta.com` (prod):** Configure in domain registrar:
-1. Add CNAME: `www` -> `ghs.googlehosted.com.`
-2. Add redirect: `nstrumenta.com` -> `https://www.nstrumenta.com`
+| Workspace | Record | Value |
+|-----------|--------|-------|
+| `prod` | `www` CNAME | `ghs.googlehosted.com.` |
+| `ci-nst` | `ci-nst` CNAME | `ghs.googlehosted.com.` |
 
 ## Deploy
 
@@ -55,11 +56,15 @@ terraform apply
 
 ## Continuous Delivery
 
-On version tags (`v*`), GitHub Actions automatically:
+On merge to main, GitHub Actions automatically:
 1. Builds and tests all packages
-2. Pushes Docker images to Artifact Registry, then Docker Hub
-3. Deploys to prod Cloud Run
-4. Deploys frontend to Firebase Hosting
+2. Pushes Docker images to Artifact Registry
+3. Deploys frontend and server to both CI and prod environments
+
+On pull requests:
+1. Deploys an ephemeral preview environment (Firebase Hosting channel + Cloud Run service)
+2. Comments the preview URL on the PR
+3. Cleans up on PR close
 
 ## Authentication
 
@@ -75,15 +80,3 @@ terraform output nstrumenta_version
 terraform output workload_identity_provider
 terraform output service_account_email
 ```
-
-## Hub Setup (One-Time)
-
-The hub project hosts the shared DNS zone for `app.nstrumenta.com`:
-
-```shell
-cd terraform/hub
-terraform init
-terraform apply
-```
-
-Then add the provided name servers to your domain registrar.
