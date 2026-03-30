@@ -57,6 +57,12 @@ variable "custom_domain" {
   default     = null
 }
 
+variable "ci_service_account_email" {
+  description = "CI service account email that needs write access to this project's Artifact Registry for CD image promotion."
+  type        = string
+  default     = null
+}
+
 locals {
   domain                = var.custom_domain != null ? var.custom_domain : "${terraform.workspace}.app.nstrumenta.com"
   is_hub_managed_domain = var.custom_domain == null # only *.app.nstrumenta.com domains are in the hub zone
@@ -614,13 +620,23 @@ resource "google_cloudfunctions2_function" "delete" {
   }
 }
 
-# artifact registry for pushing server containers in CI
+# artifact registry for server container images
 resource "google_artifact_registry_repository" "server" {
   project       = google_project.fs.project_id
   location      = "us-west1"
   repository_id = "server"
-  description   = "repository for CI server images"
+  description   = "Docker repository for server images"
   format        = "DOCKER"
+}
+
+# Allow CI service account to push images to this project's Artifact Registry (for CD image promotion)
+resource "google_artifact_registry_repository_iam_member" "ci_writer" {
+  count      = var.ci_service_account_email != null ? 1 : 0
+  project    = google_project.fs.project_id
+  location   = google_artifact_registry_repository.server.location
+  repository = google_artifact_registry_repository.server.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${var.ci_service_account_email}"
 }
 
 # Workload Identity Federation for GitHub Actions (keyless auth)
