@@ -71,7 +71,6 @@ All services use Application Default Credentials (ADC). No service account keys 
 terraform output project_id
 terraform output domain
 terraform output cloud_run_url
-terraform output nstrumenta_version
 terraform output workload_identity_provider
 terraform output service_account_email
 ```

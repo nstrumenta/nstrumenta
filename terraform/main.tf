@@ -6,12 +6,6 @@ variable "org_id" {
   type = string
 }
 
-variable "nstrumenta_version" {
-  description = "The version tag for nstrumenta images (frontend, server, data-job-runner)"
-  type        = string
-  default     = "latest"
-}
-
 variable "location_id" {
   type    = string
   default = "us-west1"
@@ -406,7 +400,7 @@ resource "google_cloud_run_v2_service" "default" {
       ports {
         container_port = 5999
       }
-      image = "nstrumenta/server:${var.nstrumenta_version}"
+      image = "nstrumenta/server:latest"
 
       resources {
         cpu_idle = true
@@ -448,10 +442,6 @@ resource "google_cloud_run_v2_service" "default" {
         }
       }
       env {
-        name  = "IMAGE_VERSION_TAG"
-        value = var.nstrumenta_version
-      }
-      env {
         name  = "FIREBASE_API_KEY"
         value = data.google_firebase_web_app_config.web_app.api_key
       }
@@ -464,6 +454,10 @@ resource "google_cloud_run_v2_service" "default" {
       min_instance_count = 0
       max_instance_count = 1
     }
+  }
+
+  lifecycle {
+    ignore_changes = [template]
   }
 }
 
@@ -658,10 +652,6 @@ output "cloud_run_url" {
 
 output "firebase_hosting_site" {
   value = google_firebase_hosting_site.frontend.site_id
-}
-
-output "nstrumenta_version" {
-  value = var.nstrumenta_version
 }
 
 output "workload_identity_provider" {
