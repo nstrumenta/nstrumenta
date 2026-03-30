@@ -49,13 +49,11 @@ import { MatIconModule } from '@angular/material/icon';
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background-color: #fafafa;
     }
     
     .top-bar {
       height: 64px;
       padding: 0 24px;
-      background: white;
       display: flex;
       align-items: center;
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -82,7 +80,7 @@ import { MatIconModule } from '@angular/material/icon';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #e3f2fd;
+      background: rgba(0, 0, 0, 0.08);
       border-radius: 50%;
     }
     
@@ -90,17 +88,12 @@ import { MatIconModule } from '@angular/material/icon';
       margin-top: 20px;
       font-size: 16px;
       line-height: 1.5;
-      color: rgba(0,0,0,0.87);
     }
     
     .card-actions {
       display: flex;
       justify-content: flex-end;
       padding: 16px 0 0 0;
-    }
-
-    strong {
-      color: rgba(0,0,0,0.87);
     }
   `]
 })

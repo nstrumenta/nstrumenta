@@ -69,3 +69,22 @@
     }
   }
 }
+
+@media (prefers-color-scheme: dark) {
+  .tag-line {
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .marketing-copy {
+    color: rgba(255, 255, 255, 0.87);
+
+    .feature {
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+      p {
+        color: rgba(255, 255, 255, 0.87);
+      }
+    }
+  }
+}
