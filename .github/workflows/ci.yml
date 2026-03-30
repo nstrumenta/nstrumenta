@@ -241,7 +241,7 @@ jobs:
             --project=$PROD_PROJECT_ID \
             --image=$PROD_IMAGE \
             --region=us-west1 \
-            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG"
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$PROD_PROJECT_ID"
 
   # ---------------------------------------------------------------------------
   # Release: Publish versioned artifacts on v* tags
