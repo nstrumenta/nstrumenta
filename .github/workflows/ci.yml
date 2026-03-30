@@ -222,12 +222,12 @@ jobs:
         with:
           workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
           service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
-      - run: gcloud --quiet config set project $PROD_PROJECT_ID
       - name: Deploy to Cloud Run
         env:
           IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
         run: |
           gcloud run services update cloudrun-service \
+            --project=$PROD_PROJECT_ID \
             --image=$IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG \
             --region=us-west1 \
             --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG"
