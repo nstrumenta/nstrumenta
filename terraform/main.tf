@@ -52,9 +52,15 @@ variable "dns_hub_zone_name" {
 }
 
 variable "custom_domain" {
-  description = "Custom domain for this workspace (e.g. nstrumenta.com). If not set, defaults to {workspace}.app.nstrumenta.com. Firebase Hosting serves the SPA and rewrites API paths to Cloud Run."
+  description = "Custom domain for this workspace (e.g. nstrumenta.com or ci-nst.nstrumenta.com). If not set, defaults to {workspace}.app.nstrumenta.com."
   type        = string
   default     = null
+}
+
+variable "enable_www_redirect" {
+  description = "Create a www.{custom_domain} redirect. Only useful for apex domains like nstrumenta.com."
+  type        = bool
+  default     = false
 }
 
 variable "ci_service_account_email" {
@@ -149,7 +155,7 @@ resource "google_identity_platform_config" "auth" {
       "${google_firebase_hosting_site.frontend.site_id}.firebaseapp.com",
       "${google_firebase_hosting_site.frontend.site_id}.web.app",
     ],
-    var.custom_domain != null ? ["nstrumenta.com", "www.nstrumenta.com"] : [],
+    var.enable_www_redirect ? ["www.${var.custom_domain}"] : [],
   )
 
   sign_in {
@@ -391,8 +397,9 @@ resource "google_firebase_hosting_custom_domain" "primary" {
 }
 
 # www redirect — Firebase Hosting redirects www.nstrumenta.com to nstrumenta.com
+# Only for apex domains (no dots in the subdomain part), not subdomains like ci-nst.nstrumenta.com
 resource "google_firebase_hosting_custom_domain" "www_redirect" {
-  count                 = var.custom_domain != null ? 1 : 0
+  count                 = var.custom_domain != null && var.enable_www_redirect ? 1 : 0
   provider              = google-beta
   project               = google_project.fs.project_id
   site_id               = google_firebase_hosting_site.frontend.site_id
