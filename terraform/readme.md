@@ -16,10 +16,10 @@ Infrastructure-as-code for provisioning nstrumenta deployments.
 
 ## Workspaces
 
-| Workspace | Purpose | Domain |
-|-----------|---------|--------|
-| `prod` | Production deployment | `nstrumenta.com` / `www.nstrumenta.com` |
-| `ci-nst` | CI/CD testing | `ci-nst.nstrumenta.com` |
+```shell
+terraform workspace list
+terraform workspace select <name>
+```
 
 ## Setup
 
@@ -40,12 +40,7 @@ Set variables in Terraform Cloud (org: `nstrumenta`):
 
 ## DNS
 
-Configure a CNAME in your domain registrar for each workspace:
-
-| Workspace | Record | Value |
-|-----------|--------|-------|
-| `prod` | `www` CNAME | `ghs.googlehosted.com.` |
-| `ci-nst` | `ci-nst` CNAME | `ghs.googlehosted.com.` |
+Each workspace's `custom_domain` needs a CNAME record configured in the domain registrar. The required CNAME value is shown in the Firebase Hosting console after `terraform apply` creates the custom domain resource.
 
 ## Deploy
 
@@ -79,4 +74,25 @@ terraform output cloud_run_url
 terraform output nstrumenta_version
 terraform output workload_identity_provider
 terraform output service_account_email
+```
+
+## Development
+
+The remote backend runs in HCP Terraform. Authentication uses the `TF_TOKEN_app_terraform_io` environment variable (set in the dev container via `credentials/activate.sh`). No `terraform login` or credentials file is needed.
+
+Workspace variables are managed in the HCP Terraform UI or via the API:
+
+```shell
+# Set a variable on a workspace via API
+curl -s -X PATCH \
+  -H "Authorization: Bearer $TF_TOKEN_app_terraform_io" \
+  -H "Content-Type: application/vnd.api+json" \
+  "https://app.terraform.io/api/v2/vars/$VAR_ID" \
+  -d '{"data":{"attributes":{"value":"new-value"}}}'
+```
+
+Variables can also be passed directly on plan/apply:
+
+```shell
+terraform plan -var="custom_domain=example.nstrumenta.com"
 ```
