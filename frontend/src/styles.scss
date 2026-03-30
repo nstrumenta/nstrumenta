@@ -86,3 +86,9 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+@media (prefers-color-scheme: dark) {
+  a {
+    color: #5aabff;
+  }
+}

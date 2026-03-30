@@ -19,3 +19,18 @@ button mat-icon {
   color: #3f51b5;
   font-weight: 500;
 }
+
+@media (prefers-color-scheme: dark) {
+  .folder-row {
+    background-color: rgba(255, 255, 255, 0.03);
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+  }
+
+  .active-crumb {
+    background-color: rgba(121, 134, 203, 0.2) !important;
+    color: #9fa8da;
+  }
+}
