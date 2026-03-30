@@ -16,6 +16,8 @@ export interface Project extends DocumentData {
   id?: string;
   key?: string;
   name?: string;
+  slug?: string;
+  orgSlug?: string;
   lastOpened?: number;
   lastModified?: number;
   [key: string]: unknown;

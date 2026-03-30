@@ -14,6 +14,7 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   onSnapshot,
   orderBy,
   query,
@@ -285,6 +286,32 @@ export class FirebaseDataService {
   }
 
   // Public methods to set project and agent
+  
+  async resolveAndSetProject(owner: string, project: string): Promise<string | null> {
+    try {
+      const db = this.firestore;
+      const projectSlugDoc = await getDoc(
+        doc(db, `project-slugs/${owner}:${project}`)
+      );
+      
+      if (projectSlugDoc.exists()) {
+        const data = projectSlugDoc.data();
+        const resolvedId = data['projectId'];
+        this.setProject(resolvedId);
+        return resolvedId;
+      } else {
+        console.error('Project not found for slugs', owner, project);
+        // Could also push empty string to clear the current project
+        this.setProject('');
+        return null;
+      }
+    } catch (e) {
+      console.error('Failed to resolve project', e);
+      this.setProject('');
+      return null;
+    }
+  }
+
   setProject(projectId: string) {
     this.currentProjectId.next(projectId);
   }

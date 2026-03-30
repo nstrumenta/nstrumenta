@@ -168,11 +168,10 @@ export class RecordComponent implements OnInit {
   uploadPercent: Observable<number>;
   geolocationWatchId: number;
   inputName: string;
-  projectId: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dataSource: MatTableDataSource<any>;
-  dataPath: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selection = new SelectionModel<any>(true, []);
   bigintTime(): bigint {
     const milliseconds = new Date().getTime();
@@ -213,15 +212,12 @@ export class RecordComponent implements OnInit {
     // Check browser capabilities for debugging
     this.checkBrowserCapabilities();
     
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = '/projects/' + this.projectId + '/record';
-
+    
     // Subscribe to user auth state and set project when authenticated
     this.authService.user.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
       if (user && this.projectId) {
-        this.firebaseDataService.setProject(this.projectId);
       }
     });
 

@@ -28,8 +28,7 @@ export class MachinesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
   dataSource: MatTableDataSource<Machine>;
   selection = new SelectionModel<Machine>(true, []);
-  dataPath: string;
-  projectId: string;
+    get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -51,15 +50,12 @@ export class MachinesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = '/projects/' + this.projectId + '/machines';
-
+    
     // Subscribe to user auth state and set project when authenticated
     this.authService.user.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
       if (user && this.projectId) {
-        this.firebaseDataService.setProject(this.projectId);
       }
     });
   }

@@ -35,12 +35,11 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
     imports: [MatButton, MatList, MatListItem, AsyncPipe, FileSizePipe]
 })
 export class DataDetailComponent implements OnInit {
-  dataPath: string;
-  fileDoc: Observable<FirebaseDocument>;
+    fileDoc: Observable<FirebaseDocument>;
   url: SafeResourceUrl;
   contents: string;
   isVideo: boolean;
-  projectId: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
   dataId: string;
 
   // Inject services using the new Angular 20 pattern
@@ -50,10 +49,8 @@ export class DataDetailComponent implements OnInit {
   private destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.dataId = this.route.snapshot.paramMap.get('dataId');
-    this.dataPath = `/projects/${this.projectId}/data/${this.dataId}`;
-    
+        
     // Use Firebase service to get the document
     this.fileDoc = this.firebaseDataService.getDocument(this.projectId, 'data', this.dataId);
     

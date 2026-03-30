@@ -51,9 +51,8 @@ export class DataTableComponent implements OnInit {
   displayedColumns = ['select', 'name', 'lastModified', 'size', 'actions'];
   dataSource: MatTableDataSource<TableItem>;
   selection = new SelectionModel<TableItem>(true, []);
-  projectId: string;
-  dataPath: string;
-  filterParam: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
+    filterParam: string;
   newFolderName = '';
 
   moduleActions = new Map<string, ModuleAction>();
@@ -296,20 +295,8 @@ export class DataTableComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Subscribe to route changes to set project ID in the Firebase service
-    this.route.paramMap.pipe(
-      map(paramMap => paramMap.get('projectId')),
-      tap(projectId => {
-        if (projectId) {
-          this.projectId = projectId;
-          this.dataPath = `/projects/${projectId}/data`;
-          this.moduleActions.clear();
-          // Set project in Firebase service to trigger data loading
-          this.firebaseDataService.setProject(projectId);
-        }
-      }),
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe();
+    // Clear module actions initially or when needed
+    this.moduleActions.clear();
 
     // Handle query params for filtering
     this.route.queryParamMap.pipe(

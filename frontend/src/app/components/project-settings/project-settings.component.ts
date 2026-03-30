@@ -50,7 +50,7 @@ export class ProjectSettingsComponent implements OnInit {
   membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
   apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
-  projectId: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
   projectPath: string;
   projectSettings: ProjectSettings;
 
@@ -94,7 +94,6 @@ export class ProjectSettingsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
     this.projectPath = `/projects/${this.projectId}`;
     
     // Subscribe to user auth state and set project when authenticated
@@ -102,7 +101,6 @@ export class ProjectSettingsComponent implements OnInit {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
       if (user && this.projectId) {
-        this.firebaseDataService.setProject(this.projectId);
       }
     });
   }

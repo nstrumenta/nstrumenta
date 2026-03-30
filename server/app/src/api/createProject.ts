@@ -100,7 +100,7 @@ const createProjectBase = async (
 
     // Add project reference to user's projects subcollection
     const userProjectRef = firestore.collection(`users/${userId}/projects`).doc(projectId)
-    batch.set(userProjectRef, { name })
+    batch.set(userProjectRef, { name, orgSlug: targetOrgSlug, slug: projectSlug })
 
     await batch.commit()
 

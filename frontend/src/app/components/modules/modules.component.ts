@@ -28,8 +28,7 @@ export class ModulesComponent implements OnInit {
   displayedColumns = ['select', 'id', 'url', 'modified'];
   dataSource: MatTableDataSource<Module>;
   selection = new SelectionModel<Module>(true, []);
-  dataPath: string;
-  projectId: string;
+    get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -49,15 +48,12 @@ export class ModulesComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = `/projects/${this.projectId}/modules`;
-    
+        
     // Subscribe to user auth state and set project when authenticated
     this.authService.user.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
       if (user && this.projectId) {
-        this.firebaseDataService.setProject(this.projectId);
       }
     });
   }

@@ -22,8 +22,7 @@ export class AgentDetailComponent implements OnInit {
   displayedColumns = ['id', 'task', 'status', 'createdAt', 'data'];
   dataSource: MatTableDataSource<Action>;
   selection = new SelectionModel<Action>(true, []);
-  dataPath: string;
-
+  
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   // Inject services using the new Angular 20 pattern
@@ -34,10 +33,7 @@ export class AgentDetailComponent implements OnInit {
   public dialog = inject(MatDialog);
 
   ngOnInit(): void {
-    const projectId = this.route.snapshot.paramMap.get('projectId');
     const agentId = this.route.snapshot.paramMap.get('agentId');
-    this.dataPath = `/projects/${projectId}/agents/${agentId}/actions`;
-    console.log(this.dataPath);
     
     // Set up effect to handle agent actions data changes  
     effect(() => {
@@ -46,12 +42,11 @@ export class AgentDetailComponent implements OnInit {
       this.dataSource.sort = this.sort;
     });
     
-    // Subscribe to user auth state and set project and agent when authenticated
+    // Subscribe to user auth state and set agent when authenticated
     this.authService.user.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((user) => {
-      if (user && projectId && agentId) {
-        this.firebaseDataService.setProject(projectId);
+      if (user && agentId) {
         this.firebaseDataService.setAgent(agentId);
       }
     });

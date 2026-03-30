@@ -25,8 +25,7 @@ export class RepositoriesComponent implements OnInit {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
   dataSource: MatTableDataSource<Repository>;
   selection = new SelectionModel<Repository>(true, []);
-  dataPath: string;
-  projectId: string;
+    get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
@@ -46,12 +45,9 @@ export class RepositoriesComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = '/projects/' + this.projectId + '/repositories';
-    
+        
     // Set project in Firebase service to trigger data loading
     if (this.projectId) {
-      this.firebaseDataService.setProject(this.projectId);
     }
   }
 

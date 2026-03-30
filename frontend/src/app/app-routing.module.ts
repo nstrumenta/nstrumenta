@@ -9,7 +9,6 @@ import { MachinesComponent } from './components/machines/machines.component';
 import { ModuleDetailsComponent } from './components/module-details/module-details.component';
 import { ModulesComponent } from './components/modules/modules.component';
 import { NavComponent } from './components/nav/nav.component';
-import { ProjectListComponent } from './components/project-list/project-list.component';
 import { ProjectSettingsComponent } from './components/project-settings/project-settings.component';
 import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
@@ -17,51 +16,12 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { HomeComponent } from './pages/home/home.component';
 import { WaitlistGuard } from './guards/waitlist.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
+import { reservedPathGuard } from './guards/reserved-path.guard';
 
 const userRoutes: Routes = [
   {
     path: 'waitlist',
     component: WaitlistComponent
-  },
-  {
-    path: 'projects/:projectId',
-    component: NavComponent,
-    canActivate: [WaitlistGuard],
-    children: [
-      {
-        path: '',
-        children: [
-          { path: '', redirectTo: 'data', pathMatch: 'full' },
-          { path: 'overview', redirectTo: 'data' },
-          { path: 'data', component: DataTableComponent },
-          { path: 'data/:dataId', component: DataDetailComponent },
-          { path: 'record', component: RecordComponent },
-          { path: 'actions', component: ActionsComponent },
-          { path: 'agents', component: AgentsComponent },
-          { path: 'agents/:agentId', component: AgentDetailComponent },
-          { path: 'machines', component: MachinesComponent },
-          { path: 'repositories', component: RepositoriesComponent },
-          { path: 'settings', component: ProjectSettingsComponent },
-          { path: 'modules', component: ModulesComponent },
-          { path: 'modules:/:moduleId', component: ModuleDetailsComponent },
-        ],
-      },
-    ],
-  },
-  {
-    path: 'projects',
-    component: NavComponent,
-    canActivate: [WaitlistGuard],
-    children: [
-      {
-        path: '',
-        component: ProjectListComponent,
-      },
-    ],
-  },
-  {
-    path: '',
-    component: HomeComponent,
   },
   {
     path: 'account',
@@ -85,6 +45,37 @@ const userRoutes: Routes = [
       },
     ],
   },
+  {
+    path: '',
+    component: HomeComponent,
+    pathMatch: 'full'
+  },
+  {
+    path: ':owner',
+    canMatch: [reservedPathGuard],
+    canActivate: [WaitlistGuard],
+    children: [
+      {
+        path: ':project',
+        component: NavComponent,
+        children: [
+          { path: '', redirectTo: 'data', pathMatch: 'full' },
+          { path: 'overview', redirectTo: 'data' },
+          { path: 'data', component: DataTableComponent },
+          { path: 'data/:dataId', component: DataDetailComponent },
+          { path: 'record', component: RecordComponent },
+          { path: 'actions', component: ActionsComponent },
+          { path: 'agents', component: AgentsComponent },
+          { path: 'agents/:agentId', component: AgentDetailComponent },
+          { path: 'machines', component: MachinesComponent },
+          { path: 'repositories', component: RepositoriesComponent },
+          { path: 'settings', component: ProjectSettingsComponent },
+          { path: 'modules', component: ModulesComponent },
+          { path: 'modules/:moduleId', component: ModuleDetailsComponent },
+        ]
+      }
+    ]
+  }
 ];
 
 // Export routes for standalone bootstrap (used in main.ts)
