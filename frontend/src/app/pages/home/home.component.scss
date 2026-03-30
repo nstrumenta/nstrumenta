@@ -1,6 +1,7 @@
 .home-page-container {
   background: url('/assets/images/nstrumenta-background-top.svg');
   background-size: cover;
+  background-position: center;
 }
 
 .center-container {
@@ -71,6 +72,12 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .home-page-container {
+    background: url('/assets/images/nstrumenta-background-top-dark.svg');
+    background-size: cover;
+    background-position: center;
+  }
+
   .tag-line {
     color: rgba(255, 255, 255, 0.87);
   }
@@ -79,8 +86,13 @@
     color: rgba(255, 255, 255, 0.87);
 
     .feature {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+
+      h3 {
+        color: #e8a020;
+      }
 
       p {
         color: rgba(255, 255, 255, 0.87);
