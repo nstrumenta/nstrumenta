@@ -29,8 +29,9 @@ const setDataMetadataBase: APIEndpoint<SetDataMetadataArgs> = async (
       dataId,
       merge = true,
       metadata,
-      timeout = TIMEOUT,
+      timeout: requestedTimeout = TIMEOUT,
     }: SetDataMetadataBody = req.body
+    const timeout = Math.min(requestedTimeout, TIMEOUT)
     
     const collectionRef = firestore.collection(`projects/${projectId}/data`)
 

@@ -27,7 +27,7 @@ const updateAgentBase: APIEndpoint<UpdateAgentArgs> = async (
 
     await firestore.doc(agentPath).update(properties)
 
-    return res.status(200).send(properties)
+    return res.status(200).json(properties)
   } catch (error) {
     console.error(error)
     res.status(404).json({ error: 'Failed to update agent' })

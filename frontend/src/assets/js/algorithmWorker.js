@@ -336,11 +336,17 @@ function Algorithm() {
       case 'inputEvents':
         inputEvents = e.data.payload;
         break;
-      case 'loadAlgorithm':
-        importScripts(e.data.payload.url);
+      case 'loadAlgorithm': {
+        const scriptUrl = new URL(e.data.payload.url, self.location.origin);
+        if (scriptUrl.origin !== self.location.origin && !scriptUrl.href.startsWith('https://storage.googleapis.com/')) {
+          console.error('Blocked untrusted script URL:', scriptUrl.origin);
+          break;
+        }
+        importScripts(scriptUrl.href);
         console.log('loaded Algorithm');
         nstrumenta = new Module.Nstrumenta();
         break;
+      }
 
       case 'setParameters':
         parameters = e.data.payload;

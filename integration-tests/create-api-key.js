@@ -64,7 +64,6 @@ async function createApiKey() {
 
     // Re-fetch to ensure we have the data (or just use what we set)
     const projectData = (await firestore.doc(projectPath).get()).data();
-    console.error('Project Data:', JSON.stringify(projectData, null, 2));
     const apiKeys = projectData.apiKeys || {};
     apiKeys[accessKeyId] = { createdAt };
 
