@@ -28,12 +28,6 @@ variable "support_email" {
   type        = string
 }
 
-variable "dns_hub_project_id" {
-  description = "The GCP Project ID that hosts the app.nstrumenta.com zone"
-  type        = string
-  default     = "nstrumenta-hub"
-}
-
 variable "GITHUB_CLIENT_ID" {
   description = "GitHub OAuth App Client ID"
   type        = string
@@ -45,16 +39,9 @@ variable "GITHUB_CLIENT_SECRET" {
   sensitive   = true
 }
 
-variable "dns_hub_zone_name" {
-  description = "The name of the Managed Zone resource in the hub project"
-  type        = string
-  default     = "app-nstrumenta-com"
-}
-
 variable "custom_domain" {
-  description = "Custom domain for this workspace (e.g. nstrumenta.com or ci-nst.nstrumenta.com). If not set, defaults to {workspace}.app.nstrumenta.com."
+  description = "Custom domain for this workspace (e.g. nstrumenta.com or ci-nst.nstrumenta.com)"
   type        = string
-  default     = null
 }
 
 variable "enable_www_redirect" {
@@ -76,8 +63,7 @@ variable "trusted_github_actors" {
 }
 
 locals {
-  domain                = var.custom_domain != null ? var.custom_domain : "${terraform.workspace}.app.nstrumenta.com"
-  is_hub_managed_domain = var.custom_domain == null # only *.app.nstrumenta.com domains are in the hub zone
+  domain = var.custom_domain
 }
 
 resource "random_id" "project_suffix" {
@@ -118,7 +104,6 @@ resource "google_project_service" "fs" {
     "firestore.googleapis.com",
     "firebase.googleapis.com",
     "cloudfunctions.googleapis.com",
-    "dns.googleapis.com",
     "cloudbuild.googleapis.com",
     "eventarc.googleapis.com",
     "pubsub.googleapis.com",
@@ -386,8 +371,7 @@ resource "google_firebase_hosting_site" "frontend" {
   depends_on = [google_firebase_project.fs]
 }
 
-# Custom domain on Firebase Hosting (apex: nstrumenta.com)
-# For hub-managed domains, uses *.app.nstrumenta.com
+# Custom domain on Firebase Hosting
 resource "google_firebase_hosting_custom_domain" "primary" {
   provider              = google-beta
   project               = google_project.fs.project_id
@@ -407,18 +391,6 @@ resource "google_firebase_hosting_custom_domain" "www_redirect" {
   redirect_target       = var.custom_domain
   wait_dns_verification = false
 }
-
-# Create CNAME record in hub zone (only for *.app.nstrumenta.com domains)
-resource "google_dns_record_set" "frontend_cname" {
-  count        = local.is_hub_managed_domain ? 1 : 0
-  project      = var.dns_hub_project_id
-  managed_zone = var.dns_hub_zone_name
-  name         = "${local.domain}."
-  type         = "CNAME"
-  ttl          = 300
-  rrdatas      = ["ghs.googlehosted.com."]
-}
-
 
 
 
