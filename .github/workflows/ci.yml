@@ -217,8 +217,8 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
-      CI_IMAGE: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server/server:${{ github.sha }}
-      PROD_IMAGE: us-west1-docker.pkg.dev/${{ env.PROD_PROJECT_ID }}/server/server:${{ github.sha }}
+      CI_IMAGE: us-west1-docker.pkg.dev/${{ vars.CI_PROJECT_ID }}/server/server:${{ github.sha }}
+      PROD_IMAGE: us-west1-docker.pkg.dev/${{ vars.PROD_PROJECT_ID }}/server/server:${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: google-github-actions/auth@v2
