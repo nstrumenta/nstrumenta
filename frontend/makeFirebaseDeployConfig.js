@@ -2,6 +2,7 @@ const fs = require('fs');
 
 const siteId = `${process.env.FIREBASE_PROJECT_ID}-frontend`;
 const cloudRunRegion = process.env.CLOUD_RUN_REGION || 'us-west1';
+const cloudRunServiceId = process.env.CLOUD_RUN_SERVICE_ID || 'cloudrun-service';
 
 const config = {
     "hosting": {
@@ -16,49 +17,49 @@ const config = {
             {
                 "source": "/api/**",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/mcp",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/mcp/**",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/health",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/config",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/oauth/**",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },
             {
                 "source": "/.well-known/**",
                 "run": {
-                    "serviceId": "cloudrun-service",
+                    "serviceId": cloudRunServiceId,
                     "region": cloudRunRegion
                 }
             },

@@ -243,6 +243,88 @@ jobs:
             --region=us-west1 \
             --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$PROD_PROJECT_ID"
 
+  deploy-preview:
+    needs: [build-frontend, build-ci-images]
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Deploy server to CI Cloud Run
+        run: |
+          gcloud run deploy pr-${{ github.event.number }} \
+            --project=$CI_PROJECT_ID \
+            --image=us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server/server:${{ github.sha }} \
+            --region=us-west1 \
+            --allow-unauthenticated \
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID"
+      - name: Deploy frontend to Firebase Hosting preview channel
+        working-directory: frontend
+        env:
+          FIREBASE_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
+          CLOUD_RUN_SERVICE_ID: pr-${{ github.event.number }}
+        run: |
+          npm install -g firebase-tools
+          node makeFirebaseDeployConfig.js
+          firebase use $FIREBASE_PROJECT_ID
+          firebase hosting:channel:deploy pr-${{ github.event.number }} \
+            --expires 7d \
+            --project $FIREBASE_PROJECT_ID
+          rm firebase.json
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        env:
+          CI_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const projectId = process.env.CI_PROJECT_ID;
+            const previewUrl = `https://${projectId}-frontend--pr-${prNumber}.web.app`;
+            const marker = '<!-- preview-environment -->';
+            const body = [
+              marker,
+              '| | Preview Environment |',
+              '|---|---|',
+              `| **Frontend** | [${previewUrl}](${previewUrl}) |`,
+              '',
+              `Deployed to CI project \`${projectId}\`. Preview channel expires after 7 days.`,
+            ].join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body,
+              });
+            }
+
   # ---------------------------------------------------------------------------
   # Release: Publish versioned artifacts on v* tags
   # ---------------------------------------------------------------------------

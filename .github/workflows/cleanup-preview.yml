@@ -1,0 +1,36 @@
+name: Cleanup PR Preview
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  CI_WIF_PROVIDER: ${{ vars.CI_WIF_PROVIDER }}
+  CI_SERVICE_ACCOUNT: ${{ vars.CI_SERVICE_ACCOUNT }}
+  CI_PROJECT_ID: ${{ vars.CI_PROJECT_ID }}
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Delete Firebase Hosting preview channel
+        run: |
+          npm install -g firebase-tools
+          firebase hosting:channel:delete pr-${{ github.event.number }} \
+            --project $CI_PROJECT_ID \
+            --force || true
+      - name: Delete per-PR Cloud Run service
+        run: |
+          gcloud run services delete pr-${{ github.event.number }} \
+            --project $CI_PROJECT_ID \
+            --region us-west1 \
+            --quiet || true
