@@ -285,12 +285,13 @@ resource "google_firebaserules_release" "fb_app" {
   project      = google_project.fs.project_id
 }
 
-# Add CORS configuration to the default App Engine bucket
+# CORS configuration for the default App Engine bucket
+# Note: project is omitted to avoid force-replacement on import.
+# The bucket is created by google_app_engine_application, this resource manages its settings.
 resource "google_storage_bucket" "default" {
   provider = google-beta
   name     = google_app_engine_application.fb_app.default_bucket
   location = var.location_id
-  project  = google_project.fs.project_id
 
   cors {
     origin          = ["*"]
@@ -300,6 +301,10 @@ resource "google_storage_bucket" "default" {
   }
 
   uniform_bucket_level_access = true
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # web app
@@ -325,42 +330,7 @@ data "google_compute_default_service_account" "default" {
   project = google_project.fs.project_id
 }
 
-# public bucket to serve configurations to web apps
-resource "google_storage_bucket" "config" {
-  provider      = google-beta
-  project       = google_project.fs.project_id
-  name          = "${google_project.fs.project_id}-config"
-  location      = var.location_id
-  force_destroy = true
-  cors {
-    origin          = ["*"]
-    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
-    response_header = ["*"]
-    max_age_seconds = 3600
-  }
 
-  uniform_bucket_level_access = true
-}
-
-data "google_iam_policy" "data_bucket" {
-  binding {
-    role = "roles/storage.objectViewer"
-    members = [
-      "allUsers",
-    ]
-  }
-  binding {
-    role    = "roles/storage.objectAdmin"
-    members = ["allAuthenticatedUsers"]
-  }
-}
-resource "google_storage_bucket_iam_policy" "data_bucket" {
-  provider    = google-beta
-  bucket      = google_storage_bucket.config.id
-  policy_data = data.google_iam_policy.data_bucket.policy_data
-}
-
-# Firebase config is stored in the config bucket
 
 # Firebase Hosting site — serves the Angular SPA from CDN, rewrites API paths to Cloud Run
 resource "google_firebase_hosting_site" "frontend" {
