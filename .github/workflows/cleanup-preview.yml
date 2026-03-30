@@ -28,3 +28,9 @@ jobs:
           firebase hosting:channel:delete pr-${{ github.event.number }} \
             --project $CI_PROJECT_ID \
             --force || true
+      - name: Delete per-PR Cloud Run service
+        run: |
+          gcloud run services delete pr-${{ github.event.number }} \
+            --project $CI_PROJECT_ID \
+            --region us-west1 \
+            --quiet || true
