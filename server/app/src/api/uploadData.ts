@@ -28,8 +28,11 @@ const uploadDataBase = async (
 
   try {
     const timestamp = Date.now()
-    // Use non-backtracking approach to strip leading/trailing slashes
-    const normalizedFolder = folder ? folder.replace(/^\/+/, '').replace(/\/+$/, '') : ''
+    // CodeQL: Avoid polynomial regex tracking for stripping slashes
+    let normalizedFolder = folder || ''
+    while (normalizedFolder.startsWith('/')) normalizedFolder = normalizedFolder.substring(1)
+    while (normalizedFolder.endsWith('/')) normalizedFolder = normalizedFolder.substring(0, normalizedFolder.length - 1)
+    
     const folderPath = normalizedFolder ? `${normalizedFolder}/` : ''
     const filePath = `projects/${projectId}/data/${folderPath}${name}`
 

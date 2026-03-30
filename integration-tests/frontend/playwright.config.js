@@ -12,7 +12,7 @@ export default defineConfig({
     ['html', { open: 'never', outputFolder: 'playwright-report' }]
   ],
   use: {
-    baseURL: process.env.FRONTEND_URL || 'http://localhost:4200',
+    baseURL: process.env.FRONTEND_URL || 'http://localhost:5999',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -22,9 +22,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: process.env.FRONTEND_URL ? undefined : {
-    command: 'npm run start',
-    url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
-  },
 });

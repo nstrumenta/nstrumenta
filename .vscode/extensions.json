@@ -1,6 +1,5 @@
 {
     "recommendations": [
-        "circleci.circleci",
         "ms-azuretools.vscode-docker",
         "hashicorp.terraform",
         "ms-vscode.vscode-typescript-next",

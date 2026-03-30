@@ -70,7 +70,7 @@ import { RepositoriesComponent } from './components/repositories/repositories.co
 import { ToolbarComponent } from './components/toolbar/toolbar.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
-import { PricingComponent } from './pages/pricing/pricing.component';
+
 import { DateAsQueryParamPipe } from './pipes/date-as-query-param.pipe';
 import { FileSizePipe } from './pipes/file-size.pipe';
 import { SafePipe } from './pipes/safe.pipe';
@@ -152,7 +152,6 @@ export class SentryErrorHandler implements ErrorHandler {
         NavbarProjectSelectComponent,
         NavbarStatusComponent,
         RecordComponent,
-        PricingComponent,
         AccountComponent,
         UserProfileComponent,
         RepositoriesComponent,

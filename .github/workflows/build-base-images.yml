@@ -1,0 +1,70 @@
+name: Build Base Images
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+    paths:
+      - 'base/Dockerfile'
+      - 'ci/Dockerfile'
+  pull_request:
+    paths:
+      - 'base/Dockerfile'
+      - 'ci/Dockerfile'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost "$AGENT_TOOLSDIRECTORY"
+          sudo apt-get clean
+          df -h
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Determine tags
+        id: tags
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            echo "base=nstrumenta/base:${VERSION},nstrumenta/base:latest" >> $GITHUB_OUTPUT
+            echo "ci=nstrumenta/ci:${VERSION},nstrumenta/ci:latest" >> $GITHUB_OUTPUT
+            echo "push=true" >> $GITHUB_OUTPUT
+          else
+            SHA=${{ github.sha }}
+            echo "base=nstrumenta/base:${SHA}" >> $GITHUB_OUTPUT
+            echo "ci=nstrumenta/ci:${SHA}" >> $GITHUB_OUTPUT
+            echo "push=${{ github.event_name != 'pull_request' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push nstrumenta/base
+        uses: docker/build-push-action@v5
+        with:
+          context: ./base
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.tags.outputs.push }}
+          tags: ${{ steps.tags.outputs.base }}
+
+      - name: Update ci Dockerfile base tag for non-release builds
+        if: "!startsWith(github.ref, 'refs/tags/v')"
+        run: sed -i "s|FROM nstrumenta/base:latest|FROM nstrumenta/base:${{ github.sha }}|g" ci/Dockerfile
+
+      - name: Build and push nstrumenta/ci
+        uses: docker/build-push-action@v5
+        with:
+          context: ./ci
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.tags.outputs.push }}
+          tags: ${{ steps.tags.outputs.ci }}

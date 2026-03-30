@@ -1,11 +1,14 @@
-import { writeFile } from 'fs/promises'
+import { ServicesClient } from '@google-cloud/run'
 import { APIEndpoint, withAuth } from '../authentication'
-import { serviceAccount } from '../authentication/ServiceAccount'
-import { asyncSpawn } from '../shared/utils'
+import { projectId } from '../authentication/ServiceAccount'
+
+const REGION = 'us-west1'
 
 export interface GetCloudRunServicesArgs {
   projectId: string
 }
+
+const servicesClient = new ServicesClient()
 
 const getCloudRunServicesBase: APIEndpoint<GetCloudRunServicesArgs> = async (
   req,
@@ -13,24 +16,9 @@ const getCloudRunServicesBase: APIEndpoint<GetCloudRunServicesArgs> = async (
   args,
 ) => {
   console.log('args', args)
-  const { projectId } = args
   try {
-    const keyfile = './credentials.json'
-    await writeFile(keyfile, JSON.stringify(serviceAccount), 'utf-8')
-    await asyncSpawn(
-      'gcloud',
-      `auth activate-service-account --key-file ${keyfile}`.split(' '),
-    )
-    await asyncSpawn(
-      'gcloud',
-      `config set core/project ${serviceAccount.project_id}`.split(' '),
-    )
-
-    const services = await asyncSpawn(
-      'gcloud',
-      `run services list --format=json`.split(' '),
-    )
-
+    const parent = `projects/${projectId}/locations/${REGION}`
+    const [services] = await servicesClient.listServices({ parent })
     return res.status(200).send(JSON.stringify(services))
   } catch (error) {
     console.error(error)

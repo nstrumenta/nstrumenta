@@ -1,11 +1,10 @@
 import { test, expect } from '@playwright/test';
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 async function signIn(page) {
-  await page.goto(FRONTEND_URL);
+  await page.goto('/');
   
   // Click the "Sign in" button in the navbar
   await page.locator('button:has-text("Sign in")').click();
@@ -24,7 +23,7 @@ async function signIn(page) {
   await expect(page.locator('button[mat-icon-button]').first()).toBeVisible({ timeout: 10000 });
   
   // Navigate to projects page
-  await page.goto(`${FRONTEND_URL}/projects`);
+  await page.goto('/projects');
 }
 
 test.describe('Project Management', () => {

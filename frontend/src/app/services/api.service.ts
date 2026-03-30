@@ -7,6 +7,7 @@ import { AuthService } from '../auth/auth.service';
 export interface CreateProjectRequest {
   name: string;
   projectIdBase?: string;
+  orgId?: string;
 }
 
 export interface CreateProjectResponse {
@@ -40,6 +41,22 @@ export class ApiService {
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+
+  private async buildMcpHeaders(projectId?: string): Promise<HttpHeaders> {
+    const user = this.authService.user.value;
+    if (!user) {
+      throw new Error('User must be authenticated');
+    }
+    const idToken = await user.getIdToken();
+    let headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${idToken}`)
+      .set('Accept', 'application/json, text/event-stream');
+    if (projectId) {
+      headers = headers.set('x-nstrumenta-project-id', projectId);
+    }
+    return headers;
+  }
 
   public async getApiUrl(): Promise<string> {
     if (this.apiUrlCache) {
@@ -82,25 +99,9 @@ export class ApiService {
   }
 
   async createProject(request: CreateProjectRequest): Promise<CreateProjectResponse> {
-    const user = this.authService.user.value;
-    
-    if (!user) {
-      throw new Error('User must be authenticated to create a project');
-    }
-
-    // Get Firebase ID token
-    const idToken = await user.getIdToken();
-    
-    // Get the API URL dynamically
     const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`,
-      'Accept': 'application/json, text/event-stream'
-    });
-
-    // Call MCP endpoint with JSON-RPC 2.0
     const mcpRequest = {
       jsonrpc: '2.0',
       id: Math.random().toString(36).substring(7),
@@ -109,13 +110,14 @@ export class ApiService {
         name: 'create_project',
         arguments: {
           name: request.name,
-          projectIdBase: request.projectIdBase
+          projectIdBase: request.projectIdBase,
+          ...(request.orgId ? { orgId: request.orgId } : {})
         }
       }
     };
 
     const response = await this.http.post<any>(
-      apiUrl,
+      `${apiUrl}/mcp`,
       mcpRequest,
       { headers }
     ).toPromise();
@@ -136,25 +138,9 @@ export class ApiService {
   }
 
   async createApiKey(request: CreateApiKeyRequest): Promise<CreateApiKeyResponse> {
-    const user = this.authService.user.value;
-
-    if (!user) {
-      throw new Error('User must be authenticated to create an API key');
-    }
-
-    // Get Firebase ID token
-    const idToken = await user.getIdToken();
-
-    // Get the API URL dynamically
     const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${idToken}`,
-      'Accept': 'application/json, text/event-stream'
-    });
-
-    // Call MCP endpoint with JSON-RPC 2.0
     const mcpRequest = {
       jsonrpc: '2.0',
       id: Math.random().toString(36).substring(7),
@@ -169,7 +155,7 @@ export class ApiService {
     };
 
     const response = await this.http.post<any>(
-      apiUrl,
+      `${apiUrl}/mcp`,
       mcpRequest,
       { headers }
     ).toPromise();
@@ -192,21 +178,11 @@ export class ApiService {
   async uploadFileToPath(
     path: string,
     file: File | Blob,
+    projectId?: string,
     metadata?: Record<string, string>
   ): Promise<Observable<number>> {
-    const user = this.authService.user.value;
-    if (!user) {
-      throw new Error('User must be authenticated to upload files');
-    }
-
-    const idToken = await user.getIdToken();
     const apiUrl = await this.getApiUrl();
-
-    // Explicitly construct headers to ensure HttpClient respects them
-    const headers = new HttpHeaders()
-      .set('Content-Type', 'application/json')
-      .set('Authorization', `Bearer ${idToken}`)
-      .set('Accept', 'application/json, text/event-stream');
+    const headers = await this.buildMcpHeaders(projectId);
 
     const contentType = file.type || 'application/octet-stream';
     const finalMetadata = { ...metadata };
@@ -229,7 +205,7 @@ export class ApiService {
     };
 
     const mcpResponse = await this.http
-      .post<any>(apiUrl, mcpRequest, { headers })
+      .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
       .toPromise();
 
     if (mcpResponse.error) {

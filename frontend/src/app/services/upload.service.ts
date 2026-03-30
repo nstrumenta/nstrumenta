@@ -48,7 +48,7 @@ export class UploadService {
 
     try {
       // Start the upload using unified uploadFileToPath
-      const progress$ = await this.apiService.uploadFileToPath(uploadPath, file);
+      const progress$ = await this.apiService.uploadFileToPath(uploadPath, file, projectId);
 
       // Subscribe to progress
       progress$.subscribe({

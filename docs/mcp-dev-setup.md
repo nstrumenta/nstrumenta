@@ -1,27 +1,28 @@
 # MCP dev loop in VS Code
 
-The MCP server now authenticates requests with the same project-scoped API keys that the rest of the platform uses. VS Code can keep the key in a prompt-based `${input:...}` variable so it never needs to live on disk.
+The MCP server authenticates requests with project-scoped API keys. VS Code can keep the key in a prompt-based `${input:...}` variable so it never needs to live on disk.
 
 ## 1. Prerequisites
 
 - `node >= 18` and `npm`
-- `GCLOUD_SERVICE_KEY` exported with your Firebase service-account JSON (matches the rest of the stack)
+- Application Default Credentials configured (`gcloud auth application-default login`)
 - An existing project in Firestore (e.g. `projects/dev-demo`)
-- Frontend + server running locally (server on `5999`, Angular app on `5008`)
-- An API key for that project (create from the frontend Settings → API Keys panel or by calling `/createApiKey` with an authenticated user session)
+- Server running locally on port 5999
+- An API key for that project (create from the frontend Settings > API Keys panel)
 
-## 2. Start the services
+## 2. Start the server
 
 ```bash
-# Terminal 1 – Express/MCP server
+source credentials/activate.sh
+docker compose up --build server
+```
+
+Or run standalone:
+
+```bash
 cd server/app
 npm install
-ENVFILE=../../credentials/local.env npm run dev-dotenv
-
-# Terminal 2 – Angular frontend (handy for creating keys and checking data)
-cd frontend
-npm install
-npm start
+npm run dev
 ```
 
 ## 3. Create or fetch an API key

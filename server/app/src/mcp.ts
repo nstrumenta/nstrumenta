@@ -24,6 +24,7 @@ type McpRequestContext = {
     projectId: string;
     userId?: string;
     authType: 'apiKey' | 'firebase';
+    origin?: string;
 };
 
 const requestContext = new AsyncLocalStorage<McpRequestContext>();
@@ -47,6 +48,11 @@ function getAuthType(): 'apiKey' | 'firebase' {
     return context?.authType || 'apiKey';
 }
 
+function getOrigin(): string | undefined {
+    const context = requestContext.getStore();
+    return context?.origin;
+}
+
 type UnifiedAuthResult = 
     | { authenticated: false; projectId: string; message?: string }
     | { authenticated: true; projectId: string; userId?: string; authType: 'apiKey' | 'firebase'; message?: string };
@@ -59,16 +65,32 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
 
     const firebaseResult = await firebaseAuth(req, res);
     if (firebaseResult.authenticated) {
-        const projectDoc = await firestore.collection('projects')
-            .where(`members.${firebaseResult.userId}`, '!=', null)
-            .limit(1)
-            .get();
-        
-        const projectId = projectDoc.empty ? '' : projectDoc.docs[0].id;
-        
+        const requestedProjectId = req.headers['x-nstrumenta-project-id'] as string | undefined;
+
+        if (requestedProjectId) {
+            const projectDoc = await firestore.doc(`projects/${requestedProjectId}`).get();
+            if (!projectDoc.exists) {
+                return {
+                    authenticated: false,
+                    projectId: '',
+                    message: `Project '${requestedProjectId}' not found`
+                };
+            }
+
+            const projectData = projectDoc.data();
+            const isMember = projectData?.members?.[firebaseResult.userId] != null;
+            if (!isMember) {
+                return {
+                    authenticated: false,
+                    projectId: '',
+                    message: `User is not a member of project '${requestedProjectId}'`
+                };
+            }
+        }
+
         return {
             authenticated: true,
-            projectId,
+            projectId: requestedProjectId || '',
             userId: firebaseResult.userId,
             authType: 'firebase'
         };
@@ -93,9 +115,11 @@ server.resource(
     async (uri, params: any) => {
         const { projectId, actionId } = params;
         try {
-            // Check project context if available, or validate projectId matches auth
-            // For now, we trust the URI params but we should probably verify access
-            
+            const authProjectId = getProjectId();
+            if (projectId !== authProjectId) {
+                throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
+            }
+
             const doc = await firestore.doc(`projects/${projectId}/actions/${actionId}`).get();
             if (!doc.exists) {
                 throw new Error(`Action ${actionId} not found`);
@@ -120,6 +144,11 @@ server.resource(
     async (uri, params: any) => {
         const { projectId, agentId } = params;
         try {
+            const authProjectId = getProjectId();
+            if (projectId !== authProjectId) {
+                throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
+            }
+
             const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
             const snapshot = await firestore.collection(actionsPath)
                 .where('status', '==', 'pending')
@@ -766,6 +795,7 @@ server.registerTool(
         inputSchema: {
             name: z.string().describe('Project name'),
             projectIdBase: z.string().optional().describe('Optional project ID base'),
+            orgId: z.string().optional().describe('Organization ID this project belongs to'),
         },
         outputSchema: {
             id: z.string().describe('Created project ID'),
@@ -773,7 +803,7 @@ server.registerTool(
             message: z.string(),
         },
     },
-    async ({ name, projectIdBase: rawProjectIdBase }) => {
+    async ({ name, projectIdBase: rawProjectIdBase, orgId }) => {
         try {
             const userId = getUserId();
             if (!userId || getAuthType() !== 'firebase') {
@@ -800,12 +830,15 @@ server.registerTool(
             }
 
             const timestamp = Date.now();
-            const projectData = {
+            const projectData: any = {
                 name,
                 createdAt: timestamp,
                 lastModified: timestamp,
                 members: { [userId]: { role: 'owner', addedAt: timestamp } },
             };
+            if (orgId) {
+                projectData.orgId = orgId;
+            }
 
             // Use batch to create both project and user project reference atomically
             const batch = firestore.batch();
@@ -956,7 +989,7 @@ server.registerTool(
             
             const path = originalPath.replace(/^(\/)*/, '/');
             const storagePathBase = `projects/${projectId}`;
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, '*');
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1004,7 +1037,7 @@ server.registerTool(
                 }
             }
             
-            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, '*');
+            const uploadUrl = await generateV4UploadSignedUrl(filePath, undefined, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1107,19 +1140,15 @@ server.registerTool(
     },
     async () => {
         try {
-            const { serviceAccount } = require('./authentication/ServiceAccount');
+            const { projectId } = require('./authentication/ServiceAccount');
             const { GoogleAuth } = require('google-auth-library');
             const { listComputeInstances } = require('./shared/computeInstances');
 
             const auth = new GoogleAuth({
-                credentials: {
-                    client_email: serviceAccount.client_email,
-                    private_key: serviceAccount.private_key,
-                },
                 scopes: ['https://www.googleapis.com/auth/compute.readonly'],
             });
             const client = await auth.getClient();
-            const machines = await listComputeInstances(serviceAccount.project_id, client);
+            const machines = await listComputeInstances(projectId, client);
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(machines, null, 2) }],
@@ -1144,14 +1173,12 @@ server.registerTool(
     },
     async () => {
         try {
-            const projectId = getProjectId();
-            const { serviceAccount } = require('./authentication/ServiceAccount');
-            const util = require('util');
-            const exec = util.promisify(require('child_process').exec);
+            const { projectId: gcpProjectId } = require('./authentication/ServiceAccount');
+            const { ServicesClient } = require('@google-cloud/run');
             
-            const cmd = `gcloud run services list --project=${serviceAccount.project_id} --format=json`;
-            const { stdout } = await exec(cmd);
-            const services = JSON.parse(stdout);
+            const servicesClient = new ServicesClient();
+            const parent = `projects/${gcpProjectId}/locations/us-west1`;
+            const [services] = await servicesClient.listServices({ parent });
 
             return {
                 content: [{ type: 'text', text: JSON.stringify(services, null, 2) }],
@@ -1343,7 +1370,8 @@ export async function handleMcpRequest(req: Request, res: Response) {
         await requestContext.run({
             projectId: authResult.projectId,
             userId: authResult.userId,
-            authType: authResult.authType
+            authType: authResult.authType,
+            origin: req.headers.origin,
         }, async () => {
             await dispatchMcpRequest(req, res);
         });
@@ -1403,8 +1431,12 @@ function respondServerError(res: Response) {
 }
 
 // SSE Handling
-const sseTransports = new Map<string, SSEServerTransport>();
-const sseMcpServers = new Map<string, McpServer>();
+type SseSession = {
+    transport: SSEServerTransport;
+    server: McpServer;
+    context: McpRequestContext;
+};
+const sseSessions = new Map<string, SseSession>();
 
 export async function handleMcpSseRequest(req: Request, res: Response) {
     try {
@@ -1412,24 +1444,24 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
         if (!authResult.authenticated) {
              return respondUnauthorized(res, authResult.message || 'Authentication required');
         }
-        
-        const server = createMcpServer();
-        const transport = new SSEServerTransport("/mcp/messages", res);
-        const sessionId = transport.sessionId;
-        sseTransports.set(sessionId, transport);
-        sseMcpServers.set(sessionId, server);
 
-        transport.onclose = () => {
-            sseTransports.delete(sessionId);
-            sseMcpServers.delete(sessionId);
-            server.close();
-        };
-
-        await requestContext.run({
+        const context: McpRequestContext = {
             projectId: authResult.projectId,
             userId: authResult.userId,
             authType: authResult.authType
-        }, async () => {
+        };
+
+        const server = createMcpServer();
+        const transport = new SSEServerTransport("/mcp/messages", res);
+        const sessionId = transport.sessionId;
+        sseSessions.set(sessionId, { transport, server, context });
+
+        transport.onclose = () => {
+            sseSessions.delete(sessionId);
+            server.close();
+        };
+
+        await requestContext.run(context, async () => {
             await server.connect(transport);
         });
     } catch (error) {
@@ -1440,20 +1472,22 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
 
 export async function handleMcpSseMessage(req: Request, res: Response) {
     const sessionId = req.query.sessionId as string;
-    const transport = sseTransports.get(sessionId);
-    if (!transport) {
+    const session = sseSessions.get(sessionId);
+    if (!session) {
         return res.status(404).send("Session not found");
     }
-    
-    await transport.handlePostMessage(req, res, req.body);
+
+    await requestContext.run(session.context, async () => {
+        await session.transport.handlePostMessage(req, res, req.body);
+    });
 }
 
-// Notify MCP SSE subscribers of resource updates
-export async function notifyResourceUpdate(uri: string) {
-    for (const [sessionId, server] of sseMcpServers) {
-        if (server.server) {
+export async function notifyResourceUpdate(uri: string, projectId: string) {
+    for (const [_sessionId, session] of sseSessions) {
+        if (session.context.projectId !== projectId) continue;
+        if (session.server.server) {
             try {
-                await server.server.sendResourceUpdated({ uri });
+                await session.server.server.sendResourceUpdated({ uri });
             } catch (error) {
                 if ((error as Error).message !== 'Not connected') {
                     console.error('Error sending resource update:', error);
@@ -1463,21 +1497,17 @@ export async function notifyResourceUpdate(uri: string) {
     }
 }
 
-// Notify MCP SSE subscribers of agent action updates
-// Called directly by running jobs/services when they update status
 export async function notifyAgentActionsUpdate(projectId: string, agentId: string) {
     const uri = `projects://${projectId}/agents/${agentId}/actions`;
-    await notifyResourceUpdate(uri);
+    await notifyResourceUpdate(uri, projectId);
 }
 
-// Notify about module updates
 export async function notifyModuleUpdate(projectId: string, moduleName: string) {
     const uri = `modules/${moduleName}`;
-    await notifyResourceUpdate(uri);
+    await notifyResourceUpdate(uri, projectId);
 }
 
-// Notify about data updates
 export async function notifyDataUpdate(projectId: string, filePath: string) {
     const uri = `data/${filePath}`;
-    await notifyResourceUpdate(uri);
+    await notifyResourceUpdate(uri, projectId);
 }

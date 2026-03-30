@@ -9,10 +9,8 @@ if (process.argv.length !== 4) {
 const projectId = process.argv[2];
 const apiUrl = process.argv[3];
 
-const serviceAccount = JSON.parse(process.env.GCLOUD_SERVICE_KEY);
-
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.applicationDefault()
 });
 
 const firestore = admin.firestore();

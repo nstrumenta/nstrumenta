@@ -51,6 +51,17 @@ variable "dns_hub_zone_name" {
   default     = "app-nstrumenta-com"
 }
 
+variable "custom_domain" {
+  description = "Custom domain for this workspace (e.g. nstrumenta.com). If not set, defaults to {workspace}.app.nstrumenta.com. Firebase Hosting serves the SPA and rewrites API paths to Cloud Run."
+  type        = string
+  default     = null
+}
+
+locals {
+  domain                = var.custom_domain != null ? var.custom_domain : "${terraform.workspace}.app.nstrumenta.com"
+  is_hub_managed_domain = var.custom_domain == null # only *.app.nstrumenta.com domains are in the hub zone
+}
+
 resource "random_id" "project_suffix" {
   byte_length = 4
 }
@@ -61,12 +72,12 @@ locals {
 
 # Creates a new Google Cloud project.
 resource "google_project" "fs" { # fs = Firestore + Storage
-  provider         = google-beta.no_user_project_override
-  name             = terraform.workspace
-  project_id       = local.project_id
-  org_id           = var.org_id
-  billing_account  = var.billing_account
-  deletion_policy  = "DELETE"
+  provider        = google-beta.no_user_project_override
+  name            = terraform.workspace
+  project_id      = local.project_id
+  org_id          = var.org_id
+  billing_account = var.billing_account
+  deletion_policy = "DELETE"
 
   # Required for the project to display in a list of Firebase projects.
   labels = {
@@ -95,6 +106,9 @@ resource "google_project_service" "fs" {
     "pubsub.googleapis.com",
     "compute.googleapis.com",
     "identitytoolkit.googleapis.com",
+    "firebasehosting.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "iam.googleapis.com",
   ])
   service = each.key
 
@@ -113,19 +127,22 @@ resource "google_firebase_project" "fs" {
 resource "google_identity_platform_config" "auth" {
   provider = google-beta
   project  = google_project.fs.project_id
-  
-  authorized_domains = [
-    "localhost",
-    "${terraform.workspace}.app.nstrumenta.com",
-    "${google_project.fs.project_id}.firebaseapp.com",
-    "${google_project.fs.project_id}.web.app",
-  ]
+
+  authorized_domains = concat(
+    [
+      "localhost",
+      local.domain,
+      "${google_project.fs.project_id}.firebaseapp.com",
+      "${google_project.fs.project_id}.web.app",
+    ],
+    var.custom_domain != null ? ["nstrumenta.com", "www.nstrumenta.com"] : [],
+  )
 
   sign_in {
     email {
       enabled = true
     }
-    
+
     phone_number {
       enabled = false
     }
@@ -340,28 +357,42 @@ resource "google_storage_bucket_iam_policy" "data_bucket" {
 
 # Firebase config is stored in the config bucket
 
-# Cloud Run domain mapping for custom domain (handles SSL automatically)
-# Terraform SA (nstrumenta-terraform@macro-coil-194519.iam.gserviceaccount.com) 
-# is verified in Google Search Console for app.nstrumenta.com
-resource "google_cloud_run_domain_mapping" "frontend" {
-  location = var.location_id
-  name     = "${terraform.workspace}.app.nstrumenta.com"
+# Firebase Hosting site — serves the Angular SPA from CDN, rewrites API paths to Cloud Run
+resource "google_firebase_hosting_site" "frontend" {
+  provider = google-beta
   project  = google_project.fs.project_id
+  site_id  = "${local.project_id}-frontend"
 
-  metadata {
-    namespace = google_project.fs.project_id
-  }
-
-  spec {
-    route_name = google_cloud_run_v2_service.default.name
-  }
+  depends_on = [google_firebase_project.fs]
 }
 
-# Create CNAME record directly in hub zone (no per-workspace DNS zone needed)
+# Custom domain on Firebase Hosting (apex: nstrumenta.com)
+# For hub-managed domains, uses *.app.nstrumenta.com
+resource "google_firebase_hosting_custom_domain" "primary" {
+  provider              = google-beta
+  project               = google_project.fs.project_id
+  site_id               = google_firebase_hosting_site.frontend.site_id
+  custom_domain         = local.domain
+  wait_dns_verification = false
+}
+
+# www redirect — Firebase Hosting redirects www.nstrumenta.com to nstrumenta.com
+resource "google_firebase_hosting_custom_domain" "www_redirect" {
+  count                 = var.custom_domain != null ? 1 : 0
+  provider              = google-beta
+  project               = google_project.fs.project_id
+  site_id               = google_firebase_hosting_site.frontend.site_id
+  custom_domain         = "www.${var.custom_domain}"
+  redirect_target       = var.custom_domain
+  wait_dns_verification = false
+}
+
+# Create CNAME record in hub zone (only for *.app.nstrumenta.com domains)
 resource "google_dns_record_set" "frontend_cname" {
+  count        = local.is_hub_managed_domain ? 1 : 0
   project      = var.dns_hub_project_id
   managed_zone = var.dns_hub_zone_name
-  name         = "${terraform.workspace}.app.nstrumenta.com."
+  name         = "${local.domain}."
   type         = "CNAME"
   ttl          = 300
   rrdatas      = ["ghs.googlehosted.com."]
@@ -369,41 +400,6 @@ resource "google_dns_record_set" "frontend_cname" {
 
 
 
-
-resource "google_service_account_key" "server" {
-  service_account_id = data.google_app_engine_default_service_account.default.id
-}
-
-resource "google_secret_manager_secret_iam_member" "app_engine" {
-  project   = google_project.fs.project_id
-  secret_id = google_secret_manager_secret.server_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
-}
-
-resource "google_secret_manager_secret_iam_member" "compute" {
-  project   = google_project.fs.project_id
-  secret_id = google_secret_manager_secret.server_key.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${data.google_compute_default_service_account.default.email}"
-}
-
-# secret so we can reference the key when starting the cloud service
-resource "google_secret_manager_secret" "server_key" {
-  secret_id = "GCLOUD_SERVICE_KEY"
-  project   = google_project.fs.project_id
-  replication {
-    auto {}
-  }
-}
-
-# secret versions hold the actual secret
-resource "google_secret_manager_secret_version" "server_key" {
-  provider = google-beta
-
-  secret      = google_secret_manager_secret.server_key.id
-  secret_data = base64decode(google_service_account_key.server.private_key)
-}
 
 # Secret for API Key Pepper
 resource "google_secret_manager_secret" "api_key_pepper" {
@@ -435,17 +431,13 @@ resource "google_secret_manager_secret_iam_member" "app_engine_pepper" {
 
 # server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
-  name               = "cloudrun-service"
-  location           = var.location_id
-  project            = google_project.fs.project_id
+  name                = "cloudrun-service"
+  location            = var.location_id
+  project             = google_project.fs.project_id
   deletion_protection = false
 
   template {
     service_account = data.google_app_engine_default_service_account.default.email
-    annotations = {
-      # Force new revision when secret version changes
-      "secret-version" = google_secret_manager_secret_version.server_key.version
-    }
     containers {
       name = "server"
       ports {
@@ -480,13 +472,8 @@ resource "google_cloud_run_v2_service" "default" {
       }
 
       env {
-        name = "GCLOUD_SERVICE_KEY"
-        value_source {
-          secret_key_ref {
-            secret  = "GCLOUD_SERVICE_KEY"
-            version = "latest"
-          }
-        }
+        name  = "GOOGLE_CLOUD_PROJECT"
+        value = google_project.fs.project_id
       }
       env {
         name = "NSTRUMENTA_API_KEY_PEPPER"
@@ -557,11 +544,6 @@ resource "google_cloudfunctions2_function" "finalize" {
   location = var.location_id
   project  = google_project.fs.project_id
 
-  labels = {
-    # Force new deployment when secret version changes
-    secret-version = google_secret_manager_secret_version.server_key.version
-  }
-
   build_config {
     runtime     = "nodejs20"
     entry_point = "storageObjectFinalize"
@@ -576,12 +558,6 @@ resource "google_cloudfunctions2_function" "finalize" {
 
   service_config {
     service_account_email = data.google_app_engine_default_service_account.default.email
-    secret_environment_variables {
-      key        = "GCLOUD_SERVICE_KEY"
-      project_id = google_project.fs.project_id
-      secret     = "GCLOUD_SERVICE_KEY"
-      version    = "latest"
-    }
   }
   event_trigger {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
@@ -606,11 +582,6 @@ resource "google_cloudfunctions2_function" "delete" {
   location = var.location_id
   project  = google_project.fs.project_id
 
-  labels = {
-    # Force new deployment when secret version changes
-    secret-version = google_secret_manager_secret_version.server_key.version
-  }
-
   build_config {
     runtime     = "nodejs20"
     entry_point = "storageObjectDelete"
@@ -625,12 +596,6 @@ resource "google_cloudfunctions2_function" "delete" {
 
   service_config {
     service_account_email = data.google_app_engine_default_service_account.default.email
-    secret_environment_variables {
-      key        = "GCLOUD_SERVICE_KEY"
-      project_id = google_project.fs.project_id
-      secret     = "GCLOUD_SERVICE_KEY"
-      version    = "latest"
-    }
   }
   event_trigger {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
@@ -656,4 +621,72 @@ resource "google_artifact_registry_repository" "server" {
   repository_id = "server"
   description   = "repository for CI server images"
   format        = "DOCKER"
+}
+
+# Workload Identity Federation for GitHub Actions (keyless auth)
+resource "google_iam_workload_identity_pool" "github" {
+  provider                  = google-beta
+  project                   = google_project.fs.project_id
+  workload_identity_pool_id = "github-actions"
+  display_name              = "GitHub Actions"
+  description               = "WIF pool for GitHub Actions CI/CD"
+
+  depends_on = [google_project_service.fs["iam.googleapis.com"]]
+}
+
+resource "google_iam_workload_identity_pool_provider" "github" {
+  provider                           = google-beta
+  project                            = google_project.fs.project_id
+  workload_identity_pool_id          = google_iam_workload_identity_pool.github.workload_identity_pool_id
+  workload_identity_pool_provider_id = "github"
+  display_name                       = "GitHub"
+  description                        = "GitHub OIDC provider"
+
+  attribute_mapping = {
+    "google.subject"       = "assertion.sub"
+    "attribute.actor"      = "assertion.actor"
+    "attribute.repository" = "assertion.repository"
+    "attribute.ref"        = "assertion.ref"
+  }
+
+  attribute_condition = "assertion.repository == 'nstrumenta/nstrumenta'"
+
+  oidc {
+    issuer_uri = "https://token.actions.githubusercontent.com"
+  }
+}
+
+resource "google_service_account_iam_member" "github_actions_wif" {
+  service_account_id = data.google_app_engine_default_service_account.default.id
+  role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/nstrumenta/nstrumenta"
+}
+
+# Outputs
+output "project_id" {
+  value = google_project.fs.project_id
+}
+
+output "domain" {
+  value = local.domain
+}
+
+output "cloud_run_url" {
+  value = google_cloud_run_v2_service.default.uri
+}
+
+output "firebase_hosting_site" {
+  value = google_firebase_hosting_site.frontend.site_id
+}
+
+output "nstrumenta_version" {
+  value = var.nstrumenta_version
+}
+
+output "workload_identity_provider" {
+  value = google_iam_workload_identity_pool_provider.github.name
+}
+
+output "service_account_email" {
+  value = data.google_app_engine_default_service_account.default.email
 }

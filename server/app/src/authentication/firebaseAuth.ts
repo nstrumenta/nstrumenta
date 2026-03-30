@@ -1,13 +1,10 @@
 import { Request, Response } from 'express'
-import { initializeApp, cert, getApps } from 'firebase-admin/app'
+import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
-import { serviceAccount } from './ServiceAccount'
 
-// Initialize Firebase Admin if not already initialized
 if (getApps().length === 0) {
   initializeApp({
-    credential: cert(serviceAccount),
-    projectId: serviceAccount.project_id,
+    credential: applicationDefault(),
   })
 }
 

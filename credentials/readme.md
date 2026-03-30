@@ -2,48 +2,47 @@
 
 Local credentials for development (gitignored).
 
+## Prerequisites
+
+Authenticate with Application Default Credentials (one-time on your host machine):
+
+```shell
+gcloud auth application-default login
+gcloud config set project <your-gcp-project-id>
+```
+
+No service account key files are needed. The devcontainer mounts `~/.config/gcloud` from your host, so ADC is available automatically inside the container.
+
 ## Required Files
 
 ### local.env
+
 ```env
-GCLOUD_SERVICE_KEY={"type":"service_account",...}
-NSTRUMENTA_API_KEY=<project-api-key>
+NSTRUMENTA_API_KEY_PEPPER=<pepper-value>
 FIREBASE_API_KEY=<web-api-key>
 FIREBASE_APP_ID=<app-id>
 ```
 
-Credentials for your local development workspace (e.g., demo, pni-nst).
+Get `FIREBASE_API_KEY` and `FIREBASE_APP_ID` from Firebase Console > Project Settings > General > Your apps (Web).
 
-Get `GCLOUD_SERVICE_KEY` from your Firebase service account:
-https://cloud.google.com/iam/docs/keys-create-delete
+Get `NSTRUMENTA_API_KEY_PEPPER` from GCP Secret Manager or Terraform output.
 
-Get `NSTRUMENTA_API_KEY` from the frontend Settings page.
+### activate.sh
 
-Get `FIREBASE_API_KEY` and `FIREBASE_APP_ID` from Firebase Console:
-1. Go to Project Settings > General
-2. Under "Your apps", find the Web app
-3. Copy the `apiKey` and `appId` values
+Sources `local.env`, reads the GCP project from `gcloud config`, and copies your ADC credentials for docker-compose:
 
-**For integration tests**, include additional variables in environment:
+```shell
+source credentials/activate.sh
+```
+
+This sets `GOOGLE_CLOUD_PROJECT` and copies `~/.config/gcloud/application_default_credentials.json` into the credentials directory for docker volume mounting.
+
+## Optional Variables
+
 ```env
-NST_CI_SERVICE_KEY={"type":"service_account","project_id":"nst-ci-nst-...",...}
-NSTRUMENTA_API_KEY_PEPPER=<pepper-value>
 TEST_USER_EMAIL=test@example.com
 TEST_USER_PASSWORD=testpassword123
 ```
 
-**To get ci-nst credentials:**
-```bash
-cd terraform
-terraform workspace select ci-nst
-terraform output -json | jq '{project_id, firebase_api_key: .firebase_web_api_key.value, firebase_app_id: .firebase_web_app_id.value}'
-```
-
-**To get the service account key:**
-1. Go to GCP Console > IAM & Admin > Service Accounts
-2. Select the ci-nst project
-3. Find `nstrumenta-firebase-admin` service account
-4. Create and download a JSON key
-5. Format as single-line JSON for the env file
-
+Used for Playwright-based frontend integration tests.
 

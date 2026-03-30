@@ -1,41 +1,48 @@
 # Integration Tests
 
-End-to-end tests for CLI, agents, frontend, and web features using Docker Compose.
+End-to-end tests for nstrumenta, running in isolated Docker Compose environments.
+
+## Prerequisites
+
+- Docker (DinD in devcontainer, or native)
+- ADC configured (`gcloud auth application-default login`)
+- Environment variables from `source credentials/activate.sh`
 
 ## Running Tests
 
 ```shell
-# Run all tests with local credentials
-ENVFILE=../credentials/local.env ./e2e.sh
+# From repo root
+npm run test:e2e
 
-# Run specific test suite
-ENVFILE=../credentials/local.env ./e2e.sh cli
-ENVFILE=../credentials/local.env ./e2e.sh frontend
-
-# Run multiple test suites
-ENVFILE=../credentials/local.env ./e2e.sh cli frontend
+# Or directly
+cd integration-tests && ./e2e.sh playwright
 ```
+
+This will:
+1. Check for ADC credentials at the well-known gcloud path
+2. Build server and frontend artifacts if missing
+3. Create an ephemeral test user via Firebase Admin
+4. Start server + Playwright containers via Docker Compose
+5. Run Playwright browser tests against the server
+
+## Architecture
+
+`docker-compose.e2e.yml` defines two services:
+
+- **server** builds from `server/Dockerfile`, mounts `~/.config/gcloud` for ADC
+- **playwright** builds from `ci/Dockerfile` (Playwright + Chromium), runs browser tests
+
+ADC is mounted from the host gcloud config directory. No credential files are copied or staged.
 
 ## Test Suites
 
-### CLI Tests (`cli/`)
-Tests the nstrumenta CLI commands against a running server instance.
+### Playwright Browser Tests (`frontend/tests/`)
+- `auth.spec.js` - sign-in flow
+- `projects.spec.js` - project CRUD
+- `upload.spec.js` - file upload
 
-### Frontend Tests (`frontend/`)
-Tests the frontend application end-to-end:
-- **MCP client tests**: JSON-RPC 2.0 API integration with API key authentication
-- **Playwright UI tests**: Full browser testing with Firebase authentication
-  - User sign-in flow
-  - Project creation and management
-  - UI navigation
+### CLI Tests (`cli/client/app/`)
+Tests nstrumenta CLI commands against a running server. Run in CI via GitHub Actions.
 
-See [frontend/README.md](frontend/README.md) for details.
-
-## Requirements
-
-- Docker and Docker Compose
-- Node.js (for test utilities)
-- Valid Firebase credentials in `../credentials/local.env`
-- Test user credentials for frontend tests
-
-Tests are written with Vitest. Each subfolder contains a `docker-compose.yml` that spins up the necessary services.
+### MCP Tests (`frontend/mcp-client.test.js`)
+JSON-RPC 2.0 API integration tests. Run in CI via GitHub Actions.

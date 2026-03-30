@@ -265,7 +265,7 @@ describe('McpClient', () => {
       
       const call = (mockFetch as any).mock.calls[0];
       // serverUrl is empty in tests without env vars
-      assert.strictEqual(call.arguments[0], '/');
+      assert.strictEqual(call.arguments[0], '/mcp');
       const body = JSON.parse(call.arguments[1].body as string);
       assert.strictEqual(body.method, 'tools/call');
       assert.strictEqual(body.params.name, 'set_agent_action');

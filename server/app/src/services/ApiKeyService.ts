@@ -3,7 +3,7 @@ import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
 
-import { serviceAccount } from '../authentication/ServiceAccount'
+import { projectId } from '../authentication/ServiceAccount'
 
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
@@ -37,7 +37,7 @@ export function CreateApiKeyService({
       const apiUrl =
         apiUrlParam ??
         projectData?.apiUrl ??
-        `https://${serviceAccount.project_id}.web.app` // Fallback to Firebase hosting URL
+        `https://${projectId}.web.app`
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 

@@ -19,7 +19,7 @@ async function callMcpTool(toolName, args, projectId = 'ci') {
     }
   }
 
-  const response = await fetch(API_URL, {
+  const response = await fetch(`${API_URL}/mcp`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

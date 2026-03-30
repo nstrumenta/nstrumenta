@@ -1,28 +1,30 @@
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: ./frontend/Dockerfile
+    image: node:24.12-alpine
     ports:
-      - 5000:5000
+      - 5008:5008
     volumes:
-      - ./frontend/src:/app/src
+      - ./frontend:/app
       - ./credentials:/credentials
+    environment:
+      - PROXY_TARGET=http://server:5999
     working_dir: /app
     command: 'npm run start'
   server:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./server/Dockerfile
     ports:
       - 5999:5999
       - 9229:9229
     volumes:
+      - ~/.config/gcloud:/gcp:ro
       - ./server/app/:/app
       - ./credentials/:/credentials
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - GCLOUD_SERVICE_KEY=${GCLOUD_SERVICE_KEY}
+      - GOOGLE_APPLICATION_CREDENTIALS=/gcp/application_default_credentials.json
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - NSTRUMENTA_CLOUD_RUN_MODE=local
       - NST_AGENT_TYPE=ci
     command: sh -c 'npm run dev'
@@ -39,13 +41,3 @@ services:
     environment:
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
     command: sh -c 'npm run dev'
-  developer:
-    build:
-      context: .
-      dockerfile: ./developer/Dockerfile
-    privileged: true
-    volumes:
-      - .:/nstrumenta
-    environment:
-      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
-    command: tail -f /dev/null

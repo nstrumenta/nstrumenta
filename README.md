@@ -5,26 +5,59 @@ Sensor solution platform for acquiring, processing, and visualizing sensor data.
 ## Components
 
 - **CLI** (`cli/`): Command-line interface for managing projects, modules, data, and agents
-- **Server** (`server/`): Backend for authentication, storage, and WebSocket coordination
+- **Server** (`server/`): Node.js/Express backend with Firebase Admin SDK, Cloud Run API, and WebSocket coordination
 - **Frontend** (`frontend/`): Angular web app for visualization and management
 - **Agent** (`agent/`): Edge runtime for sensor streams and module execution
 - **Modules**: User code packages that process sensor data (local or cloud)
 
-## Local Development
+## Prerequisites
 
-Requires a `credentials/local.env` file with `GCLOUD_SERVICE_KEY`.
+- Node.js >= 18
+- Docker (for local stack)
+- `gcloud` CLI (for initial auth only -- not used by the server at runtime)
 
 ```shell
+gcloud auth application-default login
+gcloud config set project <your-gcp-project-id>
+```
+
+## Local Development
+
+```shell
+# Activate credentials (sources local.env, copies ADC for docker)
+source credentials/activate.sh
+
 # All services with hot-reload and debugger ports
-docker compose --env-file=./credentials/local.env up --build
+docker compose up --build
 
 # Server only
-docker compose --env-file=./credentials/local.env up --build server
+docker compose up --build server
 
 # Without agent
-docker compose --env-file=./credentials/local.env up --build --scale agent=0
+docker compose up --build --scale agent=0
 
-# Production mode (no debuggers)
-docker compose --env-file=./credentials/local.env -f docker-compose.yml up
-      - ../../../Taner-Y-Banth/capture/:/capture
+# Production mode (no debuggers, no hot-reload)
+docker compose -f docker-compose.yml up --build
 ```
+
+## Build
+
+```shell
+npm run build          # All packages
+npm run build:server   # Server only
+npm run build:frontend # Frontend only
+```
+
+## Test
+
+```shell
+npm test               # Unit tests (client + server + frontend)
+npm run test:e2e       # Integration tests against local server
+```
+
+## Infrastructure
+
+All infrastructure is managed by Terraform. See [terraform/readme.md](terraform/readme.md).
+
+CI/CD runs on GitHub Actions (`.github/workflows/ci.yml`).
+

@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:4200';
+
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD
 
@@ -11,7 +11,7 @@ if (!TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
 }
 
 async function signIn(page) {
-  await page.goto(FRONTEND_URL);
+  await page.goto('/');
   
   // Click the "Sign in" button in the navbar
   // Using try/catch to handle case where we might be logged in (though unlikely in fresh test)
@@ -34,7 +34,7 @@ async function signIn(page) {
   await expect(page.locator('button[mat-icon-button]').first()).toBeVisible({ timeout: 10000 });
   
   // Navigate to projects page
-  await page.goto(`${FRONTEND_URL}/projects`);
+  await page.goto('/projects');
 }
 
 test.describe('File Upload', () => {
@@ -115,11 +115,15 @@ test.describe('File Upload', () => {
     const fileContent = 'Hello Playwright Upload';
     const fileBuffer = Buffer.from(fileContent);
 
-    // Set up response listener BEFORE triggering the upload.
-    // The upload flow is: POST to MCP for signed URL, then PUT to storage.googleapis.com.
+    // Capture the MCP response to detect errors early
+    const mcpResponsePromise = page.waitForResponse(
+      response => response.url().includes('/mcp') && response.request().method() === 'POST',
+      { timeout: 10000 }
+    );
+
     const uploadResponsePromise = page.waitForResponse(
       response => new URL(response.url()).hostname.endsWith('.googleapis.com') && response.request().method() === 'PUT',
-      { timeout: 30000 }
+      { timeout: 15000 }
     );
 
     const fileChooserPromise = page.waitForEvent('filechooser');
@@ -132,8 +136,13 @@ test.describe('File Upload', () => {
       buffer: fileBuffer,
     });
 
-    // Wait for the GCS PUT response - this is the definitive upload result.
-    // No need to wait for Cloud Function indexing in Firestore.
+    const mcpResponse = await mcpResponsePromise;
+    const mcpBody = await mcpResponse.json();
+    const isError = mcpBody.error || mcpBody.result?.isError;
+    const errorMsg = mcpBody.error?.message || mcpBody.result?.content?.[0]?.text;
+    expect(isError, `MCP get_upload_url failed: ${errorMsg}`).toBeFalsy();
+    expect(mcpBody.result?.structuredContent?.uploadUrl, 'uploadUrl missing from MCP response').toBeTruthy();
+
     const uploadResponse = await uploadResponsePromise;
     expect(uploadResponse.status()).toBeLessThan(400);
   });

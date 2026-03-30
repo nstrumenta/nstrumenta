@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { Firestore } from '@google-cloud/firestore'
 import { CreateApiKeyService } from './services/ApiKeyService'
 import { createCloudAgentService } from './services/cloudAgent'
 import { createArchiveService } from './services/firestoreArchive'
@@ -10,13 +9,15 @@ import express, { Request, Response, NextFunction } from 'express'
 import { mkdir } from 'fs/promises'
 import {
   bucketName,
-  serviceAccount,
+  firestore,
+  projectId,
   storage,
 } from './authentication/ServiceAccount'
 import { createCloudAdminService } from './services/cloudAdmin'
 import { createCloudDataJobService } from './services/cloudDataJob'
 import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage } from './mcp'
 import { registerOAuthRoutes } from './oauth'
+import { registerOrgRoutes } from './orgRoutes'
 
 const version = require('../package.json').version
 
@@ -38,7 +39,7 @@ export interface ActionData {
 const port = process.env.API_PORT ?? 5999
 
 const app = express()
-app.set('trust proxy', true)
+app.set('trust proxy', 1)
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -63,6 +64,7 @@ const mcpLimiter = rateLimit({
 
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
+registerOrgRoutes(app)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version })
@@ -74,15 +76,15 @@ app.get('/config', (req, res) => {
   const host = req.get('x-forwarded-host') || req.get('host');
   res.json({
     apiKey: process.env.FIREBASE_API_KEY,
-    authDomain: `${serviceAccount.project_id}.firebaseapp.com`,
-    projectId: serviceAccount.project_id,
+    authDomain: `${projectId}.firebaseapp.com`,
+    projectId: projectId,
     appId: process.env.FIREBASE_APP_ID,
     apiUrl: `${protocol}://${host}`
   })
 })
 
 // MCP JSON-RPC 2.0 endpoints
-app.post('/', mcpLimiter, handleMcpRequest)
+app.post('/mcp', mcpLimiter, handleMcpRequest)
 app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
 app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
 
@@ -100,16 +102,7 @@ server.listen(port, '0.0.0.0', () => {
   console.log('listening on *:', port)
 })
 
-console.log('project_id: ', serviceAccount.project_id)
-
-const firestore = new Firestore({
-  projectId: serviceAccount.project_id,
-  credentials: {
-    client_email: serviceAccount.client_email,
-    private_key: serviceAccount.private_key,
-  },
-  timestampsInSnapshots: true,
-})
+console.log('project_id: ', projectId)
 
 const bucket = storage.bucket(bucketName)
 
@@ -118,7 +111,6 @@ const bucket = storage.bucket(bucketName)
 const archiveService = createArchiveService({ firestore })
 const cloudAgentService = createCloudAgentService({
   firestore,
-  spawn,
   storage,
 })
 const apiKeyService = CreateApiKeyService({ firestore })

@@ -2,16 +2,19 @@
   "build": {
     "dockerfile": "Dockerfile"
   },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   "customizations": {
     "vscode": {
       "extensions": [
-        "CircleCI.circleci",
         "ms-azuretools.vscode-docker",
         "eamodio.gitlens",
         "hashicorp.terraform",
         "ms-vscode.vscode-typescript-next",
         "esbenp.prettier-vscode",
-        "GitHub.vscode-pull-request-github"
+        "GitHub.vscode-pull-request-github",
+        "GitHub.copilot-chat"
       ]
     }
   },
@@ -21,6 +24,6 @@
     "./credentials/local.env"
   ],
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=${localEnv:HOME}/.config/gcloud,target=/root/.config/gcloud,type=bind"
   ]
 }

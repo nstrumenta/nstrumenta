@@ -131,9 +131,11 @@ export class ProjectSettingsComponent implements OnInit {
     const dialogRef = this.dialog.open(AddProjectMemberDialogComponent);
 
     dialogRef.afterClosed().subscribe(async (response: AddProjectMemberDialogResponse) => {
-      if (response && response.memberId) {
+      if (response && response.email) {
+        // TODO: Call server-side invite endpoint that resolves email to userId
+        // For now, store email as the member key (server will resolve on next auth)
         const members = { ...this.projectSettings.members };
-        members[response.memberId] = response.role;
+        members[response.email] = response.role;
         await this.firebaseDataService.updateProjectSettings(this.projectId, { members });
       }
     });

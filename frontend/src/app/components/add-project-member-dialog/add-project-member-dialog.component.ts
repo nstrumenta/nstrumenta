@@ -9,17 +9,17 @@ import { MatSelect, MatOption } from '@angular/material/select';
 import { MatButton } from '@angular/material/button';
 
 export interface AddProjectMemberDialogResponse {
-  memberId?: string;
+  email?: string;
   role: ProjectRoles;
 }
 
 @Component({
     selector: 'app-add-project-member-dialog',
     template: `
-    <h2 mat-dialog-title>Add Project Member</h2>
+    <h2 mat-dialog-title>Invite Project Member</h2>
     <mat-dialog-content class="mat-typography">
       <mat-form-field style="width: 400px !important">
-        <input matInput [(ngModel)]="response.memberId" placeholder="User Id" />
+        <input matInput [(ngModel)]="response.email" placeholder="Email address" type="email" />
       </mat-form-field>
 
       <mat-form-field style="width: 90px; margin-left: 8px">
@@ -31,7 +31,7 @@ export interface AddProjectMemberDialogResponse {
     </mat-dialog-content>
     <div mat-dialog-actions>
       <button mat-button (click)="close()">Cancel</button>
-      <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Add</button>
+      <button mat-button [mat-dialog-close]="response" cdkFocusInitial>Invite</button>
     </div>
   `,
     imports: [MatDialogTitle, CdkScrollable, MatDialogContent, MatFormField, MatInput, FormsModule, MatSelect, MatOption, MatDialogActions, MatButton, MatDialogClose]

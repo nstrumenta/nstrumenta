@@ -1,0 +1,323 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+env:
+  IMAGE_VERSION_TAG: ${{ github.sha }}
+  CI_WIF_PROVIDER: ${{ vars.CI_WIF_PROVIDER }}
+  CI_SERVICE_ACCOUNT: ${{ vars.CI_SERVICE_ACCOUNT }}
+  CI_PROJECT_ID: ${{ vars.CI_PROJECT_ID }}
+  PROD_WIF_PROVIDER: ${{ vars.PROD_WIF_PROVIDER }}
+  PROD_SERVICE_ACCOUNT: ${{ vars.PROD_SERVICE_ACCOUNT }}
+  PROD_PROJECT_ID: ${{ vars.PROD_PROJECT_ID }}
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run build
+      - run: npm pack
+      - name: Build and pack server
+        run: |
+          cd server/app
+          npm install
+          npm run build
+          npm pack
+          mv nst-server-*.tgz ../..
+      - name: Collect build artifacts
+        run: |
+          mkdir -p build
+          mv nstrumenta-*.tgz build/
+          mv nst-server-*.tgz build/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
+          path: |
+            dist
+            node_modules
+            integration-tests
+            package.json
+            package-lock.json
+            tsconfig.json
+            src
+            build
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+      - uses: actions/cache@v4
+        with:
+          path: project/frontend/node_modules
+          key: frontend-modules-${{ hashFiles('project/frontend/package.json') }}
+      - name: Install and build
+        working-directory: project/frontend
+        run: |
+          ./use_cache_or_npm_install.sh
+          npm run build
+          ./build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend
+          path: project/frontend/dist
+
+  build-functions:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: functions/node_modules
+          key: functions-modules-${{ hashFiles('functions/package.json') }}
+      - name: Install and build
+        working-directory: functions
+        run: |
+          ./use_cache_or_npm_install.sh
+          ./build.sh
+
+  test-server:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: server/app/node_modules
+          key: server-modules-${{ hashFiles('server/app/package.json') }}
+      - name: Install and test
+        working-directory: server/app
+        run: |
+          npm install
+          npm test
+
+  test-nodejs:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run test:client && npm run test:server
+
+  test-vscode-extension:
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - run: npm run build:vscode-extension
+      - run: npm run test:vscode-extension
+
+  build-ci-images:
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+      - name: Build and push CI images
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: ./build-ci-images.sh
+
+  e2e:
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure gcloud for Playwright tests
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+        run: |
+          mkdir -p $HOME/.config/gcloud
+          cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
+          gcloud config set project $GOOGLE_CLOUD_PROJECT
+      - uses: docker/setup-buildx-action@v3
+      - name: Run Playwright tests
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+        run: cd integration-tests && ./e2e.sh
+
+  # ---------------------------------------------------------------------------
+  # CD: Deploy on merge to main
+  # ---------------------------------------------------------------------------
+
+  deploy-frontend:
+    needs: [build-frontend, test-server, test-nodejs]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
+          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
+      - name: Deploy to Firebase Hosting
+        working-directory: frontend
+        run: |
+          npm ci
+          FIREBASE_PROJECT_ID=$PROD_PROJECT_ID node makeFirebaseDeployConfig.js
+          npx firebase use $PROD_PROJECT_ID
+          npx firebase deploy --only hosting
+
+  deploy-server:
+    needs: [e2e, build-ci-images]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
+          service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
+      - run: gcloud --quiet config set project $PROD_PROJECT_ID
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: |
+          gcloud run services update cloudrun-service \
+            --image=$IMAGE_REPOSITORY/server:$IMAGE_VERSION_TAG \
+            --region=us-west1 \
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG"
+
+  # ---------------------------------------------------------------------------
+  # Release: Publish versioned artifacts on v* tags
+  # ---------------------------------------------------------------------------
+
+  publish-docker-hub:
+    needs: [e2e, build-ci-images]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-west1-docker.pkg.dev --quiet
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Pull, retag, and push images
+        env:
+          IMAGE_REPOSITORY: us-west1-docker.pkg.dev/${{ env.CI_PROJECT_ID }}/server
+        run: |
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          echo "Pulling and retagging images for version $PACKAGE_VERSION"
+          for image in agent server data-job-runner; do
+            echo "Processing $image..."
+            docker pull $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:$PACKAGE_VERSION
+            docker tag $IMAGE_REPOSITORY/$image:$IMAGE_VERSION_TAG nstrumenta/$image:latest
+            docker push nstrumenta/$image:$PACKAGE_VERSION
+            docker push nstrumenta/$image:latest
+          done
+
+  publish-npm:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: build
+      - name: Publish to npm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          npm publish
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-pypi:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Publish to PyPI
+        working-directory: python
+        run: |
+          pip install build twine
+          python -m build
+          twine upload dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+  publish-vscode:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    container: nstrumenta/base:latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: root-modules-${{ hashFiles('package.json') }}
+      - run: npm install
+      - name: Publish VS Code extension
+        working-directory: vscode-extension
+        run: |
+          npm install
+          npx vsce publish
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}

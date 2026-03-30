@@ -19,6 +19,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@google-cloud/firestore": "^8.3.0",
+    "@google-cloud/run": "^3.2.0",
     "@google-cloud/storage": "^7.19.0",
     "@modelcontextprotocol/sdk": "^1.27.1",
     "cors": "^2.8.5",

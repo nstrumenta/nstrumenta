@@ -1,50 +1,32 @@
 # Frontend E2E Tests
 
-End-to-end tests for the nstrumenta frontend application against the MCP server.
+## Playwright Browser Tests (`tests/`)
 
-## Tests
+Browser-based tests running against the nstrumenta server via Docker Compose.
 
-### MCP Client Tests (`mcp-client.test.js`)
-Tests the MCP JSON-RPC 2.0 integration that the frontend uses:
-- Listing modules via `list_modules` tool
-- Listing agents via `list_agents` tool
-- Listing data via `list_data` tool
-- Getting project info via `get_project` tool
-- Authentication error handling
+- `auth.spec.js` - sign-in flow
+- `projects.spec.js` - project CRUD
+- `upload.spec.js` - file upload
 
-### Playwright UI Tests (`tests/*.spec.js`)
-Full browser-based tests using Playwright:
-- **auth.spec.js**: User authentication flow with Firebase
-- **projects.spec.js**: Project creation and management UI
+## MCP Integration Tests (`mcp-client.test.js`)
 
-## Running Tests
+JSON-RPC 2.0 API tests for the MCP endpoint.
 
-### Local Development
+## Running
+
 ```bash
-# From integration-tests/frontend directory
+# From repo root (runs via Docker Compose)
+npm run test:e2e
+
+# MCP tests standalone (requires running server + NSTRUMENTA_API_KEY)
+cd integration-tests/frontend
 npm install
-npm test
-```
-
-### With Docker Compose
-```bash
-# From integration-tests directory
-ENVFILE=../credentials/local.env docker-compose -f frontend/docker-compose.yml up --abort-on-container-exit
-```
-
-### Full Integration Test Suite
-```bash
-# From integration-tests directory
-ENVFILE=../credentials/local.env ./e2e.sh frontend
+npx vitest run mcp-client.test.js
 ```
 
 ## Environment Variables
 
-Required for tests:
-- `NSTRUMENTA_API_KEY` - API key for MCP authentication
-- `TEST_USER_EMAIL` - Test user email for Playwright tests  
-- `TEST_USER_PASSWORD` - Test user password for Playwright tests
-- `API_URL` - Server URL (default: http://localhost:5999)
-- `FRONTEND_URL` - Frontend URL (default: http://localhost:4200)
-- `GCLOUD_SERVICE_KEY` - Service account key (loaded from ENVFILE)
-- `NSTRUMENTA_API_KEY_PEPPER` - API key pepper (loaded from ENVFILE)
+- `FRONTEND_URL` - Server URL for Playwright (default: http://localhost:5999)
+- `TEST_USER_EMAIL` - Test user email (created by e2e.sh)
+- `TEST_USER_PASSWORD` - Test user password (created by e2e.sh)
+- `NSTRUMENTA_API_KEY` - API key for MCP tests
