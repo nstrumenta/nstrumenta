@@ -22,8 +22,8 @@ async function signIn(page) {
   // Wait for successful login - account menu button should appear
   await expect(page.locator('button[mat-icon-button]').first()).toBeVisible({ timeout: 10000 });
   
-  // Navigate to projects page
-  await page.goto('/projects');
+  // Navigate to home page which shows the project list when logged in
+  await page.goto('/');
 }
 
 test.describe('Project Management', () => {
