@@ -1,6 +1,6 @@
 import express from 'express'
 import rateLimit from 'express-rate-limit'
-import { createOrg, getOrg, listOrgMembers, removeOrgMember } from './api/organizations'
+import { createOrg, getOrg, listOrgMembers, removeOrgMember, listUserOrgs } from './api/organizations'
 import { inviteMember, acceptInvitation, listInvitations, revokeInvitation } from './api/invitations'
 import { getBilling, getUsage } from './api/billing'
 
@@ -25,6 +25,7 @@ export function registerOrgRoutes(app: express.Application) {
 
   // Organization CRUD
   router.post('/', (req, res) => createOrg(req, res))
+  router.get('/', (req, res) => listUserOrgs(req, res))
   router.get('/:orgId', mergeParams, (req, res) => getOrg(req, res))
 
   // Organization members

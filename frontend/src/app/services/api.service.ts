@@ -12,6 +12,8 @@ export interface CreateProjectRequest {
 
 export interface CreateProjectResponse {
   id: string;
+  slug: string;
+  orgSlug: string;
   name: string;
   message: string;
 }
@@ -129,9 +131,10 @@ export class ApiService {
 
     // Extract result from MCP response
     const result = response.result?.structuredContent || response.result;
-    console.log('MCP createProject result:', result);
     return {
       id: result.id,
+      slug: result.slug,
+      orgSlug: result.orgSlug,
       name: result.name,
       message: result.message
     };

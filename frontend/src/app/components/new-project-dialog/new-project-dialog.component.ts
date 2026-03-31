@@ -1,55 +1,63 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
-import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
+import { OrganizationService } from 'src/app/services/organization.service';
+import { OrganizationDoc } from 'src/app/models/organization.model';
 import { Subscription } from 'rxjs';
-import { MatFormField, MatError } from '@angular/material/form-field';
+import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { MatOption } from '@angular/material/core';
 import { FormsModule } from '@angular/forms';
-
 import { MatButton } from '@angular/material/button';
 
 @Component({
     selector: 'app-new-project-dialog',
     templateUrl: './new-project-dialog.component.html',
     styleUrls: ['./new-project-dialog.component.scss'],
-    imports: [MatFormField, MatInput, FormsModule, MatError, MatButton]
+    imports: [MatFormField, MatLabel, MatInput, MatSelect, MatOption, FormsModule, MatError, MatButton]
 })
-export class NewProjectDialogComponent implements OnDestroy {
-  subscription: Subscription;
+export class NewProjectDialogComponent implements OnInit, OnDestroy {
   projectName: string;
-  uid: string;
+  selectedOrgId: string;
+  organizations: OrganizationDoc[] = [];
   isCreating = false;
   errorMessage: string;
 
-  private authService = inject(AuthService);
+  private subscription: Subscription;
   private apiService = inject(ApiService);
+  private organizationService = inject(OrganizationService);
   public dialogRef = inject(MatDialogRef<NewProjectDialogComponent>);
 
-  async create(projectIdRaw: string): Promise<void> {
+  ngOnInit(): void {
+    this.subscription = this.organizationService.getUserOrganizations().subscribe({
+      next: orgs => {
+        this.organizations = orgs;
+        if (orgs.length > 0) this.selectedOrgId = orgs[0].id;
+      },
+      error: err => { this.errorMessage = 'Failed to load organizations.'; }
+    });
+  }
+
+  async create(): Promise<void> {
     if (this.isCreating) return;
-    
+
     this.isCreating = true;
     this.errorMessage = '';
 
     try {
       const response = await this.apiService.createProject({
         name: this.projectName,
-        projectIdBase: projectIdRaw
+        orgId: this.selectedOrgId,
       });
-
-      console.log('Project created successfully:', response);
       this.dialogRef.close(response);
     } catch (error) {
-      console.error('Error creating project:', error);
       this.errorMessage = error?.error || 'Failed to create project. Please try again.';
       this.isCreating = false;
     }
   }
 
-  ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
+  ngOnDestroy(): void {
+    if (this.subscription) this.subscription.unsubscribe();
   }
 }

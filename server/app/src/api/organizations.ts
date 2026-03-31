@@ -90,6 +90,27 @@ const createOrgBase = async (
 
 export const createOrg = withFirebaseAuth(createOrgBase)
 
+// GET /api/orgs — list orgs for the authenticated user
+const listUserOrgsBase = async (
+  req: any,
+  res: any,
+  args: FirebaseAuthResult,
+) => {
+  const { authenticated, userId } = args
+  if (!authenticated || !userId) return res.status(401).send('Authentication required')
+
+  try {
+    const snapshot = await firestore.collection(`users/${userId}/organizations`).get()
+    const orgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    return res.status(200).json(orgs)
+  } catch (error) {
+    console.error('Failed to list user organizations:', error)
+    return res.status(500).send('Failed to list organizations')
+  }
+}
+
+export const listUserOrgs = withFirebaseAuth(listUserOrgsBase)
+
 // GET /api/orgs/:orgId
 const getOrgBase = async (
   req: Request,

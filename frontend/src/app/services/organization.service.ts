@@ -15,12 +15,16 @@ export class OrganizationService {
 
   getUserOrganizations(): Observable<OrganizationDoc[]> {
     return this.authService.user$.pipe(
-      switchMap(user => {
+      switchMap(async user => {
         if (!user) return of([]);
-        // We will implement actual fetching shortly. 
-        // For now relying on standard HTTP routes to circumvent missing @angular/fire exports.
-        return of([]);
-      })
+        const url = await this.apiService.getApiUrl();
+        const idToken = await user.getIdToken();
+        const headers = new HttpHeaders()
+          .set('Authorization', `Bearer ${idToken}`)
+          .set('Accept', 'application/json');
+        return this.http.get<OrganizationDoc[]>(`${url}/api/orgs`, { headers });
+      }),
+      switchMap(obs => obs)
     );
   }
 
