@@ -7,7 +7,7 @@
 
   <mat-form-field class="project-name-input">
     <mat-label>Organization</mat-label>
-    <mat-select [(ngModel)]="selectedOrgId" [disabled]="isCreating">
+    <mat-select [(ngModel)]="selectedOrgId" [disabled]="isCreating || organizations.length === 0">
       @for (org of organizations; track org.id) {
         <mat-option [value]="org.id">{{ org.name }}</mat-option>
       }

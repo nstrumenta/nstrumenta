@@ -39,41 +39,38 @@ test.describe('Project Management', () => {
 
   test('should create a new project', async ({ page }) => {
     const projectName = `e2e-test-${Date.now()}`;
-    
-    // Capture console messages to verify success
-    let projectCreated = false;
-    page.on('console', msg => {
-      const text = msg.text();
-      console.log('Browser console:', text);
-      if (text.includes('Project created successfully')) {
-        projectCreated = true;
+
+    page.on('console', msg => { if (msg.type() === 'error') console.log('BROWSER ERROR:', msg.text()); });
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.message));
+
+    // Intercept /api/orgs to debug response
+    page.on('response', async resp => {
+      if (resp.url().includes('/api/orgs')) {
+        const body = await resp.text().catch(() => '(unreadable)');
+        console.log(`/api/orgs → ${resp.status()}: ${body}`);
       }
     });
-    
-    // Click the FAB (floating action button) with "add" icon
+
     const fabButton = page.locator('button#fab mat-icon:has-text("add")');
     await expect(fabButton).toBeVisible({ timeout: 10000 });
     await fabButton.click();
-    
-    // Wait for dialog to appear
+
     await expect(page.locator('h2:has-text("Add New Project")')).toBeVisible();
-    
-    // Fill in project name
-    await page.locator('input[placeholder="Project Name"]').fill(projectName);
-    
-    // Click the create button in the dialog
+
+    await page.locator('app-new-project-dialog mat-form-field').first().locator('input').fill(projectName);
+
+    // Wait for org dropdown to be enabled (orgs loaded from API)
+    await expect(page.locator('app-new-project-dialog mat-select')).not.toHaveAttribute('aria-disabled', 'true', { timeout: 5000 });
+
+    // Open org dropdown and select first option
+    await page.locator('app-new-project-dialog mat-select').click();
+    await expect(page.locator('mat-option').first()).toBeVisible({ timeout: 5000 });
+    await page.locator('mat-option').first().click();
+
     const createButton = page.locator('button:has-text("Create")');
+    await expect(createButton).toBeEnabled({ timeout: 3000 });
     await createButton.click();
-    
-    // Wait for success message in console (project creation is async)
-    await page.waitForTimeout(3000);
-    
-    // Verify project was created based on console output
-    if (!projectCreated) {
-      const errorMessage = await page.locator('.error-message mat-error').textContent().catch(() => '');
-      throw new Error(`Project creation failed. Error: ${errorMessage}`);
-    }
-    
-    console.log(`Project ${projectName} created successfully!`);
+
+    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 15000 });
   });
 });
