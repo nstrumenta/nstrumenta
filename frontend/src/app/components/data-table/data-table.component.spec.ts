@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -11,13 +12,14 @@ import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataTableComponent } from './data-table.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { MockFirebaseDataService } from 'src/app/testing/mocks';
+import { MockFirebaseDataService, MockAuthService } from 'src/app/testing/mocks';
+import { AuthService } from 'src/app/auth/auth.service';
 
 describe('DataTableComponent', () => {
   let component: DataTableComponent;
   let fixture: ComponentFixture<DataTableComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [
         NoopAnimationsModule,
@@ -31,9 +33,9 @@ describe('DataTableComponent', () => {
         RouterTestingModule,
         DataTableComponent, FileSizePipe,
     ],
-    providers: [MatDialog, { provide: FirebaseDataService, useClass: MockFirebaseDataService }],
+    providers: [MatDialog, { provide: FirebaseDataService, useClass: MockFirebaseDataService }, { provide: AuthService, useClass: MockAuthService }],
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DataTableComponent);

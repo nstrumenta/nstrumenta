@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { EditDialogComponent } from './edit-dialog.component';
 import { FormsModule } from '@angular/forms';
@@ -16,7 +17,7 @@ describe('EditDialogComponent', () => {
   let component: EditDialogComponent;
   let fixture: ComponentFixture<EditDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [BrowserAnimationsModule, FormsModule, MatFormFieldModule, MatInputModule, EditDialogComponent],
     providers: [
@@ -25,7 +26,7 @@ describe('EditDialogComponent', () => {
         { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
     ],
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(EditDialogComponent);

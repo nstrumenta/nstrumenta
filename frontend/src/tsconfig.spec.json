@@ -3,16 +3,12 @@
   "compilerOptions": {
     "outDir": "../out-tsc/spec",
     "types": [
-      "jasmine",
       "node",
       "web-bluetooth"
     ]
   },
-  "files": [
-    "test.ts",
-    "polyfills.ts"
-  ],
   "include": [
+    "test-setup.ts",
     "**/*.spec.ts",
     "**/*.d.ts"
   ]

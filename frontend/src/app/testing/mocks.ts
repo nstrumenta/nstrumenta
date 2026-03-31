@@ -17,6 +17,8 @@ export class MockFirebaseDataService {
   get userProjects() { return () => []; }
   get projectSettings() { return () => null; }
   get projectId() { return () => 'test-project'; }
+  get agentId() { return () => ''; }
+  get userId() { return () => ''; }
   getDocument() { return of({}); }
   setProject() {}
   deleteRecord() {}

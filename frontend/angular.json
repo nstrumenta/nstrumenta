@@ -74,7 +74,8 @@
               "sourceMap": false,
               "namedChunks": false,
               "extractLicenses": true
-            }
+            },
+            "development": {}
           },
           "defaultConfiguration": ""
         },
@@ -97,22 +98,13 @@
           }
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "main": "src/test.ts",
-            "polyfills": [
-              "src/polyfills.ts"
-            ],
+            "buildTarget": "nstrumenta:build:development",
             "tsConfig": "src/tsconfig.spec.json",
-            "karmaConfig": "src/karma.conf.js",
-            "styles": [
-              "src/styles.scss"
-            ],
-            "scripts": [],
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
-            ]
+            "runner": "vitest",
+            "reporters": ["default"],
+            "setupFiles": ["src/test-setup.ts"]
           }
         },
         "lint": {

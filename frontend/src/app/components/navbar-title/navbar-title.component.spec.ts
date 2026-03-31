@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NavbarTitleComponent } from './navbar-title.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
@@ -8,12 +9,12 @@ describe('NavbarTitleComponent', () => {
   let component: NavbarTitleComponent;
   let fixture: ComponentFixture<NavbarTitleComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [RouterTestingModule, NavbarTitleComponent],
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavbarTitleComponent);

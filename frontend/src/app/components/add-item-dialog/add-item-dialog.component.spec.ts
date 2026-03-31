@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AddItemDialogComponent } from './add-item-dialog.component';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MockMatDialogRef } from 'src/app/testing/mocks';
@@ -8,7 +9,7 @@ describe('AddItemDialogComponent', () => {
   let component: AddItemDialogComponent;
   let fixture: ComponentFixture<AddItemDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [AddItemDialogComponent, NoopAnimationsModule],
       providers: [
@@ -16,7 +17,7 @@ describe('AddItemDialogComponent', () => {
         { provide: MatDialogRef, useClass: MockMatDialogRef }
       ]
     }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(AddItemDialogComponent);

@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavbarStatusComponent } from './navbar-status.component';
 import { ProjectService } from 'src/app/services/project.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
@@ -8,7 +9,7 @@ describe('NavbarStatusComponent', () => {
   let component: NavbarStatusComponent;
   let fixture: ComponentFixture<NavbarStatusComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [NavbarStatusComponent],
     providers: [
@@ -16,7 +17,7 @@ describe('NavbarStatusComponent', () => {
       { provide: FirebaseDataService, useClass: MockFirebaseDataService }
     ]
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavbarStatusComponent);

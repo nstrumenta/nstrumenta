@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, test, expect, beforeEach, vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { NewProjectDialogComponent } from './new-project-dialog.component';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -19,20 +20,25 @@ const authServiceStub = {
 };
 
 const apiServiceStub = {
-  createProject: jasmine.createSpy('createProject').and.returnValue(Promise.resolve({ id: 'p1', slug: 'test', orgSlug: 'org', name: 'Test', message: 'ok' })),
+  createProject: vi
+    .fn()
+    .mockReturnValue(
+      Promise.resolve({ id: 'p1', slug: 'test', orgSlug: 'org', name: 'Test', message: 'ok' })
+    ),
 };
 
 const organizationServiceStub = {
-  getUserOrganizations: () => of([{ id: 'org1', name: 'My Org', slug: 'my-org', createdAt: 0, createdBy: 'u1' }]),
+  getUserOrganizations: () =>
+    of([{ id: 'org1', name: 'My Org', slug: 'my-org', createdAt: 0, createdBy: 'u1' }]),
 };
 
 describe('NewProjectDialogComponent', () => {
   let component: NewProjectDialogComponent;
   let fixture: ComponentFixture<NewProjectDialogComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
-    imports: [
+      imports: [
         FormsModule,
         MatFormFieldModule,
         MatInputModule,
@@ -40,15 +46,15 @@ describe('NewProjectDialogComponent', () => {
         MatDialogModule,
         BrowserAnimationsModule,
         NewProjectDialogComponent,
-    ],
-    providers: [
+      ],
+      providers: [
         { provide: MatDialogRef, useValue: {} },
         { provide: AuthService, useValue: authServiceStub },
         { provide: ApiService, useValue: apiServiceStub },
         { provide: OrganizationService, useValue: organizationServiceStub },
-    ],
-}).compileComponents();
-  }));
+      ],
+    }).compileComponents();
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NewProjectDialogComponent);

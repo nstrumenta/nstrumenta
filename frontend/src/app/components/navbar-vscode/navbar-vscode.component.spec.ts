@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconRegistry } from '@angular/material/icon';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -10,7 +11,7 @@ describe('NavbarVscodeComponent', () => {
   let component: NavbarVscodeComponent;
   let fixture: ComponentFixture<NavbarVscodeComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [NavbarVscodeComponent, MatSnackBarModule],
     providers: [{ provide: VscodeService, useClass: MockVscodeService }]
@@ -23,7 +24,7 @@ describe('NavbarVscodeComponent', () => {
       'vscode-logo',
       sanitizer.bypassSecurityTrustResourceUrl('/assets/images/vscode-logo.svg')
     );
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavbarVscodeComponent);
