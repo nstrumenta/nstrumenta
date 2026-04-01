@@ -100,8 +100,10 @@ const listUserOrgsBase = async (
   if (!authenticated || !userId) return res.status(401).send('Authentication required')
 
   try {
+    console.log('[listUserOrgs]', userId, authenticated);
     const snapshot = await firestore.collection(`users/${userId}/organizations`).get()
     const orgs = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+    console.log('[listUserOrgs results]', orgs);
     return res.status(200).json(orgs)
   } catch (error) {
     console.error('Failed to list user organizations:', error)

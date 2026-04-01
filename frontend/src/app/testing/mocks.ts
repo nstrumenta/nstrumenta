@@ -88,6 +88,9 @@ export class MockServerService {
 export class MockApiService {
   getApiUrl() { return Promise.resolve('http://localhost:8080'); }
   createApiKey() { return Promise.resolve({}); }
+  getDownloadUrl() { return Promise.resolve('https://storage.example.com/signed-read-url'); }
+  deleteFile() { return Promise.resolve(); }
+  uploadFileToPath() { return Promise.resolve(of(100)); }
 }
 
 export class MockActivatedRoute {

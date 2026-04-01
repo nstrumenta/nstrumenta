@@ -1022,6 +1022,88 @@ server.registerTool(
 );
 
 server.registerTool(
+    'get_download_url',
+    {
+        title: 'Get Download URL',
+        description: 'Gets a signed URL for downloading a file from cloud storage.',
+        inputSchema: {
+            path: z.string().describe('File path relative to project (e.g. "data/file.mcap") or full storage path'),
+        },
+        outputSchema: {
+            downloadUrl: z.string().describe('Signed URL for download'),
+        },
+    },
+    async ({ path: originalPath }) => {
+        try {
+            const projectId = getProjectId();
+            const { generateV4ReadSignedUrl } = require('./shared/utils');
+
+            // Accept both relative ("data/file.mcap") and full ("projects/{id}/data/file.mcap") paths
+            const fullPath = originalPath.startsWith('projects/')
+                ? originalPath
+                : `projects/${projectId}/${originalPath.replace(/^\//, '')}`;
+
+            const downloadUrl = await generateV4ReadSignedUrl(fullPath);
+
+            return {
+                content: [{ type: 'text', text: downloadUrl }],
+                structuredContent: { downloadUrl },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to get download URL: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'delete_file',
+    {
+        title: 'Delete File',
+        description: 'Deletes a file from cloud storage and its Firestore metadata document.',
+        inputSchema: {
+            filePath: z.string().describe('Full storage path of the file (e.g. "projects/{id}/data/file.mcap")'),
+            firestoreDocId: z.string().optional().describe('Firestore document ID in projects/{id}/data collection to delete alongside the file'),
+        },
+        outputSchema: {
+            success: z.boolean(),
+        },
+    },
+    async ({ filePath, firestoreDocId }) => {
+        try {
+            const projectId = getProjectId();
+            const { storage, bucketName } = require('./authentication/ServiceAccount');
+            const crypto = require('crypto');
+            const path = require('path');
+
+            // Verify the file belongs to this project
+            const expectedPrefix = `projects/${projectId}/`;
+            if (!filePath.startsWith(expectedPrefix)) {
+                throw new Error(`File path does not belong to project ${projectId}`);
+            }
+
+            await storage.bucket(bucketName).file(filePath).delete({ ignoreNotFound: true });
+
+            // Delete Firestore metadata doc - either by provided ID or by hash-derived path
+            if (firestoreDocId) {
+                await firestore.doc(`projects/${projectId}/data/${firestoreDocId}`).delete();
+            } else {
+                const hash = crypto.createHash('sha256').update(filePath).digest('hex');
+                await firestore.doc(`projects/${projectId}/data/${hash}`).delete();
+            }
+
+            return {
+                content: [{ type: 'text', text: `Deleted ${filePath}` }],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to delete file: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
     'get_upload_data_url',
     {
         title: 'Get Upload Data URL',

@@ -1,11 +1,8 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ViewChild, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
-import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { Machine } from 'src/app/models/firebase.model';
 import { VmService } from 'src/app/vm.service';
@@ -24,39 +21,23 @@ import { MatMenuItem } from '@angular/material/menu';
     styleUrls: ['./machines.component.scss'],
     imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
-export class MachinesComponent implements OnInit {
+export class MachinesComponent {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
   dataSource: MatTableDataSource<Machine>;
   selection = new SelectionModel<Machine>(true, []);
-    get projectId() { return this.firebaseDataService.projectId(); }
+  get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  // Inject services using the new Angular 20 pattern
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
-  private destroyRef = inject(DestroyRef);
   public dialog = inject(MatDialog);
   private vmService = inject(VmService);
 
   constructor() {
-    // Set up effect to handle machines data changes
     effect(() => {
       const machines = this.firebaseDataService.machines();
       this.dataSource = new MatTableDataSource(machines);
       this.dataSource.sort = this.sort;
-    });
-  }
-
-  ngOnInit(): void {
-    
-    // Subscribe to user auth state and set project when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user && this.projectId) {
-      }
     });
   }
 

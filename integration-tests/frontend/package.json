@@ -7,7 +7,7 @@
     "test:playwright": "playwright test"
   },
   "devDependencies": {
-    "vitest": "^1.0.0",
-    "@playwright/test": "1.50.1"
+    "@playwright/test": "^1.58.2",
+    "vitest": "^4.1.2"
   }
 }

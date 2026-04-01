@@ -1,14 +1,12 @@
 import { SelectionModel } from '@angular/cdk/collections';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UploadMetadata } from 'firebase/storage';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
 import { McapWriter } from '@mcap/core';
 import { Observable, Subject, fromEvent } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
-import { AuthService } from 'src/app/auth/auth.service';
+import { map, startWith, takeUntil } from 'rxjs/operators';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { SensorEvent, SensorEventId } from 'src/app/models/sensorEvent.model';
 import { FormsModule } from '@angular/forms';
@@ -18,10 +16,9 @@ import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatList, MatListItem } from '@angular/material/list';
-import { AsyncPipe, DatePipe, KeyValuePipe } from '@angular/common';
+import { KeyValuePipe } from '@angular/common';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatCheckbox } from '@angular/material/checkbox';
-import { MatMenuItem } from '@angular/material/menu';
 
 interface SensorEventStats {
   timestamp: number;
@@ -47,101 +44,75 @@ export interface NstrumentaExperiment {
     selector: 'app-record',
     templateUrl: './record.component.html',
     styleUrls: ['./record.component.scss'],
-    imports: [FormsModule, MatFormField, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, AsyncPipe, DatePipe, KeyValuePipe]
+    imports: [FormsModule, MatFormField, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, KeyValuePipe]
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
 
   // Inject services using the new Angular 20 pattern
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
   private breakpointObserver = inject(BreakpointObserver);
   private destroyRef = inject(DestroyRef);
 
-  constructor() {
-    // Set up effect to handle record data changes
-    effect(() => {
-      const records = this.firebaseDataService.record();
-      const commonSources = [
-          {
-            type: 'devicemotion',
-            name: 'Device Motion',
-          },
-          {
-            type: 'geolocation',
-            name: 'Geolocation',
-          },
-          {
-            type: 'mouse',
-            name: 'Mouse',
-          },
-          {
-            type: 'gamepad',
-            name: 'Gamepad',
-          },
-          {
-            type: 'video',
-            name: 'Video',
-          },
-          {
-            type: 'bluetooth',
-            name: 'Nordic Thingy',
-            service: 'ef680400-9b35-4933-9b10-52ffa9740042',
-            characteristic: 'ef680406-9b35-4933-9b10-52ffa9740042',
-          },
-          {
-            type: 'bluetooth',
-            name: 'Trax',
-            service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
-            characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
-          },
-          {
-            type: 'bluetooth',
-            name: 'LPOM',
-            notifications: [
-              {
-                service: '00000000-0001-11ea-8d71-362b9e155667',
-                characteristic: '00000001-0001-11ea-8d71-362b9e155667',
-                configCommand: '30,1,15,62',
-              },
-            ],
-          },
-          {
-            type: 'bluetooth',
-            name: 'PEEK',
-            notifications: [
-              {
-                service: '00000000-0001-11ea-8d71-362b9e155667',
-                characteristic: '00000001-0001-11ea-8d71-362b9e155667',
-                configCommand: '100,242',
-              },
-            ],
-          },
-          {
-            type: 'bluetooth',
-            name: 'canlogger',
-            service: '097eb207-a128-49bb-a5e0-d3fe45100000',
-            characteristic: '097eb207-a128-49bb-a5e0-d3fe45100001',
-          },
-          {
-            type: 'bluetooth',
-            name: 'ST Bluecoin',
-            notifications: [
-              {
-                service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
-                characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
-              },
-            ],
-          },
-        ];
-        // Note: commonSources iteration intentionally has no implementation yet
-        // TODO: Add logic to check if any common source exists and add if it doesn't
-        // commonSources.forEach((device) => { ... });
+  readonly commonSources = [
+    { type: 'devicemotion', name: 'Device Motion' },
+    { type: 'geolocation', name: 'Geolocation' },
+    { type: 'mouse', name: 'Mouse' },
+    { type: 'gamepad', name: 'Gamepad' },
+    { type: 'video', name: 'Video' },
+    {
+      type: 'bluetooth',
+      name: 'Nordic Thingy',
+      service: 'ef680400-9b35-4933-9b10-52ffa9740042',
+      characteristic: 'ef680406-9b35-4933-9b10-52ffa9740042',
+    },
+    {
+      type: 'bluetooth',
+      name: 'Trax',
+      service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
+      characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
+    },
+    {
+      type: 'bluetooth',
+      name: 'LPOM',
+      notifications: [
+        {
+          service: '00000000-0001-11ea-8d71-362b9e155667',
+          characteristic: '00000001-0001-11ea-8d71-362b9e155667',
+          configCommand: '30,1,15,62',
+        },
+      ],
+    },
+    {
+      type: 'bluetooth',
+      name: 'PEEK',
+      notifications: [
+        {
+          service: '00000000-0001-11ea-8d71-362b9e155667',
+          characteristic: '00000001-0001-11ea-8d71-362b9e155667',
+          configCommand: '100,242',
+        },
+      ],
+    },
+    {
+      type: 'bluetooth',
+      name: 'canlogger',
+      service: '097eb207-a128-49bb-a5e0-d3fe45100000',
+      characteristic: '097eb207-a128-49bb-a5e0-d3fe45100001',
+    },
+    {
+      type: 'bluetooth',
+      name: 'ST Bluecoin',
+      notifications: [
+        {
+          service: '00000000-0001-11e1-9ab4-0002a5d5c51b',
+          characteristic: '00140000-0001-11e1-ac36-0002a5d5c51b',
+        },
+      ],
+    },
+  ];
 
-        this.dataSource = new MatTableDataSource([...commonSources, ...records] as unknown[]);
-    });
-  }
+  constructor() {}
 
   eventStats = new Map<SensorEventId, SensorEventStats>();
   registrations = new Map<string, { schemaId: number; channelId: number }>();
@@ -170,8 +141,8 @@ export class RecordComponent implements OnInit {
   inputName: string;
   get projectId() { return this.firebaseDataService.projectId(); }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dataSource: MatTableDataSource<any>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dataSource: MatTableDataSource<any> = new MatTableDataSource([...this.commonSources]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   selection = new SelectionModel<any>(true, []);
   bigintTime(): bigint {
     const milliseconds = new Date().getTime();
@@ -181,46 +152,9 @@ export class RecordComponent implements OnInit {
 
   isHandset$: Observable<boolean> = this.breakpointObserver
     .observe(Breakpoints.Handset)
-    .pipe(map((result) => result.matches));
-
-  checkBrowserCapabilities() {
-    console.log('=== Browser Capabilities Check ===');
-    console.log('navigator.mediaDevices:', !!navigator.mediaDevices);
-    console.log('getUserMedia available:', !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
-    console.log('MediaRecorder available:', typeof MediaRecorder !== 'undefined');
-    console.log('Secure context:', window.isSecureContext);
-    console.log('Location:', window.location.href);
-    console.log('User agent:', navigator.userAgent);
-    
-    // Check for specific browser issues
-    if (!window.isSecureContext) {
-      console.warn('⚠️ Not in secure context - this may prevent media access');
-    }
-    
-    if (!navigator.mediaDevices) {
-      console.error('❌ navigator.mediaDevices not available');
-    } else if (!navigator.mediaDevices.getUserMedia) {
-      console.error('❌ getUserMedia not available on mediaDevices');
-    } else {
-      console.log('✅ Media APIs appear to be available');
-    }
-    
-    console.log('=== End Browser Capabilities Check ===');
-  }
+    .pipe(map((result) => result.matches), startWith(false));
 
   ngOnInit(): void {
-    // Check browser capabilities for debugging
-    this.checkBrowserCapabilities();
-    
-    
-    // Subscribe to user auth state and set project when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user && this.projectId) {
-      }
-    });
-
     this.selection.changed.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe((change) => {
@@ -279,10 +213,6 @@ export class RecordComponent implements OnInit {
     this.handleLpomSensorNotification = this.handleLpomSensorNotification.bind(this);
   }
 
-  addRecordSource(name) {
-    console.log('addRecordSource', name);
-    this.firebaseDataService.addRecord(this.projectId, { name: name, lastModified: Date.now() });
-  }
 
   async onSensorEvent(event: SensorEvent) {
     if (!this.eventStats.has(event.id)) {
@@ -926,7 +856,7 @@ export class RecordComponent implements OnInit {
       }
     } else {
       this.isRecording = false;
-      this.recordButtonText = 'Start Recording';
+      this.recordButtonText = 'Saving...';
       
       // Stop video recording
       if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
@@ -936,6 +866,7 @@ export class RecordComponent implements OnInit {
       console.log('stopping recordDeviceMotion');
       await this.saveEvents();
       this.mcapWriter = undefined;
+      this.recordButtonText = 'Start Recording';
     }
   }
 
@@ -984,16 +915,11 @@ export class RecordComponent implements OnInit {
 
   deleteSelected() {
     this.selection.selected.forEach((item) => {
-      console.log('deleting', item);
-      this.firebaseDataService.deleteRecord(this.projectId, item.key);
+      this.dataSource.data = this.dataSource.data.filter(row => row !== item);
     });
     this.selection.clear();
   }
 
-  updateRecordSource(recordSource) {
-    console.log('updating', recordSource);
-    this.firebaseDataService.updateRecord(this.projectId, recordSource.key, recordSource);
-  }
 
   async saveEvents() {
     if (this.mcapWriter) {

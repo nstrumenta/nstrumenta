@@ -5,8 +5,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
-import { deleteObject, getDownloadURL, ref } from 'firebase/storage';
 import { map, tap } from 'rxjs/operators';
+import { ApiService } from 'src/app/services/api.service';
 import { ServerService } from 'src/app/services/server.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
@@ -64,6 +64,7 @@ export class DataTableComponent implements OnInit {
   private serverService = inject(ServerService);
   private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
+  private apiService = inject(ApiService);
   folderNav = inject(FolderNavigationService);
   public dialog = inject(MatDialog);
 
@@ -340,9 +341,8 @@ export class DataTableComponent implements OnInit {
   }
 
   download(fileDocument) {
-    console.log('download', fileDocument.name);
-  const storage = this.firebaseDataService.getStorage();
-    getDownloadURL(ref(storage, fileDocument.filePath))
+    const projectId = this.firebaseDataService.projectId();
+    this.apiService.getDownloadUrl(fileDocument.filePath, projectId)
       .then((url) => {
         window.open(url);
       })
@@ -380,14 +380,10 @@ export class DataTableComponent implements OnInit {
   }
 
   deleteSelected() {
-  const storage = this.firebaseDataService.getStorage();
-
+    const projectId = this.firebaseDataService.projectId();
     this.selection.selected.forEach((item) => {
-      // Only delete files, not folders
       if (!isFolderItem(item)) {
-        console.log('deleting', item);
-        deleteObject(ref(storage, item.filePath));
-        this.firebaseDataService.deleteRecord(this.projectId, item.key);
+        this.apiService.deleteFile(item.filePath, item.key, projectId).catch(console.error);
       }
     });
     this.selection.clear();

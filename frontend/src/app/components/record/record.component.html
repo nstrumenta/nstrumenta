@@ -19,12 +19,6 @@
   </button>
 </form>
 
-<form (submit)="addRecordSource(inputName)">
-  <mat-form-field>
-    <input matInput placeholder="new input" [(ngModel)]="inputName" name="inputName">
-  </mat-form-field>
-</form>
-
 <mat-list>
   @for (stat of eventStats | keyvalue; track stat.key) {
     <mat-list-item>
@@ -68,80 +62,15 @@
 
   <ng-container matColumnDef="name">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
-    <mat-cell *matCellDef="let recordSource">
-      <mat-form-field>
-        <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.name" />
-      </mat-form-field>
-    </mat-cell>
+    <mat-cell *matCellDef="let recordSource"> {{recordSource.name}} </mat-cell>
   </ng-container>
-
 
   <ng-container matColumnDef="type">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Type </mat-header-cell>
-    <mat-cell *matCellDef="let recordSource">
-      <mat-form-field>
-        <input matInput (change)="updateRecordSource(recordSource)" type="text" [(ngModel)]="recordSource.type" />
-      </mat-form-field>
-    </mat-cell>
+    <mat-cell *matCellDef="let recordSource"> {{recordSource.type}} </mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="notifications">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Event Subscriptions </mat-header-cell>
-    <mat-cell style="flex-direction: column;" *matCellDef="let recordSource">
-      @for (notification of recordSource.notifications; track notification; let i = $index) {
-        <div>
-          <div style="display: flex;flex-direction: row;">
-            <div style="display: flex;flex-direction: column;">
-              <div>
-                <mat-form-field style="width: 300px;">
-                  <input placeholder="Service" matInput (change)="updateRecordSource(recordSource)" type="text"
-                    [(ngModel)]="notification.service" />
-                </mat-form-field>
-              </div>
-              <div>
-                <mat-form-field style="width: 300px;">
-                  <input placeholder="Characteristic" matInput (change)="updateRecordSource(recordSource)" type="text"
-                    [(ngModel)]="notification.characteristic" />
-                </mat-form-field>
-              </div>
-              <div>
-                <mat-form-field style="width: 300px;">
-                  <input placeholder="config command on start" matInput (change)="updateRecordSource(recordSource)" type="text"
-                    [(ngModel)]="notification.configCommand" />
-                </mat-form-field>
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-      @if (!recordSource.notifications) {
-        <button mat-button
-          (click)="recordSource.notifications = [{'service':'','characteristic':'','parser':''}]; updateRecordSource(recordSource)">
-          add subscription
-        </button>
-      }
-    </mat-cell>
-  </ng-container>
-
-
-  <ng-container matColumnDef="lastModified">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
-    <mat-cell *matCellDef="let recordSource"> {{ recordSource.lastModified | date : 'medium'}} </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="downloadURL">
-    <mat-header-cell *matHeaderCellDef> Download </mat-header-cell>
-    <mat-cell *matCellDef="let recordSource" style="align-content:center">
-      <a mat-menu-item [href]="recordSource.downloadURL">{{recordSource.downloadURL}}</a>
-    </mat-cell>
-  </ng-container>
-
-
-  <mat-header-row
-    *matHeaderRowDef="(isHandset$ | async) ? ['select', 'name'] : ['select','name','type','notifications']">
-  </mat-header-row>
-  <mat-row
-    *matRowDef="let row; columns: (isHandset$ | async) ? ['select', 'name'] : ['select','name','type','notifications'];"
-  class="animate"></mat-row>
+  <mat-header-row *matHeaderRowDef="['select', 'name', 'type']"></mat-header-row>
+  <mat-row *matRowDef="let row; columns: ['select', 'name', 'type'];" class="animate"></mat-row>
 </mat-table>
 

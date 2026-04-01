@@ -1,9 +1,6 @@
-import { Component, OnInit, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
-import { AuthService } from 'src/app/auth/auth.service';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { ServerService } from 'src/app/services/server.service';
@@ -45,28 +42,24 @@ interface ApiKeyEntry {
     ],
     imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class ProjectSettingsComponent implements OnInit {
+export class ProjectSettingsComponent {
   membersDisplayedColumns = ['memberId', 'role', 'action'];
   membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
   apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
-  get projectId() { return this.firebaseDataService.projectId(); }
-  projectPath: string;
-  projectSettings: ProjectSettings;
-
-  // Inject services using the new Angular 20 pattern
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
-  private destroyRef = inject(DestroyRef);
   public dialog = inject(MatDialog);
   private serverService = inject(ServerService);
   private projectService = inject(ProjectService);
 
+  get projectId() { return this.firebaseDataService.projectId(); }
+  projectPath: string;
+  projectSettings: ProjectSettings;
+
   constructor() {
-    // Set up effect to handle project settings changes
     effect(() => {
       const settings = this.firebaseDataService.projectSettings();
+      this.projectPath = `/projects/${this.projectId}`;
       if (settings) {
         this.projectSettings = settings;
         
@@ -89,18 +82,6 @@ export class ProjectSettingsComponent implements OnInit {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
           });
         this.apiKeysDataSource = new MatTableDataSource(apiKeysData);
-      }
-    });
-  }
-
-  ngOnInit() {
-    this.projectPath = `/projects/${this.projectId}`;
-    
-    // Subscribe to user auth state and set project when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user && this.projectId) {
       }
     });
   }

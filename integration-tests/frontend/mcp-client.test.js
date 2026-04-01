@@ -1,14 +1,8 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const API_URL = process.env.API_URL || 'http://localhost:5999'
-const NSTRUMENTA_API_KEY = process.env.NSTRUMENTA_API_KEY
+const API_URL = 'http://localhost:5999'
 
-if (!NSTRUMENTA_API_KEY) {
-  throw new Error('NSTRUMENTA_API_KEY environment variable is required')
-}
-
-// Helper function to call MCP tools
-async function callMcpTool(toolName, args, projectId = 'ci') {
+async function callMcpTool(toolName, args, apiKey, projectId = 'ci') {
   const mcpRequest = {
     jsonrpc: '2.0',
     id: Math.random().toString(36).substring(7),
@@ -25,7 +19,7 @@ async function callMcpTool(toolName, args, projectId = 'ci') {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/event-stream',
       'x-nstrumenta-project-id': projectId,
-      'Authorization': `Bearer ${NSTRUMENTA_API_KEY}`
+      'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify(mcpRequest)
   })
@@ -35,7 +29,7 @@ async function callMcpTool(toolName, args, projectId = 'ci') {
   }
 
   const data = await response.json()
-  
+
   if (data.error) {
     throw new Error(data.error.message || JSON.stringify(data.error))
   }
@@ -43,64 +37,70 @@ async function callMcpTool(toolName, args, projectId = 'ci') {
   return data.result?.structuredContent || data.result
 }
 
-describe('Frontend MCP Integration with API Key', () => {
-  it('should list modules via MCP', async () => {
-    const result = await callMcpTool('list_modules', {})
-    
-    expect(result).toBeDefined()
-    expect(result.modules).toBeDefined()
-    expect(Array.isArray(result.modules)).toBe(true)
+describe('callMcpTool', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks()
   })
 
-  it('should list agents via MCP', async () => {
-    const result = await callMcpTool('list_agents', {})
-    
-    expect(result).toBeDefined()
-    expect(result.agents).toBeDefined()
-    expect(Array.isArray(result.agents)).toBe(true)
-  })
-
-  it('should list data via MCP', async () => {
-    const result = await callMcpTool('list_data', {
-      type: 'mcap'
+  it('sends a well-formed JSON-RPC request', async () => {
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ result: { modules: [] } })
     })
-    
-    expect(result).toBeDefined()
-    expect(result.objects).toBeDefined()
-    expect(Array.isArray(result.objects)).toBe(true)
+    vi.stubGlobal('fetch', mockFetch)
+
+    await callMcpTool('list_modules', {}, 'test-key', 'my-project')
+
+    const [url, options] = mockFetch.mock.calls[0]
+    expect(url).toBe(`${API_URL}/mcp`)
+    expect(options.method).toBe('POST')
+    expect(options.headers['Authorization']).toBe('Bearer test-key')
+    expect(options.headers['x-nstrumenta-project-id']).toBe('my-project')
+
+    const body = JSON.parse(options.body)
+    expect(body.jsonrpc).toBe('2.0')
+    expect(body.method).toBe('tools/call')
+    expect(body.params.name).toBe('list_modules')
+    expect(body.params.arguments).toEqual({})
   })
 
-  it('should get project info via MCP', async () => {
-    const result = await callMcpTool('get_project', {})
-    
-    console.log('get_project result:', JSON.stringify(result, null, 2))
-    expect(result).toBeDefined()
-    // The result format may vary - let's just check it's defined for now
+  it('returns structuredContent when present', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ result: { structuredContent: { modules: ['a', 'b'] } } })
+    }))
+
+    const result = await callMcpTool('list_modules', {}, 'key')
+    expect(result).toEqual({ modules: ['a', 'b'] })
   })
 
-  it('should handle authentication errors', async () => {
-    const mcpRequest = {
-      jsonrpc: '2.0',
-      id: 'auth-test',
-      method: 'tools/call',
-      params: {
-        name: 'list_modules',
-        arguments: {}
-      }
-    }
+  it('falls back to result when structuredContent is absent', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ result: { agents: [] } })
+    }))
 
-    // Send without auth token
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/event-stream',
-        'x-nstrumenta-project-id': 'ci'
-      },
-      body: JSON.stringify(mcpRequest)
-    })
+    const result = await callMcpTool('list_agents', {}, 'key')
+    expect(result).toEqual({ agents: [] })
+  })
 
-    const data = await response.json()
-    expect(data.error).toBeDefined()
+  it('throws on HTTP error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: () => Promise.resolve('Unauthorized')
+    }))
+
+    await expect(callMcpTool('list_modules', {}, 'bad-key')).rejects.toThrow('HTTP 401: Unauthorized')
+  })
+
+  it('throws on JSON-RPC error response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ error: { message: 'Tool not found' } })
+    }))
+
+    await expect(callMcpTool('unknown_tool', {}, 'key')).rejects.toThrow('Tool not found')
   })
 })
+

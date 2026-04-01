@@ -1,13 +1,10 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ViewChild, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { ActivatedRoute } from '@angular/router';
-import { deleteObject, getDownloadURL, ref } from 'firebase/storage';
-import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { ApiService } from 'src/app/services/api.service';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
@@ -24,37 +21,23 @@ import { Module } from 'src/app/models/firebase.model';
     styleUrls: ['./modules.component.scss'],
     imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class ModulesComponent implements OnInit {
+export class ModulesComponent {
   displayedColumns = ['select', 'id', 'url', 'modified'];
   dataSource: MatTableDataSource<Module>;
   selection = new SelectionModel<Module>(true, []);
-    get projectId() { return this.firebaseDataService.projectId(); }
+  get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
-  private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
+  private apiService = inject(ApiService);
   public dialog = inject(MatDialog);
 
   constructor() {
-    // Set up effect to handle modules data changes
     effect(() => {
       const modules = this.firebaseDataService.modules();
       this.dataSource = new MatTableDataSource(modules);
       this.dataSource.sort = this.sort;
-    });
-  }
-
-  ngOnInit() {
-        
-    // Subscribe to user auth state and set project when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user && this.projectId) {
-      }
     });
   }
 
@@ -72,12 +55,9 @@ export class ModulesComponent implements OnInit {
   }
 
   deleteSelected() {
-  const storage = this.firebaseDataService.getStorage();
-
+    const projectId = this.firebaseDataService.projectId();
     this.selection.selected.forEach((item) => {
-      console.log('deleting', item);
-      deleteObject(ref(storage, item.filePath as string));
-      this.firebaseDataService.deleteModule(this.projectId, item.id as string);
+      this.apiService.deleteFile(item.filePath as string, item.id as string, projectId).catch(console.error);
     });
     this.selection.clear();
   }
@@ -89,15 +69,12 @@ export class ModulesComponent implements OnInit {
   }
 
   download(fileDocument) {
-    console.log('download', fileDocument.name);
-  const storage = this.firebaseDataService.getStorage();
-    getDownloadURL(ref(storage, fileDocument.filePath))
+    const projectId = this.firebaseDataService.projectId();
+    this.apiService.getDownloadUrl(fileDocument.filePath, projectId)
       .then((url) => {
         window.open(url);
       })
-      .catch((error) => {
-        console.error(error);
-      });
+      .catch(console.error);
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */

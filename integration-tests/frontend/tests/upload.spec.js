@@ -21,51 +21,42 @@ async function signIn(page) {
     await page.locator('button[type="submit"]:has-text("Sign In")').click();
   }
   
-  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
 }
 
 test.describe('File Upload', () => {
   test.beforeEach(async ({ page }) => {
-    page.on('console', msg => console.log(`Browser console: ${msg.text()}`));
+    page.on('console', msg => {
+      if (msg.type() === 'error') console.log(`Browser error: ${msg.text()}`);
+    });
     page.on('response', async response => {
-      if (response.status() >= 400) {
-        console.log(`Request failed: ${response.status()} ${response.url()}`);
+      if (response.status() >= 400 && response.url().includes('/mcp')) {
+        console.log(`MCP request failed: ${response.status()} ${response.url()}`);
       }
     });
 
     await signIn(page);
 
-    // Home page shows project list for logged-in users
+    // Always create a fresh project for this test to ensure membership
     await page.goto('/');
-    const projectTable = page.locator('mat-table');
+    const fabButton = page.locator('button#fab mat-icon:has-text("add")');
+    await expect(fabButton).toBeVisible();
+    await fabButton.click();
 
-    try {
-      await expect(projectTable).toBeVisible({ timeout: 5000 });
-      await page.locator('mat-row a').first().click();
-    } catch (e) {
-      console.log('Project table not found, attempting to create project...');
-      const fabButton = page.locator('button#fab mat-icon:has-text("add")');
-      if (!(await fabButton.isVisible())) {
-        throw new Error('Project table and Add button not found');
-      }
+    const projectName = `upload-test-${Date.now()}`;
+    await page.locator('app-new-project-dialog mat-form-field').first().locator('input').fill(projectName);
 
-      await fabButton.click();
-      const projectName = `test-proj-${Date.now()}`;
+    await expect(page.locator('app-new-project-dialog mat-select')).not.toHaveAttribute("aria-disabled", "true");
+    await page.locator('app-new-project-dialog mat-select').click();
+    await expect(page.locator('mat-option').first()).toBeVisible();
+    await page.locator('mat-option').first().click();
 
-      await page.locator('app-new-project-dialog mat-form-field').first().locator('input').fill(projectName);
+    await page.locator('button:has-text("Create")').click();
+    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 15000 });
 
-      // Wait for org dropdown to be enabled then select first org
-      await expect(page.locator('app-new-project-dialog mat-select')).not.toHaveAttribute('aria-disabled', 'true', { timeout: 5000 });
-      await page.locator('app-new-project-dialog mat-select').click();
-      await expect(page.locator('mat-option').first()).toBeVisible({ timeout: 5000 });
-      await page.locator('mat-option').first().click();
-
-      await page.locator('button:has-text("Create")').click();
-      await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 10000 });
-    }
-
-    await expect(page).toHaveURL(/\/data/);
-    await expect(page.locator('button#fab')).toBeVisible({ timeout: 10000 });
+    // Navigate to data tab
+    await expect(page).toHaveURL(/\/data/, { timeout: 5000 });
+    await expect(page.locator('button#fab')).toBeVisible();
   });
 
   test('should upload a file via toolbar', async ({ page }) => {

@@ -83,7 +83,8 @@
           "builder": "@angular/build:dev-server",
           "options": {
             "buildTarget": "nstrumenta:build",
-            "proxyConfig": "proxy.conf.js"
+            "proxyConfig": "proxy.conf.js",
+            "allowedHosts": ["frontend-dev"]
           },
           "configurations": {
             "production": {

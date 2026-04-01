@@ -1,9 +1,9 @@
-import { Component, ViewChild, OnInit, inject, DestroyRef, effect } from '@angular/core';
+import { Component, ViewChild, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { SelectionModel } from '@angular/cdk/collections';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { MatFormField } from '@angular/material/form-field';
@@ -21,34 +21,23 @@ import { Repository } from 'src/app/models/firebase.model';
     styleUrls: ['./repositories.component.scss'],
     imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
-export class RepositoriesComponent implements OnInit {
+export class RepositoriesComponent {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];
   dataSource: MatTableDataSource<Repository>;
   selection = new SelectionModel<Repository>(true, []);
-    get projectId() { return this.firebaseDataService.projectId(); }
+  get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  // Inject services using the new Angular 20 pattern
-  private route = inject(ActivatedRoute);
-  private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
 
   constructor() {
-    // Set up effect to handle repositories data changes
     effect(() => {
       const repositories = this.firebaseDataService.repositories();
       this.dataSource = new MatTableDataSource(repositories);
       this.dataSource.sort = this.sort;
     });
-  }
-
-  ngOnInit(): void {
-        
-    // Set project in Firebase service to trigger data loading
-    if (this.projectId) {
-    }
   }
 
   applyFilter(filterValue: string) {

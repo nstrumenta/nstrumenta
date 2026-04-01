@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { ResolveFn, Routes } from '@angular/router';
 import { AccountComponent } from './components/account/account.component';
 import { ActionsComponent } from './components/actions/actions.component';
 import { AgentDetailComponent } from './components/agent-detail/agent-detail.component';
@@ -14,9 +15,24 @@ import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
-import { WaitlistGuard } from './guards/waitlist.guard';
+import { waitlistGuard } from './guards/waitlist.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
 import { reservedPathGuard } from './guards/reserved-path.guard';
+import { FirebaseDataService } from './services/firebase-data.service';
+import { Router } from '@angular/router';
+
+const projectResolver: ResolveFn<string | null> = (route) => {
+  const firebaseDataService = inject(FirebaseDataService);
+  const router = inject(Router);
+  const owner = route.paramMap.get('owner');
+  const project = route.paramMap.get('project');
+  return firebaseDataService.resolveAndSetProject(owner, project).then(projectId => {
+    if (!projectId) {
+      router.navigate(['/']);
+    }
+    return projectId;
+  });
+};
 
 const userRoutes: Routes = [
   {
@@ -26,7 +42,7 @@ const userRoutes: Routes = [
   {
     path: 'account',
     component: NavComponent,
-    canActivate: [WaitlistGuard],
+    canActivate: [waitlistGuard],
     children: [
       {
         path: '',
@@ -53,11 +69,12 @@ const userRoutes: Routes = [
   {
     path: ':owner',
     canMatch: [reservedPathGuard],
-    canActivate: [WaitlistGuard],
+    canActivate: [waitlistGuard],
     children: [
       {
         path: ':project',
         component: NavComponent,
+        resolve: { projectId: projectResolver },
         children: [
           { path: '', redirectTo: 'data', pathMatch: 'full' },
           { path: 'overview', redirectTo: 'data' },
