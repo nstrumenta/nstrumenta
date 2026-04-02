@@ -1155,37 +1155,6 @@ server.registerTool(
 );
 
 server.registerTool(
-    'get_download_url',
-    {
-        title: 'Get Download URL',
-        description: 'Gets a signed URL for downloading a file from cloud storage.',
-        inputSchema: {
-            path: z.string().describe('File path in storage'),
-        },
-        outputSchema: {
-            downloadUrl: z.string().describe('Signed URL for download'),
-        },
-    },
-    async ({ path }) => {
-        try {
-            const projectId = getProjectId();
-            const { generateV4ReadSignedUrl } = require('./shared/utils');
-            
-            const fullPath = path.startsWith('projects/') ? path : `projects/${projectId}/${path}`;
-            const downloadUrl = await generateV4ReadSignedUrl(fullPath);
-
-            return {
-                content: [{ type: 'text', text: downloadUrl }],
-                structuredContent: { downloadUrl },
-            };
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unknown error occurred';
-            throw new Error(`Failed to get download URL: ${message}`);
-        }
-    },
-);
-
-server.registerTool(
     'register_agent',
     {
         title: 'Register Agent',
