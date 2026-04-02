@@ -12,6 +12,8 @@ export interface CreateProjectRequest {
 
 export interface CreateProjectResponse {
   id: string;
+  slug: string;
+  orgSlug: string;
   name: string;
   message: string;
 }
@@ -129,9 +131,10 @@ export class ApiService {
 
     // Extract result from MCP response
     const result = response.result?.structuredContent || response.result;
-    console.log('MCP createProject result:', result);
     return {
       id: result.id,
+      slug: result.slug,
+      orgSlug: result.orgSlug,
       name: result.name,
       message: result.message
     };
@@ -244,6 +247,55 @@ export class ApiService {
         }),
         shareReplay({ bufferSize: 1, refCount: true })
       );
+  }
+
+  async getDownloadUrl(filePath: string, projectId?: string): Promise<string> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'get_download_url',
+        arguments: { path: filePath },
+      },
+    };
+
+    const mcpResponse = await this.http
+      .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
+      .toPromise();
+
+    if (mcpResponse.error) {
+      throw new Error(mcpResponse.error.message || 'Failed to get download URL');
+    }
+
+    const result = mcpResponse.result?.structuredContent || mcpResponse.result;
+    return result.downloadUrl;
+  }
+
+  async deleteFile(filePath: string, firestoreDocId: string | undefined, projectId?: string): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'delete_file',
+        arguments: { filePath, ...(firestoreDocId ? { firestoreDocId } : {}) },
+      },
+    };
+
+    const mcpResponse = await this.http
+      .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
+      .toPromise();
+
+    if (mcpResponse.error) {
+      throw new Error(mcpResponse.error.message || 'Failed to delete file');
+    }
   }
 
 }

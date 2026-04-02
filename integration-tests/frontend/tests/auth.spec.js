@@ -27,7 +27,7 @@ test.describe('Authentication Flow', () => {
     // Click the "Sign in" button in the navbar
     const signInButton = page.locator('button:has-text("Sign in")');
     try {
-      await expect(signInButton).toBeVisible({ timeout: 10000 });
+      await expect(signInButton).toBeVisible();
     } catch (e) {
       console.log('PAGE CONTENT at failure:', await page.content());
       throw e;
@@ -35,7 +35,7 @@ test.describe('Authentication Flow', () => {
     await signInButton.click();
     
     // Wait for login dialog to appear
-    await expect(page.locator('h2:has-text("Sign In")')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h2:has-text("Sign In")')).toBeVisible();
     
     // Fill in email and password in the dialog
     await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);

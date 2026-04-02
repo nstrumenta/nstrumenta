@@ -1,7 +1,16 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    match /slugs/{slug} {
+      allow read: if true;
+      allow write: if false; // Only server can write
+    }
+
+    match /project-slugs/{projectSlug} {
+      allow read: if true;
+      allow write: if false; // Only server can write
+    }
 
     // Users can read/write their own user document and subcollections
     match /users/{user}/{document=**} {

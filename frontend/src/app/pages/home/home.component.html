@@ -1,5 +1,8 @@
 <app-toolbar></app-toolbar>
 <div class="home-page-container">
+  @if (authService.user | async) {
+    <app-project-list></app-project-list>
+  } @else {
   <div class="center-container">
     <div class="logo-container">
       <img class="logo-img" src="assets/images/nstrumenta-logo.svg" alt="Nstrumenta logo" />
@@ -29,4 +32,5 @@
       </div>
     </div>
   </div>
+  }
 </div>

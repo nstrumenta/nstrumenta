@@ -18,6 +18,7 @@ import { createCloudDataJobService } from './services/cloudDataJob'
 import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage } from './mcp'
 import { registerOAuthRoutes } from './oauth'
 import { registerOrgRoutes } from './orgRoutes'
+import { registerUserRoutes } from './userRoutes'
 
 const version = require('../package.json').version
 
@@ -65,6 +66,7 @@ const mcpLimiter = rateLimit({
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
 registerOrgRoutes(app)
+registerUserRoutes(app)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version })

@@ -1,7 +1,17 @@
 <section class="mat-typography">
   <h2>Add New Project</h2>
   <mat-form-field class="project-name-input">
-    <input matInput [(ngModel)]="projectName" placeholder="Project Name" [disabled]="isCreating">
+    <mat-label>Project Name</mat-label>
+    <input matInput [(ngModel)]="projectName" [disabled]="isCreating">
+  </mat-form-field>
+
+  <mat-form-field class="project-name-input">
+    <mat-label>Organization</mat-label>
+    <mat-select [(ngModel)]="selectedOrgId" [disabled]="isCreating || organizations.length === 0">
+      @for (org of organizations; track org.id) {
+        <mat-option [value]="org.id">{{ org.name }}</mat-option>
+      }
+    </mat-select>
   </mat-form-field>
 
   @if (errorMessage) {
@@ -12,8 +22,8 @@
 
   <button
     mat-raised-button
-    (click)="create(projectName)"
-    [disabled]="!projectName || isCreating"
+    (click)="create()"
+    [disabled]="!projectName || !selectedOrgId || isCreating"
     color="primary">
     @if (!isCreating) {
       <span>Create</span>

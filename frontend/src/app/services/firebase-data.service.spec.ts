@@ -1,7 +1,32 @@
+import { describe, it, expect, beforeAll, beforeEach, afterAll, vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { initializeApp, deleteApp, getApps, FirebaseApp } from 'firebase/app';
 import { FirebaseDataService } from './firebase-data.service';
+import { AuthService } from '../auth/auth.service';
+import { MockAuthService } from '../testing/mocks';
+
+let firebaseApp: FirebaseApp;
+
+beforeAll(() => {
+  if (!getApps().length) {
+    firebaseApp = initializeApp({
+      projectId: 'demo-test',
+      apiKey: 'fake-api-key',
+      authDomain: 'demo-test.firebaseapp.com',
+      storageBucket: 'demo-test.appspot.com',
+      messagingSenderId: '123456789',
+      appId: '1:123456789:web:abcdef123456',
+    });
+  }
+});
+
+afterAll(async () => {
+  if (firebaseApp) {
+    await deleteApp(firebaseApp);
+  }
+});
 
 describe('FirebaseDataService', () => {
   let service: FirebaseDataService;
@@ -9,8 +34,9 @@ describe('FirebaseDataService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        FirebaseDataService
-      ]
+        FirebaseDataService,
+        { provide: AuthService, useClass: MockAuthService },
+      ],
     });
 
     service = TestBed.inject(FirebaseDataService);
@@ -25,44 +51,47 @@ describe('FirebaseDataService', () => {
      * This test validates that all collectionData() calls receive Query types,
      * not raw CollectionReference objects. This catches the Firebase modular SDK
      * error: "Expected type '_Query', but it was: a custom _CollectionReference object"
-     * 
+     *
      * The test uses TypeScript type guards and runtime checks to ensure proper usage.
      */
     it('should wrap all collectionData calls with query() to prevent Query type errors', () => {
       // Create spy functions that validate the input type
-      const collectionSpy = jasmine.createSpy('collection').and.returnValue({
+      const collectionSpy = vi.fn().mockReturnValue({
         type: 'collection',
-        path: 'test-path'
+        path: 'test-path',
       } as any);
 
-      const querySpy = jasmine.createSpy('query').and.callFake((collectionRef: any, ..._queryConstraints: any[]) => {
-        // Validate that query is called with a collection reference
-        expect(collectionRef).toBeDefined();
-        expect(collectionRef.type).toBe('collection');
-        return {
-          type: 'query',
-          _query: collectionRef,
-        } as any;
-      });
+      const querySpy = vi
+        .fn()
+        .mockImplementation((collectionRef: any, ..._queryConstraints: any[]) => {
+          // Validate that query is called with a collection reference
+          expect(collectionRef).toBeDefined();
+          expect(collectionRef.type).toBe('collection');
+          return {
+            type: 'query',
+            _query: collectionRef,
+          } as any;
+        });
 
-      const collectionDataSpy = jasmine.createSpy('collectionData').and.callFake((queryRef: any) => {
+      const collectionDataSpy = vi.fn().mockImplementation((queryRef: any) => {
         // CRITICAL CHECK: collectionData must receive a Query type, not a CollectionReference
         if (queryRef.type === 'collection') {
-          fail('collectionData received a CollectionReference instead of a Query. ' +
-               'All collectionData() calls must wrap collections with query(). ' +
-               'Example: collectionData(query(collection(...))) not collectionData(collection(...))');
+          throw new Error(
+            'collectionData received a CollectionReference instead of a Query. ' +
+              'All collectionData() calls must wrap collections with query(). ' +
+              'Example: collectionData(query(collection(...))) not collectionData(collection(...))'
+          );
         }
-        
-        expect(queryRef.type).toBe('query', 
-          'collectionData must receive a Query object, not a CollectionReference');
-        
+
+        expect(queryRef.type, 'collectionData must receive a Query object, not a CollectionReference').toBe('query');
+
         return of([]);
       });
 
       // This test serves as documentation and validation that the pattern:
       // ✅ CORRECT:   collectionData(query(collection(firestore, 'path')))
       // ❌ INCORRECT: collectionData(collection(firestore, 'path'))
-      // 
+      //
       // The incorrect pattern causes runtime errors with Firebase modular SDK:
       // "Expected type '_Query', but it was: a custom _CollectionReference object"
 
@@ -74,10 +103,10 @@ describe('FirebaseDataService', () => {
 
       expect(collectionSpy).toHaveBeenCalled();
       expect(querySpy).toHaveBeenCalledWith(collectionRef);
-      expect(collectionDataSpy).toHaveBeenCalledWith(jasmine.objectContaining({ type: 'query' }));
-      
+      expect(collectionDataSpy).toHaveBeenCalledWith(expect.objectContaining({ type: 'query' }));
+
       // Verify the observable returns data
-      observable.subscribe(data => {
+      observable.subscribe((data) => {
         expect(data).toEqual([]);
       });
     });
@@ -86,21 +115,23 @@ describe('FirebaseDataService', () => {
       // This test demonstrates the WRONG pattern and should fail
       const mockCollection = {
         type: 'collection',
-        path: 'test-path'
+        path: 'test-path',
       } as any;
 
       // Simulate calling collectionData with a raw collection reference
       const validateCollectionDataInput = (input: any) => {
         if (input.type === 'collection') {
           throw new Error(
-            'Firebase Modular SDK Error: Expected type \'_Query\', but it was: a custom _CollectionReference object. ' +
-            'Fix: Wrap collection() with query() => collectionData(query(collection(...)))'
+            "Firebase Modular SDK Error: Expected type '_Query', but it was: a custom _CollectionReference object. " +
+              'Fix: Wrap collection() with query() => collectionData(query(collection(...)))'
           );
         }
       };
 
       // This should throw an error
-      expect(() => validateCollectionDataInput(mockCollection)).toThrowError(/Expected type '_Query'/);
+      expect(() => validateCollectionDataInput(mockCollection)).toThrowError(
+        /Expected type '_Query'/
+      );
     });
 
     it('should document the correct pattern for all collection observables', () => {
@@ -129,12 +160,12 @@ describe('FirebaseDataService', () => {
       ];
 
       // Document that all patterns must use query() wrapper
-      correctPatterns.forEach(pattern => {
+      correctPatterns.forEach((pattern) => {
         expect(pattern).toContain('query(collection(');
         expect(pattern).toMatch(/collectionData\(query\(collection\(/);
       });
 
-      incorrectPatterns.forEach(pattern => {
+      incorrectPatterns.forEach((pattern) => {
         expect(pattern).not.toContain('query(collection(');
         expect(pattern).toMatch(/collectionData\(collection\(/);
       });
@@ -164,6 +195,33 @@ describe('FirebaseDataService', () => {
 
     it('should provide access to userProjects signal', () => {
       expect(service.userProjects).toBeDefined();
+    });
+  });
+
+  describe('WritableSignal state', () => {
+    it('projectId signal starts empty', () => {
+      expect(service.projectId()).toBe('');
+    });
+
+    it('setProject updates the projectId signal', () => {
+      service.setProject('proj-123');
+      expect(service.projectId()).toBe('proj-123');
+    });
+
+    it('setProject with empty string clears projectId signal', () => {
+      service.setProject('proj-123');
+      service.setProject('');
+      expect(service.projectId()).toBe('');
+    });
+
+    it('setAgent updates agentId signal', () => {
+      service.setAgent('agent-abc');
+      expect(service.agentId()).toBe('agent-abc');
+    });
+
+    it('setUser updates userId signal', () => {
+      service.setUser('user-xyz');
+      expect(service.userId()).toBe('user-xyz');
     });
   });
 });

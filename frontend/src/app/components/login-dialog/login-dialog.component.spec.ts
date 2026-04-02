@@ -1,3 +1,4 @@
+import { describe, it, test, expect, beforeEach, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LoginDialogComponent } from './login-dialog.component';
 import { AuthService } from '../../auth/auth.service';
@@ -18,8 +19,8 @@ describe('LoginDialogComponent', () => {
       providers: [
         { provide: AuthService, useClass: MockAuthService },
         { provide: MatDialogRef, useClass: MockMatDialogRef },
-        { provide: MAT_DIALOG_DATA, useValue: {} }
-      ]
+        { provide: MAT_DIALOG_DATA, useValue: {} },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LoginDialogComponent);
@@ -46,8 +47,8 @@ describe('LoginDialogComponent', () => {
   });
 
   it('should call loginWithGithub when github button is clicked', async () => {
-    spyOn(authService, 'loginWithGithub').and.callThrough();
-    spyOn(dialogRef, 'close');
+    vi.spyOn(authService, 'loginWithGithub');
+    vi.spyOn(dialogRef, 'close');
 
     await component.githubLogin();
 
@@ -56,8 +57,8 @@ describe('LoginDialogComponent', () => {
   });
 
   it('should call loginWithEmail when form is submitted in login mode', async () => {
-    spyOn(authService, 'loginWithEmail').and.callThrough();
-    spyOn(dialogRef, 'close');
+    vi.spyOn(authService, 'loginWithEmail');
+    vi.spyOn(dialogRef, 'close');
 
     component.email = 'test@example.com';
     component.password = 'password';
@@ -68,8 +69,8 @@ describe('LoginDialogComponent', () => {
   });
 
   it('should call registerWithEmail when form is submitted in register mode', async () => {
-    spyOn(authService, 'registerWithEmail').and.callThrough();
-    spyOn(dialogRef, 'close');
+    vi.spyOn(authService, 'registerWithEmail');
+    vi.spyOn(dialogRef, 'close');
 
     component.toggleMode(); // Switch to register
     component.email = 'new@example.com';
@@ -81,8 +82,10 @@ describe('LoginDialogComponent', () => {
   });
 
   it('should display error message if login fails', async () => {
-    spyOn(authService, 'loginWithEmail').and.returnValue(Promise.reject(new Error('Login failed')));
-    
+    vi.spyOn(authService, 'loginWithEmail').mockReturnValue(
+      Promise.reject(new Error('Login failed'))
+    );
+
     component.email = 'fail@example.com';
     component.password = 'password';
     await component.emailLogin();

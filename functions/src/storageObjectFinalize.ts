@@ -1,5 +1,5 @@
 import { Firestore } from '@google-cloud/firestore';
-import { CloudFunctionsContext } from '@google-cloud/functions-framework';
+import { CloudEvent, cloudEvent } from '@google-cloud/functions-framework';
 import path from 'path';
 import crypto from 'crypto';
 
@@ -18,11 +18,21 @@ function generateHash(input: string): { dirname: string; documentPath: string } 
   return { dirname, documentPath };
 }
 
-export const storageObjectFinalize = async (
-  file: { name: string },
-  context: CloudFunctionsContext
-) => {
-  if (context.eventType === 'google.storage.object.finalize') {
+interface StorageObjectData {
+  name: string;
+  size?: string;
+  bucket?: string;
+  [key: string]: unknown;
+}
+
+export const storageObjectFinalize = cloudEvent<StorageObjectData>(
+  'storageObjectFinalize',
+  async (event: CloudEvent<StorageObjectData>) => {
+    const file = event.data;
+    if (!file?.name) {
+      console.log('No file name in event data, skipping.');
+      return;
+    }
     if (file.name.endsWith('/')) {
       console.log('The trigger file is a directory. Skipping processing.');
       return;
@@ -33,8 +43,8 @@ export const storageObjectFinalize = async (
       dirname,
       lastModified: Date.now(),
       filePath: file.name,
-      size: (file as any).size,
+      size: file.size ? parseInt(file.size, 10) : undefined,
       file,
     });
   }
-};
+);

@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { NavbarProjectSelectComponent } from './navbar-project-select.component';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -9,7 +10,7 @@ describe('NavbarProjectSelectComponent', () => {
   let component: NavbarProjectSelectComponent;
   let fixture: ComponentFixture<NavbarProjectSelectComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
     imports: [NavbarProjectSelectComponent, RouterTestingModule],
     providers: [
@@ -17,7 +18,7 @@ describe('NavbarProjectSelectComponent', () => {
       { provide: FirebaseDataService, useClass: MockFirebaseDataService }
     ]
 }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavbarProjectSelectComponent);

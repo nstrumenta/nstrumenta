@@ -1,0 +1,33 @@
+# Watch mode override for fast frontend iteration.
+# Runs Angular dev server with hot reload instead of serving a built dist.
+# Playwright tests run against the Angular dev server, which proxies API calls to the nstrumenta server.
+#
+# Start once:
+#   docker compose -f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml up -d server frontend-dev
+#
+# Then iterate (edit frontend code, run tests — no rebuild needed):
+#   ./pw.sh tests/record.spec.js
+services:
+  frontend-dev:
+    image: node:22-slim
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - PROXY_TARGET=http://server:5999
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.js"
+    depends_on:
+      server:
+        condition: service_healthy
+
+  playwright:
+    environment:
+      - FRONTEND_URL=http://frontend-dev:4200
+    volumes:
+      - ./frontend:/app
+    depends_on:
+      - frontend-dev
+
+volumes:
+  playwright-node-modules:

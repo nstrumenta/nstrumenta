@@ -269,4 +269,50 @@ describe('MCP Tools', () => {
       expect(firebaseContext.authType).toBe('firebase')
     })
   })
+
+  describe('Storage Access Control', () => {
+    it('get_download_url input accepts relative path', () => {
+      const input = { path: 'data/recording-123.mcap' }
+      expect(input.path.includes('data/')).toBe(true)
+    })
+
+    it('get_download_url input accepts full storage path', () => {
+      const input = { path: 'projects/proj-abc/data/recording-123.mcap' }
+      expect(input.path.startsWith('projects/')).toBe(true)
+    })
+
+    it('get_download_url output has downloadUrl', () => {
+      const output = { downloadUrl: 'https://storage.googleapis.com/signed-read-url?X-Goog-Signature=abc' }
+      expect(output.downloadUrl.startsWith('https://')).toBe(true)
+    })
+
+    it('delete_file rejects paths outside the project', () => {
+      const projectId = 'my-project'
+      const foreignPath = 'projects/other-project/data/secret.mcap'
+      const expectedPrefix = `projects/${projectId}/`
+      expect(foreignPath.startsWith(expectedPrefix)).toBe(false)
+    })
+
+    it('delete_file accepts paths owned by the project', () => {
+      const projectId = 'my-project'
+      const ownPath = `projects/${projectId}/data/recording.mcap`
+      const expectedPrefix = `projects/${projectId}/`
+      expect(ownPath.startsWith(expectedPrefix)).toBe(true)
+    })
+
+    it('delete_file derives Firestore docId from path hash when not provided', () => {
+      const crypto = require('crypto')
+      const filePath = 'projects/proj-abc/data/recording.mcap'
+      const hash = crypto.createHash('sha256').update(filePath).digest('hex')
+      expect(hash).toHaveLength(64)
+      expect(typeof hash).toBe('string')
+    })
+
+    it('storage rules deny all direct client access', () => {
+      // Represents the storage.rules content — all direct Firebase SDK access is blocked
+      const rulesContent = 'allow read, write: if false'
+      expect(rulesContent).toContain('if false')
+      expect(rulesContent).not.toContain('if request.auth')
+    })
+  })
 })

@@ -1,8 +1,16 @@
 #!/bin/bash -e
-# E2E test runner — runs CLI tests and Playwright tests in Docker Compose
+# Full E2E test run — CI-equivalent: builds server image, runs all tests, tears down.
+# For fast frontend iteration, use pw.sh instead.
 # Prerequisites: source credentials/activate.sh
+#
+# Usage:
+#   ./e2e.sh                    # run all tests
+#   ./e2e.sh tests/foo.spec.js  # run specific test file
 
 cd "$(dirname "$0")"
+
+START_SECONDS=$SECONDS
+TEST_FILE="${1:-}"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
     echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
@@ -25,17 +33,32 @@ export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
 
 export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
 
-docker compose -f docker-compose.e2e.yml up --build -d server
-docker compose -f docker-compose.e2e.yml run --rm cli-tests
-set +e
-docker compose -f docker-compose.e2e.yml run --rm playwright
-PLAYWRIGHT_EXIT_CODE=$?
-set -e
+COMPOSE_FILES="-f docker-compose.e2e.yml"
+docker compose $COMPOSE_FILES up --build -d server
 
-docker compose -f docker-compose.e2e.yml down
+PLAYWRIGHT_EXIT_CODE=0
+if [ -n "$TEST_FILE" ]; then
+    set +e
+    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_FILE"
+    PLAYWRIGHT_EXIT_CODE=$?
+    set -e
+else
+    set +e
+    docker compose $COMPOSE_FILES run --rm playwright
+    PLAYWRIGHT_EXIT_CODE=$?
+    set -e
+fi
+
+docker compose $COMPOSE_FILES down
+
+ELAPSED=$(( SECONDS - START_SECONDS ))
+REPORT_PATH="$(pwd)/frontend/playwright-report/index.html"
 
 if [ $PLAYWRIGHT_EXIT_CODE -ne 0 ]; then
-    echo "❌ Playwright E2E tests failed!"
-    echo "View report: file://$(pwd)/frontend/playwright-report/index.html"
+    echo "E2E tests failed in ${ELAPSED}s"
+    echo "Report: file://${REPORT_PATH}"
     exit $PLAYWRIGHT_EXIT_CODE
+else
+    echo "E2E tests passed in ${ELAPSED}s"
+    echo "Report: file://${REPORT_PATH}"
 fi

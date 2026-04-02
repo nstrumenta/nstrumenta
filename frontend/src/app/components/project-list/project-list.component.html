@@ -8,10 +8,10 @@
     <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc"
       class="animate">
       <ng-container matColumnDef="id">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> id </mat-header-cell>
+        <mat-header-cell *matHeaderCellDef mat-sort-header> project </mat-header-cell>
         <mat-cell *matCellDef="let fileDocument">
-          <a mat-button [routerLink]="[fileDocument.id,'overview']" queryParamsHandling="preserve">
-            {{ fileDocument.id }}
+          <a mat-button [routerLink]="['/', fileDocument.orgSlug || 'unknown', fileDocument.slug || fileDocument.id, 'overview']" queryParamsHandling="preserve">
+            {{ fileDocument.name || fileDocument.id }}
           </a>
         </mat-cell>
       </ng-container>

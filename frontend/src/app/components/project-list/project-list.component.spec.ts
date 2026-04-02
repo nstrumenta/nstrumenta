@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ProjectListComponent } from './project-list.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
@@ -14,23 +15,23 @@ const authServiceStub = {
 
 const firebaseDataServiceStub = {
   userProjects: signal([]),
-  setUser: jasmine.createSpy('setUser')
+  setUser: vi.fn(),
 };
 
 describe('ProjectListComponent', () => {
   let component: ProjectListComponent;
   let fixture: ComponentFixture<ProjectListComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
-    imports: [MatDialogModule, ProjectListComponent],
-    schemas: [CUSTOM_ELEMENTS_SCHEMA],
-    providers: [
+      imports: [MatDialogModule, ProjectListComponent],
+      schemas: [CUSTOM_ELEMENTS_SCHEMA],
+      providers: [
         { provide: AuthService, useValue: authServiceStub },
         { provide: FirebaseDataService, useValue: firebaseDataServiceStub },
-    ],
-}).compileComponents();
-  }));
+      ],
+    }).compileComponents();
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ProjectListComponent);

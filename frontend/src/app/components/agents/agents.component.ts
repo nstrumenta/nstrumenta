@@ -1,11 +1,9 @@
 import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, ViewChild, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { ActivatedRoute, RouterLink } from '@angular/router';
-import { AuthService } from 'src/app/auth/auth.service';
+import { RouterLink } from '@angular/router';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
@@ -20,41 +18,22 @@ import { Agent } from 'src/app/models/firebase.model';
     styleUrls: ['./agents.component.scss'],
     imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
-export class AgentsComponent implements OnInit {
+export class AgentsComponent {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];
   dataSource: MatTableDataSource<Agent>;
   selection = new SelectionModel<Agent>(true, []);
-  dataPath: string;
-  projectId: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
 
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  private route = inject(ActivatedRoute);
-  private authService = inject(AuthService);
-  private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
 
   constructor() {
-    // Set up effect to handle agents data changes
     effect(() => {
       const agents = this.firebaseDataService.agents();
       this.dataSource = new MatTableDataSource(agents);
       this.dataSource.sort = this.sort;
-    });
-  }
-
-  ngOnInit() {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataPath = `/projects/${this.projectId}/agents`;
-    
-    // Subscribe to user auth state and set project when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user && this.projectId) {
-        this.firebaseDataService.setProject(this.projectId);
-      }
     });
   }
 

@@ -19,7 +19,6 @@ import { ToolbarComponent } from '../toolbar/toolbar.component';
 })
 export class NavComponent {
   isExpanded = false;
-  element: HTMLElement;
 
   public router = inject(Router);
   private breakpointObserver = inject(BreakpointObserver);

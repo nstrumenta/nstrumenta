@@ -2,13 +2,13 @@
   <div>
     <mat-menu #projectSelectMenu="matMenu">
       @for (project of userProjects(); track project.id || project.key || $index) {
-        <a mat-menu-item [routerLink]="'/projects/' + project.id + '/overview'" queryParamsHandling="preserve">
-          {{ project.name }} <small>{{ project.id }}</small>
+        <a mat-menu-item [routerLink]="'/' + project.orgSlug + '/' + project.slug + '/overview'" queryParamsHandling="preserve">
+          {{ project.name }}
         </a>
       }
     </mat-menu>
     <button mat-button [matMenuTriggerFor]="projectSelectMenu">
-      {{currentProjectId()}}
+      {{ projectSettings()?.name || currentProjectId() || 'Select Project' }}
     </button>
   </div>
 }

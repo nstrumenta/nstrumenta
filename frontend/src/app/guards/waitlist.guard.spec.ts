@@ -1,60 +1,82 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import type { MockedObject } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { UrlTree, Router, RouterStateSnapshot, ActivatedRouteSnapshot } from '@angular/router';
-import { BehaviorSubject, of, Observable } from 'rxjs';
-import { WaitlistGuard } from './waitlist.guard';
+import { Router, UrlTree } from '@angular/router';
+import { BehaviorSubject, Observable } from 'rxjs';
+import { waitlistGuard } from './waitlist.guard';
+import { AuthService } from '../auth/auth.service';
+import { runInInjectionContext } from '@angular/core';
 
-describe('WaitlistGuard', () => {
-  let guard: WaitlistGuard;
-  let routerSpy: jasmine.SpyObj<Router>;
+function runGuard(): Observable<boolean | UrlTree> {
+  return TestBed.runInInjectionContext(() => waitlistGuard(null, null)) as Observable<
+    boolean | UrlTree
+  >;
+}
+
+describe('waitlistGuard', () => {
+  let routerSpy: MockedObject<Router>;
   let userStatusSubject: BehaviorSubject<string | null>;
 
   beforeEach(() => {
-    userStatusSubject = new BehaviorSubject<string | null>('approved');
-
-    routerSpy = jasmine.createSpyObj('Router', ['parseUrl', 'navigate']);
+    userStatusSubject = new BehaviorSubject<string | null>(null);
+    routerSpy = {
+      parseUrl: vi.fn().mockName('Router.parseUrl'),
+      navigate: vi.fn().mockName('Router.navigate'),
+    } as unknown as MockedObject<Router>;
 
     TestBed.configureTestingModule({
       providers: [
-        WaitlistGuard,
-        { provide: Router, useValue: routerSpy }
-      ]
+        { provide: Router, useValue: routerSpy },
+        { provide: AuthService, useValue: { userStatus$: userStatusSubject.asObservable() } },
+      ],
     });
-    guard = TestBed.inject(WaitlistGuard);
-
-    // Mocking auth service temporarily within the test for isolation
-    (guard as any).authService = {
-      userStatus$: userStatusSubject.asObservable()
-    };
   });
 
-  it('should redirect to /waitlist if user is pending', (done) => {
-    const mockUrlTree = {} as any;
-    routerSpy.parseUrl.and.returnValue(mockUrlTree);
-    userStatusSubject.next('pending');
+  it('should not emit while status is null (loading state)', async () => {
+    const result$ = runGuard();
+    let emitted = false;
+    result$.subscribe(() => {
+      emitted = true;
+    });
+    setTimeout(() => {
+      expect(emitted).toBe(false);
+    }, 50);
+  });
 
-    const result$ = guard.canActivate({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>;
-    result$.subscribe(result => {
+  it('should allow navigation once status resolves from null to approved', async () => {
+    const result$ = runGuard();
+    result$.subscribe((result) => {
+      expect(result).toBe(true);
+    });
+    userStatusSubject.next('approved');
+  });
+
+  it('should redirect to /waitlist when status resolves from null to pending', async () => {
+    const mockUrlTree = {} as UrlTree;
+    routerSpy.parseUrl.mockReturnValue(mockUrlTree);
+    const result$ = runGuard();
+    result$.subscribe((result) => {
       expect(result).toBe(mockUrlTree);
       expect(routerSpy.parseUrl).toHaveBeenCalledWith('/waitlist');
-      done();
     });
+    userStatusSubject.next('pending');
   });
 
-  it('should allow navigation if user is not logged in', (done) => {
-    userStatusSubject.next(null);
-    const result$ = guard.canActivate({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>;
-    result$.subscribe(result => {
-      expect(result).toBeTrue();
-      done();
-    });
-  });
-
-  it('should allow navigation if user is approved', (done) => {
+  it('should allow navigation if user is already approved', async () => {
     userStatusSubject.next('approved');
-    const result$ = guard.canActivate({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>;
-    result$.subscribe(result => {
-      expect(result).toBeTrue();
-      done();
+    const result$ = runGuard();
+    result$.subscribe((result) => {
+      expect(result).toBe(true);
+    });
+  });
+
+  it('should redirect if user is already pending', async () => {
+    const mockUrlTree = {} as UrlTree;
+    routerSpy.parseUrl.mockReturnValue(mockUrlTree);
+    userStatusSubject.next('pending');
+    const result$ = runGuard();
+    result$.subscribe((result) => {
+      expect(result).toBe(mockUrlTree);
     });
   });
 });

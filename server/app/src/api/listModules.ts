@@ -5,7 +5,10 @@ import {
   firestore,
   storage,
 } from '../authentication/ServiceAccount'
-import { ListModulesArgs } from './types'
+
+interface ListModulesArgs {
+  projectId: string
+}
 
 export async function getModulesList(projectId: string) {
   const path = `projects/${projectId}/modules/`

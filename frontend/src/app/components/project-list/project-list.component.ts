@@ -87,10 +87,8 @@ export class ProjectListComponent implements OnInit {
     const dialogRef = this.dialog.open(NewProjectDialogComponent);
     
     dialogRef.afterClosed().subscribe(result => {
-      if (result?.id) {
-        console.log('Navigating to new project:', result.id);
-        this.router.navigate(['/projects', result.id]).then(success => {
-          console.log('Navigation success:', success);
+      if (result?.orgSlug && result?.slug) {
+        this.router.navigate(['/', result.orgSlug, result.slug, 'overview']).then(success => {
           if (success) {
             (window as any)._projectNavigationComplete = true;
           }

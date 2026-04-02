@@ -1,6 +1,6 @@
 import { Firestore } from '@google-cloud/firestore';
 import { Storage } from '@google-cloud/storage';
-import { CloudFunctionsContext } from '@google-cloud/functions-framework';
+import { CloudEvent, cloudEvent } from '@google-cloud/functions-framework';
 import path from 'path';
 import crypto from 'crypto';
 
@@ -20,18 +20,29 @@ function generateHash(input: string): { dirname: string; documentPath: string } 
   return { dirname, documentPath };
 }
 
-export const storageObjectDelete = async (
-  file: { name: string; bucket: string },
-  context: CloudFunctionsContext
-) => {
-  // delete triggers when overwriting in gcsfuse
-  // check to see if the file exists before removing the firestore doc
-  const exists = (await storage.bucket(file.bucket).file(file.name).exists())[0];
-  const { documentPath } = generateHash(file.name);
-  if (!exists) {
-    console.log(`file ${file.name} doesn't exist, deleting`);
-    await firestore.doc(documentPath).delete();
-  } else {
-    console.log(`file ${file.name} exists, ignoring overwrite`);
+interface StorageObjectData {
+  name: string;
+  bucket: string;
+  [key: string]: unknown;
+}
+
+export const storageObjectDelete = cloudEvent<StorageObjectData>(
+  'storageObjectDelete',
+  async (event: CloudEvent<StorageObjectData>) => {
+    const file = event.data;
+    if (!file?.name) {
+      console.log('No file name in event data, skipping.');
+      return;
+    }
+    // delete triggers when overwriting in gcsfuse
+    // check to see if the file exists before removing the firestore doc
+    const exists = (await storage.bucket(file.bucket).file(file.name).exists())[0];
+    const { documentPath } = generateHash(file.name);
+    if (!exists) {
+      console.log(`file ${file.name} doesn't exist, deleting`);
+      await firestore.doc(documentPath).delete();
+    } else {
+      console.log(`file ${file.name} exists, ignoring overwrite`);
+    }
   }
-};
+);

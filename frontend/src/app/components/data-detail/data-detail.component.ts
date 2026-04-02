@@ -1,9 +1,9 @@
-import { Component, OnInit, inject, DestroyRef } from '@angular/core';
+import { Component, Input, OnChanges, inject, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { ApiService } from 'src/app/services/api.service';
 import { AsyncPipe } from '@angular/common';
 import { MatButton } from '@angular/material/button';
 import { MatList, MatListItem } from '@angular/material/list';
@@ -34,27 +34,21 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
     styles: [],
     imports: [MatButton, MatList, MatListItem, AsyncPipe, FileSizePipe]
 })
-export class DataDetailComponent implements OnInit {
-  dataPath: string;
-  fileDoc: Observable<FirebaseDocument>;
+export class DataDetailComponent implements OnChanges {
+    fileDoc: Observable<FirebaseDocument>;
   url: SafeResourceUrl;
   contents: string;
   isVideo: boolean;
-  projectId: string;
-  dataId: string;
+  get projectId() { return this.firebaseDataService.projectId(); }
+  @Input() dataId: string;
 
-  // Inject services using the new Angular 20 pattern
-  private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);
+  private apiService = inject(ApiService);
   public sanitizer = inject(DomSanitizer);
   private destroyRef = inject(DestroyRef);
 
-  ngOnInit(): void {
-    this.projectId = this.route.snapshot.paramMap.get('projectId');
-    this.dataId = this.route.snapshot.paramMap.get('dataId');
-    this.dataPath = `/projects/${this.projectId}/data/${this.dataId}`;
-    
-    // Use Firebase service to get the document
+  ngOnChanges() {
+    if (!this.dataId) return;
     this.fileDoc = this.firebaseDataService.getDocument(this.projectId, 'data', this.dataId);
     
     this.fileDoc.pipe(
@@ -70,7 +64,7 @@ export class DataDetailComponent implements OnInit {
           return;
         }
         
-        this.firebaseDataService.getDownloadUrl(filePath)
+        this.apiService.getDownloadUrl(filePath, this.projectId)
           .then(async (url) => {
             if (
               fileName.toLowerCase().endsWith('.mov') ||

@@ -1,5 +1,6 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 /* eslint-disable @typescript-eslint/no-empty-function */
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavbarAccountComponent } from './navbar-account.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
@@ -14,13 +15,13 @@ const AuthServiceStub = {
   user$: of({ uid: 'mock', email: 'mock@example.com' }),
   setUser: () => {},
   login: () => Promise.resolve(),
-  logout: () => Promise.resolve()
+  logout: () => Promise.resolve(),
 };
 
 class MatDialogMock {
   open() {
     return {
-      afterClosed: () => of(true)
+      afterClosed: () => of(true),
     };
   }
 }
@@ -30,15 +31,15 @@ describe('NavbarAccountComponent', () => {
   let fixture: ComponentFixture<NavbarAccountComponent>;
   let dialog: MatDialog;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
-    imports: [MatMenuModule, MatFormFieldModule, RouterTestingModule, NavbarAccountComponent],
-    providers: [
-      { provide: AuthService, useValue: AuthServiceStub },
-      { provide: MatDialog, useClass: MatDialogMock }
-    ],
-}).compileComponents();
-  }));
+      imports: [MatMenuModule, MatFormFieldModule, RouterTestingModule, NavbarAccountComponent],
+      providers: [
+        { provide: AuthService, useValue: AuthServiceStub },
+        { provide: MatDialog, useClass: MatDialogMock },
+      ],
+    }).compileComponents();
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(NavbarAccountComponent);
@@ -52,7 +53,7 @@ describe('NavbarAccountComponent', () => {
   });
 
   it('should open login dialog when login is called', () => {
-    spyOn(dialog, 'open');
+    vi.spyOn(dialog, 'open');
     component.login();
     expect(dialog.open).toHaveBeenCalledWith(LoginDialogComponent, { width: '400px' });
   });

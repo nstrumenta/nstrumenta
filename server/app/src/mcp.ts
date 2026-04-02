@@ -794,11 +794,13 @@ server.registerTool(
         description: 'Creates a new project (requires Firebase authentication).',
         inputSchema: {
             name: z.string().describe('Project name'),
-            projectIdBase: z.string().optional().describe('Optional project ID base'),
+            projectIdBase: z.string().optional().describe('Optional project slug base'),
             orgId: z.string().optional().describe('Organization ID this project belongs to'),
         },
         outputSchema: {
             id: z.string().describe('Created project ID'),
+            slug: z.string().describe('Project slug for URL routing'),
+            orgSlug: z.string().describe('Organization slug for URL routing'),
             name: z.string(),
             message: z.string(),
         },
@@ -810,56 +812,73 @@ server.registerTool(
                 throw new Error('Firebase authentication required for project creation');
             }
 
-            const { v4: uuid } = require('uuid');
-            const projectIdBase = rawProjectIdBase || encodeURIComponent(
-                name.toLowerCase().replace(/ +/g, '-').replace(/[^a-z0-9 _-]+/gi, '-')
-            );
+            const userDoc = await firestore.collection('users').doc(userId).get();
+            const userData = userDoc.data();
+            if (!userData) throw new Error('User not found');
 
-            let confirmedUnique = false;
-            let suffix = '';
-            let projectId = projectIdBase;
-            
-            while (!confirmedUnique) {
-                const doc = await firestore.collection('projects').doc(projectId).get();
-                if (!doc.exists) {
-                    confirmedUnique = true;
-                } else {
-                    suffix = uuid().split('-')[0];
-                    projectId = `${projectIdBase}-${suffix}`;
+            let targetOrgId = orgId;
+            let targetOrgSlug = '';
+
+            if (targetOrgId) {
+                const orgDoc = await firestore.collection('organizations').doc(targetOrgId).get();
+                if (!orgDoc.exists) throw new Error('Organization not found');
+                targetOrgSlug = orgDoc.data()?.slug;
+            } else {
+                targetOrgId = userData.personalOrgId;
+                targetOrgSlug = userData.username;
+                if (!targetOrgId || !targetOrgSlug) {
+                    throw new Error('User profile setup required before creating projects');
                 }
             }
 
-            const timestamp = Date.now();
-            const projectData: any = {
-                name,
-                createdAt: timestamp,
-                lastModified: timestamp,
-                members: { [userId]: { role: 'owner', addedAt: timestamp } },
-            };
-            if (orgId) {
-                projectData.orgId = orgId;
+            const { v4: uuid } = require('uuid');
+            const slugBase = rawProjectIdBase || encodeURIComponent(
+                name.toLowerCase().replace(/ +/g, '-').replace(/[^a-z0-9_-]+/gi, '-')
+            );
+
+            let confirmedUnique = false;
+            let projectSlug = slugBase;
+            while (!confirmedUnique) {
+                const existing = await firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`).get();
+                if (!existing.exists) {
+                    confirmedUnique = true;
+                } else {
+                    projectSlug = `${slugBase}-${uuid().substring(0, 5)}`;
+                }
             }
 
-            // Use batch to create both project and user project reference atomically
+            const projectId = firestore.collection('projects').doc().id;
             const batch = firestore.batch();
-            
-            const projectRef = firestore.collection('projects').doc(projectId);
-            batch.set(projectRef, projectData);
-            
-            const userProjectRef = firestore.collection(`users/${userId}/projects`).doc(projectId);
-            batch.set(userProjectRef, { name });
-            
+
+            batch.set(firestore.collection('projects').doc(projectId), {
+                name,
+                slug: projectSlug,
+                orgId: targetOrgId,
+                orgSlug: targetOrgSlug,
+                members: { [userId]: 'owner' },
+                createdAt: new Date().toISOString(),
+                createdBy: userId,
+                visibility: 'private',
+            });
+
+            batch.set(firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`), { projectId });
+
+            batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId), {
+                name,
+                orgSlug: targetOrgSlug,
+                slug: projectSlug,
+            });
+
             await batch.commit();
 
             return {
-                content: [{
-                    type: 'text',
-                    text: `Project created: ${projectId}`
-                }],
+                content: [{ type: 'text', text: `Project created: ${targetOrgSlug}/${projectSlug}` }],
                 structuredContent: {
                     id: projectId,
+                    slug: projectSlug,
+                    orgSlug: targetOrgSlug,
                     name,
-                    message: 'Project created successfully'
+                    message: 'Project created successfully',
                 },
             };
         } catch (error) {
@@ -1003,6 +1022,88 @@ server.registerTool(
 );
 
 server.registerTool(
+    'get_download_url',
+    {
+        title: 'Get Download URL',
+        description: 'Gets a signed URL for downloading a file from cloud storage.',
+        inputSchema: {
+            path: z.string().describe('File path relative to project (e.g. "data/file.mcap") or full storage path'),
+        },
+        outputSchema: {
+            downloadUrl: z.string().describe('Signed URL for download'),
+        },
+    },
+    async ({ path: originalPath }) => {
+        try {
+            const projectId = getProjectId();
+            const { generateV4ReadSignedUrl } = require('./shared/utils');
+
+            // Accept both relative ("data/file.mcap") and full ("projects/{id}/data/file.mcap") paths
+            const fullPath = originalPath.startsWith('projects/')
+                ? originalPath
+                : `projects/${projectId}/${originalPath.replace(/^\//, '')}`;
+
+            const downloadUrl = await generateV4ReadSignedUrl(fullPath);
+
+            return {
+                content: [{ type: 'text', text: downloadUrl }],
+                structuredContent: { downloadUrl },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to get download URL: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'delete_file',
+    {
+        title: 'Delete File',
+        description: 'Deletes a file from cloud storage and its Firestore metadata document.',
+        inputSchema: {
+            filePath: z.string().describe('Full storage path of the file (e.g. "projects/{id}/data/file.mcap")'),
+            firestoreDocId: z.string().optional().describe('Firestore document ID in projects/{id}/data collection to delete alongside the file'),
+        },
+        outputSchema: {
+            success: z.boolean(),
+        },
+    },
+    async ({ filePath, firestoreDocId }) => {
+        try {
+            const projectId = getProjectId();
+            const { storage, bucketName } = require('./authentication/ServiceAccount');
+            const crypto = require('crypto');
+            const path = require('path');
+
+            // Verify the file belongs to this project
+            const expectedPrefix = `projects/${projectId}/`;
+            if (!filePath.startsWith(expectedPrefix)) {
+                throw new Error(`File path does not belong to project ${projectId}`);
+            }
+
+            await storage.bucket(bucketName).file(filePath).delete({ ignoreNotFound: true });
+
+            // Delete Firestore metadata doc - either by provided ID or by hash-derived path
+            if (firestoreDocId) {
+                await firestore.doc(`projects/${projectId}/data/${firestoreDocId}`).delete();
+            } else {
+                const hash = crypto.createHash('sha256').update(filePath).digest('hex');
+                await firestore.doc(`projects/${projectId}/data/${hash}`).delete();
+            }
+
+            return {
+                content: [{ type: 'text', text: `Deleted ${filePath}` }],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to delete file: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
     'get_upload_data_url',
     {
         title: 'Get Upload Data URL',
@@ -1049,37 +1150,6 @@ server.registerTool(
             }
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
             throw new Error(`Failed to get upload data URL: ${message}`);
-        }
-    },
-);
-
-server.registerTool(
-    'get_download_url',
-    {
-        title: 'Get Download URL',
-        description: 'Gets a signed URL for downloading a file from cloud storage.',
-        inputSchema: {
-            path: z.string().describe('File path in storage'),
-        },
-        outputSchema: {
-            downloadUrl: z.string().describe('Signed URL for download'),
-        },
-    },
-    async ({ path }) => {
-        try {
-            const projectId = getProjectId();
-            const { generateV4ReadSignedUrl } = require('./shared/utils');
-            
-            const fullPath = path.startsWith('projects/') ? path : `projects/${projectId}/${path}`;
-            const downloadUrl = await generateV4ReadSignedUrl(fullPath);
-
-            return {
-                content: [{ type: 'text', text: downloadUrl }],
-                structuredContent: { downloadUrl },
-            };
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'An unknown error occurred';
-            throw new Error(`Failed to get download URL: ${message}`);
         }
     },
 );

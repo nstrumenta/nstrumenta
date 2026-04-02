@@ -1,4 +1,5 @@
-import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RepositoriesComponent } from './repositories.component';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -10,7 +11,7 @@ describe('RepositoriesComponent', () => {
   let component: RepositoriesComponent;
   let fixture: ComponentFixture<RepositoriesComponent>;
 
-  beforeEach(waitForAsync(() => {
+  beforeEach(async () => {
     TestBed.configureTestingModule({
       imports: [RepositoriesComponent, NoopAnimationsModule],
       providers: [
@@ -19,7 +20,7 @@ describe('RepositoriesComponent', () => {
         { provide: FirebaseDataService, useClass: MockFirebaseDataService }
       ]
     }).compileComponents();
-  }));
+  });
 
   beforeEach(() => {
     fixture = TestBed.createComponent(RepositoriesComponent);

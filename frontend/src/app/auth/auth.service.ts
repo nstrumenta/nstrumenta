@@ -36,14 +36,13 @@ export class AuthService {
       }
       
       if (user) {
-        // Assume pending immediately on login
-        this.userStatusSubject.next('pending');
-        
         const docRef = doc(this.firestore, `users/${user.uid}`);
         this.userStatusUnsubscribe = onSnapshot(docRef, (snapshot) => {
           const data = snapshot.data();
           if (data) {
-             this.userStatusSubject.next(data['status'] || 'pending');
+            this.userStatusSubject.next(data['status'] || 'pending');
+          } else {
+            this.userStatusSubject.next('pending');
           }
         });
       } else {
