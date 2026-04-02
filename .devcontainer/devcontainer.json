@@ -26,5 +26,6 @@
   ],
   "mounts": [
     "source=${localEnv:HOME}/.config/gcloud,target=/root/.config/gcloud,type=bind"
-  ]
+  ],
+  "forwardPorts": [5008, 5999, 9229]
 }

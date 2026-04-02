@@ -33,6 +33,38 @@
           <span>{{(authService?.user | async)?.displayName}}</span>
         </div>
       }
+
+      @if (username()) {
+        <div class="detail-item">
+          <strong>Username:</strong>
+          <span>@{{ username() }}</span>
+        </div>
+        <button mat-button routerLink="/">Go to Projects</button>
+      } @else {
+        <div class="username-setup">
+          <h3>Choose your username</h3>
+          <p>Your username is your personal namespace for projects.</p>
+          <mat-form-field>
+            <mat-label>Username</mat-label>
+            <input matInput
+                   [(ngModel)]="usernameInput"
+                   (ngModelChange)="checkAvailability()"
+                   placeholder="e.g. tyler"
+                   autocomplete="off" />
+            @if (usernameAvailable === true) {
+              <mat-hint>Available</mat-hint>
+            }
+            @if (usernameError) {
+              <mat-error>{{ usernameError }}</mat-error>
+            }
+          </mat-form-field>
+          <button mat-raised-button color="primary"
+                  [disabled]="!usernameAvailable || isSaving"
+                  (click)="saveUsername()">
+            {{ isSaving ? 'Saving...' : 'Save username' }}
+          </button>
+        </div>
+      }
     </div>
   </div>
 </div>

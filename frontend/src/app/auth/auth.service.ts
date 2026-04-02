@@ -37,12 +37,18 @@ export class AuthService {
       
       if (user) {
         const docRef = doc(this.firestore, `users/${user.uid}`);
-        this.userStatusUnsubscribe = onSnapshot(docRef, (snapshot) => {
+        this.userStatusUnsubscribe = onSnapshot(docRef, async (snapshot) => {
           const data = snapshot.data();
-          if (data) {
-            this.userStatusSubject.next(data['status'] || 'pending');
+          if (!snapshot.exists() || !data?.['status']) {
+            // New or legacy user without status: initialize server-side
+            const idToken = await user.getIdToken();
+            fetch('/api/user/init', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${idToken}` },
+            }).catch(err => console.error('Failed to init user:', err));
+            // snapshot will fire again once the server writes the doc
           } else {
-            this.userStatusSubject.next('pending');
+            this.userStatusSubject.next(data?.['status'] || 'pending');
           }
         });
       } else {
