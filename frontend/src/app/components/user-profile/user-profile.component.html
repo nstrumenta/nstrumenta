@@ -2,35 +2,35 @@
   <h2>User Profile</h2>
   
   <div class="profile-info">
-    @if ((authService?.user | async)?.photoURL) {
+    @if (authService.currentUser()?.photoURL) {
       <img class="avatar" 
-           [src]="(authService?.user | async)?.photoURL" 
+           [src]="authService.currentUser()?.photoURL" 
            [alt]="'User avatar'" />
     }
     
     <div class="user-details">
       <div class="detail-item">
         <strong>User ID:</strong>
-        <span class="user-id">{{(authService?.user | async)?.uid}}</span>
+        <span class="user-id">{{authService.currentUser()?.uid}}</span>
         <button mat-icon-button 
-                [cdkCopyToClipboard]="(authService?.user | async)?.uid || ''"
+                [cdkCopyToClipboard]="authService.currentUser()?.uid || ''"
                 (cdkCopyToClipboardCopied)="onCopied($event)"
                 title="Copy User ID">
           <mat-icon>content_copy</mat-icon>
         </button>
       </div>
       
-      @if ((authService?.user | async)?.email) {
+      @if (authService.currentUser()?.email) {
         <div class="detail-item">
           <strong>Email:</strong>
-          <span>{{(authService?.user | async)?.email}}</span>
+          <span>{{authService.currentUser()?.email}}</span>
         </div>
       }
       
-      @if ((authService?.user | async)?.displayName) {
+      @if (authService.currentUser()?.displayName) {
         <div class="detail-item">
           <strong>Name:</strong>
-          <span>{{(authService?.user | async)?.displayName}}</span>
+          <span>{{authService.currentUser()?.displayName}}</span>
         </div>
       }
 

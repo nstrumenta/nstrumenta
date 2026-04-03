@@ -23,6 +23,7 @@ describe('DataDetailComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(DataDetailComponent);
     component = fixture.componentInstance;
+    fixture.componentRef.setInput('dataId', 'test-id');
     fixture.detectChanges();
   });
 

@@ -23,8 +23,8 @@ async function signIn(page) {
   await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
 }
 
-test.describe('Data Detail', () => {
-  test('should upload a JSON file and render its contents in the detail view', async ({ page }) => {
+test.describe('Data Table', () => {
+  test('should upload a file and download it via signed URL from the actions menu', async ({ page }) => {
     test.setTimeout(60000);
     page.on('console', msg => {
       if (msg.type() === 'error') console.log('Browser error: ' + msg.text());
@@ -34,7 +34,7 @@ test.describe('Data Detail', () => {
 
     await page.goto('/');
     await page.locator('button#fab mat-icon:has-text("add")').click();
-    const projectName = 'data-detail-test-' + Date.now();
+    const projectName = 'data-table-test-' + Date.now();
     await page.locator('app-new-project-dialog mat-form-field').first().locator('input').fill(projectName);
     await expect(page.locator('app-new-project-dialog mat-select')).not.toHaveAttribute('aria-disabled', 'true', { timeout: 10000 });
     await page.locator('app-new-project-dialog mat-select').click();
@@ -43,9 +43,8 @@ test.describe('Data Detail', () => {
     await page.locator('button:has-text("Create")').click();
     await expect(page).toHaveURL(/\/[^/]+\/[^/]+\/data/, { timeout: 15000 });
 
-    const filename = 'test-' + Date.now() + '.json';
-    const fileContent = { hello: 'world', value: 42 };
-    const fileBuffer = Buffer.from(JSON.stringify(fileContent));
+    const filename = 'test-' + Date.now() + '.txt';
+    const fileBuffer = Buffer.from('hello from playwright');
 
     const uploadDone = page.waitForResponse(
       r => new URL(r.url()).hostname.endsWith('.googleapis.com') && r.request().method() === 'PUT',
@@ -54,25 +53,33 @@ test.describe('Data Detail', () => {
     const fileChooserPromise = page.waitForEvent('filechooser');
     await page.locator('button#fab').click();
     const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles({ name: filename, mimeType: 'application/json', buffer: fileBuffer });
+    await fileChooser.setFiles({ name: filename, mimeType: 'text/plain', buffer: fileBuffer });
 
     const uploadResponse = await uploadDone;
     expect(uploadResponse.status(), 'GCS upload should succeed').toBeLessThan(400);
 
-    // File should appear in the data table — click the row link to open detail view
-    const fileLink = page.locator('mat-cell a', { hasText: filename });
-    await expect(fileLink).toBeVisible({ timeout: 15000 });
-    await fileLink.click();
-    await expect(page).toHaveURL(/\/data\//, { timeout: 5000 });
+    // File should appear in the data table
+    const fileRow = page.locator('mat-row', { hasText: filename });
+    await expect(fileRow).toBeVisible({ timeout: 15000 });
 
-    // JSON content should be rendered in the detail view
-    await expect(page.locator('app-data-detail')).toContainText('"hello"', { timeout: 15000 });
-    await expect(page.locator('app-data-detail')).toContainText('"world"');
+    // Click the kebab menu → Download; intercept the MCP response to get the signed URL
+    const mcpResponsePromise = page.waitForResponse(
+      r => r.url().includes('/mcp') && r.request().method() === 'POST',
+      { timeout: 15000 }
+    );
+    await fileRow.locator('button[mat-icon-button]').click();
+    await page.locator('button[mat-menu-item]:has-text("Download")').click();
 
-    // Download link should be present with a signed GCS URL
-    const downloadLink = page.locator('app-data-detail a[mat-button]');
-    await expect(downloadLink).toBeVisible();
-    const href = await downloadLink.getAttribute('href');
-    expect(href, 'download link should be a signed GCS URL').toMatch(/^https:\/\/storage\.googleapis\.com/);
+    const mcpResponse = await mcpResponsePromise;
+    const mcpBody = await mcpResponse.json().catch(() => null);
+    const signedUrl = mcpBody && mcpBody.result && mcpBody.result.structuredContent && mcpBody.result.structuredContent.downloadUrl;
+    expect(signedUrl, 'MCP get_download_url should return a signed GCS URL').toMatch(/^https:\/\/storage\.googleapis\.com/);
+
+    // The signed URL should return 200 — verifies the service account has storage.objects.get
+    const status = await page.evaluate(
+      url => fetch(url, { credentials: 'omit' }).then(r => r.status),
+      signedUrl
+    );
+    expect(status, 'signed URL should return 200, not 403').toBe(200);
   });
 });

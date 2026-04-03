@@ -2,6 +2,12 @@
 
 Angular web application for project management, data visualization, and real-time sensor monitoring.
 
+## Code Conventions
+
+- **Signals everywhere**: use `signal()`, `computed()`, `effect()`, and `input()` for all state. No `BehaviorSubject` in components or services — observables only where Angular APIs require them (guards use `CanActivateFn` which must return an observable/promise).
+- **Services cache via signals**: services that fetch remote data (e.g. org membership) should store results in a `signal` and fetch once on auth change, not on every subscriber call. This keeps the UI fast and predictable.
+- **Auth boundary**: `AuthService` exposes `currentUser`, `authResolved`, and `userStatus` as signals. Observable aliases (`user$`, `authResolved$`) exist only for route guards.
+
 ## Development
 
 ```shell

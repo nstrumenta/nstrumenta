@@ -563,6 +563,16 @@ export class FirebaseDataService {
     return this.docData(docRef);
   }
 
+  async getUserDocOnce(uid: string): Promise<Record<string, unknown>> {
+    const snapshot = await getDoc(doc(this.firestore, `users/${uid}`));
+    return (snapshot.data() as Record<string, unknown>) ?? {};
+  }
+
+  async slugExists(slug: string): Promise<boolean> {
+    const snapshot = await getDoc(doc(this.firestore, `slugs/${slug}`));
+    return snapshot.exists();
+  }
+
   async updateUserProject(projectId: string, projectData: unknown): Promise<void> {
     const currentUserId = this.currentUserId();
     if (!currentUserId) return;

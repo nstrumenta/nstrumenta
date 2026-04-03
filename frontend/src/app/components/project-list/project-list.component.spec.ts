@@ -10,7 +10,7 @@ import { of } from 'rxjs';
 import { signal } from '@angular/core';
 
 const authServiceStub = {
-  user: of({ uid: 'mock' }),
+  currentUser: signal<any>({ uid: 'mock' }),
 };
 
 const firebaseDataServiceStub = {

@@ -1,13 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { filter, from, map, of, switchMap, take } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { FirebaseDataService } from '../services/firebase-data.service';
 
 export const usernameGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const firestore = getFirestore();
+  const firebaseDataService = inject(FirebaseDataService);
 
   return authService.authResolved$.pipe(
     filter(resolved => resolved),
@@ -16,9 +16,9 @@ export const usernameGuard: CanActivateFn = (_route, state) => {
     take(1),
     switchMap(user => {
       if (!user) return of(true);
-      return from(getDoc(doc(firestore, `users/${user.uid}`))).pipe(
-        map(snapshot => {
-          const username = snapshot.data()?.['username'];
+      return from(firebaseDataService.getUserDocOnce(user.uid)).pipe(
+        map(data => {
+          const username = data['username'];
           if (username) return true;
           const queryParams = state.url !== '/' ? { returnUrl: state.url } : {};
           return router.createUrlTree(['/account/profile'], { queryParams });

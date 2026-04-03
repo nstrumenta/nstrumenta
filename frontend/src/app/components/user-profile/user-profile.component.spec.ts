@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { AuthService } from 'src/app/auth/auth.service';
-import { MockAuthService } from 'src/app/testing/mocks';
+import { ApiService } from 'src/app/services/api.service';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { MockAuthService, MockApiService, MockFirebaseDataService } from 'src/app/testing/mocks';
 
 import { UserProfileComponent } from './user-profile.component';
 
@@ -11,9 +14,13 @@ describe('UserProfileComponent', () => {
 
   beforeEach(async () => {
     TestBed.configureTestingModule({
-    imports: [UserProfileComponent],
-    providers: [{ provide: AuthService, useClass: MockAuthService }],
-}).compileComponents();
+      imports: [UserProfileComponent, RouterTestingModule],
+      providers: [
+        { provide: AuthService, useClass: MockAuthService },
+        { provide: ApiService, useClass: MockApiService },
+        { provide: FirebaseDataService, useClass: MockFirebaseDataService },
+      ],
+    }).compileComponents();
   });
 
   beforeEach(() => {

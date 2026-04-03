@@ -13,7 +13,7 @@
       <app-navbar-project-select></app-navbar-project-select>
     }
     <span class="fill-remaining-space"></span>
-    @if ((isHandset$ | async) === false) {
+    @if (isHandset() === false) {
       @if (router.url !== '/') {
         <app-navbar-status></app-navbar-status>
       }

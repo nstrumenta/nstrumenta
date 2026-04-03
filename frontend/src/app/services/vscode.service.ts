@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { UploadMetadata } from 'firebase/storage';
 import { Observable, Observer, Subject } from 'rxjs';
 import { ProjectService } from './project.service';
+import { AuthService } from '../auth/auth.service';
 import { ServerService } from './server.service';
 import { FirebaseDataService } from './firebase-data.service';
 
@@ -17,6 +18,7 @@ export interface VscodeMessage {
 @Injectable()
 export class VscodeService {
   private projectService = inject(ProjectService);
+  private authService = inject(AuthService);
   private serverService = inject(ServerService);
   private firebaseDataService = inject(FirebaseDataService);
 
@@ -57,7 +59,7 @@ export class VscodeService {
             if (message.config && message.config.modules) {
               // upload files and send path to server
               const promises = [];
-              const uid = this.projectService.user.uid;
+              const uid = this.authService.currentUser()?.uid;
               const uploadPath =
                 'projects/' + this.projectService.currentProjectId + '/live-session/' + uid;
               message.payload.forEach((fileTextItem) => {

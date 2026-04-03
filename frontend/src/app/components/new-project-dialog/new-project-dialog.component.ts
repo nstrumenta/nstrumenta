@@ -1,9 +1,7 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 import { ApiService } from 'src/app/services/api.service';
 import { OrganizationService } from 'src/app/services/organization.service';
-import { OrganizationDoc } from 'src/app/models/organization.model';
-import { Subscription } from 'rxjs';
 import { MatFormField, MatLabel, MatError } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
@@ -17,27 +15,22 @@ import { MatButton } from '@angular/material/button';
     styleUrls: ['./new-project-dialog.component.scss'],
     imports: [MatFormField, MatLabel, MatInput, MatSelect, MatOption, FormsModule, MatError, MatButton]
 })
-export class NewProjectDialogComponent implements OnInit, OnDestroy {
+export class NewProjectDialogComponent {
   projectName: string;
   selectedOrgId: string;
-  organizations: OrganizationDoc[] = [];
   isCreating = false;
   errorMessage: string;
 
-  private subscription: Subscription;
   private apiService = inject(ApiService);
   private organizationService = inject(OrganizationService);
   public dialogRef = inject(MatDialogRef<NewProjectDialogComponent>);
 
-  ngOnInit(): void {
-    this.subscription = this.organizationService.getUserOrganizations().subscribe({
-      next: orgs => {
-        this.organizations = orgs;
-        if (orgs.length > 0) this.selectedOrgId = orgs[0].id;
-      },
-      error: err => { this.errorMessage = 'Failed to load organizations.'; }
-    });
-  }
+  readonly organizations = this.organizationService.organizations;
+  readonly selectedOrgIdDefault = computed(() => {
+    const orgs = this.organizations();
+    if (orgs.length > 0 && !this.selectedOrgId) this.selectedOrgId = orgs[0].id;
+    return this.selectedOrgId;
+  });
 
   async create(): Promise<void> {
     if (this.isCreating) return;
@@ -55,9 +48,5 @@ export class NewProjectDialogComponent implements OnInit, OnDestroy {
       this.errorMessage = error?.error || 'Failed to create project. Please try again.';
       this.isCreating = false;
     }
-  }
-
-  ngOnDestroy(): void {
-    if (this.subscription) this.subscription.unsubscribe();
   }
 }

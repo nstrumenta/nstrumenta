@@ -1,9 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
-import { AsyncPipe } from '@angular/common';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { FormsModule } from '@angular/forms';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
@@ -17,15 +16,15 @@ import { RouterLink } from '@angular/router';
     selector: 'app-user-profile',
     templateUrl: './user-profile.component.html',
     styleUrls: ['./user-profile.component.scss'],
-    imports: [AsyncPipe, FormsModule, MatIconButton, MatButton, MatIcon, CdkCopyToClipboard, MatFormField, MatLabel, MatInput, MatError, MatHint, RouterLink]
+    imports: [FormsModule, MatIconButton, MatButton, MatIcon, CdkCopyToClipboard, MatFormField, MatLabel, MatInput, MatError, MatHint, RouterLink]
 })
 export class UserProfileComponent implements OnInit {
   public authService = inject(AuthService);
   private apiService = inject(ApiService);
+  private firebaseDataService = inject(FirebaseDataService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
-  private firestore = getFirestore();
 
   username = signal<string | null>(null);
   usernameInput = '';
@@ -40,11 +39,11 @@ export class UserProfileComponent implements OnInit {
   ]);
 
   async ngOnInit(): Promise<void> {
-    const user = this.authService.user.getValue();
+    const user = this.authService.currentUser();
     if (!user) return;
 
-    const snapshot = await getDoc(doc(this.firestore, `users/${user.uid}`));
-    const existing = snapshot.data()?.['username'] as string | undefined;
+    const snapshot = await this.firebaseDataService.getUserDocOnce(user.uid);
+    const existing = snapshot['username'] as string | undefined;
     if (existing) {
       this.username.set(existing);
       return;
@@ -78,8 +77,7 @@ export class UserProfileComponent implements OnInit {
       return;
     }
 
-    const slugDoc = await getDoc(doc(this.firestore, `slugs/${v}`));
-    this.usernameAvailable = !slugDoc.exists();
+    this.usernameAvailable = !(await this.firebaseDataService.slugExists(v));
     if (!this.usernameAvailable) {
       this.usernameError = 'Username is already taken';
     }
@@ -91,7 +89,7 @@ export class UserProfileComponent implements OnInit {
     this.usernameError = '';
     try {
       const apiUrl = await this.apiService.getApiUrl();
-      const user = this.authService.user.getValue();
+      const user = this.authService.currentUser();
       const idToken = await user.getIdToken();
       const res = await fetch(`${apiUrl}/api/user/setup-username`, {
         method: 'POST',

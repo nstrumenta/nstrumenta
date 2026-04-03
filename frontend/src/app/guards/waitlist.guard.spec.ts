@@ -18,16 +18,23 @@ describe('waitlistGuard', () => {
   let userStatusSubject: BehaviorSubject<string | null>;
 
   beforeEach(() => {
+    let userSubject: BehaviorSubject<any>;
     userStatusSubject = new BehaviorSubject<string | null>(null);
+    userSubject = new BehaviorSubject<any>({ uid: 'test-uid' });
     routerSpy = {
       parseUrl: vi.fn().mockName('Router.parseUrl'),
       navigate: vi.fn().mockName('Router.navigate'),
+      createUrlTree: vi.fn().mockReturnValue('/'),
     } as unknown as MockedObject<Router>;
 
     TestBed.configureTestingModule({
       providers: [
         { provide: Router, useValue: routerSpy },
-        { provide: AuthService, useValue: { userStatus$: userStatusSubject.asObservable() } },
+        { provide: AuthService, useValue: {
+          authResolved$: new BehaviorSubject(true).asObservable(),
+          user$: userSubject.asObservable(),
+          userStatus$: userStatusSubject.asObservable(),
+        }},
       ],
     });
   });

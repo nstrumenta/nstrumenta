@@ -4,7 +4,8 @@ import { VscodeService } from './vscode.service';
 import { ProjectService } from './project.service';
 import { ServerService } from './server.service';
 import { FirebaseDataService } from './firebase-data.service';
-import { MockProjectService, MockServerService, MockFirebaseDataService } from '../testing/mocks';
+import { AuthService } from '../auth/auth.service';
+import { MockProjectService, MockServerService, MockFirebaseDataService, MockAuthService } from '../testing/mocks';
 
 describe('VscodeService', () => {
   beforeEach(() => TestBed.configureTestingModule({
@@ -12,7 +13,8 @@ describe('VscodeService', () => {
       VscodeService,
       { provide: ProjectService, useClass: MockProjectService },
       { provide: ServerService, useClass: MockServerService },
-      { provide: FirebaseDataService, useClass: MockFirebaseDataService }
+      { provide: FirebaseDataService, useClass: MockFirebaseDataService },
+      { provide: AuthService, useClass: MockAuthService },
     ]
   }));
 
