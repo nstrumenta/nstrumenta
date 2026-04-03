@@ -434,14 +434,14 @@ export class FirebaseDataService {
   }
 
   // Update operations
-  async updateRepository(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRepository(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
       await updateDoc(docRef, data);
     });
   }
 
-  async updateRecord(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRecord(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
       await updateDoc(docRef, data);
@@ -449,14 +449,14 @@ export class FirebaseDataService {
   }
 
   // Record collection CRUD operations (distinct from data collection)
-  async addRecording(projectId: string, data: unknown): Promise<void> {
+  async addRecording(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
       await addDoc(collectionRef, { ...(data as object), lastModified: Date.now() });
     });
   }
 
-  async updateRecording(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRecording(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -470,7 +470,7 @@ export class FirebaseDataService {
     });
   }
 
-  async updateAction(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateAction(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -528,7 +528,7 @@ export class FirebaseDataService {
     projectId: string,
     agentId: string,
     id: string,
-    data: unknown
+    data: Record<string, unknown>
   ): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
@@ -550,7 +550,7 @@ export class FirebaseDataService {
   }
 
   // Project settings operations
-  async updateProjectSettings(projectId: string, data: unknown): Promise<void> {
+  async updateProjectSettings(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}`);
       await setDoc(docRef, data, { merge: true });
