@@ -57,6 +57,13 @@ export class ProjectListComponent implements OnInit {
       this.dataSource = new MatTableDataSource(items);
       this.dataSource.sort = this.sort;
     });
+
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user) {
+        this.firebaseDataService.setUser(user.uid);
+      }
+    });
   }
 
   computeBreakpoint() {
@@ -66,15 +73,6 @@ export class ProjectListComponent implements OnInit {
 
   ngOnInit(): void {
     this.breakpoint = this.computeBreakpoint();
-    
-    // Subscribe to user auth state and set user when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user) {
-        this.firebaseDataService.setUser(user.uid);
-      }
-    });
   }
 
   applyFilter(filterValue: string) {

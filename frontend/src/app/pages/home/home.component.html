@@ -1,6 +1,6 @@
 <app-toolbar></app-toolbar>
 <div class="home-page-container">
-  @if (authService.user | async) {
+  @if (currentUser()) {
     <app-project-list></app-project-list>
   } @else {
   <div class="center-container">

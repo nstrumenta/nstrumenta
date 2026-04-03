@@ -8,7 +8,7 @@
   @if (router.url === '/') {
     <app-navbar-title></app-navbar-title>
   }
-  @if (authService?.user | async ) {
+  @if (authService?.currentUser()) {
     @if (router.url !== '/') {
       <app-navbar-project-select></app-navbar-project-select>
     }

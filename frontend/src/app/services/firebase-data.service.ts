@@ -104,7 +104,7 @@ export class FirebaseDataService {
 
     // Gate all per-project subscriptions on both projectId and authenticated user being present.
     // This prevents Firestore permission errors during auth restore on fresh page loads.
-    const projectWithAuth$ = combineLatest([toObservable(this.currentProjectId), this.authService.user$]);
+    const projectWithAuth$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.authService.currentUser)]);
 
     this.modulesObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
@@ -150,7 +150,7 @@ export class FirebaseDataService {
       })
     );
 
-    this.agentActionsObservable$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.currentAgentId), this.authService.user$]).pipe(
+    this.agentActionsObservable$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.currentAgentId), toObservable(this.authService.currentUser)]).pipe(
       switchMap(([projectId, agentId, user]) => {
         if (!projectId || !agentId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {

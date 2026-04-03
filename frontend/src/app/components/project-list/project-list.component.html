@@ -1,4 +1,4 @@
-@if (authService.user | async) {
+@if (authService.currentUser()) {
   <div>
     <div style="flex-direction:row">
       <mat-form-field>

@@ -4,7 +4,7 @@ import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { filter, from, map, of, switchMap, take } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 
-export const usernameGuard: CanActivateFn = () => {
+export const usernameGuard: CanActivateFn = (_route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const firestore = getFirestore();
@@ -19,7 +19,9 @@ export const usernameGuard: CanActivateFn = () => {
       return from(getDoc(doc(firestore, `users/${user.uid}`))).pipe(
         map(snapshot => {
           const username = snapshot.data()?.['username'];
-          return username ? true : router.parseUrl('/account/profile');
+          if (username) return true;
+          const queryParams = state.url !== '/' ? { returnUrl: state.url } : {};
+          return router.createUrlTree(['/account/profile'], { queryParams });
         })
       );
     })

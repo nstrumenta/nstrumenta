@@ -1,4 +1,4 @@
-@if ((authService.user | async)) {
+@if (authService.currentUser()) {
   <div>
     <mat-menu #projectSelectMenu="matMenu">
       @for (project of userProjects(); track project.id || project.key || $index) {
