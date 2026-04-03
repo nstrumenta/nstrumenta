@@ -19,13 +19,12 @@ async function signIn(page) {
     await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);
     await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
     await page.locator('button[type="submit"]:has-text("Sign In")').click();
+    await page.locator('h2:has-text("Sign In")').waitFor({ state: 'hidden' });
   }
-  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
 }
 
 test.describe('Data Table', () => {
   test('should upload a file and download it via signed URL from the actions menu', async ({ page }) => {
-    test.setTimeout(60000);
     page.on('console', msg => {
       if (msg.type() === 'error') console.log('Browser error: ' + msg.text());
     });
