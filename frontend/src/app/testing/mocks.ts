@@ -20,6 +20,9 @@ export class MockFirebaseDataService {
   get agentId() { return () => ''; }
   get userId() { return () => ''; }
   getDocument() { return of({}); }
+  getUserDoc() { return of({}); }
+  getUserDocOnce() { return Promise.resolve({}); }
+  slugExists() { return Promise.resolve(false); }
   setProject() {}
   deleteRecord() {}
   deleteModule() {}
@@ -62,8 +65,11 @@ export class MockAuth {
 }
 
 export class MockAuthService {
+  currentUser = signal<any>({ uid: 'test-uid' });
   user = new BehaviorSubject<any>({ uid: 'test-uid' });
   user$ = this.user.asObservable();
+  authResolved$ = of(true);
+  userStatus$ = of('approved');
   setUser() {}
   login() { return Promise.resolve(); }
   loginWithGoogle() { return Promise.resolve(); }
@@ -76,7 +82,6 @@ export class MockAuthService {
 
 export class MockProjectService {
   currentProjectId = 'test-project';
-  user = { uid: 'test-uid' };
   currentProject = new BehaviorSubject<string>('test-project');
   userProjectsObservable$ = of([{ projectId: 'test-project' }]);
 }

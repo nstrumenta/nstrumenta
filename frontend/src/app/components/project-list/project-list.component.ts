@@ -7,7 +7,7 @@ import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeader
 import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
-import { AsyncPipe, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatButton, MatFabButton } from '@angular/material/button';
@@ -30,7 +30,7 @@ export interface Item {
     selector: 'app-project-list',
     templateUrl: './project-list.component.html',
     styleUrls: ['./project-list.component.scss'],
-    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, MatIcon, AsyncPipe, DatePipe]
+    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, MatIcon, DatePipe]
 })
 export class ProjectListComponent implements OnInit {
   displayedColumns = ['id', 'lastOpened'];
@@ -57,6 +57,13 @@ export class ProjectListComponent implements OnInit {
       this.dataSource = new MatTableDataSource(items);
       this.dataSource.sort = this.sort;
     });
+
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user) {
+        this.firebaseDataService.setUser(user.uid);
+      }
+    });
   }
 
   computeBreakpoint() {
@@ -66,15 +73,6 @@ export class ProjectListComponent implements OnInit {
 
   ngOnInit(): void {
     this.breakpoint = this.computeBreakpoint();
-    
-    // Subscribe to user auth state and set user when authenticated
-    this.authService.user.pipe(
-      takeUntilDestroyed(this.destroyRef)
-    ).subscribe((user) => {
-      if (user) {
-        this.firebaseDataService.setUser(user.uid);
-      }
-    });
   }
 
   applyFilter(filterValue: string) {

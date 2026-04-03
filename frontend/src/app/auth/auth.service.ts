@@ -1,7 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Firestore, doc, getFirestore, onSnapshot, Unsubscribe } from 'firebase/firestore';
-import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,12 +11,24 @@ export class AuthService {
   private firestore: Firestore;
   private googleProvider: GoogleAuthProvider;
   private githubProvider: GithubAuthProvider;
-  
-  user = new BehaviorSubject<User | null>(null);
-  user$: Observable<User | null>;
-  
+
+  // Signals — preferred for components
+  readonly currentUser = signal<User | null>(null);
+  readonly authResolved = signal(false);
+  readonly userStatus = signal<string | null>(null);
+
+  // Observable aliases — required for guards (CanActivateFn returns Observable)
+  private userSubject = new BehaviorSubject<User | null>(null);
+  user$ = this.userSubject.asObservable();
+  // Keep BehaviorSubject for legacy consumers; guards use toObservable(this.authResolved)
+  private authResolvedSubject = new BehaviorSubject<boolean>(false);
+  authResolved$ = this.authResolvedSubject.asObservable();
   private userStatusSubject = new BehaviorSubject<string | null>(null);
-  userStatus$: Observable<string | null> = this.userStatusSubject.asObservable();
+  userStatus$ = this.userStatusSubject.asObservable();
+
+  // Legacy: some components access .user.getValue() — keep the BehaviorSubject reference
+  get user() { return this.userSubject; }
+
   private userStatusUnsubscribe?: Unsubscribe;
 
   constructor() {
@@ -24,35 +36,43 @@ export class AuthService {
     this.firestore = getFirestore();
     this.googleProvider = new GoogleAuthProvider();
     this.githubProvider = new GithubAuthProvider();
-    this.user$ = this.user.asObservable();
 
-    // Listen to auth state changes
     onAuthStateChanged(this.auth, (user) => {
-      this.user.next(user);
-      
-      // Cleanup previous subscription if it exists
+      this.currentUser.set(user);
+      this.authResolved.set(true);
+      this.userSubject.next(user);
+      this.authResolvedSubject.next(true);
+
       if (this.userStatusUnsubscribe) {
         this.userStatusUnsubscribe();
       }
-      
+
       if (user) {
         const docRef = doc(this.firestore, `users/${user.uid}`);
-        this.userStatusUnsubscribe = onSnapshot(docRef, (snapshot) => {
+        this.userStatusUnsubscribe = onSnapshot(docRef, async (snapshot) => {
           const data = snapshot.data();
-          if (data) {
-            this.userStatusSubject.next(data['status'] || 'pending');
+          if (!snapshot.exists() || !data?.['status']) {
+            const idToken = await user.getIdToken();
+            fetch('/api/user/init', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${idToken}` },
+            }).catch(err => console.error('Failed to init user:', err));
           } else {
-            this.userStatusSubject.next('pending');
+            const status = data?.['status'] || 'pending';
+            this.userStatus.set(status);
+            this.userStatusSubject.next(status);
           }
         });
       } else {
+        this.userStatus.set(null);
         this.userStatusSubject.next(null);
       }
     });
   }
 
   setUser(user: User | null) {
-    this.user.next(user);
+    this.userSubject.next(user);
+    this.currentUser.set(user);
   }
 
   async loginWithGoogle(): Promise<void> {
@@ -71,7 +91,6 @@ export class AuthService {
     await createUserWithEmailAndPassword(this.auth, email, password);
   }
 
-  // Deprecated: use loginWithGoogle instead
   async login(): Promise<void> {
     return this.loginWithGoogle();
   }

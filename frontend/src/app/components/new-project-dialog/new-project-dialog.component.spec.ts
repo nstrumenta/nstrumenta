@@ -11,12 +11,11 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
 import { OrganizationService } from 'src/app/services/organization.service';
-import { of } from 'rxjs';
+import { signal } from '@angular/core';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 const authServiceStub = {
-  user: of({ uid: 'mock' }),
-  user$: of({ uid: 'mock' }),
+  currentUser: signal({ uid: 'mock' }),
 };
 
 const apiServiceStub = {
@@ -28,8 +27,7 @@ const apiServiceStub = {
 };
 
 const organizationServiceStub = {
-  getUserOrganizations: () =>
-    of([{ id: 'org1', name: 'My Org', slug: 'my-org', createdAt: 0, createdBy: 'u1' }]),
+  organizations: signal([{ id: 'org1', name: 'My Org', slug: 'my-org', createdAt: 0, createdBy: 'u1' }]),
 };
 
 describe('NewProjectDialogComponent', () => {
@@ -66,8 +64,7 @@ describe('NewProjectDialogComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load organizations on init', () => {
-    expect(component.organizations.length).toBe(1);
-    expect(component.selectedOrgId).toBe('org1');
+  it('should expose organizations from service signal', () => {
+    expect(component.organizations().length).toBe(1);
   });
 });

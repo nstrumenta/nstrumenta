@@ -83,7 +83,7 @@
           <span style="margin-left: 8px;">{{ item.name }}</span>
         </button>
       } @else {
-        <a mat-button [matTooltip]="item.displayName || item.name" matTooltipPosition="right" [routerLink]="item.key" queryParamsHandling="preserve">
+        <a mat-button [matTooltip]="item.displayName || item.name" matTooltipPosition="right" [routerLink]="item.id || item.key" queryParamsHandling="preserve">
           {{ item.displayName || item.name }}
         </a>
       }

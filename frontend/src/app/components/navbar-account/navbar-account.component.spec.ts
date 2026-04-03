@@ -6,11 +6,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatMenuModule } from '@angular/material/menu';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
+import { signal } from '@angular/core';
 import { AuthService } from 'src/app/auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 
 const AuthServiceStub = {
+  currentUser: signal({ uid: 'mock', email: 'mock@example.com' }),
   user: of({ uid: 'mock', email: 'mock@example.com' }),
   user$: of({ uid: 'mock', email: 'mock@example.com' }),
   setUser: () => {},

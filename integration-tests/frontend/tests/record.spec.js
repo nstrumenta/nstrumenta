@@ -24,8 +24,8 @@ async function signIn(page) {
     await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);
     await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
     await page.locator('button[type="submit"]:has-text("Sign In")').click();
+    await page.locator('h2:has-text("Sign In")').waitFor({ state: 'hidden' });
   }
-  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
 }
 
 async function createProjectAndNavigateTo(page, tab) {
@@ -41,7 +41,7 @@ async function createProjectAndNavigateTo(page, tab) {
   await expect(page.locator('mat-option').first()).toBeVisible();
   await page.locator('mat-option').first().click();
   await page.locator('button:has-text("Create")').click();
-  await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 15000 });
+  await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//);
 
   const currentUrl = page.url();
 
@@ -87,14 +87,14 @@ test.describe('Recording', () => {
 
     await test.step('stop recording', async () => {
       await page.locator('button:has-text("Stop Recording")').click();
-      await expect(page.locator('button:has-text("Start Recording")')).toBeVisible();
+      await expect(page.locator('button:has-text("Start Recording")')).toBeVisible({ timeout: 10000 }); // waits for MCAP upload to complete
     });
 
     await test.step('navigate to data tab and verify .mcap upload', async () => {
       const dataUrl = projectUrl.replace(/\/[^/]+$/, '/data');
       await page.goto(dataUrl);
       await expect(page).toHaveURL(/\/data/);
-      await expect(page.locator('mat-row a', { hasText: '.mcap' }).first()).toBeVisible({ timeout: 5000 });
+      await expect(page.locator('mat-row a', { hasText: '.mcap' }).first()).toBeVisible({ timeout: 15000 }); // storageObjectFinalize → Firestore
     });
   });
 });

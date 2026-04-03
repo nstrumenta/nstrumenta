@@ -8,17 +8,16 @@
   @if (router.url === '/') {
     <app-navbar-title></app-navbar-title>
   }
-  @if (authService?.user | async ) {
-    <app-navbar-project-select></app-navbar-project-select>
+  @if (authService?.currentUser()) {
+    @if (router.url !== '/') {
+      <app-navbar-project-select></app-navbar-project-select>
+    }
     <span class="fill-remaining-space"></span>
-    @if ((isHandset$ | async) === false) {
+    @if (isHandset() === false) {
       @if (router.url !== '/') {
         <app-navbar-status></app-navbar-status>
       }
       <span class="fill-remaining-space"></span>
-    }
-    @if (router.url === '/') {
-      <div><button mat-button [routerLink]="['/']" queryParamsHandling="preserve">Go to Projects</button></div>
     }
     @if (router.url !== '/') {
       <app-navbar-vscode></app-navbar-vscode>

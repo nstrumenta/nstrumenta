@@ -1,9 +1,8 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal, effect } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { ApiService } from './api.service';
-import { Observable, of, from, firstValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { firstValueFrom } from 'rxjs';
 import { OrganizationDoc } from '../models/organization.model';
 
 @Injectable({ providedIn: 'root' })
@@ -12,22 +11,24 @@ export class OrganizationService {
   private apiService = inject(ApiService);
   private http = inject(HttpClient);
 
-  getUserOrganizations(): Observable<OrganizationDoc[]> {
-    return this.authService.user$.pipe(
-      switchMap(user => {
-        if (!user) return of([]);
-        return from(
-          Promise.all([this.apiService.getApiUrl(), user.getIdToken()])
-        ).pipe(
-          switchMap(([url, idToken]) => {
-            const headers = new HttpHeaders()
-              .set('Authorization', `Bearer ${idToken}`)
-              .set('Accept', 'application/json');
-            return this.http.get<OrganizationDoc[]>(`${url}/api/orgs`, { headers });
-          })
-        );
-      })
-    );
+  readonly organizations = signal<OrganizationDoc[]>([]);
+
+  constructor() {
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (!user) {
+        this.organizations.set([]);
+        return;
+      }
+      Promise.all([this.apiService.getApiUrl(), user.getIdToken()]).then(([url, idToken]) => {
+        const headers = new HttpHeaders()
+          .set('Authorization', `Bearer ${idToken}`)
+          .set('Accept', 'application/json');
+        firstValueFrom(this.http.get<OrganizationDoc[]>(`${url}/api/orgs`, { headers }))
+          .then(orgs => this.organizations.set(orgs))
+          .catch(() => this.organizations.set([]));
+      });
+    });
   }
 
   async createOrganization(name: string, slug?: string): Promise<OrganizationDoc> {

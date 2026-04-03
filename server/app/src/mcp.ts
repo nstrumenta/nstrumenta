@@ -1039,9 +1039,11 @@ server.registerTool(
             const { generateV4ReadSignedUrl } = require('./shared/utils');
 
             // Accept both relative ("data/file.mcap") and full ("projects/{id}/data/file.mcap") paths
-            const fullPath = originalPath.startsWith('projects/')
-                ? originalPath
-                : `projects/${projectId}/${originalPath.replace(/^\//, '')}`;
+            // Strip any leading slash before checking prefix
+            const normalizedPath = originalPath.replace(/^\//, '');
+            const fullPath = normalizedPath.startsWith('projects/')
+                ? normalizedPath
+                : `projects/${projectId}/${normalizedPath}`;
 
             const downloadUrl = await generateV4ReadSignedUrl(fullPath);
 

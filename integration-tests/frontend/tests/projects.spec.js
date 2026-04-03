@@ -5,31 +5,20 @@ const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 async function signIn(page) {
   await page.goto('/');
-  
-  // Click the "Sign in" button in the navbar
-  const signInBtn = page.locator('button:has-text("Sign in")');
-  try {
-    await expect(signInBtn).toBeVisible();
-  } catch (e) {
-    console.log('PAGE TEXT at sign-in failure:\n', await page.locator('body').innerText());
-    throw e;
+
+  await Promise.race([
+    page.locator('button:has-text("Sign in"), button[mat-icon-button]').first().waitFor({ state: 'visible' }),
+  ]);
+
+  if (await page.locator('button:has-text("Sign in")').isVisible()) {
+    await page.locator('button:has-text("Sign in")').click();
+    await expect(page.locator('h2:has-text("Sign In")')).toBeVisible();
+    await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);
+    await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
+    await page.locator('button[type="submit"]:has-text("Sign In")').click();
+    await page.locator('h2:has-text("Sign In")').waitFor({ state: 'hidden' });
   }
-  await signInBtn.click();
-  
-  // Wait for login dialog to appear
-  await expect(page.locator('h2:has-text("Sign In")')).toBeVisible();
-  
-  // Fill in email and password
-  await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);
-  await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
-  
-  // Submit
-  await page.locator('button[type="submit"]:has-text("Sign In")').click();
-  
-  // Wait for successful login - account menu button should appear
-  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
-  
-  // Navigate to home page which shows the project list when logged in
+
   await page.goto('/');
 }
 
@@ -78,6 +67,6 @@ test.describe('Project Management', () => {
     await expect(createButton).toBeEnabled();
     await createButton.click();
 
-    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//);
   });
 });

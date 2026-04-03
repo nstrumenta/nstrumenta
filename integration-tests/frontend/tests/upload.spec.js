@@ -12,16 +12,19 @@ if (!TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
 
 async function signIn(page) {
   await page.goto('/');
-  
+
+  await Promise.race([
+    page.locator('button:has-text("Sign in"), button[mat-icon-button]').first().waitFor({ state: 'visible' }),
+  ]);
+
   if (await page.locator('button:has-text("Sign in")').isVisible()) {
     await page.locator('button:has-text("Sign in")').click();
     await expect(page.locator('h2:has-text("Sign In")')).toBeVisible();
     await page.locator('input[name="email"]').fill(TEST_USER_EMAIL);
     await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
     await page.locator('button[type="submit"]:has-text("Sign In")').click();
+    await page.locator('h2:has-text("Sign In")').waitFor({ state: 'hidden' });
   }
-  
-  await expect(page.locator('button[mat-icon-button]').first()).toBeVisible();
 }
 
 test.describe('File Upload', () => {
@@ -52,10 +55,10 @@ test.describe('File Upload', () => {
     await page.locator('mat-option').first().click();
 
     await page.locator('button:has-text("Create")').click();
-    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//, { timeout: 15000 });
+    await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//);
 
     // Navigate to data tab
-    await expect(page).toHaveURL(/\/data/, { timeout: 5000 });
+    await expect(page).toHaveURL(/\/data/);
     await expect(page.locator('button#fab')).toBeVisible();
   });
 
@@ -66,13 +69,11 @@ test.describe('File Upload', () => {
 
     // Capture the MCP response to detect errors early
     const mcpResponsePromise = page.waitForResponse(
-      response => response.url().includes('/mcp') && response.request().method() === 'POST',
-      { timeout: 10000 }
+      response => response.url().includes('/mcp') && response.request().method() === 'POST'
     );
 
     const uploadResponsePromise = page.waitForResponse(
-      response => new URL(response.url()).hostname.endsWith('.googleapis.com') && response.request().method() === 'PUT',
-      { timeout: 15000 }
+      response => new URL(response.url()).hostname.endsWith('.googleapis.com') && response.request().method() === 'PUT'
     );
 
     const fileChooserPromise = page.waitForEvent('filechooser');

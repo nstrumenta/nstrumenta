@@ -1,0 +1,43 @@
+# Local dev stack: server + Angular hot-reload frontend.
+# Start via: ./dev.sh
+# Stop via:  docker compose -f integration-tests/docker-compose.dev.yml down
+name: nstrumenta-dev
+
+services:
+  server:
+    build:
+      context: ../
+      dockerfile: server/Dockerfile
+    ports:
+      - "5999:5999"
+      - "9229:9229"
+    environment:
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
+      - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+      - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+    volumes:
+      - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
+      - ../server/app/src:/build/server/app/src
+    working_dir: /build/server/app
+    command: npx tsx watch --poll --inspect=0.0.0.0:9229 src/index.ts
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5999/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+      start_period: 5s
+
+  frontend:
+    image: node:22-slim
+    working_dir: /app
+    ports:
+      - "5008:4200"
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules
+    environment:
+      - PROXY_TARGET=http://server:5999
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.js"
+    depends_on:
+      server:
+        condition: service_healthy

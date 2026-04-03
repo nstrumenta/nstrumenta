@@ -1,6 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, EventEmitter, Output, inject } from '@angular/core';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -8,8 +9,7 @@ import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { UploadService } from 'src/app/services/upload.service';
 import { FolderNavigationService } from 'src/app/services/folder-navigation.service';
 import { MatToolbar } from '@angular/material/toolbar';
-import { AsyncPipe } from '@angular/common';
-import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
+import { MatIconButton, MatFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
 import { NavbarProjectSelectComponent } from '../navbar-project-select/navbar-project-select.component';
@@ -22,7 +22,7 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
     selector: 'app-toolbar',
     templateUrl: './toolbar.component.html',
     styleUrls: ['./toolbar.component.scss'],
-    imports: [MatToolbar, MatIconButton, MatIcon, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, MatButton, RouterLink, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent, AsyncPipe]
+    imports: [MatToolbar, MatIconButton, MatIcon, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
 })
 export class ToolbarComponent {
   private route = inject(ActivatedRoute);
@@ -37,9 +37,10 @@ export class ToolbarComponent {
   downloadURL: Observable<string>;
   projectId: string;
 
-  isHandset$: Observable<boolean> = this.breakpointObserver
-    .observe(Breakpoints.Handset)
-    .pipe(map((result) => result.matches));
+  isHandset = toSignal(
+    this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
+    { initialValue: false }
+  );
 
   isDataRouteOrUploading() {
     return this.uploadService.hasActiveUploads() || this.router.url.includes('/data');

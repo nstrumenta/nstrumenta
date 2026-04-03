@@ -1,6 +1,4 @@
 import { Injectable, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { User } from 'firebase/auth';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { ProjectSettings } from '../models/projectSettings.model';
@@ -13,39 +11,35 @@ import { FirebaseDataService } from './firebase-data.service';
   providedIn: 'root',
 })
 export class ProjectService {
-  // Inject services using the new Angular 20 pattern
   private authService = inject(AuthService);
   private serverService = inject(ServerService);
   private apiService = inject(ApiService);
-  private destroyRef = inject(DestroyRef);
   private firebaseDataService = inject(FirebaseDataService);
 
   currentProject = new BehaviorSubject<string>('');
   projects: Observable<Project[]>;
-  user: User;
-  
+
   get currentProjectId() {
     return this.firebaseDataService.projectId();
   }
-  
+
   projectSettings: ProjectSettings;
 
   constructor() {
-    this.authService.user.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((user) => {
+    effect(() => {
+      const user = this.authService.currentUser();
       if (user) {
-        this.user = user;
         this.firebaseDataService.setUser(user.uid);
         this.projects = this.firebaseDataService.userProjectsObservable$;
       }
     });
-    
+
     effect(() => {
       this.currentProject.next(this.currentProjectId);
     });
   }
 
   setProject(id: string) {
-    // Left just in case something else expects to set the ID via project service instead of navigation
     this.firebaseDataService.setProject(id);
   }
 

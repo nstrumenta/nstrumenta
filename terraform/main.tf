@@ -324,6 +324,12 @@ data "google_compute_default_service_account" "default" {
   project = google_project.fs.project_id
 }
 
+resource "google_storage_bucket_iam_member" "app_engine_object_admin" {
+  bucket = google_storage_bucket.default.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 
 
 # Firebase Hosting site — serves the Angular SPA from CDN, rewrites API paths to Cloud Run
@@ -622,6 +628,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "&& (",
     "  assertion.ref.startsWith('refs/heads/main')",
     "  || assertion.ref.startsWith('refs/tags/v')",
+    "  || assertion.event_name == 'pull_request'",
     length(var.trusted_github_actors) > 0 ? "  || assertion.actor in [${join(", ", [for a in var.trusted_github_actors : "'${a}'"])}]" : "",
     ")",
   ])

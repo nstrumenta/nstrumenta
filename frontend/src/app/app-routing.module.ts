@@ -16,6 +16,7 @@ import { RepositoriesComponent } from './components/repositories/repositories.co
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
 import { waitlistGuard } from './guards/waitlist.guard';
+import { usernameGuard } from './guards/username.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
 import { reservedPathGuard } from './guards/reserved-path.guard';
 import { FirebaseDataService } from './services/firebase-data.service';
@@ -64,12 +65,13 @@ const userRoutes: Routes = [
   {
     path: '',
     component: HomeComponent,
-    pathMatch: 'full'
+    pathMatch: 'full',
+    canActivate: [usernameGuard]
   },
   {
     path: ':owner',
     canMatch: [reservedPathGuard],
-    canActivate: [waitlistGuard],
+    canActivate: [waitlistGuard, usernameGuard],
     children: [
       {
         path: ':project',

@@ -45,7 +45,7 @@ export class ApiService {
   private authService = inject(AuthService);
 
   private async buildMcpHeaders(projectId?: string): Promise<HttpHeaders> {
-    const user = this.authService.user.value;
+    const user = this.authService.currentUser();
     if (!user) {
       throw new Error('User must be authenticated');
     }

@@ -104,7 +104,7 @@ export class FirebaseDataService {
 
     // Gate all per-project subscriptions on both projectId and authenticated user being present.
     // This prevents Firestore permission errors during auth restore on fresh page loads.
-    const projectWithAuth$ = combineLatest([toObservable(this.currentProjectId), this.authService.user$]);
+    const projectWithAuth$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.authService.currentUser)]);
 
     this.modulesObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
@@ -150,7 +150,7 @@ export class FirebaseDataService {
       })
     );
 
-    this.agentActionsObservable$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.currentAgentId), this.authService.user$]).pipe(
+    this.agentActionsObservable$ = combineLatest([toObservable(this.currentProjectId), toObservable(this.currentAgentId), toObservable(this.authService.currentUser)]).pipe(
       switchMap(([projectId, agentId, user]) => {
         if (!projectId || !agentId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
@@ -434,14 +434,14 @@ export class FirebaseDataService {
   }
 
   // Update operations
-  async updateRepository(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRepository(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
       await updateDoc(docRef, data);
     });
   }
 
-  async updateRecord(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRecord(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
       await updateDoc(docRef, data);
@@ -449,14 +449,14 @@ export class FirebaseDataService {
   }
 
   // Record collection CRUD operations (distinct from data collection)
-  async addRecording(projectId: string, data: unknown): Promise<void> {
+  async addRecording(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
       await addDoc(collectionRef, { ...(data as object), lastModified: Date.now() });
     });
   }
 
-  async updateRecording(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateRecording(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -470,7 +470,7 @@ export class FirebaseDataService {
     });
   }
 
-  async updateAction(projectId: string, id: string, data: unknown): Promise<void> {
+  async updateAction(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
@@ -528,7 +528,7 @@ export class FirebaseDataService {
     projectId: string,
     agentId: string,
     id: string,
-    data: unknown
+    data: Record<string, unknown>
   ): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
@@ -550,7 +550,7 @@ export class FirebaseDataService {
   }
 
   // Project settings operations
-  async updateProjectSettings(projectId: string, data: unknown): Promise<void> {
+  async updateProjectSettings(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/projects/${projectId}`);
       await setDoc(docRef, data, { merge: true });
@@ -561,6 +561,16 @@ export class FirebaseDataService {
   getUserDoc(uid: string): Observable<any> {
     const docRef = doc(this.firestore, `users/${uid}`);
     return this.docData(docRef);
+  }
+
+  async getUserDocOnce(uid: string): Promise<Record<string, unknown>> {
+    const snapshot = await getDoc(doc(this.firestore, `users/${uid}`));
+    return (snapshot.data() as Record<string, unknown>) ?? {};
+  }
+
+  async slugExists(slug: string): Promise<boolean> {
+    const snapshot = await getDoc(doc(this.firestore, `slugs/${slug}`));
+    return snapshot.exists();
   }
 
   async updateUserProject(projectId: string, projectData: unknown): Promise<void> {

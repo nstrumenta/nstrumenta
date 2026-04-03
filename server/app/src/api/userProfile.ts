@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { firestore } from '../authentication/ServiceAccount'
 import { withFirebaseAuth, FirebaseAuthResult } from '../authentication/firebaseAuth'
+import { getAuth } from 'firebase-admin/auth'
 
 const RESERVED_WORDS = new Set([
   'admin', 'settings', 'new', 'waitlist', 'login', 'signup',
@@ -10,6 +11,35 @@ const RESERVED_WORDS = new Set([
 const USERNAME_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/
 
 const INITIAL_CREDIT_CENTS = 2500
+
+const initUserBase = async (
+  req: Request,
+  res: Response,
+  args: FirebaseAuthResult,
+) => {
+  const { authenticated, userId } = args
+  if (!authenticated || !userId) return res.status(401).send('Authentication required')
+
+  const userRef = firestore.doc(`users/${userId}`)
+  const snapshot = await userRef.get()
+  const existing = snapshot.data()
+
+  if (snapshot.exists && existing?.['status']) {
+    return res.status(200).json(existing)
+  }
+
+  const authUser = await getAuth().getUser(userId)
+  const userData = {
+    email: authUser.email ?? '',
+    displayName: authUser.displayName ?? '',
+    status: 'pending',
+    createdAt: existing?.['createdAt'] ?? Date.now(),
+  }
+  await userRef.set(userData, { merge: true })
+  return res.status(snapshot.exists ? 200 : 201).json({ ...existing, ...userData })
+}
+
+export const initUser = withFirebaseAuth(initUserBase)
 
 const setupUsernameBase = async (
   req: Request,
@@ -80,7 +110,15 @@ const setupUsernameBase = async (
         updatedAt: timestamp,
       })
 
-      // 5. Update the user document
+      // 5. Add org reference to user subcollection (for listUserOrgs)
+      const userOrgRef = firestore.doc(`users/${userId}/organizations/${orgId}`)
+      transaction.set(userOrgRef, {
+        name: normalizedUsername,
+        slug: normalizedUsername,
+        role: 'owner',
+      })
+
+      // 6. Update the user document
       const userRef = firestore.doc(`users/${userId}`)
       transaction.set(userRef, {
         username: normalizedUsername,

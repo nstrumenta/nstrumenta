@@ -1,7 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { User } from 'firebase/auth';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { Observable, Subscription } from 'rxjs';
 import { AuthService } from 'src/app/auth/auth.service';
 
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
@@ -21,31 +19,24 @@ export class NavbarAccountComponent {
   private router = inject(Router);
   private dialog = inject(MatDialog);
 
-  subscriptions = new Array<Subscription>();
-  loggedIn = false;
-  user$: Observable<User | null>;
-  currentUser: User | null = null;
-  userSubscription: Subscription;
-
-  constructor() {
-    this.user$ = this.authService.user$;
-    this.userSubscription = this.user$.subscribe((aUser: User | null) => {
-      this.loggedIn = aUser ? true : false;
-      this.currentUser = aUser;
-    });
-  }
+  currentUser = this.authService.currentUser;
+  loggedIn = computed(() => !!this.currentUser());
 
   async logout() {
     await this.authService.logout();
-    this.loggedIn = false;
-    this.router.navigate(['/'], {
-      queryParamsHandling: 'preserve'
-    });
+    this.router.navigate(['/'], { queryParamsHandling: 'preserve' });
   }
 
   login() {
-    this.dialog.open(LoginDialogComponent, {
-      width: '400px'
-    });
+    const urlTree = this.router.parseUrl(this.router.url);
+    const returnUrl = urlTree.queryParams['returnUrl'] as string | undefined;
+
+    this.dialog.open(LoginDialogComponent, { width: '400px' })
+      .afterClosed()
+      .subscribe(success => {
+        if (success && returnUrl) {
+          this.router.navigateByUrl(returnUrl);
+        }
+      });
   }
 }
