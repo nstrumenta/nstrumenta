@@ -9,7 +9,7 @@
 #   ./pw.sh tests/record.spec.js
 services:
   frontend-dev:
-    image: node:22-slim
+    image: node:24-slim
     working_dir: /app
     volumes:
       - ../frontend:/app

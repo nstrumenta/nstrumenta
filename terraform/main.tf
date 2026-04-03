@@ -628,6 +628,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "&& (",
     "  assertion.ref.startsWith('refs/heads/main')",
     "  || assertion.ref.startsWith('refs/tags/v')",
+    "  || assertion.event_name == 'pull_request'",
     length(var.trusted_github_actors) > 0 ? "  || assertion.actor in [${join(", ", [for a in var.trusted_github_actors : "'${a}'"])}]" : "",
     ")",
   ])
