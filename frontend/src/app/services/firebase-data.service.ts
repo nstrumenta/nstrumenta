@@ -36,6 +36,7 @@ import {
   Observable,
   catchError,
   combineLatest,
+  from,
   map,
   of,
   switchMap
@@ -219,7 +220,37 @@ export class FirebaseDataService {
           const projectsQuery = query(projectsCollection);
           return this.collectionData(projectsQuery);
         }).pipe(
-          map((data) => data as Project[]),
+          switchMap((refs) => {
+            const projects = refs as Project[];
+            // Identify projects missing slug or orgSlug — these are legacy format docs
+            const missingSlug = projects.filter(p => !p['slug'] || !p['orgSlug']);
+            if (missingSlug.length === 0) return of(projects);
+            // Batch-fetch the main /projects/{id} docs for the missing ones to get slug+orgSlug+name
+            return from(
+              Promise.all(
+                missingSlug.map(p =>
+                  getDoc(doc(this.firestore, `projects/${p['id']}`))
+                    .then(snap => ({ refId: p['id'], data: snap.exists() ? snap.data() : null }))
+                    .catch(() => ({ refId: p['id'], data: null }))
+                )
+              )
+            ).pipe(
+              map(enrichDocs => {
+                const enrichMap = new Map(enrichDocs.map(e => [e.refId, e.data]));
+                return projects.map(p => {
+                  if (p['slug'] && p['orgSlug']) return p;
+                  const full = enrichMap.get(p['id'] as string);
+                  if (!full) return p;
+                  return {
+                    ...p,
+                    name: p['name'] || full['name'],
+                    slug: p['slug'] || full['slug'],
+                    orgSlug: p['orgSlug'] || full['orgSlug'],
+                  };
+                });
+              })
+            );
+          }),
           catchError((error) => {
             console.error('Error loading user projects for user:', userId, error);
             return of([]);

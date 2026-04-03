@@ -10,7 +10,7 @@
           <mat-card-header>
             <mat-card-title>{{ project.name || project.id }}</mat-card-title>
             @if (project.orgSlug) {
-              <mat-card-subtitle>{{ project.orgSlug }}</mat-card-subtitle>
+              <mat-card-subtitle>{{ project.orgSlug }}/{{ project.slug }}</mat-card-subtitle>
             }
           </mat-card-header>
           <mat-card-content>
@@ -19,9 +19,13 @@
             </p>
           </mat-card-content>
           <mat-card-actions>
-            <a mat-button [routerLink]="['/', project.orgSlug || 'unknown', project.slug || project.id, 'data']" queryParamsHandling="preserve">
-              Open
-            </a>
+            @if (isRoutable(project)) {
+              <a mat-button [routerLink]="['/', project.orgSlug, project.slug, 'data']" queryParamsHandling="preserve">
+                Open
+              </a>
+            } @else {
+              <span class="mat-body-small legacy-note">Project needs reconfiguration</span>
+            }
           </mat-card-actions>
         </mat-card>
       }

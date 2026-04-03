@@ -10,15 +10,13 @@ import { MatIcon } from '@angular/material/icon';
 import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
+import { Project } from '../../models/firebase.model';
 
-interface Project {
-  id: string;
-  name?: string;
-  slug?: string;
-  orgSlug?: string;
-  lastOpened?: number;
-  [key: string]: unknown;
-}
+// Reserved paths that cannot be used as org slugs (mirrors reserved-path.guard.ts)
+const RESERVED_PATHS = new Set([
+  'admin', 'settings', 'new', 'waitlist', 'login', 'signup',
+  'api', 'mcp', 'oauth', 'health', 'config', 'assets', '_', 'projects', 'account'
+]);
 
 @Component({
     selector: 'app-project-list',
@@ -58,5 +56,9 @@ export class ProjectListComponent {
         this.router.navigate(['/', result.orgSlug, result.slug, 'overview']).catch(console.error);
       }
     });
+  }
+
+  isRoutable(project: Project): boolean {
+    return !!project.orgSlug && !!project.slug && !RESERVED_PATHS.has(project.orgSlug);
   }
 }
