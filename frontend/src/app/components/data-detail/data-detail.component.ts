@@ -81,14 +81,14 @@ export class DataDetailComponent {
           );
           if (fileName.toLowerCase().endsWith('.json')) {
             if (fileSize < 1_000_000) {
-              this.contents.set(JSON.stringify(await (await fetch(url)).json(), undefined, 4));
+              this.contents.set(JSON.stringify(await (await fetch(url, { credentials: 'omit' })).json(), undefined, 4));
             } else if (fileSize < 100_000_000) {
-              this.contents.set(await (await fetch(url)).text());
+              this.contents.set(await (await fetch(url, { credentials: 'omit' })).text());
             } else {
               this.contents.set('large file, no preview available');
             }
           } else if (fileName.toLowerCase().endsWith('.txt') || fileName.toLowerCase().endsWith('.log')) {
-            this.contents.set(await (await fetch(url)).text());
+            this.contents.set(await (await fetch(url, { credentials: 'omit' })).text());
           }
           this.url.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
         } catch (error) {

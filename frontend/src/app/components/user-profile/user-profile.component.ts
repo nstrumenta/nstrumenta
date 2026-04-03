@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { doc, getDoc, getFirestore } from 'firebase/firestore';
 import { AuthService } from 'src/app/auth/auth.service';
 import { ApiService } from 'src/app/services/api.service';
@@ -23,6 +23,7 @@ export class UserProfileComponent implements OnInit {
   public authService = inject(AuthService);
   private apiService = inject(ApiService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private snackBar = inject(MatSnackBar);
   private firestore = getFirestore();
 
@@ -107,7 +108,8 @@ export class UserProfileComponent implements OnInit {
       const { username } = await res.json();
       this.username.set(username);
       this.snackBar.open(`Username set to @${username}`, 'Close', { duration: 3000 });
-      this.router.navigate(['/']);
+      const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+      this.router.navigateByUrl(returnUrl || '/');
     } catch (err: any) {
       this.usernameError = err.message || 'Failed to save username';
     } finally {
