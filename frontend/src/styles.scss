@@ -48,6 +48,15 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
+  background-color: #121212;
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: light) {
+  html, body {
+    background-color: #fafafa;
+    color: #000000;
+  }
 }
 
 $indigo: mat.m2-define-palette(mat.$m2-indigo-palette);

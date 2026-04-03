@@ -64,6 +64,8 @@ export class MockAuth {
 export class MockAuthService {
   user = new BehaviorSubject<any>({ uid: 'test-uid' });
   user$ = this.user.asObservable();
+  authResolved$ = of(true);
+  userStatus$ = of('approved');
   setUser() {}
   login() { return Promise.resolve(); }
   loginWithGoogle() { return Promise.resolve(); }
