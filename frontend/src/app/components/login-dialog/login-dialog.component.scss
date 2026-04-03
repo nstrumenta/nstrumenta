@@ -13,44 +13,24 @@
 
 .oauth-btn {
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
 }
 
 .divider {
   display: flex;
   align-items: center;
   text-align: center;
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--mat-sys-on-surface-variant);
   font-size: 12px;
-  
+
   &::before,
   &::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
   }
 
-  &::before {
-    margin-right: 8px;
-  }
-
-  &::after {
-    margin-left: 8px;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .divider {
-    color: rgba(255, 255, 255, 0.54);
-
-    &::before,
-    &::after {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-  }
+  &::before { margin-right: 8px; }
+  &::after { margin-left: 8px; }
 }
 
 .email-form {
@@ -64,13 +44,11 @@
 }
 
 .error-message {
-  color: #f44336;
+  color: var(--mat-sys-error);
   font-size: 12px;
-  margin-bottom: 8px;
 }
 
 .toggle-mode {
   display: flex;
   justify-content: center;
-  margin-top: 8px;
 }

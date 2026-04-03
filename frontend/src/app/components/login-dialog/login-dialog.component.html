@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>{{ isRegistering ? 'Create Account' : 'Sign In' }}</h2>
 <mat-dialog-content class="login-dialog-content">
   <div class="oauth-login-container">
-    <button mat-stroked-button (click)="githubLogin()" class="oauth-btn">
+    <button mat-outlined-button (click)="githubLogin()" class="oauth-btn">
       <mat-icon>code</mat-icon>
       Sign in with GitHub
     </button>
@@ -26,7 +26,7 @@
       {{ errorMessage }}
     </div>
 
-    <button mat-flat-button color="primary" type="submit" class="full-width submit-btn" [disabled]="!email || !password">
+    <button mat-flat-button type="submit" class="full-width submit-btn" [disabled]="!email || !password">
       {{ isRegistering ? 'Sign Up' : 'Sign In' }}
     </button>
   </form>

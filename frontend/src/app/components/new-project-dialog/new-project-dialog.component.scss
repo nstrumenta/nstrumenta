@@ -1,14 +1,9 @@
-.project-name-input {
-    margin-right: 10px; 
-}
-
 .error-message {
-    margin: 10px 0;
-    color: #f44336;
+  color: var(--mat-sys-error);
 }
 
 section {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

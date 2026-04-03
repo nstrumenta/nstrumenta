@@ -51,7 +51,7 @@
 
 .progress-text {
   font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+  color: var(--mat-sys-on-surface-variant);
   min-width: 45px;
   text-align: right;
 }
@@ -65,7 +65,7 @@
 }
 
 .error-message {
-  color: #f44336;
+  color: var(--mat-sys-error);
   font-size: 12px;
   display: block;
   word-wrap: break-word;

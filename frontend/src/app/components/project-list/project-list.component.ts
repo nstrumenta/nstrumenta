@@ -1,63 +1,49 @@
-import { SelectionModel } from '@angular/cdk/collections';
-import { Component, OnInit, ViewChild, inject, DestroyRef, effect } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, computed, signal, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { MatSort, MatSortHeader } from '@angular/material/sort';
-import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
 import { NewProjectDialogComponent } from '../new-project-dialog/new-project-dialog.component';
 import { DatePipe } from '@angular/common';
-import { MatFormField } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
-import { MatButton, MatFabButton } from '@angular/material/button';
+import { MatFabButton } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
+import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card';
+import { MatFormField } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
 
-// Interface for project data
 interface Project {
   id: string;
-  lastOpened: number;
-  [key: string]: unknown; // Allow for additional properties
-}
-
-export interface Item {
-  id: string;
-  modified: number;
+  name?: string;
+  slug?: string;
+  orgSlug?: string;
+  lastOpened?: number;
+  [key: string]: unknown;
 }
 
 @Component({
     selector: 'app-project-list',
     templateUrl: './project-list.component.html',
     styleUrls: ['./project-list.component.scss'],
-    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, MatIcon, DatePipe]
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions, RouterLink, MatFabButton, MatIcon, DatePipe, MatFormField, MatInput]
 })
-export class ProjectListComponent implements OnInit {
-  displayedColumns = ['id', 'lastOpened'];
-  dataSource: MatTableDataSource<Project>;
-  selection = new SelectionModel<Project>(true, []);
-  breakpoint: number;
-
-  @ViewChild(MatSort, { static: false }) sort: MatSort;
-
-  // Inject services using the new Angular 20 pattern
+export class ProjectListComponent {
   public dialog = inject(MatDialog);
   public authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
-  private destroyRef = inject(DestroyRef);
   private router = inject(Router);
 
-  constructor() {
-    // Set up effect to handle user projects data changes
-    effect(() => {
-      const userProjects = this.firebaseDataService.userProjects();
-      const items = userProjects.map((item: Project) => {
-        return { key: item.id, id: item.id, ...item };
-      });
-      this.dataSource = new MatTableDataSource(items);
-      this.dataSource.sort = this.sort;
-    });
+  filterText = signal('');
 
+  userProjects = this.firebaseDataService.userProjects;
+
+  filteredProjects = computed(() => {
+    const filter = this.filterText().toLowerCase();
+    return this.userProjects()
+      .filter((p: Project) => !filter || (p.name || p.id || '').toLowerCase().includes(filter))
+      .sort((a: Project, b: Project) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0));
+  });
+
+  constructor() {
     effect(() => {
       const user = this.authService.currentUser();
       if (user) {
@@ -66,54 +52,11 @@ export class ProjectListComponent implements OnInit {
     });
   }
 
-  computeBreakpoint() {
-    const ret = Math.max(1, Math.min(4, Math.ceil(window.innerWidth / 400)));
-    return ret;
-  }
-
-  ngOnInit(): void {
-    this.breakpoint = this.computeBreakpoint();
-  }
-
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim();
-    filterValue = filterValue.toLowerCase();
-    this.dataSource.filter = filterValue;
-  }
-
   newProjectDialog() {
-    const dialogRef = this.dialog.open(NewProjectDialogComponent);
-    
-    dialogRef.afterClosed().subscribe(result => {
+    this.dialog.open(NewProjectDialogComponent).afterClosed().subscribe(result => {
       if (result?.orgSlug && result?.slug) {
-        this.router.navigate(['/', result.orgSlug, result.slug, 'overview']).then(success => {
-          if (success) {
-            (window as any)._projectNavigationComplete = true;
-          }
-        }).catch(err => {
-          console.error('Navigation error:', err);
-        });
+        this.router.navigate(['/', result.orgSlug, result.slug, 'overview']).catch(console.error);
       }
     });
-  }
-
-  onResize() {
-    this.breakpoint = this.computeBreakpoint();
-  }
-
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.data.length;
-    return numSelected === numRows;
-  }
-
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  masterToggle() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-    } else {
-      this.dataSource.data.forEach((row) => this.selection.select(row));
-    }
   }
 }

@@ -1,31 +1,38 @@
 @if (authService.currentUser()) {
-  <div>
-    <div style="flex-direction:row">
-      <mat-form-field>
-        <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
-      </mat-form-field>
+  <div class="project-list-container">
+    <mat-form-field subscriptSizing="dynamic">
+      <input matInput (input)="filterText.set($event.target.value)" placeholder="Filter projects">
+    </mat-form-field>
+
+    <div class="project-grid">
+      @for (project of filteredProjects(); track project.id) {
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ project.name || project.id }}</mat-card-title>
+            @if (project.orgSlug) {
+              <mat-card-subtitle>{{ project.orgSlug }}</mat-card-subtitle>
+            }
+          </mat-card-header>
+          <mat-card-content>
+            <p class="mat-body-small last-opened">
+              Last opened: {{ project.lastOpened | date: 'mediumDate' }}
+            </p>
+          </mat-card-content>
+          <mat-card-actions>
+            <a mat-button [routerLink]="['/', project.orgSlug || 'unknown', project.slug || project.id, 'data']" queryParamsHandling="preserve">
+              Open
+            </a>
+          </mat-card-actions>
+        </mat-card>
+      }
+
+      @if (filteredProjects().length === 0) {
+        <p class="mat-body-medium no-projects">No projects yet. Create one to get started.</p>
+      }
     </div>
-    <mat-table #table [dataSource]="dataSource" matSort matSortActive="lastOpened" matSortDirection="desc"
-      class="animate">
-      <ng-container matColumnDef="id">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> project </mat-header-cell>
-        <mat-cell *matCellDef="let fileDocument">
-          <a mat-button [routerLink]="['/', fileDocument.orgSlug || 'unknown', fileDocument.slug || fileDocument.id, 'overview']" queryParamsHandling="preserve">
-            {{ fileDocument.name || fileDocument.id }}
-          </a>
-        </mat-cell>
-      </ng-container>
-      <ng-container matColumnDef="lastOpened">
-        <mat-header-cell *matHeaderCellDef mat-sort-header> last opened </mat-header-cell>
-        <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastOpened | date : 'medium'}} </mat-cell>
-      </ng-container>
-      <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-      <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
-    </mat-table>
   </div>
 }
 
-
-<button mat-fab id="fab" (click)="newProjectDialog()">
+<button mat-fab id="fab" (click)="newProjectDialog()" aria-label="New project">
   <mat-icon>add</mat-icon>
 </button>

@@ -24,10 +24,12 @@
     }
   } @else {
     <span class="fill-remaining-space"></span>
-    <!-- <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/']">Use Cases</div>
-    <div *ngIf="router.url === '/'" mat-menu-item [routerLink]="['/subscribe']">Subscribe</div> -->
   }
-  <div style="border-left: 2px solid lightgrey;height: 30px"></div>
+  <button mat-icon-button (click)="themeService.toggleTheme()"
+    [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
+    <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
+  <div style="border-left: 2px solid var(--mat-sys-outline-variant); height: 30px"></div>
   <app-navbar-account></app-navbar-account>
   @if (isDataRouteOrUploading()) {
     <button mat-fab id="fab" (click)="uploader.click()" title="add data">
@@ -39,4 +41,3 @@
     }
   }
 </mat-toolbar>
-

@@ -36,7 +36,7 @@
       <input matInput [(ngModel)]="newFolderName" placeholder="e.g., sensors" 
              (keyup.enter)="createFolder()" />
     </mat-form-field>
-    <button mat-raised-button color="primary" (click)="createFolder()" 
+    <button mat-flat-button (click)="createFolder()" 
             [disabled]="!newFolderName.trim()" 
             matTooltip="Create and navigate to folder">
       <mat-icon>create_new_folder</mat-icon>
@@ -48,10 +48,10 @@
   @if (selection.hasValue()) {
     {{ selection.selected.length }} files selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
-      <mat-icon color="accent">delete</mat-icon>
+      <mat-icon>delete</mat-icon>
     </button>
     <button mat-icon-button matTooltip="Download Selected" (click)="downloadSelected()">
-      <mat-icon color="accent">cloud_download</mat-icon>
+      <mat-icon>cloud_download</mat-icon>
     </button>
   }
 </div>

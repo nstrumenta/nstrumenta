@@ -20,7 +20,7 @@ import { MatIconModule } from '@angular/material/icon';
         <mat-card class="waitlist-card">
           <mat-card-header>
             <div mat-card-avatar class="header-icon">
-              <mat-icon color="primary">hourglass_empty</mat-icon>
+              <mat-icon>hourglass_empty</mat-icon>
             </div>
             <mat-card-title>Account Pending Approval</mat-card-title>
             <mat-card-subtitle>You are on the waitlist</mat-card-subtitle>
@@ -36,7 +36,7 @@ import { MatIconModule } from '@angular/material/icon';
           </mat-card-content>
           
           <mat-card-actions class="card-actions">
-            <button mat-stroked-button (click)="signOut()">
+            <button mat-outlined-button (click)="signOut()">
               <mat-icon>logout</mat-icon> Sign Out
             </button>
           </mat-card-actions>

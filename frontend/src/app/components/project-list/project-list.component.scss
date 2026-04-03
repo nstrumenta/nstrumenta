@@ -1,28 +1,22 @@
-.mat-mdc-card:hover {
-  filter: brightness(150%);
+.project-list-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.project-card {
-  outline: none;
-  position: absolute;
-  top: 25px;
-  left: 15px;
-  right: 15px;
-  bottom: 25px;
-
-  .mat-mdc-card-title {
-    font-size: 20px;
-  }
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
 
-.mat-mdc-card-image {
-  height: 180px;
-  width: 100%;
-  object-fit: contain;
+.last-opened {
+  color: var(--mat-sys-on-surface-variant);
   margin: 0;
 }
 
-.add-button {
-  display: flex;
-  align-items: center;
+.no-projects {
+  color: var(--mat-sys-on-surface-variant);
+  grid-column: 1 / -1;
 }
