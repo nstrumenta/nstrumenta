@@ -66,7 +66,7 @@ const userRoutes: Routes = [
     path: '',
     component: HomeComponent,
     pathMatch: 'full',
-    canActivate: [waitlistGuard, usernameGuard]
+    canActivate: [usernameGuard]
   },
   {
     path: ':owner',

@@ -14,7 +14,10 @@ export class AuthService {
   
   user = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null>;
-  
+
+  private authResolvedSubject = new BehaviorSubject<boolean>(false);
+  authResolved$ = this.authResolvedSubject.asObservable();
+
   private userStatusSubject = new BehaviorSubject<string | null>(null);
   userStatus$: Observable<string | null> = this.userStatusSubject.asObservable();
   private userStatusUnsubscribe?: Unsubscribe;
@@ -28,6 +31,7 @@ export class AuthService {
 
     // Listen to auth state changes
     onAuthStateChanged(this.auth, (user) => {
+      this.authResolvedSubject.next(true);
       this.user.next(user);
       
       // Cleanup previous subscription if it exists

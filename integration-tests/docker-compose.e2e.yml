@@ -9,8 +9,6 @@ services:
         - type=gha
       cache_to:
         - type=gha,mode=max
-    ports:
-      - "5999:5999"
     environment:
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
