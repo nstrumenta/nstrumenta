@@ -324,6 +324,12 @@ data "google_compute_default_service_account" "default" {
   project = google_project.fs.project_id
 }
 
+resource "google_storage_bucket_iam_member" "app_engine_object_admin" {
+  bucket = google_storage_bucket.default.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 
 
 # Firebase Hosting site — serves the Angular SPA from CDN, rewrites API paths to Cloud Run
