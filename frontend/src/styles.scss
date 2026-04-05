@@ -32,8 +32,6 @@ $nst-light-theme: mat.define-theme((
 // Apply dark theme by default via CSS custom properties
 :root {
   @include mat.all-component-themes($nst-dark-theme);
-  // Override background to a slightly warmer dark (M3 default tone-6 is near-black #121316)
-  --mat-app-background-color: #1a1c20;
   // Landing page background shapes
   --nst-landing-rect: #252830;
   --nst-landing-accent: #263238;
