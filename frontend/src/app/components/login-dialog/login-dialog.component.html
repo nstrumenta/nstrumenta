@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>{{ isRegistering ? 'Create Account' : 'Sign In' }}</h2>
 <mat-dialog-content class="login-dialog-content">
   <div class="oauth-login-container">
-    <button mat-outlined-button (click)="githubLogin()" class="oauth-btn">
+    <button mat-stroked-button (click)="githubLogin()" class="oauth-btn">
       <mat-icon>code</mat-icon>
       Sign in with GitHub
     </button>

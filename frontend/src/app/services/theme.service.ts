@@ -8,8 +8,10 @@ export class ThemeService {
 
   private resolveInitialTheme(): boolean {
     const saved = localStorage.getItem(this.storageKey);
-    if (saved) return saved === 'dark';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark-mode', dark);
+    document.documentElement.classList.toggle('light-mode', !dark);
+    return dark;
   }
 
   toggleTheme() {

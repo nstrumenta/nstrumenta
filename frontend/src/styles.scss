@@ -4,7 +4,7 @@
 $nst-dark-theme: mat.define-theme((
   color: (
     theme-type: dark,
-    primary: mat.$azure-palette,
+    primary: mat.$violet-palette,
   ),
   typography: (
     brand-family: 'Inter, sans-serif',
@@ -18,7 +18,7 @@ $nst-dark-theme: mat.define-theme((
 $nst-light-theme: mat.define-theme((
   color: (
     theme-type: light,
-    primary: mat.$azure-palette,
+    primary: mat.$violet-palette,
   ),
   typography: (
     brand-family: 'Inter, sans-serif',
@@ -32,7 +32,11 @@ $nst-light-theme: mat.define-theme((
 // Apply dark theme by default via CSS custom properties
 :root {
   @include mat.all-component-themes($nst-dark-theme);
-  body { background-color: mat.get-theme-color($nst-dark-theme, surface-container-lowest); }
+  // Override background to a slightly warmer dark (M3 default tone-6 is near-black #121316)
+  --mat-app-background-color: #1a1c20;
+  // Landing page background shapes
+  --nst-landing-rect: #252830;
+  --nst-landing-accent: #263238;
 }
 
 // Light mode — toggled by ThemeService adding .light-mode to <html>
@@ -41,13 +45,15 @@ $nst-light-theme: mat.define-theme((
 :root:not(.dark-mode) {
   @media (prefers-color-scheme: light) {
     @include mat.all-component-colors($nst-light-theme);
-    body { background-color: mat.get-theme-color($nst-light-theme, surface-container-lowest); }
+    --nst-landing-rect: #f5f6f7;
+    --nst-landing-accent: #bac3d2;
   }
 }
 
 .light-mode {
   @include mat.all-component-colors($nst-light-theme);
-  body { background-color: mat.get-theme-color($nst-light-theme, surface-container-lowest); }
+  --nst-landing-rect: #f5f6f7;
+  --nst-landing-accent: #bac3d2;
 }
 
 html,
@@ -56,6 +62,9 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
+  // Use CSS vars emitted by the theme so dark/light switching works at runtime
+  background-color: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
 }
 
 app-root,

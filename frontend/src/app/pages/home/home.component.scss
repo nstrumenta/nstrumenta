@@ -3,23 +3,22 @@
 }
 
 .landing-background {
-  background: url('/assets/images/nstrumenta-background-top.svg');
-  background-size: cover;
-  background-position: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.dark-mode .landing-background {
-  background: url('/assets/images/nstrumenta-background-top-dark.svg');
-  background-size: cover;
-  background-position: center;
+.landing-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not(.light-mode) .landing-background {
-    background: url('/assets/images/nstrumenta-background-top-dark.svg');
-    background-size: cover;
-    background-position: center;
-  }
+.center-container > *:not(.landing-svg) {
+  position: relative;
+  z-index: 1;
 }
 
 .center-container {
@@ -43,6 +42,7 @@
 }
 
 .logo-name {
+  font-family: 'Roboto', sans-serif;
   font-size: clamp(2rem, 8vw, 6rem);
   color: var(--mat-sys-primary);
 }
@@ -54,22 +54,3 @@
   text-align: center;
 }
 
-.marketing-copy {
-  margin-top: 3rem;
-  text-align: center;
-  max-width: 900px;
-  width: 100%;
-
-  p {
-    font-size: 1.2rem;
-    color: var(--mat-sys-on-surface-variant);
-    margin-bottom: 2rem;
-  }
-
-  .features {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-  }
-}
