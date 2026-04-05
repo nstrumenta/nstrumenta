@@ -7,7 +7,7 @@
     <div class="project-grid">
       @for (project of filteredProjects(); track project.id) {
         @if (isRoutable(project)) {
-          <a mat-card appearance="outlined" [routerLink]="['/', project.orgSlug, project.slug, 'data']" queryParamsHandling="preserve">
+          <mat-card class="project-card-link" appearance="outlined" [routerLink]="['/', project.orgSlug, project.slug, 'data']" queryParamsHandling="preserve">
             <mat-card-header>
               <mat-card-title>{{ project.name || project.id }}</mat-card-title>
               <mat-card-subtitle>{{ project.orgSlug }}/{{ project.slug }}</mat-card-subtitle>
@@ -15,7 +15,7 @@
             <mat-card-content>
               <p class="mat-body-small last-opened">Last opened: {{ project.lastOpened | date: 'mediumDate' }}</p>
             </mat-card-content>
-          </a>
+          </mat-card>
         } @else {
           <mat-card appearance="outlined">
             <mat-card-header>

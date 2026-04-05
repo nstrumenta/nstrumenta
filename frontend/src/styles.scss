@@ -32,6 +32,7 @@ $nst-light-theme: mat.define-theme((
 // Apply dark theme by default via CSS custom properties
 :root {
   @include mat.all-component-themes($nst-dark-theme);
+  body { background-color: mat.get-theme-color($nst-dark-theme, surface-container-lowest); }
 }
 
 // Light mode — toggled by ThemeService adding .light-mode to <html>
@@ -40,11 +41,13 @@ $nst-light-theme: mat.define-theme((
 :root:not(.dark-mode) {
   @media (prefers-color-scheme: light) {
     @include mat.all-component-colors($nst-light-theme);
+    body { background-color: mat.get-theme-color($nst-light-theme, surface-container-lowest); }
   }
 }
 
 .light-mode {
   @include mat.all-component-colors($nst-light-theme);
+  body { background-color: mat.get-theme-color($nst-light-theme, surface-container-lowest); }
 }
 
 html,
@@ -54,6 +57,14 @@ body {
   margin: 0;
   padding: 0;
 }
+
+app-root,
+app-home,
+app-project-list {
+  display: block;
+}
+
+// Apply M3 background to body within the theme blocks below:
 
 a {
   color: var(--mat-sys-primary);

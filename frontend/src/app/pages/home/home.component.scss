@@ -1,11 +1,21 @@
 .home-page-container {
+  min-height: calc(100vh - 64px);
+}
+
+.landing-background {
   background: url('/assets/images/nstrumenta-background-top.svg');
   background-size: cover;
   background-position: center;
 }
 
+.dark-mode .landing-background {
+  background: url('/assets/images/nstrumenta-background-top-dark.svg');
+  background-size: cover;
+  background-position: center;
+}
+
 @media (prefers-color-scheme: dark) {
-  .home-page-container {
+  :root:not(.light-mode) .landing-background {
     background: url('/assets/images/nstrumenta-background-top-dark.svg');
     background-size: cover;
     background-position: center;
