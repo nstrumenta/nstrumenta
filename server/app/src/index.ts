@@ -81,7 +81,7 @@ app.get('/config', (req, res) => {
     authDomain: `${projectId}.firebaseapp.com`,
     projectId: projectId,
     appId: process.env.FIREBASE_APP_ID,
-    apiUrl: `${protocol}://${host}`
+    apiUrl: process.env.NST_API_URL || `${protocol}://${host}`
   })
 })
 

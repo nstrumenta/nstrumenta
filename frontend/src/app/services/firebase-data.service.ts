@@ -212,8 +212,9 @@ export class FirebaseDataService {
       })
     );
 
-    this.userProjectsObservable$ = toObservable(this.currentUserId).pipe(
-      switchMap((userId) => {
+    this.userProjectsObservable$ = toObservable(this.authService.currentUser).pipe(
+      switchMap((user) => {
+        const userId = user?.uid;
         if (!userId) return of([]);
         return runInInjectionContext(this.injector, () => {
           const projectsCollection = collection(this.firestore, `/users/${userId}/projects`);

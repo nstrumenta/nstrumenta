@@ -6,28 +6,27 @@
 
     <div class="project-grid">
       @for (project of filteredProjects(); track project.id) {
-        <mat-card appearance="outlined">
-          <mat-card-header>
-            <mat-card-title>{{ project.name || project.id }}</mat-card-title>
-            @if (project.orgSlug) {
+        @if (isRoutable(project)) {
+          <a mat-card appearance="outlined" [routerLink]="['/', project.orgSlug, project.slug, 'data']" queryParamsHandling="preserve">
+            <mat-card-header>
+              <mat-card-title>{{ project.name || project.id }}</mat-card-title>
               <mat-card-subtitle>{{ project.orgSlug }}/{{ project.slug }}</mat-card-subtitle>
-            }
-          </mat-card-header>
-          <mat-card-content>
-            <p class="mat-body-small last-opened">
-              Last opened: {{ project.lastOpened | date: 'mediumDate' }}
-            </p>
-          </mat-card-content>
-          <mat-card-actions>
-            @if (isRoutable(project)) {
-              <a mat-button [routerLink]="['/', project.orgSlug, project.slug, 'data']" queryParamsHandling="preserve">
-                Open
-              </a>
-            } @else {
-              <span class="mat-body-small legacy-note">Project needs reconfiguration</span>
-            }
-          </mat-card-actions>
-        </mat-card>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="mat-body-small last-opened">Last opened: {{ project.lastOpened | date: 'mediumDate' }}</p>
+            </mat-card-content>
+          </a>
+        } @else {
+          <mat-card appearance="outlined">
+            <mat-card-header>
+              <mat-card-title>{{ project.name || project.id }}</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="mat-body-small last-opened">Last opened: {{ project.lastOpened | date: 'mediumDate' }}</p>
+              <p class="mat-body-small legacy-note">Project needs reconfiguration</p>
+            </mat-card-content>
+          </mat-card>
+        }
       }
 
       @if (filteredProjects().length === 0) {

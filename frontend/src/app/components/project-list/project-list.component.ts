@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, effect } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
@@ -7,7 +7,7 @@ import { DatePipe } from '@angular/common';
 import { MatFabButton } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { MatIcon } from '@angular/material/icon';
-import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions } from '@angular/material/card';
+import { MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent } from '@angular/material/card';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { Project } from '../../models/firebase.model';
@@ -22,7 +22,7 @@ const RESERVED_PATHS = new Set([
     selector: 'app-project-list',
     templateUrl: './project-list.component.html',
     styleUrls: ['./project-list.component.scss'],
-    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, MatCardActions, RouterLink, MatFabButton, MatIcon, DatePipe, MatFormField, MatInput]
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatCardSubtitle, MatCardContent, RouterLink, MatFabButton, MatIcon, DatePipe, MatFormField, MatInput]
 })
 export class ProjectListComponent {
   public dialog = inject(MatDialog);
@@ -41,14 +41,7 @@ export class ProjectListComponent {
       .sort((a: Project, b: Project) => (b.lastOpened ?? 0) - (a.lastOpened ?? 0));
   });
 
-  constructor() {
-    effect(() => {
-      const user = this.authService.currentUser();
-      if (user) {
-        this.firebaseDataService.setUser(user.uid);
-      }
-    });
-  }
+  constructor() {}
 
   newProjectDialog() {
     this.dialog.open(NewProjectDialogComponent).afterClosed().subscribe(result => {

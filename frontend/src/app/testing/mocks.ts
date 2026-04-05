@@ -80,6 +80,11 @@ export class MockAuthService {
   getAuth() { return {} as any; }
 }
 
+export class MockThemeService {
+  isDark = signal(false);
+  toggleTheme() { this.isDark.set(!this.isDark()); }
+}
+
 export class MockProjectService {
   currentProjectId = 'test-project';
   currentProject = new BehaviorSubject<string>('test-project');
