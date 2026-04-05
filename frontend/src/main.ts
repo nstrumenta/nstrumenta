@@ -8,7 +8,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ErrorHandler } from '@angular/core';
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
@@ -59,7 +59,9 @@ fetch('/config')
     // Initialize Firebase
     const app = initializeApp(config);
     getAuth(app);
-    getFirestore(app);
+    // Use long polling for Firestore — more reliable in containerized/proxy environments
+    // where WebSocket/gRPC streaming connections may be blocked or unstable.
+    initializeFirestore(app, { experimentalForceLongPolling: true });
     getStorage(app);
 
     bootstrapApplication(AppComponent, {
