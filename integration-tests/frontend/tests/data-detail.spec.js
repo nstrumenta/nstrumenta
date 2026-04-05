@@ -57,10 +57,9 @@ test.describe('Data Detail', () => {
     const uploadResponse = await uploadDone;
     expect(uploadResponse.status(), 'GCS upload should succeed').toBeLessThan(400);
 
-    // File should appear in the data table (waits for storageObjectFinalize → Firestore).
-    // Firestore may take 20-30s to connect in container environments on cold start.
+    // File should appear in the data table (waits for storageObjectFinalize → Firestore)
     const fileLink = page.locator('mat-cell a', { hasText: filename });
-    await expect(fileLink).toBeVisible({ timeout: 45000 });
+    await expect(fileLink).toBeVisible({ timeout: 15000 });
     await fileLink.click();
     await expect(page).toHaveURL(/\/data\//);
 
