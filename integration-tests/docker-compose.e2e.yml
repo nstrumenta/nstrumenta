@@ -14,6 +14,7 @@ services:
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
+      - NST_API_URL=http://server:5999
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     healthcheck:

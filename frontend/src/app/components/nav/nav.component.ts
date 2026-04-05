@@ -1,13 +1,12 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MatSidenavContainer, MatSidenav, MatSidenavContent } from '@angular/material/sidenav';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
-import { MatNavList } from '@angular/material/list';
+import { MatNavList, MatListItem, MatListItemIcon, MatListItemTitle } from '@angular/material/list';
 import { AsyncPipe } from '@angular/common';
-import { MatMenuItem } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 
@@ -15,7 +14,7 @@ import { ToolbarComponent } from '../toolbar/toolbar.component';
     selector: 'app-nav',
     templateUrl: './nav.component.html',
     styleUrls: ['./nav.component.scss'],
-    imports: [MatSidenavContainer, MatSidenav, NavbarTitleComponent, MatNavList, MatMenuItem, RouterLink, MatIcon, MatSidenavContent, ToolbarComponent, RouterOutlet, AsyncPipe]
+    imports: [MatSidenavContainer, MatSidenav, NavbarTitleComponent, MatNavList, MatListItem, MatListItemIcon, MatListItemTitle, RouterLink, RouterLinkActive, MatIcon, MatSidenavContent, ToolbarComponent, RouterOutlet, AsyncPipe]
 })
 export class NavComponent {
   isExpanded = false;

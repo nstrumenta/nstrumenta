@@ -26,7 +26,7 @@
       {{ errorMessage }}
     </div>
 
-    <button mat-flat-button color="primary" type="submit" class="full-width submit-btn" [disabled]="!email || !password">
+    <button mat-flat-button type="submit" class="full-width submit-btn" [disabled]="!email || !password">
       {{ isRegistering ? 'Sign Up' : 'Sign In' }}
     </button>
   </form>

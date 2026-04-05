@@ -58,7 +58,7 @@
               <mat-error>{{ usernameError }}</mat-error>
             }
           </mat-form-field>
-          <button mat-raised-button color="primary"
+          <button mat-flat-button
                   [disabled]="!usernameAvailable || isSaving"
                   (click)="saveUsername()">
             {{ isSaving ? 'Saving...' : 'Save username' }}

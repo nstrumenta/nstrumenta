@@ -4,40 +4,45 @@
       [attr.role]="(isHandset$ | async) ? 'dialog' : 'navigation'" [mode]="(isHandset$ | async) ? 'over' : 'side'">
       <app-navbar-title></app-navbar-title>
       <mat-nav-list>
-        <!-- we can just check if route has active params via routerLinkActive, or check if we are in a project route by verifying if there's an owner/project url match. For now just show if we aren't in account/waitlist -->
         @if (!router.url.startsWith('/account') && !router.url.startsWith('/waitlist') && router.url !== '/') {
-          <a mat-menu-item [routerLink]="['record']" queryParamsHandling="preserve">
-            <mat-icon>fiber_manual_record</mat-icon> Record
+          <a mat-list-item [routerLink]="['record']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>fiber_manual_record</mat-icon>
+            <span matListItemTitle>Record</span>
           </a>
-          <a mat-menu-item [routerLink]="['data']" queryParamsHandling="preserve">
-            <mat-icon>storage</mat-icon> Data
+          <a mat-list-item [routerLink]="['data']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>storage</mat-icon>
+            <span matListItemTitle>Data</span>
           </a>
-          <a mat-menu-item [routerLink]="['repositories']" queryParamsHandling="preserve">
-            <mat-icon>code</mat-icon> Repositories
+          <a mat-list-item [routerLink]="['repositories']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>code</mat-icon>
+            <span matListItemTitle>Repositories</span>
           </a>
-          <a mat-menu-item [routerLink]="['modules']" queryParamsHandling="preserve">
-            <mat-icon>category</mat-icon> Modules
+          <a mat-list-item [routerLink]="['modules']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>category</mat-icon>
+            <span matListItemTitle>Modules</span>
           </a>
-          <a mat-menu-item [routerLink]="['agents']" queryParamsHandling="preserve">
-            <mat-icon>developer_board</mat-icon> Agents
+          <a mat-list-item [routerLink]="['agents']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>developer_board</mat-icon>
+            <span matListItemTitle>Agents</span>
           </a>
-          <a mat-menu-item [routerLink]="['actions']" queryParamsHandling="preserve">
-            <mat-icon>list</mat-icon> Action Log
+          <a mat-list-item [routerLink]="['actions']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>list</mat-icon>
+            <span matListItemTitle>Action Log</span>
           </a>
-          <a mat-menu-item [routerLink]="['machines']" queryParamsHandling="preserve">
-            <mat-icon>cloud</mat-icon> Machines
+          <a mat-list-item [routerLink]="['machines']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>cloud</mat-icon>
+            <span matListItemTitle>Machines</span>
           </a>
-          <a mat-menu-item [routerLink]="['settings']" queryParamsHandling="preserve">
-            <mat-icon>settings</mat-icon>Settings
+          <a mat-list-item [routerLink]="['settings']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
+            <mat-icon matListItemIcon>settings</mat-icon>
+            <span matListItemTitle>Settings</span>
           </a>
         }
-        <span class="fill-remaining-space"></span>
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content layout>
       <app-toolbar (drawerToggleClick)="drawer.toggle()"></app-toolbar>
       <router-outlet></router-outlet>
     </mat-sidenav-content>
-
   </mat-sidenav-container>
 </div>

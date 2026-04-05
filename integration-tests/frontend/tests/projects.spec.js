@@ -28,9 +28,8 @@ test.describe('Project Management', () => {
   });
 
   test('should display project list', async ({ page }) => {
-    // Look for mat-table which is used for project list
-    const projectTable = page.locator('mat-table');
-    await expect(projectTable).toBeVisible();
+    const projectGrid = page.locator('.project-grid');
+    await expect(projectGrid).toBeVisible({ timeout: 10000 });
   });
 
   test('should create a new project', async ({ page }) => {
