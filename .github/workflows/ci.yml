@@ -313,6 +313,7 @@ jobs:
             --allow-unauthenticated \
             --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID"
       - name: Deploy frontend to Firebase Hosting preview channel
+        id: deploy-hosting
         working-directory: frontend
         env:
           FIREBASE_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
@@ -321,19 +322,23 @@ jobs:
           npm install -g firebase-tools
           node makeFirebaseDeployConfig.js
           firebase use $FIREBASE_PROJECT_ID
-          firebase hosting:channel:deploy pr-${{ github.event.number }} \
+          DEPLOY_OUTPUT=$(firebase hosting:channel:deploy pr-${{ github.event.number }} \
             --expires 7d \
-            --project $FIREBASE_PROJECT_ID
+            --project $FIREBASE_PROJECT_ID 2>&1)
+          echo "$DEPLOY_OUTPUT"
+          CHANNEL_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Channel URL[^:]*:\s*\K\S+')
+          echo "channel_url=$CHANNEL_URL" >> "$GITHUB_OUTPUT"
           rm firebase.json
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
         env:
           CI_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
+          CHANNEL_URL: ${{ steps.deploy-hosting.outputs.channel_url }}
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
             const projectId = process.env.CI_PROJECT_ID;
-            const previewUrl = `https://${projectId}-frontend--pr-${prNumber}.web.app`;
+            const previewUrl = process.env.CHANNEL_URL || `https://${projectId}-frontend--pr-${prNumber}.web.app`;
             const marker = '<!-- preview-environment -->';
             const body = [
               marker,
