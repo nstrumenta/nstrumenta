@@ -18,6 +18,7 @@ import { routes } from './app/app-routing.module';
 import { environment } from './environments/environment';
 import { AuthService } from './app/auth/auth.service';
 import { VscodeService } from './app/services/vscode.service';
+import { getNstConfig } from './app/nst-config';
 import * as Sentry from '@sentry/browser';
 
 // Sentry Error Handler
@@ -49,8 +50,7 @@ function initializeIcons() {
   };
 }
 
-fetch('/config')
-  .then((res) => res.json())
+getNstConfig()
   .then((config) => {
     if (environment.production) {
       enableProdMode();
