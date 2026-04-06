@@ -216,7 +216,11 @@ export class ApiService {
     }
 
     const result = mcpResponse.result?.structuredContent || mcpResponse.result;
-    const { uploadUrl } = result;
+    const uploadUrl = result.uploadUrl || (Array.isArray(mcpResponse.result?.content) ? mcpResponse.result.content[0]?.text : undefined);
+
+    if (!uploadUrl) {
+      throw new Error('MCP missing uploadUrl in response');
+    }
 
     return this.http
       .put(uploadUrl, file, {
@@ -272,7 +276,13 @@ export class ApiService {
     }
 
     const result = mcpResponse.result?.structuredContent || mcpResponse.result;
-    return result.downloadUrl;
+    const downloadUrl = result.downloadUrl || (Array.isArray(mcpResponse.result?.content) ? mcpResponse.result.content[0]?.text : undefined);
+    
+    if (!downloadUrl) {
+      throw new Error('MCP missing downloadUrl in response');
+    }
+    
+    return downloadUrl;
   }
 
   async deleteFile(filePath: string, firestoreDocId: string | undefined, projectId?: string): Promise<void> {
