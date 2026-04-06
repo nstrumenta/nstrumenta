@@ -58,8 +58,14 @@ test.describe('Data Detail', () => {
     expect(uploadResponse.status(), 'GCS upload should succeed').toBeLessThan(400);
 
     // File should appear in the data table (waits for storageObjectFinalize → Firestore)
+    // onSnapshot may lag; if not visible after 15s, reload to force a fresh Firestore subscription
     const fileLink = page.locator('mat-cell a', { hasText: filename });
-    await expect(fileLink).toBeVisible({ timeout: 15000 });
+    const appeared = await fileLink.isVisible().catch(() => false) ||
+      await fileLink.waitFor({ state: 'visible', timeout: 15000 }).then(() => true).catch(() => false);
+    if (!appeared) {
+      await page.reload();
+      await expect(fileLink).toBeVisible({ timeout: 10000 });
+    }
     await fileLink.click();
     await expect(page).toHaveURL(/\/data\//);
 

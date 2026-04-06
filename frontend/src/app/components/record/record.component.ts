@@ -864,7 +864,11 @@ export class RecordComponent implements OnInit {
       }
 
       console.log('stopping recordDeviceMotion');
-      await this.saveEvents();
+      try {
+        await this.saveEvents();
+      } catch (error) {
+        console.error('Failed to save recording:', error);
+      }
       this.mcapWriter = undefined;
       this.recordButtonText = 'Start Recording';
     }

@@ -27,7 +27,13 @@ case "$SUBCOMMAND" in
 esac
 
 START_SECONDS=$SECONDS
-TEST_FILE="${1:-}"
+TEST_ARGS="$*"
+
+# Verify the watch stack is running before wasting time on setup
+if ! docker compose $COMPOSE_FILES exec -T server sh -c "wget -qO- http://localhost:5999/health" > /dev/null 2>&1; then
+    echo "Error: server is not running. Start the watch stack first: ./pw.sh up"
+    exit 1
+fi
 
 if [ ! -d "node_modules" ]; then npm install; fi
 
@@ -41,9 +47,9 @@ export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
 export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
 
 PLAYWRIGHT_EXIT_CODE=0
-if [ -n "$TEST_FILE" ]; then
+if [ -n "$TEST_ARGS" ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm --no-deps playwright sh -c "npm run test:playwright -- $TEST_FILE"
+    docker compose $COMPOSE_FILES run --rm --no-deps playwright sh -c "npm run test:playwright -- $TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

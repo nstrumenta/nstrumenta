@@ -303,6 +303,20 @@ jobs:
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
           service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Read Firebase config from CI Cloud Run service
+        id: firebase-config
+        run: |
+          ENV_YAML=$(gcloud run services describe cloudrun-service \
+            --project=$CI_PROJECT_ID --region=us-west1 \
+            --format='yaml(spec.template.spec.containers[0].env)')
+          FIREBASE_API_KEY=$(echo "$ENV_YAML" | grep -A1 'name: FIREBASE_API_KEY' | grep 'value:' | awk '{print $2}')
+          FIREBASE_APP_ID=$(echo "$ENV_YAML" | grep -A1 'name: FIREBASE_APP_ID' | grep 'value:' | awk '{print $2}')
+          if [ -z "$FIREBASE_API_KEY" ] || [ -z "$FIREBASE_APP_ID" ]; then
+            echo "::error::Failed to read Firebase config from cloudrun-service"
+            exit 1
+          fi
+          echo "api_key=$FIREBASE_API_KEY" >> "$GITHUB_OUTPUT"
+          echo "app_id=$FIREBASE_APP_ID" >> "$GITHUB_OUTPUT"
       - name: Deploy server to CI Cloud Run
         run: |
           gcloud run deploy pr-${{ github.event.number }} \
@@ -311,8 +325,9 @@ jobs:
             --region=us-west1 \
             --port=5999 \
             --allow-unauthenticated \
-            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID"
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID,FIREBASE_API_KEY=${{ steps.firebase-config.outputs.api_key }},FIREBASE_APP_ID=${{ steps.firebase-config.outputs.app_id }}"
       - name: Deploy frontend to Firebase Hosting preview channel
+        id: deploy-hosting
         working-directory: frontend
         env:
           FIREBASE_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
@@ -321,19 +336,27 @@ jobs:
           npm install -g firebase-tools
           node makeFirebaseDeployConfig.js
           firebase use $FIREBASE_PROJECT_ID
-          firebase hosting:channel:deploy pr-${{ github.event.number }} \
+          DEPLOY_OUTPUT=$(firebase hosting:channel:deploy pr-${{ github.event.number }} \
             --expires 7d \
-            --project $FIREBASE_PROJECT_ID
+            --project $FIREBASE_PROJECT_ID 2>&1)
+          echo "$DEPLOY_OUTPUT"
+          CHANNEL_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Channel URL[^:]*:\s*\K\S+')
+          if [ -z "$CHANNEL_URL" ]; then
+            echo "::error::Failed to parse channel URL from firebase hosting output"
+            exit 1
+          fi
+          echo "channel_url=$CHANNEL_URL" >> "$GITHUB_OUTPUT"
           rm firebase.json
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
         env:
           CI_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
+          CHANNEL_URL: ${{ steps.deploy-hosting.outputs.channel_url }}
         with:
           script: |
             const prNumber = context.payload.pull_request.number;
             const projectId = process.env.CI_PROJECT_ID;
-            const previewUrl = `https://${projectId}-frontend--pr-${prNumber}.web.app`;
+            const previewUrl = process.env.CHANNEL_URL;
             const marker = '<!-- preview-environment -->';
             const body = [
               marker,
