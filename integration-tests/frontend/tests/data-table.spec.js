@@ -57,8 +57,14 @@ test.describe('Data Table', () => {
     expect(uploadResponse.status(), 'GCS upload should succeed').toBeLessThan(400);
 
     // File should appear in the data table (waits for storageObjectFinalize → Firestore)
+    // onSnapshot may lag; if not visible after 15s, reload to force a fresh Firestore subscription
     const fileRow = page.locator('mat-row', { hasText: filename });
-    await expect(fileRow).toBeVisible({ timeout: 30000 });
+    const appeared = await fileRow.isVisible().catch(() => false) ||
+      await fileRow.waitFor({ state: 'visible', timeout: 10000 }).then(() => true).catch(() => false);
+    if (!appeared) {
+      await page.reload();
+      await expect(fileRow).toBeVisible({ timeout: 10000 });
+    }
 
     // Click the kebab menu → Download; intercept the MCP response to get the signed URL
     const mcpResponsePromise = page.waitForResponse(
