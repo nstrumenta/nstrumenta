@@ -1,45 +1,57 @@
 @use '@angular/material' as mat;
 
-@include mat.elevation-classes();
-@include mat.app-background();
+// M3 theme — azure palette (blue-indigo) drives all color roles
+$nst-dark-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$violet-palette,
+  ),
+  typography: (
+    brand-family: 'Inter, sans-serif',
+    plain-family: 'Inter, sans-serif',
+  ),
+  density: (
+    scale: -1,
+  ),
+));
 
-$my-typography: mat.m2-define-typography-config(
-  $font-family: 'Roboto',
-);
+$nst-light-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$violet-palette,
+  ),
+  typography: (
+    brand-family: 'Inter, sans-serif',
+    plain-family: 'Inter, sans-serif',
+  ),
+  density: (
+    scale: -1,
+  ),
+));
 
-// Define a dark theme
-$dark-theme: mat.m2-define-dark-theme(
-  (
-    color: (
-      primary: mat.m2-define-palette(mat.$m2-pink-palette),
-      accent: mat.m2-define-palette(mat.$m2-blue-grey-palette),
-    ),
-    // Only include `typography` and `density` in the default dark theme.
-    typography: $my-typography,
-    density: 0,
-  )
-);
+// Apply dark theme by default via CSS custom properties
+:root {
+  @include mat.all-component-themes($nst-dark-theme);
+  // Landing page background shapes
+  --nst-landing-rect: #252830;
+  --nst-landing-accent: #263238;
+}
 
-// Define a light theme
-$light-theme: mat.m2-define-light-theme(
-  (
-    color: (
-      primary: mat.m2-define-palette(mat.$m2-indigo-palette),
-      accent: mat.m2-define-palette(mat.$m2-pink-palette),
-    ),
-  )
-);
+// Light mode — toggled by ThemeService adding .light-mode to <html>
+// Also respects system preference when no explicit class is set
+.light-mode,
+:root:not(.dark-mode) {
+  @media (prefers-color-scheme: light) {
+    @include mat.all-component-colors($nst-light-theme);
+    --nst-landing-rect: #f5f6f7;
+    --nst-landing-accent: #bac3d2;
+  }
+}
 
-@include mat.all-component-typographies($my-typography);
-
-// Apply the dark theme by default
-@include mat.all-component-themes($dark-theme);
-
-// Apply the light theme only when the user prefers light themes.
-@media (prefers-color-scheme: light) {
-  // Use the `-color` mixins to only apply color styles without reapplying the same
-  // typography and density styles.
-  @include mat.all-component-colors($light-theme);
+.light-mode {
+  @include mat.all-component-colors($nst-light-theme);
+  --nst-landing-rect: #f5f6f7;
+  --nst-landing-accent: #bac3d2;
 }
 
 html,
@@ -48,20 +60,27 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #121212;
-  color: #ffffff;
+  // Use CSS vars emitted by the theme so dark/light switching works at runtime
+  background-color: var(--mat-app-background-color);
+  color: var(--mat-app-text-color);
 }
 
-@media (prefers-color-scheme: light) {
-  html, body {
-    background-color: #fafafa;
-    color: #000000;
-  }
+app-root,
+app-home,
+app-project-list {
+  display: block;
+  height: 100%;
 }
 
-$indigo: mat.m2-define-palette(mat.$m2-indigo-palette);
-.mat-mdc-button:visited {
-  color: mat.m2-get-color-from-palette($indigo, lighter);
+// Apply M3 background to body within the theme blocks below:
+
+a {
+  color: var(--mat-sys-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
 }
 
 .full-width-table {
@@ -85,19 +104,4 @@ $indigo: mat.m2-define-palette(mat.$m2-indigo-palette);
   top: 60px;
   z-index: 1;
   position: fixed !important;
-}
-
-a {
-  color: #007bff; /* Your desired link color */
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-@media (prefers-color-scheme: dark) {
-  a {
-    color: #5aabff;
-  }
 }

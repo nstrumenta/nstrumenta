@@ -70,7 +70,7 @@ async function ensureUsernameSetup(uid) {
 }
 
 async function createTestUser() {
-  const password = crypto.randomBytes(24).toString('base64url');
+  let password = crypto.randomBytes(24).toString('base64url');
   let uid = null;
 
   try {
@@ -103,6 +103,42 @@ async function createTestUser() {
     console.error(`Set status to 'approved' in Firestore for uid ${uid}`);
 
     await ensureUsernameSetup(uid);
+  }
+
+  // Verify credentials work by making a real sign-in call before returning.
+  // This catches cases where Firebase Auth rejects the new password (rate limiting, etc.)
+  // and ensures the test receives credentials that are confirmed to work.
+  const apiKey = process.env.FIREBASE_API_KEY;
+  if (apiKey) {
+    let verified = false;
+    let attempts = 0;
+    const maxAttempts = 5;
+    while (!verified && attempts < maxAttempts) {
+      attempts++;
+      const signInRes = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, returnSecureToken: true }),
+        }
+      );
+      if (signInRes.ok) {
+        verified = true;
+      } else {
+        const err = await signInRes.json().catch(() => ({}));
+        console.error(`Credential verification attempt ${attempts} failed: ${err?.error?.message}`);
+        if (attempts < maxAttempts) {
+          // Reset to a fresh password and retry verification
+          const newPassword = crypto.randomBytes(24).toString('base64url');
+          await auth.updateUser(uid, { password: newPassword });
+          password = newPassword;
+        }
+      }
+    }
+    if (!verified) {
+      throw new Error(`Could not verify test credentials after ${maxAttempts} attempts`);
+    }
   }
 
   // Output credentials as JSON to stdout (stderr used for logs above)

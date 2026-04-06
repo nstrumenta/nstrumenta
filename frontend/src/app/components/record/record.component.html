@@ -8,14 +8,14 @@
   <mat-form-field style="min-width:300px">
     <input matInput placeholder="channel" [(ngModel)]="forwardToWebsocketChannel" name="forwardToWebsocketChannel">
   </mat-form-field>
-  <button mat-raised-button [matTooltip]="forwardButtonText" (click)="toggleForwardToWebsocket()">
-    <mat-icon color="accent">cloud_upload</mat-icon> {{forwardButtonText}}
+  <button mat-flat-button [matTooltip]="forwardButtonText" (click)="toggleForwardToWebsocket()">
+    <mat-icon>cloud_upload</mat-icon> {{forwardButtonText}}
   </button>
 </form>
 
 <form style="margin-top: 8px;">
-  <button mat-raised-button [matTooltip]="recordButtonText" (click)="toggleRecord()">
-    <mat-icon color="accent">fiber_manual_record</mat-icon> {{recordButtonText}}
+  <button mat-flat-button [matTooltip]="recordButtonText" (click)="toggleRecord()">
+    <mat-icon>fiber_manual_record</mat-icon> {{recordButtonText}}
   </button>
 </form>
 
@@ -38,7 +38,7 @@
   @if (selection.hasValue()) {
     {{selection.selected.length}} inputs selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
-      <mat-icon color="accent">delete</mat-icon>
+      <mat-icon>delete</mat-icon>
     </button>
   }
 </div>

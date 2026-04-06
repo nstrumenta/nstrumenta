@@ -21,10 +21,9 @@
   }
 
   <button
-    mat-raised-button
+    mat-flat-button
     (click)="create()"
-    [disabled]="!projectName || !selectedOrgId || isCreating"
-    color="primary">
+    [disabled]="!projectName || !selectedOrgId || isCreating">
     @if (!isCreating) {
       <span>Create</span>
     }

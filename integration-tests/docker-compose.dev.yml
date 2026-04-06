@@ -15,11 +15,12 @@ services:
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+      - NST_API_URL=http://localhost:5999
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
       - ../server/app/src:/build/server/app/src
     working_dir: /build/server/app
-    command: npx tsx watch --poll --inspect=0.0.0.0:9229 src/index.ts
+    command: npx tsx watch --inspect=0.0.0.0:9229 src/index.ts
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5999/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
       interval: 2s
@@ -37,6 +38,7 @@ services:
       - /app/node_modules
     environment:
       - PROXY_TARGET=http://server:5999
+      - NG_CACHE_PATH=/tmp/ng-cache-dev
     command: sh -c "npm install && npx ng serve --host 0.0.0.0 --proxy-config proxy.conf.js"
     depends_on:
       server:

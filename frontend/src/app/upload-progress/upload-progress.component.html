@@ -12,11 +12,11 @@
               @if (task.status === 'uploading') {
                 <span class='progress-text'>{{ task.progress | number : '0.0-0' }}%</span>
               } @else if (task.status === 'verifying') {
-                <mat-chip color="accent">Verifying...</mat-chip>
+                <mat-chip>Verifying...</mat-chip>
               } @else if (task.status === 'complete') {
-                <mat-chip color="primary">Complete ✓</mat-chip>
+                <mat-chip highlighted>Complete ✓</mat-chip>
               } @else if (task.status === 'error') {
-                <mat-chip color="warn">Error</mat-chip>
+                <mat-chip class="mat-error">Error</mat-chip>
               }
             </div>
           </div>
