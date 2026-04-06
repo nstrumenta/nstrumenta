@@ -29,6 +29,12 @@ esac
 START_SECONDS=$SECONDS
 TEST_ARGS="$*"
 
+# Verify the watch stack is running before wasting time on setup
+if ! docker compose $COMPOSE_FILES exec -T server sh -c "wget -qO- http://localhost:5999/health" > /dev/null 2>&1; then
+    echo "Error: server is not running. Start the watch stack first: ./pw.sh up"
+    exit 1
+fi
+
 if [ ! -d "node_modules" ]; then npm install; fi
 
 eval "$(node get-project-config.js)"

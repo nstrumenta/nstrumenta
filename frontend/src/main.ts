@@ -59,8 +59,6 @@ fetch('/config')
     // Initialize Firebase
     const app = initializeApp(config);
     getAuth(app);
-    // Use long polling for Firestore — more reliable in containerized/proxy environments
-    // where WebSocket/gRPC streaming connections may be blocked or unstable.
     getFirestore(app);
     getStorage(app);
 

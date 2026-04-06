@@ -20,15 +20,9 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'setup',
-      testMatch: /.*\.setup\.js/,
-    },
-    {
       name: 'chromium',
-      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
-        storageState: '.auth/user.json',
         launchOptions: {
           args: [
             `--unsafely-treat-insecure-origin-as-secure=${process.env.FRONTEND_URL || 'http://localhost:5999'}`,
