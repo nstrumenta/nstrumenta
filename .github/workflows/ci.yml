@@ -137,7 +137,6 @@ jobs:
 
   build-ci-images:
     needs: [build-frontend]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -158,7 +157,6 @@ jobs:
 
   e2e:
     needs: [build-frontend]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     env:
       CI: true
