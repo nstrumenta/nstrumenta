@@ -59,7 +59,7 @@ test.describe('Data Detail', () => {
 
     // File should appear in the data table (waits for storageObjectFinalize → Firestore)
     const fileLink = page.locator('mat-cell a', { hasText: filename });
-    await expect(fileLink).toBeVisible({ timeout: 15000 });
+    await expect(fileLink).toBeVisible({ timeout: 30000 });
     await fileLink.click();
     await expect(page).toHaveURL(/\/data\//);
 

@@ -327,6 +327,10 @@ jobs:
             --project $FIREBASE_PROJECT_ID 2>&1)
           echo "$DEPLOY_OUTPUT"
           CHANNEL_URL=$(echo "$DEPLOY_OUTPUT" | grep -oP 'Channel URL[^:]*:\s*\K\S+')
+          if [ -z "$CHANNEL_URL" ]; then
+            echo "::error::Failed to parse channel URL from firebase hosting output"
+            exit 1
+          fi
           echo "channel_url=$CHANNEL_URL" >> "$GITHUB_OUTPUT"
           rm firebase.json
       - name: Comment preview URL on PR
@@ -338,7 +342,7 @@ jobs:
           script: |
             const prNumber = context.payload.pull_request.number;
             const projectId = process.env.CI_PROJECT_ID;
-            const previewUrl = process.env.CHANNEL_URL || `https://${projectId}-frontend--pr-${prNumber}.web.app`;
+            const previewUrl = process.env.CHANNEL_URL;
             const marker = '<!-- preview-environment -->';
             const body = [
               marker,

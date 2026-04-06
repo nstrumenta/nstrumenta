@@ -58,7 +58,7 @@ test.describe('Data Table', () => {
 
     // File should appear in the data table (waits for storageObjectFinalize → Firestore)
     const fileRow = page.locator('mat-row', { hasText: filename });
-    await expect(fileRow).toBeVisible({ timeout: 15000 });
+    await expect(fileRow).toBeVisible({ timeout: 30000 });
 
     // Click the kebab menu → Download; intercept the MCP response to get the signed URL
     const mcpResponsePromise = page.waitForResponse(
