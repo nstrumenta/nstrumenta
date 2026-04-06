@@ -28,8 +28,8 @@ test('Warm up Firestore connection and authenticate', async ({ page }) => {
   // Project Grid is on the home page (/)
   await page.goto('/');
   await expect(page.locator('.project-grid')).toBeVisible({ timeout: 15000 });
-  await page.waitForLoadState('networkidle');
 
+  // Await the auth state resolution cleanly
   await page.context().storageState({ path: '.auth/user.json' });
   console.log('Auth state saved.');
 });
