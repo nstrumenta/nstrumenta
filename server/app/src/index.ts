@@ -69,7 +69,7 @@ registerOrgRoutes(app)
 registerUserRoutes(app)
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', version })
+  res.status(200).json({ status: 'ok', version, buildSha: nstrumentaImageVersionTag })
 })
 
 app.get('/config', (req, res) => {
@@ -81,7 +81,8 @@ app.get('/config', (req, res) => {
     authDomain: `${projectId}.firebaseapp.com`,
     projectId: projectId,
     appId: process.env.FIREBASE_APP_ID,
-    apiUrl: process.env.NST_API_URL || `${protocol}://${host}`
+    apiUrl: process.env.NST_API_URL || `${protocol}://${host}`,
+    serverSha: nstrumentaImageVersionTag
   })
 })
 

@@ -1,4 +1,5 @@
-<div mat-menu-item class="mat-toolbar" [routerLink]="['/']" queryParamsHandling="preserve">
+<div mat-menu-item class="mat-toolbar" [routerLink]="['/']" queryParamsHandling="preserve"
+     [title]="serverSha ? 'server: ' + serverSha : ''">
   nstrumenta
-  <small>{{version}}</small>
+  <small>{{frontendSha || version}}</small>
 </div>

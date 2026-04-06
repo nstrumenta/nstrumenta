@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
+import { getNstConfig } from '../nst-config';
 
 export interface CreateProjectRequest {
   name: string;
@@ -72,23 +73,8 @@ export class ApiService {
       return apiUrl;
     }
 
-    // Fetch the API URL from the /config endpoint
-    const response = await fetch('/config');
-    
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch config: ${response.status} ${response.statusText}`
-      );
-    }
-
-    let config: { apiUrl: string };
-    try {
-      config = await response.json();
-    } catch (error) {
-      throw new Error(
-        `Failed to parse config: ${error}`
-      );
-    }
+    // Fetch the API URL from config
+    const config = await getNstConfig();
 
     if (!config.apiUrl) {
       throw new Error(

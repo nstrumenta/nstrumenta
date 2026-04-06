@@ -19,6 +19,7 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuTrigger, MatMenu, MatMenuItem } from '@angular/material/menu';
+import { getNstConfig } from '../../nst-config';
 import { FileSizePipe } from 'src/app/pipes/file-size.pipe';
 import { DataRecord } from 'src/app/models/firebase.model';
 
@@ -354,7 +355,7 @@ export class DataTableComponent implements OnInit {
   async handleModuleAction(moduleAction, fileDocument) {
     console.log(moduleAction, fileDocument);
     if (moduleAction.url) {
-      const config = await fetch('/config').then(res => res.json());
+      const config = await getNstConfig();
       window.open(
         `${moduleAction.url}?org=${config.projectId}&experiment=${fileDocument.filePath}`
       );
