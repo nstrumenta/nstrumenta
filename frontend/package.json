@@ -54,7 +54,7 @@
     "angular-eslint": "20.2.0",
     "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9.33.0",
-    "firebase-tools": "^14.17.0",
+    "firebase-tools": "^15.13.0",
     "http-server": "^14.1.1",
     "jsdom": "^29.0.1",
     "sass": "^1.79.0",
