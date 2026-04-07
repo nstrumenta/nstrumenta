@@ -361,6 +361,10 @@ jobs:
           fi
           echo "api_key=$FIREBASE_API_KEY" >> "$GITHUB_OUTPUT"
           echo "app_id=$FIREBASE_APP_ID" >> "$GITHUB_OUTPUT"
+          SERVICE_ACCOUNT=$(gcloud run services describe cloudrun-service \
+            --project=$CI_PROJECT_ID --region=us-west1 \
+            --format='value(spec.template.spec.serviceAccountName)')
+          echo "service_account=$SERVICE_ACCOUNT" >> "$GITHUB_OUTPUT"
       - name: Deploy server to CI Cloud Run
         run: |
           gcloud run deploy pr-${{ github.event.number }} \
@@ -369,6 +373,7 @@ jobs:
             --region=us-west1 \
             --port=5999 \
             --allow-unauthenticated \
+            --service-account=${{ steps.firebase-config.outputs.service_account }} \
             --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID,FIREBASE_API_KEY=${{ steps.firebase-config.outputs.api_key }},FIREBASE_APP_ID=${{ steps.firebase-config.outputs.app_id }}"
       - name: Inject config into frontend
         working-directory: frontend
