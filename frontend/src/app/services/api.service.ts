@@ -45,6 +45,19 @@ export class ApiService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
+  private extractMcpResult(response: any, toolName: string): any {
+    if (response.error) {
+      throw new Error(response.error.message || `MCP tool ${toolName} failed`);
+    }
+    if (response.result?.isError) {
+      const errorText = Array.isArray(response.result.content)
+        ? response.result.content.map((c: any) => c.text).join('\n')
+        : `MCP tool ${toolName} returned an error`;
+      throw new Error(errorText);
+    }
+    return response.result?.structuredContent || response.result;
+  }
+
   private async buildMcpHeaders(projectId?: string): Promise<HttpHeaders> {
     const user = this.authService.currentUser();
     if (!user) {
@@ -110,13 +123,7 @@ export class ApiService {
       { headers }
     ).toPromise();
 
-    if (response.error) {
-      console.error('MCP error response:', response.error);
-      throw new Error(response.error.message || 'Failed to create project');
-    }
-
-    // Extract result from MCP response
-    const result = response.result?.structuredContent || response.result;
+    const result = this.extractMcpResult(response, 'create_project');
     return {
       id: result.id,
       slug: result.slug,
@@ -149,12 +156,7 @@ export class ApiService {
       { headers }
     ).toPromise();
 
-    if (response.error) {
-      throw new Error(response.error.message || 'Failed to create API key');
-    }
-
-    // Extract result from MCP response
-    const result = response.result?.structuredContent || response.result;
+    const result = this.extractMcpResult(response, 'create_api_key');
     return {
       key: result.key,
       keyId: result.keyId,
@@ -197,12 +199,8 @@ export class ApiService {
       .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
       .toPromise();
 
-    if (mcpResponse.error) {
-      throw new Error(mcpResponse.error.message || 'Failed to get upload URL');
-    }
-
-    const result = mcpResponse.result?.structuredContent || mcpResponse.result;
-    const uploadUrl = result.uploadUrl || (Array.isArray(mcpResponse.result?.content) ? mcpResponse.result.content[0]?.text : undefined);
+    const result = this.extractMcpResult(mcpResponse, 'get_upload_url');
+    const uploadUrl = result.uploadUrl;
 
     if (!uploadUrl) {
       throw new Error('MCP missing uploadUrl in response');
@@ -257,12 +255,8 @@ export class ApiService {
       .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
       .toPromise();
 
-    if (mcpResponse.error) {
-      throw new Error(mcpResponse.error.message || 'Failed to get download URL');
-    }
-
-    const result = mcpResponse.result?.structuredContent || mcpResponse.result;
-    const downloadUrl = result.downloadUrl || (Array.isArray(mcpResponse.result?.content) ? mcpResponse.result.content[0]?.text : undefined);
+    const result = this.extractMcpResult(mcpResponse, 'get_download_url');
+    const downloadUrl = result.downloadUrl;
     
     if (!downloadUrl) {
       throw new Error('MCP missing downloadUrl in response');
@@ -289,9 +283,7 @@ export class ApiService {
       .post<any>(`${apiUrl}/mcp`, mcpRequest, { headers })
       .toPromise();
 
-    if (mcpResponse.error) {
-      throw new Error(mcpResponse.error.message || 'Failed to delete file');
-    }
+    this.extractMcpResult(mcpResponse, 'delete_file');
   }
 
 }
