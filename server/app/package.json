@@ -47,5 +47,8 @@
     "semi": false,
     "singleQuote": true,
     "preferTemplate": true
+  },
+  "overrides": {
+    "@tootallnate/once": ">=3.0.1"
   }
 }
