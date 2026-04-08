@@ -10,13 +10,14 @@ import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatButton } from '@angular/material/button';
+import { MatIcon } from '@angular/material/icon';
 import { Agent } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-agents',
     templateUrl: './agents.component.html',
     styleUrls: ['./agents.component.scss'],
-    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
+    imports: [MatFormField, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class AgentsComponent {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];

@@ -1,7 +1,8 @@
 @if (authService.currentUser()) {
   <div class="project-list-container">
     <mat-form-field subscriptSizing="dynamic">
-      <input matInput (input)="filterText.set($event.target.value)" placeholder="Filter projects">
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput (input)="filterText.set($event.target.value)" aria-label="Filter projects" placeholder="Filter projects" />
     </mat-form-field>
 
     <div class="project-grid">

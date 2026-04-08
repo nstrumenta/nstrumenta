@@ -1,8 +1,9 @@
 <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
   <!-- Filter row with view toggle -->
   <div style="display: flex; align-items: center; gap: 16px;">
-    <mat-form-field>
-      <input matInput (keyup)="applyFilter($event.target.value)" [placeholder]="filterParam ?? 'Filter'" />
+    <mat-form-field subscriptSizing="dynamic">
+      <mat-icon matPrefix>search</mat-icon>
+      <input matInput (keyup)="applyFilter($event.target.value)" [attr.aria-label]="filterParam ?? 'Filter'" [placeholder]="filterParam ?? 'Filter'" />
     </mat-form-field>
     <button mat-icon-button (click)="folderNav.toggleFlatView()" 
             [matTooltip]="folderNav.flatView() ? 'Switch to folder view' : 'Switch to flat view'">
@@ -31,7 +32,7 @@
     <span style="flex: 1;"></span>
     
     <!-- New folder controls -->
-    <mat-form-field style="width: 200px;" subscriptSizing="dynamic">
+    <mat-form-field style="width: 200px;">
       <mat-label>New folder name</mat-label>
       <input matInput [(ngModel)]="newFolderName" placeholder="e.g., sensors" 
              (keyup.enter)="createFolder()" />

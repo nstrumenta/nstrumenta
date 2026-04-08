@@ -2,10 +2,9 @@
 <mat-dialog-content style='display: flex; flex-direction: column;' class='mat-typography'>
   {{data.description}}
   @for (field of response | keyvalue ; track trackByFn($index, field)) {
-    <mat-form-field class="add-item-form-field"
-      appearance="fill">
-      <input matInput [(ngModel)]='response[field.key]' [placeholder]='field.key'
-        [type]='getFieldType(field.key)'>
+    <mat-form-field class="add-item-form-field">
+      <mat-label>{{ field.key }}</mat-label>
+      <input matInput [(ngModel)]='response[field.key]' [type]='getFieldType(field.key)'>
     </mat-form-field>
   }
 

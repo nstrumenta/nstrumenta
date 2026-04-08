@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { FormsModule } from '@angular/forms';
 import { MatButton } from '@angular/material/button';
@@ -9,7 +9,7 @@ import { MatButton } from '@angular/material/button';
     selector: 'app-edit-dialog',
     templateUrl: './edit-dialog.component.html',
     styleUrls: ['./edit-dialog.component.scss'],
-    imports: [MatFormField, MatInput, FormsModule, MatButton]
+    imports: [MatFormField, MatLabel, MatInput, FormsModule, MatButton]
 })
 export class EditDialogComponent {
   dialogRef = inject<MatDialogRef<EditDialogComponent>>(MatDialogRef);
