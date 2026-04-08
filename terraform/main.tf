@@ -330,6 +330,12 @@ resource "google_storage_bucket_iam_member" "app_engine_object_admin" {
   member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
+resource "google_service_account_iam_member" "app_engine_token_creator" {
+  service_account_id = data.google_app_engine_default_service_account.default.name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 
 
 # Firebase Hosting site — serves the Angular SPA from CDN, rewrites API paths to Cloud Run
