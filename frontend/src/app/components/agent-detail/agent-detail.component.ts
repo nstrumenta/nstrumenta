@@ -8,12 +8,13 @@ import { Action } from 'src/app/models/action.model';
 import { MatFormField } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { JsonPipe, DatePipe } from '@angular/common';
+import { MatIcon } from '@angular/material/icon';
 
 @Component({
     selector: 'app-agents',
     templateUrl: './agent-detail.component.html',
     styleUrls: ['./agent-detail.component.scss'],
-    imports: [MatFormField, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, JsonPipe, DatePipe]
+    imports: [MatFormField, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, JsonPipe, DatePipe]
 })
 export class AgentDetailComponent implements OnChanges {
   @Input() agentId: string;

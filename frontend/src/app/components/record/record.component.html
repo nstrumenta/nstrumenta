@@ -3,10 +3,12 @@
 
 <form>
   <mat-form-field style="min-width:300px">
-    <input matInput placeholder="remote url" [(ngModel)]="forwardToWebsocketUrl" name="forwardToWebsocketUrl">
+    <mat-label>Remote URL</mat-label>
+    <input matInput [(ngModel)]="forwardToWebsocketUrl" name="forwardToWebsocketUrl">
   </mat-form-field>
   <mat-form-field style="min-width:300px">
-    <input matInput placeholder="channel" [(ngModel)]="forwardToWebsocketChannel" name="forwardToWebsocketChannel">
+    <mat-label>Channel</mat-label>
+    <input matInput [(ngModel)]="forwardToWebsocketChannel" name="forwardToWebsocketChannel">
   </mat-form-field>
   <button mat-flat-button [matTooltip]="forwardButtonText" (click)="toggleForwardToWebsocket()">
     <mat-icon>cloud_upload</mat-icon> {{forwardButtonText}}

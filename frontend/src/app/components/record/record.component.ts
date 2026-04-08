@@ -10,7 +10,7 @@ import { map, startWith, takeUntil } from 'rxjs/operators';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { SensorEvent, SensorEventId } from 'src/app/models/sensorEvent.model';
 import { FormsModule } from '@angular/forms';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -44,7 +44,7 @@ export interface NstrumentaExperiment {
     selector: 'app-record',
     templateUrl: './record.component.html',
     styleUrls: ['./record.component.scss'],
-    imports: [FormsModule, MatFormField, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, KeyValuePipe]
+    imports: [FormsModule, MatFormField, MatLabel, MatInput, MatButton, MatTooltip, MatIcon, MatList, MatListItem, MatIconButton, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, KeyValuePipe]
 })
 export class RecordComponent implements OnInit {
   @ViewChild('previewVideo', { static: false }) previewVideo: ElementRef;
