@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Firestore, doc, getFirestore, onSnapshot, Unsubscribe } from 'firebase/firestore';
 import { BehaviorSubject, Observable, Subscription, of } from 'rxjs';
@@ -14,7 +14,9 @@ export class AuthService {
   
   user = new BehaviorSubject<User | null>(null);
   user$: Observable<User | null>;
-  
+  currentUser = signal<User | null>(null);
+  currentUserRole = signal<string | null>(null);
+
   private userStatusSubject = new BehaviorSubject<string | null>(null);
   userStatus$: Observable<string | null> = this.userStatusSubject.asObservable();
   private userStatusUnsubscribe?: Unsubscribe;
@@ -29,25 +31,26 @@ export class AuthService {
     // Listen to auth state changes
     onAuthStateChanged(this.auth, (user) => {
       this.user.next(user);
-      
-      // Cleanup previous subscription if it exists
+      this.currentUser.set(user);
+
       if (this.userStatusUnsubscribe) {
         this.userStatusUnsubscribe();
       }
-      
+
       if (user) {
-        // Assume pending immediately on login
         this.userStatusSubject.next('pending');
-        
+
         const docRef = doc(this.firestore, `users/${user.uid}`);
         this.userStatusUnsubscribe = onSnapshot(docRef, (snapshot) => {
           const data = snapshot.data();
           if (data) {
-             this.userStatusSubject.next(data['status'] || 'pending');
+            this.userStatusSubject.next(data['status'] || 'pending');
+            this.currentUserRole.set(data['role'] ?? null);
           }
         });
       } else {
         this.userStatusSubject.next(null);
+        this.currentUserRole.set(null);
       }
     });
   }

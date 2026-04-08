@@ -31,6 +31,11 @@
           </a>
         }
         <span class="fill-remaining-space"></span>
+        @if (authService.currentUserRole() === 'admin') {
+          <a mat-menu-item routerLink="/admin/users">
+            <mat-icon>admin_panel_settings</mat-icon> Admin
+          </a>
+        }
       </mat-nav-list>
     </mat-sidenav>
     <mat-sidenav-content layout>

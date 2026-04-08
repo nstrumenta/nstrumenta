@@ -10,6 +10,7 @@ import { AsyncPipe } from '@angular/common';
 import { MatMenuItem } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
+import { AuthService } from '../../auth/auth.service';
 
 @Component({
     selector: 'app-nav',
@@ -22,6 +23,7 @@ export class NavComponent {
   element: HTMLElement;
 
   public router = inject(Router);
+  public authService = inject(AuthService);
   private breakpointObserver = inject(BreakpointObserver);
 
   isHandset$: Observable<boolean> = this.breakpointObserver

@@ -17,11 +17,22 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { HomeComponent } from './pages/home/home.component';
 import { WaitlistGuard } from './guards/waitlist.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
+import { adminGuard } from './guards/admin.guard';
+import { AdminUsersComponent } from './components/admin-users/admin-users.component';
 
 const userRoutes: Routes = [
   {
     path: 'waitlist',
     component: WaitlistComponent
+  },
+  {
+    path: 'admin',
+    component: NavComponent,
+    canActivate: [WaitlistGuard, adminGuard],
+    children: [
+      { path: 'users', component: AdminUsersComponent },
+      { path: '', redirectTo: 'users', pathMatch: 'full' },
+    ],
   },
   {
     path: 'projects/:projectId',
