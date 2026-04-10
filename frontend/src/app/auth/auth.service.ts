@@ -60,9 +60,9 @@ export class AuthService {
             }).catch(err => console.error('Failed to init user:', err));
           } else {
             const status = data?.['status'] || 'pending';
+            this.currentUserRole.set(data?.['role'] ?? null);
             this.userStatus.set(status);
             this.userStatusSubject.next(status);
-            this.currentUserRole.set(data?.['role'] ?? null);
           }
         });
       } else {
