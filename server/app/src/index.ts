@@ -19,6 +19,7 @@ import { handleMcpRequest, handleMcpSseRequest, handleMcpSseMessage } from './mc
 import { registerOAuthRoutes } from './oauth'
 import { registerOrgRoutes } from './orgRoutes'
 import { registerUserRoutes } from './userRoutes'
+import { registerAdminRoutes } from './adminRoutes'
 
 const version = require('../package.json').version
 
@@ -67,6 +68,7 @@ const mcpLimiter = rateLimit({
 registerOAuthRoutes(app)
 registerOrgRoutes(app)
 registerUserRoutes(app)
+registerAdminRoutes(app)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version, buildSha: nstrumentaImageVersionTag })

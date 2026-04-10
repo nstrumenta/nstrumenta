@@ -19,6 +19,8 @@ import { waitlistGuard } from './guards/waitlist.guard';
 import { usernameGuard } from './guards/username.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
 import { reservedPathGuard } from './guards/reserved-path.guard';
+import { adminGuard } from './guards/admin.guard';
+import { AdminUsersComponent } from './components/admin-users/admin-users.component';
 import { FirebaseDataService } from './services/firebase-data.service';
 import { Router } from '@angular/router';
 
@@ -39,6 +41,15 @@ const userRoutes: Routes = [
   {
     path: 'waitlist',
     component: WaitlistComponent
+  },
+  {
+    path: 'admin',
+    component: NavComponent,
+    canActivate: [waitlistGuard, adminGuard],
+    children: [
+      { path: 'users', component: AdminUsersComponent },
+      { path: '', redirectTo: 'users', pathMatch: 'full' },
+    ],
   },
   {
     path: 'account',

@@ -66,6 +66,7 @@ export class MockAuth {
 
 export class MockAuthService {
   currentUser = signal<any>({ uid: 'test-uid' });
+  currentUserRole = signal<string | null>(null);
   user = new BehaviorSubject<any>({ uid: 'test-uid' });
   user$ = this.user.asObservable();
   authResolved$ = of(true);

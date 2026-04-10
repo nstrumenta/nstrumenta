@@ -16,6 +16,7 @@ export class AuthService {
   readonly currentUser = signal<User | null>(null);
   readonly authResolved = signal(false);
   readonly userStatus = signal<string | null>(null);
+  readonly currentUserRole = signal<string | null>(null);
 
   // Observable aliases — required for guards (CanActivateFn returns Observable)
   private userSubject = new BehaviorSubject<User | null>(null);
@@ -61,11 +62,13 @@ export class AuthService {
             const status = data?.['status'] || 'pending';
             this.userStatus.set(status);
             this.userStatusSubject.next(status);
+            this.currentUserRole.set(data?.['role'] ?? null);
           }
         });
       } else {
         this.userStatus.set(null);
         this.userStatusSubject.next(null);
+        this.currentUserRole.set(null);
       }
     });
   }
