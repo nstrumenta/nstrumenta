@@ -27,8 +27,8 @@ Check if services are already running before attempting to start them yourself.
 **CRITICAL**: Never expose credentials in logs, terminal output, or command echoes.
 
 NEVER use `cat`, `head`, `tail`, `echo` on credential files or environment variables containing `KEY`, `SECRET`, `TOKEN`, `PASSWORD`.
-Use `test -f` to check file existence. Use `--env-file` flag without displaying contents.
-Secrets stored in `credentials/*.env` (gitignored) for local dev, GCP Secret Manager for production.
+DO NOT use or look for `.env` files. We strictly avoid `.env` files to prevent credential leakage.
+Use `gh variable get` or `gh secret get` and inject them into the shell via `source credentials/activate.sh` for local dev. Use GCP Secret Manager for production.
 
 ## Task and Issue Tracking
 We manage complex tasks and progress using the built-in structured Todo system (`manage_todo_list` tool).

@@ -23,8 +23,13 @@ gcloud config set project <your-gcp-project-id>
 
 ## Local Development
 
+We strictly avoid `.env` files (e.g., `local.env`) for local development to prevent secret sniffing and accidental leakage. Instead, we securely fetch secrets from GitHub or GCP directly into memory.
+
 ```shell
-# Activate credentials (sources local.env, copies ADC for docker)
+# Authenticate with GitHub to fetch secrets dynamically
+gh auth login
+
+# Activate credentials dynamically (fetches from gh secrets/variables into env)
 source credentials/activate.sh
 
 # All services with hot-reload and debugger ports
