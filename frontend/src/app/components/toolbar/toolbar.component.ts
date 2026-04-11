@@ -1,8 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
@@ -12,6 +11,7 @@ import { ThemeService } from 'src/app/services/theme.service';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIconButton, MatFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
 import { NavbarProjectSelectComponent } from '../navbar-project-select/navbar-project-select.component';
 import { NavbarStatusComponent } from '../navbar-status/navbar-status.component';
@@ -23,10 +23,9 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
     selector: 'app-toolbar',
     templateUrl: './toolbar.component.html',
     styleUrls: ['./toolbar.component.scss'],
-    imports: [MatToolbar, MatIconButton, MatIcon, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
+    imports: [MatToolbar, MatIconButton, MatIcon, MatDivider, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
 })
 export class ToolbarComponent {
-  private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);
   uploadService = inject(UploadService);
   private folderNav = inject(FolderNavigationService);
@@ -35,8 +34,7 @@ export class ToolbarComponent {
   private breakpointObserver = inject(BreakpointObserver);
 
   @Output() drawerToggleClick = new EventEmitter();
-  downloadURL: Observable<string>;
-  projectId: string;
+  projectContext = input(false);
   themeService = inject(ThemeService);
 
   isHandset = toSignal(

@@ -5,7 +5,7 @@ import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeader
 import { SelectionModel } from '@angular/cdk/collections';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { Action } from 'src/app/models/action.model';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatIconButton } from '@angular/material/button';
@@ -23,7 +23,7 @@ interface FileDocument {
     selector: 'app-actions',
     templateUrl: './actions.component.html',
     styleUrls: ['./actions.component.scss'],
-    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
+    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ActionsComponent {
   displayedColumns = ['select', 'task', 'status', 'lastModified', 'error'];

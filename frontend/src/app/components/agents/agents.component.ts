@@ -5,7 +5,7 @@ import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatCheckbox } from '@angular/material/checkbox';
@@ -17,7 +17,7 @@ import { Agent } from 'src/app/models/firebase.model';
     selector: 'app-agents',
     templateUrl: './agents.component.html',
     styleUrls: ['./agents.component.scss'],
-    imports: [MatFormField, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
+    imports: [MatFormField, MatLabel, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class AgentsComponent {
   displayedColumns = ['select', 'id', 'tag', 'status', 'createdAt'];

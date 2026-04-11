@@ -13,6 +13,7 @@ import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 
 const AuthServiceStub = {
   currentUser: signal({ uid: 'mock', email: 'mock@example.com' }),
+  currentUserRole: signal('user'),
   user: of({ uid: 'mock', email: 'mock@example.com' }),
   user$: of({ uid: 'mock', email: 'mock@example.com' }),
   setUser: () => {},

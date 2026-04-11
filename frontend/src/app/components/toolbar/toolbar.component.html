@@ -1,25 +1,22 @@
 <mat-toolbar class="app-header">
-  @if (router.url !== '/') {
+  @if (drawerToggleClick.observed) {
     <button type="button" aria-label="Toggle sidenav" mat-icon-button
       (click)="drawerToggleClick.emit()">
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
-  }
-  @if (router.url === '/') {
+  } @else {
     <app-navbar-title></app-navbar-title>
   }
   @if (authService?.currentUser()) {
-    @if (router.url !== '/') {
-      <app-navbar-project-select></app-navbar-project-select>
-    }
+    <app-navbar-project-select [projectContext]="projectContext()"></app-navbar-project-select>
     <span class="fill-remaining-space"></span>
     @if (isHandset() === false) {
-      @if (router.url !== '/') {
+      @if (projectContext()) {
         <app-navbar-status></app-navbar-status>
       }
       <span class="fill-remaining-space"></span>
     }
-    @if (router.url !== '/') {
+    @if (projectContext()) {
       <app-navbar-vscode></app-navbar-vscode>
     }
   } @else {
@@ -29,7 +26,7 @@
     [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
     <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
   </button>
-  <div style="border-left: 2px solid var(--mat-sys-outline-variant); height: 30px"></div>
+  <mat-divider vertical></mat-divider>
   <app-navbar-account></app-navbar-account>
   @if (isDataRouteOrUploading()) {
     <button mat-fab id="fab" (click)="uploader.click()" title="add data">

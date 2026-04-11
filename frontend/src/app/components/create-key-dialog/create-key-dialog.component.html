@@ -1,12 +1,11 @@
 <h2 mat-dialog-title>Creating Key</h2>
 @if (!key) {
-  <div style="padding: 16px; display: flex;">
+  <mat-dialog-content>
     <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>
-  </div>
+  </mat-dialog-content>
 }
 @if (key) {
-  <div style="padding: 16px; display: flex;">
-    <mat-dialog-content class="mat-typography">
+  <mat-dialog-content class="mat-typography">
       <h3>
         This key is your secret key and will only displayed once.
         Copy this now and save it for accessing the API.
@@ -18,7 +17,6 @@
         </button>
       </div>
     </mat-dialog-content>
-  </div>
 }
 <div mat-dialog-actions>
   <button mat-button (click)="close()">Cancel</button>

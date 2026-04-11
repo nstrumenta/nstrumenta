@@ -43,10 +43,19 @@ export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secre
 TEST_USER_JSON=$(node create-test-user.js)
 export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
 export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
+TEST_USER_UID=$(echo "$TEST_USER_JSON" | jq -r .uid)
 
 TEST_ADMIN_JSON=$(node create-test-user.js --admin)
 export TEST_ADMIN_EMAIL=$(echo "$TEST_ADMIN_JSON" | jq -r .email)
 export TEST_ADMIN_PASSWORD=$(echo "$TEST_ADMIN_JSON" | jq -r .password)
+TEST_ADMIN_UID=$(echo "$TEST_ADMIN_JSON" | jq -r .uid)
+
+cleanup_users() {
+    echo "Cleaning up test users..."
+    node delete-test-user.js "$TEST_USER_UID" 2>&1 || true
+    node delete-test-user.js "$TEST_ADMIN_UID" 2>&1 || true
+}
+trap cleanup_users EXIT
 
 export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
 

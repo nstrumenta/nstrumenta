@@ -1,9 +1,10 @@
-<div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+<div class="data-table-header">
   <!-- Filter row with view toggle -->
-  <div style="display: flex; align-items: center; gap: 16px;">
+  <div class="filter-row">
     <mat-form-field subscriptSizing="dynamic">
+      <mat-label>Filter</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput (keyup)="applyFilter($event.target.value)" [attr.aria-label]="filterParam ?? 'Filter'" [placeholder]="filterParam ?? 'Filter'" />
+      <input matInput (keyup)="applyFilter($event.target.value)" />
     </mat-form-field>
     <button mat-icon-button (click)="folderNav.toggleFlatView()" 
             [matTooltip]="folderNav.flatView() ? 'Switch to folder view' : 'Switch to flat view'">
@@ -13,36 +14,49 @@
   
   <!-- Breadcrumb navigation row (only in hierarchical view) -->
   @if (!folderNav.flatView()) {
-  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-    <mat-icon style="color: #666;">folder_open</mat-icon>
+  <div class="breadcrumb-row">
+    <mat-icon class="breadcrumb-icon">folder_open</mat-icon>
     <button mat-button (click)="folderNav.navigateToFolder('')" 
             [class.active-crumb]="!folderNav.currentFolder()"
-            style="min-width: auto; padding: 0 8px;">
+            class="breadcrumb-button">
       <strong>/</strong>
     </button>
     @for (crumb of folderNav.breadcrumbs; track crumb.path) {
-      <span style="color: #999;">/</span>
+      <span class="breadcrumb-separator">/</span>
       <button mat-button (click)="folderNav.navigateToFolder(crumb.path)"
               [class.active-crumb]="crumb.path === folderNav.currentFolder()"
-              style="min-width: auto; padding: 0 8px;">
+              class="breadcrumb-button">
         {{ crumb.label }}
       </button>
     }
     
-    <span style="flex: 1;"></span>
+    <span class="fill-remaining-space"></span>
     
     <!-- New folder controls -->
-    <mat-form-field style="width: 200px;">
-      <mat-label>New folder name</mat-label>
-      <input matInput [(ngModel)]="newFolderName" placeholder="e.g., sensors" 
-             (keyup.enter)="createFolder()" />
-    </mat-form-field>
-    <button mat-flat-button (click)="createFolder()" 
-            [disabled]="!newFolderName.trim()" 
-            matTooltip="Create and navigate to folder">
-      <mat-icon>create_new_folder</mat-icon>
-      Create Folder
-    </button>
+    @if (showNewFolderInput) {
+      <mat-form-field class="new-folder-field" subscriptSizing="dynamic">
+        <mat-label>Folder name</mat-label>
+        <input matInput [(ngModel)]="newFolderName" 
+               (keyup.enter)="createFolder()"
+               (keyup.escape)="showNewFolderInput = false; newFolderName = ''"
+               cdkFocusInitial />
+      </mat-form-field>
+      <button mat-icon-button (click)="createFolder()" 
+              [disabled]="!newFolderName.trim()"
+              matTooltip="Create folder">
+        <mat-icon>check</mat-icon>
+      </button>
+      <button mat-icon-button (click)="showNewFolderInput = false; newFolderName = ''"
+              matTooltip="Cancel">
+        <mat-icon>close</mat-icon>
+      </button>
+    } @else {
+      <button mat-button (click)="showNewFolderInput = true"
+              matTooltip="Create a new folder">
+        <mat-icon>create_new_folder</mat-icon>
+        New Folder
+      </button>
+    }
   </div>
   }
 
@@ -79,9 +93,9 @@
     <mat-header-cell *matHeaderCellDef mat-sort-header> Name </mat-header-cell>
     <mat-cell *matCellDef="let item">
       @if (isFolder(item)) {
-        <button mat-button (click)="navigateToFolder(item.path)" style="text-align: left;">
+        <button mat-button (click)="navigateToFolder(item.path)">
           <mat-icon>folder</mat-icon>
-          <span style="margin-left: 8px;">{{ item.name }}</span>
+          <span class="folder-name">{{ item.name }}</span>
         </button>
       } @else {
         <a mat-button [matTooltip]="item.displayName || item.name" matTooltipPosition="right" [routerLink]="item.id || item.key" queryParamsHandling="preserve">
@@ -107,7 +121,7 @@
 
   <ng-container matColumnDef="actions">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
-    <mat-cell *matCellDef="let item" style="align-content: center">
+    <mat-cell *matCellDef="let item">
       @if (!isFolder(item)) {
         <button mat-icon-button [matMenuTriggerFor]="menu" aria-label="Example icon-button with a menu">
           <mat-icon>more_vert</mat-icon>

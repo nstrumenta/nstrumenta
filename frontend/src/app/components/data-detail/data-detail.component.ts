@@ -15,7 +15,7 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
     template: `
     <ng-container>
       @if (isVideo()) {
-        <video controls width="100%" style="max-height: 80%" [src]="url()"></video>
+        <video controls width="100%" class="video-preview" [src]="url()"></video>
       }
       <a mat-button [href]="url()">{{ (fileDoc | async)?.name }}</a>
       <mat-list>
@@ -25,13 +25,22 @@ import { FileSizePipe } from '../../pipes/file-size.pipe';
         <mat-list-item>dirname: {{ (fileDoc | async)?.dirname }}</mat-list-item>
       </mat-list>
       @if (contents()) {
-        <div style="overflow-wrap: anywhere; width: 100% ; white-space: pre-wrap">
+        <div class="text-preview">
           {{ contents() }}
         </div>
       }
     </ng-container>
     `,
-    styles: [],
+    styles: [`
+      .video-preview {
+        max-height: 80%;
+      }
+      .text-preview {
+        overflow-wrap: anywhere;
+        width: 100%;
+        white-space: pre-wrap;
+      }
+    `],
     imports: [MatButton, MatList, MatListItem, AsyncPipe, FileSizePipe]
 })
 export class DataDetailComponent {

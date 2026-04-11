@@ -33,9 +33,9 @@ async function signInAs(page, email, password) {
 }
 
 test.describe('Admin user approval', () => {
-  test.setTimeout(10000);
+  test.setTimeout(15000);
 
-  test('admin nav link is visible after signing in as admin', async ({ page }) => {
+  test('admin menu item is visible after signing in as admin', async ({ page }) => {
     page.on('console', msg => {
       if (msg.type() === 'error') console.log('Browser error:', msg.text());
     });
@@ -44,11 +44,12 @@ test.describe('Admin user approval', () => {
     await page.goto('/account');
 
     await expect(page.locator('mat-toolbar:has-text("User Settings")')).toBeVisible();
-    // Check the element is in the DOM — @if renders it when role=admin
-    await expect(page.locator('a[mat-list-item]:has-text("Admin")')).toBeAttached();
+    // Open the account menu
+    await page.locator('mat-toolbar button:has(mat-icon:text("account_circle"))').click();
+    await expect(page.locator('button[mat-menu-item]:has-text("Admin")')).toBeVisible();
   });
 
-  test('admin nav link is not visible for regular user', async ({ page }) => {
+  test('admin menu item is not visible for regular user', async ({ page }) => {
     page.on('console', msg => {
       if (msg.type() === 'error') console.log('Browser error:', msg.text());
     });
@@ -57,8 +58,10 @@ test.describe('Admin user approval', () => {
     await page.goto('/account');
 
     await expect(page.locator('mat-toolbar:has-text("User Settings")')).toBeVisible();
-    // Element should not be in DOM at all — @if removes it when role is not admin
-    await expect(page.locator('a[mat-list-item]:has-text("Admin")')).not.toBeAttached();
+    // Open the account menu
+    await page.locator('mat-toolbar button:has(mat-icon:text("account_circle"))').click();
+    // Admin item should not be rendered for non-admin users
+    await expect(page.locator('button[mat-menu-item]:has-text("Admin")')).not.toBeAttached();
   });
 
   test('admin can navigate to /admin/users and see the pending users table', async ({ page }) => {
@@ -67,11 +70,10 @@ test.describe('Admin user approval', () => {
     });
 
     await signInAs(page, TEST_ADMIN_EMAIL, TEST_ADMIN_PASSWORD);
-    // Navigate into a NavComponent route so the sidenav with admin link is in DOM
     await page.goto('/account');
-    // Admin nav link attached proves currentUserRole()='admin' from Firestore resolved
-    await expect(page.locator('a[mat-list-item]:has-text("Admin")')).toBeAttached();
-    await page.goto('/admin/users');
+    // Open account menu and click Admin
+    await page.locator('mat-toolbar button:has(mat-icon:text("account_circle"))').click();
+    await page.locator('button[mat-menu-item]:has-text("Admin")').click();
     await expect(page.locator('h2:has-text("Pending Users")')).toBeVisible();
   });
 

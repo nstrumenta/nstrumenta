@@ -1,11 +1,6 @@
 :host {
-  display: block;
-  height: 100%;
-}
-
-.main-container {
-  height: 100%;
   display: flex;
+  height: 100%;
 }
 
 .main-sandbox-container {
@@ -14,11 +9,22 @@
 }
 
 .sidenav {
-  width: 200px;
+  width: 240px;
+  padding: 8px;
 }
 
-.mat-sidenav-content {
+mat-sidenav-content[layout] {
   overflow-y: auto;
+}
+
+mat-nav-list {
+  padding: 0;
+}
+
+mat-nav-list a[mat-list-item] {
+  border-radius: 28px;
+  margin-bottom: 2px;
+  height: 48px;
 }
 
 .active-nav-item {

@@ -1,7 +1,7 @@
 @if (actions) {
   <div class="mat-card">
     @for (action of actions() ; track action.id; let i = $index; let isFirst = $first) {
-      <div style="display: flex">
+      <div class="status-row">
         @if (isFirst && (action.status==='pending' || action.status==='started')) {
           <div class="spinner">
             <mat-spinner strokeWidth="3" [diameter]="22"></mat-spinner>

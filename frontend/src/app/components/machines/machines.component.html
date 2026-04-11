@@ -1,7 +1,8 @@
-<div style="flex-direction:row">
+<div>
   <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Filter</mat-label>
     <mat-icon matPrefix>search</mat-icon>
-    <input matInput (keyup)="applyFilter($event.target.value)" aria-label="Filter" placeholder="Filter" />
+    <input matInput (keyup)="applyFilter($event.target.value)" />
   </mat-form-field>
   @if (selection.hasValue()) {
     {{selection.selected.length}} machines selected:
@@ -54,7 +55,7 @@
 
   <ng-container matColumnDef="downloadURL">
     <mat-header-cell *matHeaderCellDef> Actions </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument" style="align-content:center">
+    <mat-cell *matCellDef="let fileDocument">
       <a mat-menu-item [href]="fileDocument.downloadURL">{{fileDocument.downloadURL}}</a>
 
     </mat-cell>

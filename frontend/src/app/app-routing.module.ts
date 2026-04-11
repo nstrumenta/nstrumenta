@@ -87,6 +87,7 @@ const userRoutes: Routes = [
       {
         path: ':project',
         component: NavComponent,
+        data: { projectContext: true },
         resolve: { projectId: projectResolver },
         children: [
           { path: '', redirectTo: 'data', pathMatch: 'full' },

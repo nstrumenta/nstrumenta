@@ -8,7 +8,7 @@
       }
     </mat-menu>
     <button mat-button [matMenuTriggerFor]="projectSelectMenu">
-      {{ projectSettings()?.name || currentProjectId() || 'Select Project' }}
+      {{ projectContext() ? (projectSettings()?.name || currentProjectId() || 'Select Project') : 'Select Project' }}
     </button>
   </div>
 }

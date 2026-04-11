@@ -1,7 +1,8 @@
-<div style="flex-direction:row">
+<div>
   <mat-form-field subscriptSizing="dynamic">
+    <mat-label>Filter</mat-label>
     <mat-icon matPrefix>search</mat-icon>
-    <input matInput (keyup)="applyFilter($event.target.value)" aria-label="Filter" placeholder="Filter" />
+    <input matInput (keyup)="applyFilter($event.target.value)" />
   </mat-form-field>
 </div>
 

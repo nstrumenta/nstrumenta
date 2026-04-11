@@ -6,7 +6,7 @@ import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeader
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { Machine } from 'src/app/models/firebase.model';
 import { VmService } from 'src/app/vm.service';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
@@ -19,7 +19,7 @@ import { MatMenuItem } from '@angular/material/menu';
     selector: 'app-machines',
     templateUrl: './machines.component.html',
     styleUrls: ['./machines.component.scss'],
-    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
+    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
 export class MachinesComponent {
   displayedColumns = ['select', 'name', 'createdAt', 'status', 'serverStatus', 'downloadURL'];
