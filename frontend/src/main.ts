@@ -12,6 +12,7 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app-routing.module';
@@ -74,6 +75,9 @@ getNstConfig()
         ),
         provideHttpClient(withInterceptorsFromDi()),
         importProvidersFrom(BrowserAnimationsModule, MatDialogModule, MatSnackBarModule),
+        
+        // Outline appearance works cleanly on any surface in both light and dark themes
+        { provide: MAT_FORM_FIELD_DEFAULT_OPTIONS, useValue: { appearance: 'outline' } },
         
         // Resolve auth + Firestore once before routing begins — makes guards synchronous
         {
