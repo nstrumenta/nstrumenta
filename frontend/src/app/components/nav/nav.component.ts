@@ -1,5 +1,5 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, inject } from '@angular/core';
+import { Component, effect, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { map } from 'rxjs/operators';
@@ -9,6 +9,7 @@ import { MatNavList, MatListItem, MatListItemIcon, MatListItemTitle } from '@ang
 import { MatIcon } from '@angular/material/icon';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
 import { AuthService } from '../../auth/auth.service';
+import { FirebaseDataService } from '../../services/firebase-data.service';
 
 @Component({
     selector: 'app-nav',
@@ -20,6 +21,7 @@ export class NavComponent {
   public authService = inject(AuthService);
   private breakpointObserver = inject(BreakpointObserver);
   private route = inject(ActivatedRoute);
+  private firebaseDataService = inject(FirebaseDataService);
 
   isHandset = toSignal(
     this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
@@ -30,4 +32,12 @@ export class NavComponent {
     this.route.data.pipe(map(data => !!data['projectContext'])),
     { initialValue: false }
   );
+
+  constructor() {
+    effect(() => {
+      if (!this.projectContext()) {
+        this.firebaseDataService.setProject('');
+      }
+    });
+  }
 }

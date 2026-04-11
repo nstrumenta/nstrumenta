@@ -8,7 +8,7 @@
     <app-navbar-title></app-navbar-title>
   }
   @if (authService?.currentUser()) {
-    <app-navbar-project-select></app-navbar-project-select>
+    <app-navbar-project-select [projectContext]="projectContext()"></app-navbar-project-select>
     <span class="fill-remaining-space"></span>
     @if (isHandset() === false) {
       @if (projectContext()) {

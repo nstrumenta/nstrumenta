@@ -1,4 +1,4 @@
-import { Component, inject, effect, signal } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { RouterLink } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -15,6 +15,7 @@ export class NavbarProjectSelectComponent {
   authService = inject(AuthService);
   private firebaseDataService = inject(FirebaseDataService);
 
+  projectContext = input(false);
   userProjects = this.firebaseDataService.userProjects;
   projectSettings = this.firebaseDataService.projectSettings;
   currentProjectId = this.firebaseDataService.projectId;
