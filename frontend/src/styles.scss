@@ -36,8 +36,11 @@ $nst-light-theme: mat.define-theme((
   --nst-landing-rect: #252830;
   --nst-landing-accent: #263238;
 
-  // Rounded input fields (pill shape)
+  // Rounded input fields
   --mdc-outlined-text-field-container-shape: 12px;
+
+  // Sidenav drawer uses a slightly elevated surface tone (Gemini pattern)
+  --mat-sidenav-container-background-color: var(--mat-sys-surface-container);
 }
 
 // Light mode — toggled by ThemeService adding .light-mode to <html>

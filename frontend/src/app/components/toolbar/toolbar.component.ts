@@ -1,8 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Component, EventEmitter, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Output, inject, input } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Router } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/auth.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
@@ -27,7 +26,6 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
     imports: [MatToolbar, MatIconButton, MatIcon, MatDivider, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
 })
 export class ToolbarComponent {
-  private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);
   uploadService = inject(UploadService);
   private folderNav = inject(FolderNavigationService);
@@ -36,8 +34,7 @@ export class ToolbarComponent {
   private breakpointObserver = inject(BreakpointObserver);
 
   @Output() drawerToggleClick = new EventEmitter();
-  downloadURL: Observable<string>;
-  projectId: string;
+  projectContext = input(false);
   themeService = inject(ThemeService);
 
   isHandset = toSignal(

@@ -6,7 +6,7 @@
     [opened]="!isHandset()">
     <app-navbar-title></app-navbar-title>
     <mat-nav-list>
-      @if (!router.url.startsWith('/account') && !router.url.startsWith('/waitlist') && !router.url.startsWith('/admin') && router.url !== '/') {
+      @if (projectContext()) {
         <a mat-list-item [routerLink]="['record']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
           <mat-icon matListItemIcon>fiber_manual_record</mat-icon>
           <span matListItemTitle>Record</span>
@@ -49,7 +49,7 @@
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content layout>
-    <app-toolbar (drawerToggleClick)="drawer.toggle()"></app-toolbar>
+    <app-toolbar [projectContext]="projectContext()" (drawerToggleClick)="drawer.toggle()"></app-toolbar>
     <router-outlet></router-outlet>
   </mat-sidenav-content>
 </mat-sidenav-container>

@@ -1,25 +1,22 @@
 <mat-toolbar class="app-header">
-  @if (router.url !== '/') {
+  @if (drawerToggleClick.observed) {
     <button type="button" aria-label="Toggle sidenav" mat-icon-button
       (click)="drawerToggleClick.emit()">
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
-  }
-  @if (router.url === '/') {
+  } @else {
     <app-navbar-title></app-navbar-title>
   }
   @if (authService?.currentUser()) {
-    @if (router.url !== '/') {
-      <app-navbar-project-select></app-navbar-project-select>
-    }
+    <app-navbar-project-select></app-navbar-project-select>
     <span class="fill-remaining-space"></span>
     @if (isHandset() === false) {
-      @if (router.url !== '/') {
+      @if (projectContext()) {
         <app-navbar-status></app-navbar-status>
       }
       <span class="fill-remaining-space"></span>
     }
-    @if (router.url !== '/') {
+    @if (projectContext()) {
       <app-navbar-vscode></app-navbar-vscode>
     }
   } @else {

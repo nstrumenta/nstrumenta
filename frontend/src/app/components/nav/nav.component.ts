@@ -1,7 +1,7 @@
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ActivatedRoute, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { MatSidenavContainer, MatSidenav, MatSidenavContent } from '@angular/material/sidenav';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
@@ -17,12 +17,17 @@ import { AuthService } from '../../auth/auth.service';
     imports: [MatSidenavContainer, MatSidenav, NavbarTitleComponent, MatNavList, MatListItem, MatListItemIcon, MatListItemTitle, RouterLink, RouterLinkActive, MatIcon, MatSidenavContent, ToolbarComponent, RouterOutlet]
 })
 export class NavComponent {
-  public router = inject(Router);
   public authService = inject(AuthService);
   private breakpointObserver = inject(BreakpointObserver);
+  private route = inject(ActivatedRoute);
 
   isHandset = toSignal(
     this.breakpointObserver.observe(Breakpoints.Handset).pipe(map(result => result.matches)),
+    { initialValue: false }
+  );
+
+  projectContext = toSignal(
+    this.route.data.pipe(map(data => !!data['projectContext'])),
     { initialValue: false }
   );
 }
