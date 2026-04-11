@@ -66,11 +66,9 @@ export class MockAuth {
 
 export class MockAuthService {
   currentUser = signal<any>({ uid: 'test-uid' });
+  authResolved = signal(true);
+  userStatus = signal<string | null>('approved');
   currentUserRole = signal<string | null>(null);
-  user = new BehaviorSubject<any>({ uid: 'test-uid' });
-  user$ = this.user.asObservable();
-  authResolved$ = of(true);
-  userStatus$ = of('approved');
   setUser() {}
   login() { return Promise.resolve(); }
   loginWithGoogle() { return Promise.resolve(); }

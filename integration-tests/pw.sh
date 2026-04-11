@@ -44,6 +44,10 @@ TEST_USER_JSON=$(node create-test-user.js)
 export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
 export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
 
+TEST_ADMIN_JSON=$(node create-test-user.js --admin)
+export TEST_ADMIN_EMAIL=$(echo "$TEST_ADMIN_JSON" | jq -r .email)
+export TEST_ADMIN_PASSWORD=$(echo "$TEST_ADMIN_JSON" | jq -r .password)
+
 export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
 
 PLAYWRIGHT_EXIT_CODE=0

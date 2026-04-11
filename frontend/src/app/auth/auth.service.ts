@@ -1,7 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Firestore, doc, getFirestore, onSnapshot, Unsubscribe } from 'firebase/firestore';
-import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -12,25 +11,16 @@ export class AuthService {
   private googleProvider: GoogleAuthProvider;
   private githubProvider: GithubAuthProvider;
 
-  // Signals — preferred for components
   readonly currentUser = signal<User | null>(null);
   readonly authResolved = signal(false);
   readonly userStatus = signal<string | null>(null);
   readonly currentUserRole = signal<string | null>(null);
 
-  // Observable aliases — required for guards (CanActivateFn returns Observable)
-  private userSubject = new BehaviorSubject<User | null>(null);
-  user$ = this.userSubject.asObservable();
-  // Keep BehaviorSubject for legacy consumers; guards use toObservable(this.authResolved)
-  private authResolvedSubject = new BehaviorSubject<boolean>(false);
-  authResolved$ = this.authResolvedSubject.asObservable();
-  private userStatusSubject = new BehaviorSubject<string | null>(null);
-  userStatus$ = this.userStatusSubject.asObservable();
-
-  // Legacy: some components access .user.getValue() — keep the BehaviorSubject reference
-  get user() { return this.userSubject; }
+  /** Resolves once auth + Firestore have both settled for the initial page load. */
+  readonly initialized: Promise<void>;
 
   private userStatusUnsubscribe?: Unsubscribe;
+  private resolveInitialized!: () => void;
 
   constructor() {
     this.auth = getAuth();
@@ -38,44 +28,44 @@ export class AuthService {
     this.googleProvider = new GoogleAuthProvider();
     this.githubProvider = new GithubAuthProvider();
 
+    this.initialized = new Promise<void>(resolve => {
+      this.resolveInitialized = resolve;
+    });
+
     onAuthStateChanged(this.auth, (user) => {
       this.currentUser.set(user);
       this.authResolved.set(true);
-      this.userSubject.next(user);
-      this.authResolvedSubject.next(true);
 
       if (this.userStatusUnsubscribe) {
         this.userStatusUnsubscribe();
+        this.userStatusUnsubscribe = undefined;
       }
 
-      if (user) {
-        const docRef = doc(this.firestore, `users/${user.uid}`);
-        this.userStatusUnsubscribe = onSnapshot(docRef, async (snapshot) => {
-          const data = snapshot.data();
-          if (!snapshot.exists() || !data?.['status']) {
-            const idToken = await user.getIdToken();
-            fetch('/api/user/init', {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${idToken}` },
-            }).catch(err => console.error('Failed to init user:', err));
-          } else {
-            const status = data?.['status'] || 'pending';
-            this.currentUserRole.set(data?.['role'] ?? null);
-            this.userStatus.set(status);
-            this.userStatusSubject.next(status);
-          }
-        });
-      } else {
+      if (!user) {
         this.userStatus.set(null);
-        this.userStatusSubject.next(null);
         this.currentUserRole.set(null);
+        this.resolveInitialized();
+        return;
       }
-    });
-  }
 
-  setUser(user: User | null) {
-    this.userSubject.next(user);
-    this.currentUser.set(user);
+      const docRef = doc(this.firestore, `users/${user.uid}`);
+      this.userStatusUnsubscribe = onSnapshot(docRef, async (snapshot) => {
+        const data = snapshot.data();
+        if (!snapshot.exists() || !data?.['status']) {
+          const idToken = await user.getIdToken();
+          fetch('/api/user/init', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${idToken}` },
+          }).catch(err => console.error('Failed to init user:', err));
+          // resolveInitialized will be called on the next snapshot after server creates the doc
+        } else {
+          const status = data?.['status'] || 'pending';
+          this.currentUserRole.set(data?.['role'] ?? null);
+          this.userStatus.set(status);
+          this.resolveInitialized();
+        }
+      });
+    });
   }
 
   async loginWithGoogle(): Promise<void> {

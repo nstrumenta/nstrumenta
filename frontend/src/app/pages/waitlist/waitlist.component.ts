@@ -31,7 +31,7 @@ import { MatIconModule } from '@angular/material/icon';
               Thanks for signing up! To ensure a great experience for our early users, new accounts are currently subject to manual review.
             </p>
             <p>
-              We will notify you at <strong>{{ (authService.user$ | async)?.email }}</strong> once your account has been approved.
+              We will notify you at <strong>{{ authService.currentUser()?.email }}</strong> once your account has been approved.
             </p>
           </mat-card-content>
           

@@ -77,7 +77,7 @@ export class AdminUsersComponent implements OnInit {
   }
 
   private async buildHeaders(): Promise<HttpHeaders> {
-    const user = this.authService.user.value;
+    const user = this.authService.currentUser();
     if (!user) throw new Error('Not authenticated');
     const idToken = await user.getIdToken();
     return new HttpHeaders().set('Authorization', `Bearer ${idToken}`);

@@ -21,9 +21,6 @@ test.describe('Authentication Flow', () => {
     
     await page.goto('/');
     
-    // Wait for page to fully load
-    await page.waitForLoadState('networkidle');
-    
     // Click the "Sign in" button in the navbar
     const signInButton = page.locator('button:has-text("Sign in")');
     try {

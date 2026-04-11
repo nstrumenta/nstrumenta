@@ -34,23 +34,20 @@ describe('adminGuard', () => {
     });
   });
 
-  it('should allow navigation when role is admin', () => {
+  it('allows navigation when role is admin', () => {
     roleSignal.set('admin');
-    const result = runGuard();
-    expect(result).toBe(true);
+    expect(runGuard()).toBe(true);
   });
 
-  it('should redirect to / when role is null (unauthenticated)', () => {
+  it('redirects to / when role is null', () => {
     roleSignal.set(null);
-    const result = runGuard();
-    expect(result).toBe(mockUrlTree);
+    expect(runGuard()).toBe(mockUrlTree);
     expect(routerSpy.parseUrl).toHaveBeenCalledWith('/');
   });
 
-  it('should redirect to / when role is a non-admin value', () => {
+  it('redirects to / when role is a non-admin value', () => {
     roleSignal.set('member');
-    const result = runGuard();
-    expect(result).toBe(mockUrlTree);
+    expect(runGuard()).toBe(mockUrlTree);
     expect(routerSpy.parseUrl).toHaveBeenCalledWith('/');
   });
 });

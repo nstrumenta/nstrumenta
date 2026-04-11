@@ -5,10 +5,13 @@ const crypto = require('crypto');
 // Outputs JSON with email and password to stdout.
 // Uses ADC — no secrets needed.
 //
-// Usage: node create-test-user.js [email]
+// Usage:
+//   node create-test-user.js           # regular approved user
+//   node create-test-user.js --admin   # approved user with role=admin
 
-const email = process.argv[2] || 'ci-playwright@nstrumenta.test';
-const TEST_USERNAME = 'ci-playwright';
+const isAdmin = process.argv.includes('--admin');
+const email = isAdmin ? 'ci-playwright-admin@nstrumenta.test' : 'ci-playwright@nstrumenta.test';
+const TEST_USERNAME = isAdmin ? 'ci-playwright-admin' : 'ci-playwright';
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -93,14 +96,12 @@ async function createTestUser() {
     }
   }
 
-  // Ensure test user bypasses waitlist
+  // Ensure test user bypasses waitlist, set role if admin
   if (uid) {
-    await db.collection('users').doc(uid).set({
-      status: 'approved',
-      email: email,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    }, { merge: true });
-    console.error(`Set status to 'approved' in Firestore for uid ${uid}`);
+    const userDoc = { status: 'approved', email, createdAt: admin.firestore.FieldValue.serverTimestamp() };
+    if (isAdmin) userDoc.role = 'admin';
+    await db.collection('users').doc(uid).set(userDoc, { merge: true });
+    console.error(`Set status='approved'${isAdmin ? ", role='admin'" : ''} in Firestore for uid ${uid}`);
 
     await ensureUsernameSetup(uid);
   }

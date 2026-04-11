@@ -20,7 +20,7 @@ describe('AdminUsersComponent', () => {
   beforeEach(async () => {
     snackBarSpy = { open: vi.fn() };
     mockAuthService = new MockAuthService();
-    mockAuthService.user.next({
+    mockAuthService.currentUser.set({
       uid: 'test-uid',
       getIdToken: vi.fn().mockResolvedValue('fake-token'),
     });

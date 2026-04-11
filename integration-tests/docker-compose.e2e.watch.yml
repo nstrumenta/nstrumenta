@@ -33,6 +33,7 @@ services:
       - FRONTEND_URL=http://frontend-dev:4200
     volumes:
       - ./frontend:/app
+      - playwright-node-modules:/app/node_modules
     depends_on:
       frontend-dev:
         condition: service_healthy

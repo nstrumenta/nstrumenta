@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, effect } from '@angular/core';
 import { ServerService } from './services/server.service';
 import { ProjectService } from './services/project.service';
 import { AuthService } from 'src/app/auth/auth.service';
@@ -14,10 +14,9 @@ export class VmService {
   userId = '';
 
   constructor() {
-    this.authService.user.subscribe((user) => {
-      if (user) {
-        this.userId = user.uid;
-      }
+    effect(() => {
+      const user = this.authService.currentUser();
+      if (user) this.userId = user.uid;
     });
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, effect } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
 import { FirebaseDataService } from './firebase-data.service';
 
@@ -22,12 +22,9 @@ export class ServerService {
   private authService = inject(AuthService);
 
   constructor() {
-    this.authService.user.subscribe((user) => {
-      if (user) {
-        this.uid = user.uid;
-      } else {
-        this.uid = '';
-      }
+    effect(() => {
+      const user = this.authService.currentUser();
+      this.uid = user ? user.uid : '';
     });
   }
 
