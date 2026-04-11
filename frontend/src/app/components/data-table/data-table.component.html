@@ -33,17 +33,30 @@
     <span class="fill-remaining-space"></span>
     
     <!-- New folder controls -->
-    <mat-form-field class="new-folder-field">
-      <mat-label>New folder name</mat-label>
-      <input matInput [(ngModel)]="newFolderName" placeholder="e.g., sensors" 
-             (keyup.enter)="createFolder()" />
-    </mat-form-field>
-    <button mat-flat-button (click)="createFolder()" 
-            [disabled]="!newFolderName.trim()" 
-            matTooltip="Create and navigate to folder">
-      <mat-icon>create_new_folder</mat-icon>
-      Create Folder
-    </button>
+    @if (showNewFolderInput) {
+      <mat-form-field class="new-folder-field" subscriptSizing="dynamic">
+        <mat-label>Folder name</mat-label>
+        <input matInput [(ngModel)]="newFolderName" 
+               (keyup.enter)="createFolder()"
+               (keyup.escape)="showNewFolderInput = false; newFolderName = ''"
+               cdkFocusInitial />
+      </mat-form-field>
+      <button mat-icon-button (click)="createFolder()" 
+              [disabled]="!newFolderName.trim()"
+              matTooltip="Create folder">
+        <mat-icon>check</mat-icon>
+      </button>
+      <button mat-icon-button (click)="showNewFolderInput = false; newFolderName = ''"
+              matTooltip="Cancel">
+        <mat-icon>close</mat-icon>
+      </button>
+    } @else {
+      <button mat-button (click)="showNewFolderInput = true"
+              matTooltip="Create a new folder">
+        <mat-icon>create_new_folder</mat-icon>
+        New Folder
+      </button>
+    }
   </div>
   }
 

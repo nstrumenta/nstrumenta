@@ -19,6 +19,7 @@
 
 mat-sidenav-content[layout] {
   overflow-y: auto;
+  background-color: var(--mat-sys-surface-container-lowest);
 }
 
 .active-nav-item {

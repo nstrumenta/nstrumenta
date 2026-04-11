@@ -55,6 +55,7 @@ export class DataTableComponent implements OnInit {
   get projectId() { return this.firebaseDataService.projectId(); }
     filterParam: string;
   newFolderName = '';
+  showNewFolderInput = false;
 
   moduleActions = new Map<string, ModuleAction>();
 
@@ -423,5 +424,6 @@ export class DataTableComponent implements OnInit {
     
     this.folderNav.navigateToFolder(newFolderPath);
     this.newFolderName = '';
+    this.showNewFolderInput = false;
   }
 }
