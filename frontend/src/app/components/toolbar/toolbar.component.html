@@ -29,7 +29,7 @@
     [attr.aria-label]="themeService.isDark() ? 'Switch to light mode' : 'Switch to dark mode'">
     <mat-icon>{{ themeService.isDark() ? 'light_mode' : 'dark_mode' }}</mat-icon>
   </button>
-  <div style="border-left: 2px solid var(--mat-sys-outline-variant); height: 30px"></div>
+  <mat-divider vertical></mat-divider>
   <app-navbar-account></app-navbar-account>
   @if (isDataRouteOrUploading()) {
     <button mat-fab id="fab" (click)="uploader.click()" title="add data">

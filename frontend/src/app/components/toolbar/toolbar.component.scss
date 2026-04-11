@@ -4,6 +4,10 @@ mat-toolbar {
   z-index: 2;
 }
 
+mat-divider[vertical] {
+  height: 30px;
+}
+
 app-navbar-status {
   flex: 1 0 400px;
 }

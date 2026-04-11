@@ -5,7 +5,7 @@ import { MatSort, MatSortHeader } from '@angular/material/sort';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 import { Action } from 'src/app/models/action.model';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { JsonPipe, DatePipe } from '@angular/common';
 import { MatIcon } from '@angular/material/icon';
@@ -14,7 +14,7 @@ import { MatIcon } from '@angular/material/icon';
     selector: 'app-agents',
     templateUrl: './agent-detail.component.html',
     styleUrls: ['./agent-detail.component.scss'],
-    imports: [MatFormField, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, JsonPipe, DatePipe]
+    imports: [MatFormField, MatLabel, MatIcon, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, JsonPipe, DatePipe]
 })
 export class AgentDetailComponent implements OnChanges {
   @Input() agentId: string;

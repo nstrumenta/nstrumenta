@@ -6,7 +6,7 @@ import { SelectionModel } from '@angular/cdk/collections';
 import { RouterLink } from '@angular/router';
 import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { MatFormField } from '@angular/material/form-field';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
 import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
@@ -19,7 +19,7 @@ import { Repository } from 'src/app/models/firebase.model';
     selector: 'app-repositories',
     templateUrl: './repositories.component.html',
     styleUrls: ['./repositories.component.scss'],
-    imports: [MatFormField, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
+    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
 })
 export class RepositoriesComponent {
   displayedColumns = ['select', 'name', 'url', 'lastModified'];

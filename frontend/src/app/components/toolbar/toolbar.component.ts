@@ -12,6 +12,7 @@ import { ThemeService } from 'src/app/services/theme.service';
 import { MatToolbar } from '@angular/material/toolbar';
 import { MatIconButton, MatFabButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
 import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
 import { NavbarProjectSelectComponent } from '../navbar-project-select/navbar-project-select.component';
 import { NavbarStatusComponent } from '../navbar-status/navbar-status.component';
@@ -23,7 +24,7 @@ import { UploadProgressComponent } from '../../upload-progress/upload-progress.c
     selector: 'app-toolbar',
     templateUrl: './toolbar.component.html',
     styleUrls: ['./toolbar.component.scss'],
-    imports: [MatToolbar, MatIconButton, MatIcon, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
+    imports: [MatToolbar, MatIconButton, MatIcon, MatDivider, NavbarTitleComponent, NavbarProjectSelectComponent, NavbarStatusComponent, NavbarVscodeComponent, NavbarAccountComponent, MatFabButton, UploadProgressComponent]
 })
 export class ToolbarComponent {
   private route = inject(ActivatedRoute);

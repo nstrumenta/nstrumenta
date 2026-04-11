@@ -2,8 +2,9 @@
   <!-- Filter row with view toggle -->
   <div class="filter-row">
     <mat-form-field subscriptSizing="dynamic">
+      <mat-label>Filter</mat-label>
       <mat-icon matPrefix>search</mat-icon>
-      <input matInput (keyup)="applyFilter($event.target.value)" [attr.aria-label]="filterParam ?? 'Filter'" [placeholder]="filterParam ?? 'Filter'" />
+      <input matInput (keyup)="applyFilter($event.target.value)" />
     </mat-form-field>
     <button mat-icon-button (click)="folderNav.toggleFlatView()" 
             [matTooltip]="folderNav.flatView() ? 'Switch to folder view' : 'Switch to flat view'">
