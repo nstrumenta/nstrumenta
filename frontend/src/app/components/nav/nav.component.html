@@ -6,7 +6,7 @@
     [opened]="!isHandset()">
     <app-navbar-title></app-navbar-title>
     <mat-nav-list>
-      @if (!router.url.startsWith('/account') && !router.url.startsWith('/waitlist') && router.url !== '/') {
+      @if (!router.url.startsWith('/account') && !router.url.startsWith('/waitlist') && !router.url.startsWith('/admin') && router.url !== '/') {
         <a mat-list-item [routerLink]="['record']" queryParamsHandling="preserve" routerLinkActive="active-nav-item">
           <mat-icon matListItemIcon>fiber_manual_record</mat-icon>
           <span matListItemTitle>Record</span>
