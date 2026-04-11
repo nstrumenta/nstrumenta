@@ -56,7 +56,7 @@ import { MatIconModule } from '@angular/material/icon';
       padding: 0 24px;
       display: flex;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: var(--mat-sys-level1);
     }
     
     .logo {
@@ -80,7 +80,7 @@ import { MatIconModule } from '@angular/material/icon';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0, 0, 0, 0.08);
+      background: var(--mat-sys-surface-container-high);
       border-radius: 50%;
     }
     

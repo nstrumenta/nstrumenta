@@ -2,11 +2,11 @@
 <video #previewVideo controls></video>
 
 <form>
-  <mat-form-field style="min-width:300px">
+  <mat-form-field class="remote-url-field">
     <mat-label>Remote URL</mat-label>
     <input matInput [(ngModel)]="forwardToWebsocketUrl" name="forwardToWebsocketUrl">
   </mat-form-field>
-  <mat-form-field style="min-width:300px">
+  <mat-form-field class="remote-url-field">
     <mat-label>Channel</mat-label>
     <input matInput [(ngModel)]="forwardToWebsocketChannel" name="forwardToWebsocketChannel">
   </mat-form-field>
@@ -15,7 +15,7 @@
   </button>
 </form>
 
-<form style="margin-top: 8px;">
+<form class="record-actions">
   <button mat-flat-button [matTooltip]="recordButtonText" (click)="toggleRecord()">
     <mat-icon>fiber_manual_record</mat-icon> {{recordButtonText}}
   </button>
@@ -36,7 +36,7 @@
   }
 </mat-list>
 
-<div style="flex-direction:row">
+<div>
   @if (selection.hasValue()) {
     {{selection.selected.length}} inputs selected:
     <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
