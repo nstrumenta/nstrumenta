@@ -40,12 +40,6 @@
           <span matListItemTitle>Settings</span>
         </a>
       }
-      @if (authService.currentUserRole() === 'admin') {
-        <a mat-list-item routerLink="/admin/users" routerLinkActive="active-nav-item">
-          <mat-icon matListItemIcon>admin_panel_settings</mat-icon>
-          <span matListItemTitle>Admin</span>
-        </a>
-      }
     </mat-nav-list>
   </mat-sidenav>
   <mat-sidenav-content layout>

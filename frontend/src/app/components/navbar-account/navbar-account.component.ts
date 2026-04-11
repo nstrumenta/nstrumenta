@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/auth/auth.service';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIconButton, MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
+import { MatDivider } from '@angular/material/divider';
 import { MatDialog } from '@angular/material/dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
 
@@ -12,10 +13,10 @@ import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
     selector: 'app-navbar-account',
     templateUrl: './navbar-account.component.html',
     styleUrls: ['./navbar-account.component.scss'],
-    imports: [MatMenu, MatMenuItem, RouterLink, MatIconButton, MatMenuTrigger, MatIcon, MatButton]
+    imports: [MatMenu, MatMenuItem, RouterLink, MatIconButton, MatMenuTrigger, MatIcon, MatButton, MatDivider]
 })
 export class NavbarAccountComponent {
-  private authService = inject(AuthService);
+  authService = inject(AuthService);
   private router = inject(Router);
   private dialog = inject(MatDialog);
 

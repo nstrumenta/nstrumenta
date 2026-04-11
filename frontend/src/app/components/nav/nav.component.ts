@@ -8,7 +8,6 @@ import { NavbarTitleComponent } from '../navbar-title/navbar-title.component';
 import { MatNavList, MatListItem, MatListItemIcon, MatListItemTitle } from '@angular/material/list';
 import { MatIcon } from '@angular/material/icon';
 import { ToolbarComponent } from '../toolbar/toolbar.component';
-import { AuthService } from '../../auth/auth.service';
 import { FirebaseDataService } from '../../services/firebase-data.service';
 
 @Component({
@@ -18,7 +17,6 @@ import { FirebaseDataService } from '../../services/firebase-data.service';
     imports: [MatSidenavContainer, MatSidenav, NavbarTitleComponent, MatNavList, MatListItem, MatListItemIcon, MatListItemTitle, RouterLink, RouterLinkActive, MatIcon, MatSidenavContent, ToolbarComponent, RouterOutlet]
 })
 export class NavComponent {
-  public authService = inject(AuthService);
   private breakpointObserver = inject(BreakpointObserver);
   private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);

@@ -1,8 +1,21 @@
 @if (loggedIn()) {
   <div>
     <mat-menu #appMenu="matMenu">
-      <button mat-menu-item [routerLink]="['/account/profile']" queryParamsHandling="preserve">Settings</button>
-      <button mat-menu-item (click)="logout()">Sign out</button>
+      <button mat-menu-item [routerLink]="['/account/profile']" queryParamsHandling="preserve">
+        <mat-icon>settings</mat-icon>
+        Settings
+      </button>
+      @if (authService.currentUserRole() === 'admin') {
+        <button mat-menu-item routerLink="/admin/users">
+          <mat-icon>admin_panel_settings</mat-icon>
+          Admin
+        </button>
+      }
+      <mat-divider></mat-divider>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Sign out
+      </button>
     </mat-menu>
     <button mat-icon-button [matMenuTriggerFor]="appMenu">
       @if (currentUser()?.photoURL) {
