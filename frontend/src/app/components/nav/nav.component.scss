@@ -14,11 +14,24 @@
 }
 
 .sidenav {
-  width: 200px;
+  width: 240px;
+  background-color: var(--mat-sys-surface-container);
+  border-right: none;
+  padding: 8px;
 }
 
 mat-sidenav-content[layout] {
   overflow-y: auto;
+}
+
+mat-nav-list {
+  padding: 0;
+}
+
+mat-nav-list a[mat-list-item] {
+  border-radius: 28px;
+  margin-bottom: 2px;
+  height: 48px;
 }
 
 .active-nav-item {

@@ -2,6 +2,8 @@ mat-toolbar {
   position: sticky;
   top: 0;
   z-index: 2;
+  background-color: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-sys-surface-variant);
 }
 
 mat-divider[vertical] {

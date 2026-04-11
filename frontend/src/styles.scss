@@ -35,6 +35,9 @@ $nst-light-theme: mat.define-theme((
   // Landing page background shapes
   --nst-landing-rect: #252830;
   --nst-landing-accent: #263238;
+
+  // Rounded input fields (pill shape)
+  --mdc-outlined-text-field-container-shape: 12px;
 }
 
 // Light mode — toggled by ThemeService adding .light-mode to <html>
