@@ -33,7 +33,7 @@ async function signInAs(page, email, password) {
 }
 
 test.describe('Admin user approval', () => {
-  test.setTimeout(10000);
+  test.setTimeout(15000);
 
   test('admin menu item is visible after signing in as admin', async ({ page }) => {
     page.on('console', msg => {

@@ -1,7 +1,6 @@
 @use '@angular/material' as mat;
 
-// M3 theme — azure palette (blue-indigo) drives all color roles
-$nst-dark-theme: mat.define-theme((
+$nst-theme-config: (
   color: (
     theme-type: dark,
     primary: mat.$violet-palette,
@@ -13,9 +12,9 @@ $nst-dark-theme: mat.define-theme((
   density: (
     scale: -1,
   ),
-));
+);
 
-$nst-light-theme: mat.define-theme((
+$nst-light-config: (
   color: (
     theme-type: light,
     primary: mat.$violet-palette,
@@ -27,35 +26,27 @@ $nst-light-theme: mat.define-theme((
   density: (
     scale: -1,
   ),
-));
+);
 
-// Apply dark theme by default via CSS custom properties
 :root {
-  @include mat.all-component-themes($nst-dark-theme);
-  // Landing page background shapes
+  @include mat.theme($nst-theme-config);
   --nst-landing-rect: #252830;
   --nst-landing-accent: #263238;
-
-  // Rounded input fields
   --mdc-outlined-text-field-container-shape: 12px;
-
-  // Sidenav drawer uses a slightly elevated surface tone (Gemini pattern)
   --mat-sidenav-container-background-color: var(--mat-sys-surface-container);
 }
 
-// Light mode — toggled by ThemeService adding .light-mode to <html>
-// Also respects system preference when no explicit class is set
 .light-mode,
 :root:not(.dark-mode) {
   @media (prefers-color-scheme: light) {
-    @include mat.all-component-colors($nst-light-theme);
+    @include mat.theme($nst-light-config);
     --nst-landing-rect: #f5f6f7;
     --nst-landing-accent: #bac3d2;
   }
 }
 
 .light-mode {
-  @include mat.all-component-colors($nst-light-theme);
+  @include mat.theme($nst-light-config);
   --nst-landing-rect: #f5f6f7;
   --nst-landing-accent: #bac3d2;
 }
@@ -66,9 +57,9 @@ body {
   height: 100vh;
   margin: 0;
   padding: 0;
-  // Use CSS vars emitted by the theme so dark/light switching works at runtime
-  background-color: var(--mat-app-background-color);
-  color: var(--mat-app-text-color);
+  background-color: var(--mat-sys-background);
+  color: var(--mat-sys-on-background);
+  color-scheme: dark light;
 }
 
 app-root,
@@ -77,8 +68,6 @@ app-project-list {
   display: block;
   height: 100%;
 }
-
-// Apply M3 background to body within the theme blocks below:
 
 a {
   color: var(--mat-sys-primary);

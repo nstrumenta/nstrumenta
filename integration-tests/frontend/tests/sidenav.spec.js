@@ -43,19 +43,16 @@ test.describe('Sidenav layout', () => {
 
     const sidenav = page.locator('mat-sidenav');
     await expect(sidenav).toBeVisible();
-
     await expect(sidenav).toHaveClass(/mat-drawer-side/);
 
     const sidenavBg = await sidenav.evaluate(el => getComputedStyle(el).backgroundColor);
     const sidenavColor = parseColor(sidenavBg);
-    console.log('Desktop sidenav background:', sidenavBg);
     expect(sidenavColor, 'sidenav background should be parseable').not.toBeNull();
     expect(sidenavColor.a, 'sidenav background should be opaque').toBeGreaterThan(0.9);
 
     const container = page.locator('mat-sidenav-container');
     const containerBg = await container.evaluate(el => getComputedStyle(el).backgroundColor);
     const containerColor = parseColor(containerBg);
-    console.log('Desktop container background:', containerBg);
     expect(containerColor, 'container background should be parseable').not.toBeNull();
     expect(containerColor.a, 'container background should be opaque').toBeGreaterThan(0.9);
   });
@@ -76,14 +73,12 @@ test.describe('Sidenav layout', () => {
 
     const sidenavBg = await sidenav.evaluate(el => getComputedStyle(el).backgroundColor);
     const sidenavColor = parseColor(sidenavBg);
-    console.log('Mobile sidenav background:', sidenavBg);
     expect(sidenavColor, 'sidenav background should be parseable').not.toBeNull();
     expect(sidenavColor.a, 'sidenav background should be opaque').toBeGreaterThan(0.9);
 
     const container = page.locator('mat-sidenav-container');
     const containerBg = await container.evaluate(el => getComputedStyle(el).backgroundColor);
     const containerColor = parseColor(containerBg);
-    console.log('Mobile container background:', containerBg);
     expect(containerColor, 'container background should be parseable').not.toBeNull();
     expect(containerColor.a, 'container background should be opaque').toBeGreaterThan(0.9);
   });
