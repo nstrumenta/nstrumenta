@@ -1,4 +1,4 @@
-import { enableProdMode, importProvidersFrom, ENVIRONMENT_INITIALIZER, inject, provideZoneChangeDetection } from '@angular/core';
+import { enableProdMode, importProvidersFrom, APP_INITIALIZER, ENVIRONMENT_INITIALIZER, inject, provideZoneChangeDetection } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { provideRouter, withComponentInputBinding, withRouterConfig } from '@angular/router';
@@ -75,6 +75,14 @@ getNstConfig()
         provideHttpClient(withInterceptorsFromDi()),
         importProvidersFrom(BrowserAnimationsModule, MatDialogModule, MatSnackBarModule),
         
+        // Resolve auth + Firestore once before routing begins — makes guards synchronous
+        {
+          provide: APP_INITIALIZER,
+          useFactory: (auth: AuthService) => () => auth.initialized,
+          deps: [AuthService],
+          multi: true,
+        },
+
         // Services
         AuthService,
         VscodeService,
