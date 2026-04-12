@@ -118,6 +118,9 @@ export async function setup(): Promise<() => Promise<void>> {
   process.env.NSTRUMENTA_API_KEY = apiKey;
 
   return async () => {
+    await firestore.recursiveDelete(firestore.doc(`organizations/${username}`));
+    await firestore.recursiveDelete(firestore.doc(`users/${uid}`));
+    await firestore.doc(`slugs/${username}`).delete();
     await auth.deleteUser(uid);
   };
 }
@@ -127,10 +130,9 @@ export async function seedLocalDev(): Promise<void> {
   const password = process.env.NST_DEV_PASSWORD;
   const username = process.env.NST_DEV_USERNAME;
   const projectSlug = process.env.NST_DEV_PROJECT;
-  const apiUrl = process.env.NSTRUMENTA_API_URL;
 
-  if (!email || !password || !username || !projectSlug || !apiUrl) {
-    console.error('Missing required env vars: NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, NSTRUMENTA_API_URL');
+  if (!email || !password || !username || !projectSlug) {
+    console.error('Missing required env vars: NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT');
     process.exit(1);
   }
 
@@ -166,12 +168,12 @@ export async function seedLocalDev(): Promise<void> {
     tx.set(firestore.doc(`organizations/${username}/projects/${projectSlug}`), {
       name: projectSlug, slug: projectSlug, orgSlug: username,
       members: { [uid]: 'owner' }, createdAt: timestamp, createdBy: uid,
-      apiUrl, apiKeys: {},
+      apiUrl: SERVER_URL, apiKeys: {},
     }, { merge: true });
   });
 
   const projectId = `${username}/${projectSlug}`;
-  const keyWithUrl = await createApiKey(projectId, apiUrl, uid);
+  const keyWithUrl = await createApiKey(projectId, SERVER_URL, uid);
 
   const outputPath = join(__dirname, '..', '..', '..', '..', '.seed-output');
   writeFileSync(outputPath, [
