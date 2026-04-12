@@ -45,7 +45,7 @@ describe('Authentication V2', () => {
 
     mockGet.mockResolvedValue({
       data: () => ({
-        projectId: 'test-project',
+        projectId: 'test-org/test-project',
         version: 'v2',
         salt,
         hash
@@ -55,7 +55,7 @@ describe('Authentication V2', () => {
     const result = await auth(req as Request, res as Response)
 
     expect(result.authenticated).toBe(true)
-    expect((result as any).projectId).toBe('test-project')
+    expect((result as any).projectId).toBe('test-org/test-project')
     expect(mockCollection).toHaveBeenCalledWith('keys')
     expect(mockDoc).toHaveBeenCalledWith(accessKeyId)
   })
@@ -72,7 +72,7 @@ describe('Authentication V2', () => {
 
     mockGet.mockResolvedValue({
       data: () => ({
-        projectId: 'test-project',
+        projectId: 'test-org/test-project',
         version: 'v2',
         salt,
         hash: 'wrong-hash'

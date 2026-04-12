@@ -1,9 +1,9 @@
-import { Firestore } from '@google-cloud/firestore'
+import { Firestore, FieldValue } from '@google-cloud/firestore'
 import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
-
 import { projectId } from '../authentication/ServiceAccount'
+import { orgProjectPath, parseOrgProject } from '../shared/utils'
 
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
@@ -30,14 +30,17 @@ export function CreateApiKeyService({
       projectId: string,
       apiUrlParam?: string,
     ) {
+      const { projectSlug } = parseOrgProject(projectId)
+      const projectPath = orgProjectPath(projectId)
+
       // Get apiUrl from parameter, project data, or use a default
       const projectData = (
-        await firestore.doc(`/projects/${projectId}`).get()
+        await firestore.doc(projectPath).get()
       ).data()
       const apiUrl =
         apiUrlParam ??
         projectData?.apiUrl ??
-        `https://${projectId}.web.app`
+        `https://${projectSlug}.web.app`
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 
@@ -66,9 +69,7 @@ export function CreateApiKeyService({
           version: 'v2' // Mark as new version
         })
 
-        const projectPath = `/projects/${projectId}`
-
-        const projectDoc = await (await firestore.doc(projectPath).get()).data()
+        const projectDoc = await (await firestore.doc(orgProjectPath(projectId)).get()).data()
         const apiKeys = projectDoc?.apiKeys ? projectDoc.apiKeys : {}
         
         // Store metadata in project
@@ -103,8 +104,12 @@ export function CreateApiKeyService({
       console.log('revokeApiKey', projectId, data)
       const keyId = data.payload.keyId
       try {
-        const doc = firestore.collection('keys').doc(keyId)
-        await doc.delete()
+        await firestore.collection('keys').doc(keyId).delete()
+
+        const projectPath = orgProjectPath(projectId)
+        await firestore.doc(projectPath).update({
+          [`apiKeys.${keyId}`]: FieldValue.delete(),
+        })
 
         await firestore
           .doc(actionPath)

@@ -27,6 +27,6 @@ npx vitest run mcp-client.test.js
 ## Environment Variables
 
 - `FRONTEND_URL` - Server URL for Playwright (default: http://localhost:5999)
-- `TEST_USER_EMAIL` - Test user email (created by e2e.sh)
-- `TEST_USER_PASSWORD` - Test user password (created by e2e.sh)
+- `TEST_USER_EMAIL` - Test user email (created by frontend-e2e.sh)
+- `TEST_USER_PASSWORD` - Test user password (created by frontend-e2e.sh)
 - `NSTRUMENTA_API_KEY` - API key for MCP tests

@@ -169,6 +169,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: integration-tests/node_modules
+          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
+      - name: Install integration-tests deps
+        run: cd integration-tests && npm install --quiet
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -184,7 +190,44 @@ jobs:
       - name: Run Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: cd integration-tests && ./e2e.sh
+        run: cd integration-tests && ./frontend-e2e.sh
+
+  cli-e2e:
+    needs: [build, build-frontend]
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: integration-tests/node_modules
+          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
+      - name: Install integration-tests deps
+        run: cd integration-tests && npm install --quiet
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
+          service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Configure ADC for globalSetup
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+        run: |
+          mkdir -p $HOME/.config/gcloud
+          cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
+          gcloud config set project $GOOGLE_CLOUD_PROJECT
+      - uses: docker/setup-buildx-action@v3
+      - name: Run CLI E2E tests
+        env:
+          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+        run: cd integration-tests && ./cli-e2e.sh
 
   # ---------------------------------------------------------------------------
   # CD: Deploy on merge to main
@@ -299,7 +342,7 @@ jobs:
           firebase deploy --only hosting
 
   deploy-server:
-    needs: [e2e, build-ci-images]
+    needs: [e2e, cli-e2e, build-ci-images]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     env:
@@ -453,7 +496,7 @@ jobs:
   # ---------------------------------------------------------------------------
 
   publish-docker-hub:
-    needs: [e2e, build-ci-images]
+    needs: [e2e, cli-e2e, build-ci-images]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04-arm
     steps:

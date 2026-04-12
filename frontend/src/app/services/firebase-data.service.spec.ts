@@ -151,7 +151,7 @@ describe('FirebaseDataService', () => {
         'collectionData(query(collection(this.firestore, `users/${uid}/repositories`)))',
         'collectionData(query(collection(this.firestore, `users/${uid}/agents`)))',
         'collectionData(query(collection(this.firestore, `users/${uid}/machines`)))',
-        'collectionData(query(collection(this.firestore, `users/${uid}/projects`)))',
+        'collectionData(query(collection(this.firestore, `organizations/${username}/projects`)))',
       ];
 
       const incorrectPatterns = [

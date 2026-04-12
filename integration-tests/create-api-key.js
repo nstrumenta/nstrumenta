@@ -9,6 +9,13 @@ if (process.argv.length !== 4) {
 const projectId = process.argv[2];
 const apiUrl = process.argv[3];
 
+if (!projectId.includes('/') || projectId.split('/').length !== 2) {
+  console.error(`Error: projectId must be in 'orgSlug/projectSlug' format. Got: '${projectId}'`);
+  process.exit(1);
+}
+
+const [orgSlug, projectSlug] = projectId.split('/');
+
 admin.initializeApp({
   credential: admin.credential.applicationDefault()
 });
@@ -29,25 +36,28 @@ async function createApiKey() {
   // Hash the secret part
   const hash = crypto.scryptSync(secretAccessKey, salt + pepper, 64).toString('hex');
 
-  const createdAt = Date.now();
+  const now = Date.now();
+  const expiresAt = now + 1000 * 60 * 60 * 2; // 2 hours for CI tests
 
   try {
     // Store under accessKeyId (public ID)
     await firestore.collection('keys').doc(accessKeyId).set({
       projectId,
-      createdAt,
+      createdAt: now,
+      expiresAt,
       salt,
       hash,
       version: 'v2'
     });
 
-    const projectPath = `/projects/${projectId}`;
+    const projectPath = `organizations/${orgSlug}/projects/${projectSlug}`;
+    
     const projectDoc = await firestore.doc(projectPath).get();
     
     if (!projectDoc.exists) {
         // Create the project if it doesn't exist
         await firestore.doc(projectPath).set({
-            name: projectId,
+            name: projectSlug,
             members: {
               'ci-user': 'owner'
             },
@@ -65,10 +75,7 @@ async function createApiKey() {
     // Re-fetch to ensure we have the data (or just use what we set)
     const projectData = (await firestore.doc(projectPath).get()).data();
     const apiKeys = projectData.apiKeys || {};
-    apiKeys[accessKeyId] = { createdAt };
-
-    await firestore.doc(projectPath).update({ apiKeys });
-
+    apiKeys[accessKeyId] = { createdAt: now, expiresAt, createdBy: 'ci-user' };
     const keyWithUrl = `${key}:${btoa(apiUrl)}`;
     console.log(keyWithUrl);
   } catch (error) {

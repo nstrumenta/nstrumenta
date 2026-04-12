@@ -13,9 +13,11 @@ import { getDataList } from './api/listStorageObjects';
 import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
+import { parseOrgProject, orgProjectPath } from './shared/utils';
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {
-    const actionDoc = firestore.collection(`projects/${projectId}/actions`).doc();
+    const path = `${orgProjectPath(projectId)}/actions`;
+    const actionDoc = firestore.collection(path).doc();
     await actionDoc.set(action);
     return actionDoc.id;
 }
@@ -43,6 +45,11 @@ function getUserId(): string | undefined {
     return context?.userId;
 }
 
+export function getStoragePathPrefix(projectId: string): string {
+    const { orgSlug, projectSlug } = parseOrgProject(projectId);
+    return `${orgSlug}/${projectSlug}`;
+}
+
 function getAuthType(): 'apiKey' | 'firebase' {
     const context = requestContext.getStore();
     return context?.authType || 'apiKey';
@@ -68,7 +75,9 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         const requestedProjectId = req.headers['x-nstrumenta-project-id'] as string | undefined;
 
         if (requestedProjectId) {
-            const projectDoc = await firestore.doc(`projects/${requestedProjectId}`).get();
+            const projectPath = orgProjectPath(requestedProjectId);
+
+            const projectDoc = await firestore.doc(projectPath).get();
             if (!projectDoc.exists) {
                 return {
                     authenticated: false,
@@ -120,7 +129,7 @@ server.resource(
                 throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
             }
 
-            const doc = await firestore.doc(`projects/${projectId}/actions/${actionId}`).get();
+            const doc = await firestore.doc(`${orgProjectPath(projectId)}/actions/${actionId}`).get();
             if (!doc.exists) {
                 throw new Error(`Action ${actionId} not found`);
             }
@@ -149,7 +158,7 @@ server.resource(
                 throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
             }
 
-            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            const actionsPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`;
             const snapshot = await firestore.collection(actionsPath)
                 .where('status', '==', 'pending')
                 .get();
@@ -489,7 +498,7 @@ server.registerTool(
     async ({ actionId, status, error, progress, logs }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
             
             const updateData: Record<string, any> = {
                 status,
@@ -530,7 +539,7 @@ server.registerTool(
     async ({ actionId, timeout = 600000 }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
             
             return new Promise((resolve, reject) => {
                 const startTime = Date.now();
@@ -708,7 +717,7 @@ server.registerTool(
     async ({ agentId, status }) => {
         try {
             const projectId = getProjectId();
-            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            const actionsPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`;
             let query = firestore.collection(actionsPath);
             
             if (status) {
@@ -756,7 +765,7 @@ server.registerTool(
     async ({ agentId, actionId, status, error }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/agents/${agentId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions/${actionId}`;
             const updateData: any = {
                 status,
                 lastModified: Date.now(),
@@ -839,7 +848,7 @@ server.registerTool(
             let confirmedUnique = false;
             let projectSlug = slugBase;
             while (!confirmedUnique) {
-                const existing = await firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`).get();
+                const existing = await firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug).get();
                 if (!existing.exists) {
                     confirmedUnique = true;
                 } else {
@@ -847,10 +856,9 @@ server.registerTool(
                 }
             }
 
-            const projectId = firestore.collection('projects').doc().id;
-            const batch = firestore.batch();
+            const projectId = `${targetOrgSlug}/${projectSlug}`;
 
-            batch.set(firestore.collection('projects').doc(projectId), {
+            await firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug).set({
                 name,
                 slug: projectSlug,
                 orgId: targetOrgId,
@@ -860,16 +868,6 @@ server.registerTool(
                 createdBy: userId,
                 visibility: 'private',
             });
-
-            batch.set(firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`), { projectId });
-
-            batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId), {
-                name,
-                orgSlug: targetOrgSlug,
-                slug: projectSlug,
-            });
-
-            await batch.commit();
 
             return {
                 content: [{ type: 'text', text: `Project created: ${targetOrgSlug}/${projectSlug}` }],
@@ -911,7 +909,9 @@ server.registerTool(
                 throw new Error('Firebase authentication required for API key creation');
             }
 
-            const projectDoc = await firestore.collection('projects').doc(projectId).get();
+            const projectPath = orgProjectPath(projectId);
+
+            const projectDoc = await firestore.doc(projectPath).get();
             if (!projectDoc.exists) {
                 throw new Error('Project not found');
             }
@@ -959,7 +959,7 @@ server.registerTool(
     async ({ path, name, version, size, type, entry }) => {
         try {
             const projectId = getProjectId();
-            const modulesPath = `projects/${projectId}/modules`;
+            const modulesPath = `${orgProjectPath(projectId)}/modules`;
             const moduleDoc = firestore.collection(modulesPath).doc();
             
             // Filter out undefined values to avoid Firestore errors
@@ -992,9 +992,9 @@ server.registerTool(
     'get_upload_url',
     {
         title: 'Get Upload URL',
-        description: 'Gets a signed URL for uploading a module file to cloud storage.',
+        description: 'Gets a signed URL for uploading a file to cloud storage. Accepts a path relative to the project root (e.g. "data/file.mcap", "modules/tool.tar.gz").',
         inputSchema: {
-            path: z.string().describe('File path relative to project'),
+            path: z.string().describe('File path relative to project root (e.g. "data/file.mcap")'),
             metadata: z.record(z.string(), z.string()).optional().describe('Optional file metadata'),
         },
         outputSchema: {
@@ -1005,10 +1005,13 @@ server.registerTool(
         try {
             const projectId = getProjectId();
             const { generateV4UploadSignedUrl } = require('./shared/utils');
-            
-            const path = originalPath.replace(/^(\/)*/, '/');
-            const storagePathBase = `projects/${projectId}`;
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, getOrigin());
+
+            const storagePathBase = getStoragePathPrefix(projectId);
+            const stripped = originalPath.replace(/^\/+/, '');
+            const relativePath = stripped.startsWith(storagePathBase + '/')
+                ? stripped.slice(storagePathBase.length + 1)
+                : stripped;
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}/${relativePath}`, metadata, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1025,9 +1028,9 @@ server.registerTool(
     'get_download_url',
     {
         title: 'Get Download URL',
-        description: 'Gets a signed URL for downloading a file from cloud storage.',
+        description: 'Gets a signed URL for downloading a file from cloud storage. Accepts a path relative to the project root (e.g. "data/file.mcap").',
         inputSchema: {
-            path: z.string().describe('File path relative to project (e.g. "data/file.mcap") or full storage path'),
+            path: z.string().describe('File path relative to project root (e.g. "data/file.mcap")'),
         },
         outputSchema: {
             downloadUrl: z.string().describe('Signed URL for download'),
@@ -1038,12 +1041,14 @@ server.registerTool(
             const projectId = getProjectId();
             const { generateV4ReadSignedUrl } = require('./shared/utils');
 
-            // Accept both relative ("data/file.mcap") and full ("projects/{id}/data/file.mcap") paths
-            // Strip any leading slash before checking prefix
-            const normalizedPath = originalPath.replace(/^\//, '');
-            const fullPath = normalizedPath.startsWith('projects/')
-                ? normalizedPath
-                : `projects/${projectId}/${normalizedPath}`;
+            const storagePathBase = getStoragePathPrefix(projectId);
+            // Strip leading slashes and strip the project prefix if the caller included it,
+            // so both "data/file.mcap" and "org/project/data/file.mcap" are accepted.
+            const stripped = originalPath.replace(/^\/+/, '');
+            const relativePath = stripped.startsWith(storagePathBase + '/')
+                ? stripped.slice(storagePathBase.length + 1)
+                : stripped;
+            const fullPath = `${storagePathBase}/${relativePath}`;
 
             const downloadUrl = await generateV4ReadSignedUrl(fullPath);
 
@@ -1078,9 +1083,11 @@ server.registerTool(
             const crypto = require('crypto');
             const path = require('path');
 
+            const storagePathBase = getStoragePathPrefix(projectId);
+
             // Verify the file belongs to this project
-            const expectedPrefix = `projects/${projectId}/`;
-            if (!filePath.startsWith(expectedPrefix)) {
+            const expectedPrefix = `${storagePathBase}/`;
+            if (!filePath.startsWith(expectedPrefix) && !filePath.startsWith(`${orgProjectPath(projectId)}/`)) {
                 throw new Error(`File path does not belong to project ${projectId}`);
             }
 
@@ -1088,10 +1095,10 @@ server.registerTool(
 
             // Delete Firestore metadata doc - either by provided ID or by hash-derived path
             if (firestoreDocId) {
-                await firestore.doc(`projects/${projectId}/data/${firestoreDocId}`).delete();
+                await firestore.doc(`${orgProjectPath(projectId)}/data/${firestoreDocId}`).delete();
             } else {
                 const hash = crypto.createHash('sha256').update(filePath).digest('hex');
-                await firestore.doc(`projects/${projectId}/data/${hash}`).delete();
+                await firestore.doc(`${orgProjectPath(projectId)}/data/${hash}`).delete();
             }
 
             return {
@@ -1126,9 +1133,10 @@ server.registerTool(
             const { v4: uuid } = require('uuid');
             const { storage, bucketName } = require('./authentication/ServiceAccount');
             
+            const storagePathBase = getStoragePathPrefix(projectId);
             const timestamp = Date.now();
             const dataId = uuid();
-            const filePath = `projects/${projectId}/data/${dataId}/${name}`;
+            const filePath = `${storagePathBase}/data/${dataId}/${name}`;
             
             const bucket = storage.bucket(bucketName);
             const file = bucket.file(filePath);
@@ -1173,7 +1181,7 @@ server.registerTool(
             const projectId = getProjectId();
             const { v4: uuid } = require('uuid');
             
-            const agentsPath = `projects/${projectId}/agents`;
+            const agentsPath = `${orgProjectPath(projectId)}/agents`;
             const agentId = uuid();
             const timestamp = Date.now();
             
@@ -1282,7 +1290,7 @@ server.registerTool(
     async ({ collection, limit, field, comparison, value }) => {
         try {
             const projectId = getProjectId();
-            const collectionPath = `projects/${projectId}/${collection}`;
+            const collectionPath = `${orgProjectPath(projectId)}/${collection}`;
             let query: any = firestore.collection(collectionPath);
             
             if (field && comparison && value !== undefined) {
@@ -1326,7 +1334,7 @@ server.registerTool(
     async ({ dataId, metadata }) => {
         try {
             const projectId = getProjectId();
-            const dataPath = `projects/${projectId}/data/${dataId}`;
+            const dataPath = `${orgProjectPath(projectId)}/data/${dataId}`;
             
             await firestore.doc(dataPath).set(metadata, { merge: true });
 
@@ -1359,7 +1367,7 @@ server.registerTool(
     async ({ dataId }) => {
         try {
             const projectId = getProjectId();
-            const dataPath = `projects/${projectId}/data/${dataId}`;
+            const dataPath = `${orgProjectPath(projectId)}/data/${dataId}`;
             
             const doc = await firestore.doc(dataPath).get();
             if (!doc.exists) {

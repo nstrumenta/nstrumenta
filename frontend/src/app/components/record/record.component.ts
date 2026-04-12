@@ -812,7 +812,7 @@ export class RecordComponent implements OnInit {
         
         if (this.recordingName) {
           console.log('Uploading video recording...');
-          const projectDataPath = '/projects/' + this.projectId + '/data';
+          const projectDataPath = 'data';
           const filePath = `${projectDataPath}/${this.recordingName}.webm`;
 
           await this.firebaseDataService.uploadFile(filePath, recordedBlob);
@@ -938,7 +938,7 @@ export class RecordComponent implements OnInit {
         this.bytesWritten,
         blob.size
       );
-      const projectDataPath = '/projects/' + this.projectId + '/data';
+      const projectDataPath = 'data';
       const dataFilePath = `${projectDataPath}/${mcapFileName}`;
       const experimentFilepath = `${projectDataPath}/${recording}.experiment.json`;
       const metadata: UploadMetadata = {

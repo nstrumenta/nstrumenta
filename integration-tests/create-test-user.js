@@ -29,32 +29,31 @@ const db = admin.firestore();
 
 async function setupUsernameAndOrg(uid) {
   const slugRef = db.doc(`slugs/${username}`);
-  const orgId = db.collection('organizations').doc().id;
   const timestamp = Date.now();
 
   await db.runTransaction(async (tx) => {
     tx.set(slugRef, { type: 'user', id: uid });
-    tx.set(db.doc(`organizations/${orgId}`), {
+    tx.set(db.doc(`organizations/${username}`), {
       name: username,
       slug: username,
       type: 'personal',
       createdAt: timestamp,
       createdBy: uid,
     });
-    tx.set(db.doc(`organizations/${orgId}/members/${uid}`), {
+    tx.set(db.doc(`organizations/${username}/members/${uid}`), {
       role: 'owner',
       addedAt: timestamp,
       addedBy: uid,
     });
     tx.set(db.doc(`users/${uid}`), {
       username,
-      personalOrgId: orgId,
+      personalOrgId: username,
       status: 'approved',
       email,
       ...(isAdmin ? { role: 'admin' } : {}),
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     }, { merge: true });
-    tx.set(db.doc(`users/${uid}/organizations/${orgId}`), {
+    tx.set(db.doc(`users/${uid}/organizations/${username}`), {
       name: username,
       slug: username,
       role: 'owner',
@@ -78,7 +77,7 @@ async function createTestUser() {
 
   await setupUsernameAndOrg(uid);
 
-  process.stdout.write(JSON.stringify({ email, password, uid }) + '\n');
+  process.stdout.write(JSON.stringify({ email, password, uid, username }) + '\n');
 }
 
 createTestUser().catch((error) => {

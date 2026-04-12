@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Request, Response } from 'express'
+import { parseOrgProject } from '../shared/utils'
 
 describe('MCP Tools', () => {
   let mockFirestore: any
@@ -180,13 +181,12 @@ describe('MCP Tools', () => {
     it('should return uploadUrl and filePath for get_upload_data_url', () => {
       const output = {
         uploadUrl: 'https://storage.googleapis.com/signed-data-url',
-        filePath: 'projects/test-project/data/uuid-123/test-data.json',
+        filePath: 'my-org/my-project/data/uuid-123/test-data.json',
       }
 
       expect(output.uploadUrl).toBeTruthy()
       expect(output.uploadUrl.startsWith('https://')).toBe(true)
-      expect(output.filePath).toContain('projects/')
-      expect(output.filePath).toContain('/data/')
+      expect(output.filePath).toMatch(/^[^/]+\/[^/]+\/data\//)
     })
 
     it('should return agentId for register_agent', () => {
@@ -294,15 +294,16 @@ describe('MCP Tools', () => {
     })
 
     it('delete_file accepts paths owned by the project', () => {
-      const projectId = 'my-project'
-      const ownPath = `projects/${projectId}/data/recording.mcap`
-      const expectedPrefix = `projects/${projectId}/`
+      const projectId = 'my-org/my-project'
+      const [orgSlug, projectSlug] = projectId.split('/')
+      const ownPath = `${orgSlug}/${projectSlug}/data/recording.mcap`
+      const expectedPrefix = `${orgSlug}/${projectSlug}/`
       expect(ownPath.startsWith(expectedPrefix)).toBe(true)
     })
 
     it('delete_file derives Firestore docId from path hash when not provided', () => {
       const crypto = require('crypto')
-      const filePath = 'projects/proj-abc/data/recording.mcap'
+      const filePath = 'my-org/my-project/data/recording.mcap'
       const hash = crypto.createHash('sha256').update(filePath).digest('hex')
       expect(hash).toHaveLength(64)
       expect(typeof hash).toBe('string')
@@ -314,5 +315,52 @@ describe('MCP Tools', () => {
       expect(rulesContent).toContain('if false')
       expect(rulesContent).not.toContain('if request.auth')
     })
+  })
+})
+
+describe('getStoragePathPrefix', () => {
+  it('returns orgSlug/projectSlug for org-scoped projectId', () => {
+    const { orgSlug, projectSlug } = parseOrgProject('my-org/my-project')
+    expect(`${orgSlug}/${projectSlug}`).toBe('my-org/my-project')
+  })
+
+  it('prepended to a relative path produces the correct GCS path', () => {
+    const { orgSlug, projectSlug } = parseOrgProject('acme/sensor-data')
+    const prefix = `${orgSlug}/${projectSlug}`
+    expect(`${prefix}/data/recording.mcap`).toBe('acme/sensor-data/data/recording.mcap')
+  })
+})
+
+describe('get_upload_url / get_download_url path normalization', () => {
+  function resolveStoragePath(projectId: string, originalPath: string): string {
+    const [orgSlug, projectSlug] = projectId.split('/')
+    const storagePathBase = `${orgSlug}/${projectSlug}`
+    const stripped = originalPath.replace(/^\/+/, '')
+    const relativePath = stripped.startsWith(storagePathBase + '/')
+      ? stripped.slice(storagePathBase.length + 1)
+      : stripped
+    return `${storagePathBase}/${relativePath}`
+  }
+
+  it('relative path is prefixed with project', () => {
+    expect(resolveStoragePath('acme/sensor-lab', 'data/recording.mcap'))
+      .toBe('acme/sensor-lab/data/recording.mcap')
+  })
+
+  it('leading slash is stripped', () => {
+    expect(resolveStoragePath('acme/sensor-lab', '/data/recording.mcap'))
+      .toBe('acme/sensor-lab/data/recording.mcap')
+  })
+
+  it('full path including own project prefix is normalised (legacy caller)', () => {
+    expect(resolveStoragePath('acme/sensor-lab', 'acme/sensor-lab/data/recording.mcap'))
+      .toBe('acme/sensor-lab/data/recording.mcap')
+  })
+
+  it('full path from a different project is NOT treated as a full path — prefix is re-applied', () => {
+    // A caller whose project is acme/sensor-lab cannot get a URL for victim/secret-proj/data/file
+    // because the path does not start with their own prefix; it gets re-prefixed under their project.
+    expect(resolveStoragePath('acme/sensor-lab', 'victim/secret-proj/data/file.mcap'))
+      .toBe('acme/sensor-lab/victim/secret-proj/data/file.mcap')
   })
 })

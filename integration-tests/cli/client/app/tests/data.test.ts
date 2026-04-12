@@ -40,8 +40,8 @@ describe('Data', () => {
         { cwd: testFolderBase }
       );
       
-      // CLI command waits for uploads synchronously
-      expect(result).toContain('projects/ci/data');
+      // CLI returns the remoteFilePath using the new orgSlug/projectSlug storage prefix
+      expect(result).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+\/data\//m);
     });
   });
 });

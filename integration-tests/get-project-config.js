@@ -1,5 +1,5 @@
 // Fetches Firebase web app config for the current GCP project using ADC.
-// Outputs shell export statements to stdout so e2e.sh can eval them.
+// Outputs shell export statements to stdout so frontend-e2e.sh can eval them.
 // Usage: eval "$(node get-project-config.js)"
 
 const admin = require('firebase-admin');

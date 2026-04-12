@@ -91,8 +91,8 @@ export class DataTableComponent implements OnInit {
       const isFlatView = this.folderNav.flatView();
       
       // Helper function to extract folder from filePath
-      // filePath format: projects/{projectId}/data/{folder}/{filename}
-      // We want just the {folder} part, which matches dirname
+      // filePath format: {orgSlug}/{projectSlug}/data/{folder}/{filename}
+      // We want just the {folder} part
       const getFolderFromPath = (filePath: string): string => {
         if (!filePath) return '';
         

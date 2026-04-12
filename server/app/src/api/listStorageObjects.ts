@@ -1,5 +1,6 @@
 import { APIEndpoint, withAuth } from '../authentication'
 import { firestore } from '../authentication/ServiceAccount'
+import { orgProjectPath } from '../shared/utils'
 
 export interface ListObjectsArgs {
   projectId: string
@@ -32,8 +33,7 @@ async function getDocs(path: string) {
 
 export async function getDataList(projectId: string, type: string = 'data') {
   const sanitizedType = sanitizeString(type)
-  const projectPath = `projects/${projectId}`
-  const path = `${projectPath}/${sanitizedType}`
+  const path = `${orgProjectPath(projectId)}/${sanitizedType}`
   const objects = await getDocs(path)
   return objects
 }

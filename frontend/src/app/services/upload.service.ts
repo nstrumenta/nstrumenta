@@ -29,6 +29,10 @@ export class UploadService {
   // Public readonly signal for components to observe
   uploads = this.uploadsMap.asReadonly();
 
+  getProjectPath(projectId: string): string {
+    return projectId;
+  }
+
   async uploadFile(projectId: string, file: File, folder?: string): Promise<string> {
     const uploadId = `${Date.now()}-${file.name}`;
     const normalizedFolder = folder ? folder.replace(/^\/+|\/+$/g, '') : '';
@@ -36,7 +40,7 @@ export class UploadService {
     // Construct path relative to project for upload API: data/folder/file.name
     const uploadPath = `data/${folderPath}${file.name}`;
     // Expected path in Firestore follows the same structure
-    const expectedPath = `projects/${projectId}/${uploadPath}`;
+    const expectedPath = `${this.getProjectPath(projectId)}/${uploadPath}`;
 
     // Initialize upload task
     this.updateUpload(uploadId, {

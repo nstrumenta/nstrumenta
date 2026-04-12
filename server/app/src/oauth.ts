@@ -156,7 +156,6 @@ async function handleAuthorize(req: Request, res: Response) {
   logOAuth('authorize.success', {
     clientId,
     redirectUri,
-    code,
     expiresAt,
   })
   return res.redirect(302, redirectTarget)

@@ -2,6 +2,19 @@
 import { GetSignedUrlConfig } from '@google-cloud/storage'
 import { bucketName, storage } from '../authentication/ServiceAccount'
 
+export function parseOrgProject(projectId: string): { orgSlug: string; projectSlug: string } {
+  const [orgSlug, projectSlug, ...rest] = projectId.split('/');
+  if (!orgSlug || !projectSlug || rest.length > 0) {
+    throw new Error(`Invalid projectId '${projectId}'. Expected format: orgSlug/projectSlug`);
+  }
+  return { orgSlug, projectSlug };
+}
+
+export function orgProjectPath(projectId: string): string {
+  const { orgSlug, projectSlug } = parseOrgProject(projectId);
+  return `organizations/${orgSlug}/projects/${projectSlug}`;
+}
+
 export async function generateV4UploadSignedUrl(
   fileName: string,
   metadata?: Record<string, string>,

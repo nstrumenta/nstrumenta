@@ -9,6 +9,7 @@ import {
   Firestore,
 } from '@google-cloud/firestore'
 import { ActionData } from '../index'
+import { orgProjectPath } from '../shared/utils'
 
 export interface FirestoreArchiveServiceDependencies {
   firestore: Firestore
@@ -117,8 +118,10 @@ export function createArchiveService({
       const project = []
 
       try {
+        const projectPath = orgProjectPath(projectId)
+
         for await (const doc of walkFirestoreDocument(
-          `projects/${projectId}`,
+          projectPath,
         )) {
           const { valid, data } = cleanDataForArchive(doc)
           if (!valid) continue
@@ -131,7 +134,7 @@ export function createArchiveService({
 
         console.log(`set archive at ${timestamp}`)
         await firestore
-          .doc(`projects/${projectId}`)
+          .doc(projectPath)
           .collection('archives')
           .doc(timestamp.toString())
           .set({ archive: JSON.stringify(project), createdAt: timestamp })
@@ -167,8 +170,9 @@ export function createArchiveService({
       } = data
 
       const duplicateId = duplicateName || `${originalProjectId}_duplicate`
-      const originalPath = `projects/${originalProjectId}`
-      const duplicatePath = `projects/${duplicateId}`
+      
+      const originalPath = orgProjectPath(originalProjectId)
+      const duplicatePath = orgProjectPath(duplicateId)
 
       try {
         // create a new project
@@ -176,7 +180,7 @@ export function createArchiveService({
         await archiveDoc.create({})
 
         const archiveRefs = await firestore
-          .doc(`projects/${originalProjectId}`)
+          .doc(originalPath)
           .collection('archives')
           .listDocuments()
 

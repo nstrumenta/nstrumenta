@@ -4,8 +4,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    globalSetup: './globalSetup.ts',
     testTimeout: 600000,
-    bail: 1, // Exit after first test failure
+    bail: 1,
     hookTimeout: 30000,
   },
 });

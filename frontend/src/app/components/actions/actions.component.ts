@@ -13,12 +13,6 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 
-// Interface for file upload document
-interface FileDocument {
-  key: string;
-  name: string;
-}
-
 @Component({
     selector: 'app-actions',
     templateUrl: './actions.component.html',
@@ -68,11 +62,6 @@ export class ActionsComponent {
 
   dropzoneClick() {
     console.log('dropzone click');
-  }
-
-  onUploadSuccess(fileDocument: FileDocument) {
-    // Use Firebase service to update the document
-    this.firebaseDataService.updateAction(this.projectId, fileDocument.key, { name: fileDocument.name });
   }
 
   deleteSelected() {

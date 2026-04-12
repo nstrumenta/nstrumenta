@@ -60,8 +60,7 @@ export class VscodeService {
               // upload files and send path to server
               const promises = [];
               const uid = this.authService.currentUser()?.uid;
-              const uploadPath =
-                'projects/' + this.projectService.currentProjectId + '/live-session/' + uid;
+              const uploadPath = 'live-session/' + uid;
               message.payload.forEach((fileTextItem) => {
                 // remove leading slash if present
                 let filename = fileTextItem.path;

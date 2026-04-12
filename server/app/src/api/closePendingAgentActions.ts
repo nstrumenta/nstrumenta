@@ -1,5 +1,6 @@
 import { APIEndpoint, withAuth } from '../authentication'
 import { firestore } from '../authentication/ServiceAccount'
+import { orgProjectPath } from '../shared/utils'
 
 
 export interface ClosePendingAgentActionsArgs {
@@ -11,7 +12,7 @@ export async function cancelAgentActions(projectId: string, agentId: string) {
     throw new Error('agentId required')
   }
 
-  const actionPath = `projects/${projectId}/agents/${agentId}/actions`
+  const actionPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`
   const collection: FirebaseFirestore.CollectionReference =
     firestore.collection(actionPath)
   const actions = await collection.listDocuments()
