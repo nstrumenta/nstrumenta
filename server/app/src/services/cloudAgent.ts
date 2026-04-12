@@ -12,9 +12,16 @@ import { ApiKeyService } from './ApiKeyService'
 const REGION = 'us-west1'
 
 const buildResourceName = (actionPath: string) => {
-  const projectId = actionPath.split('/')[1]
-  const actionId = actionPath.split('/')[3]
-  return `${projectId}-${actionId}`
+  const parts = actionPath.split('/')
+  // old path: projects/{projectId}/agents/{agentId}/...
+  // new path: organizations/{orgSlug}/projects/{projectSlug}/agents/{agentId}/...
+  let projSlug = parts[1]
+  let agentId = parts[3]
+  if (parts[0] === 'organizations') {
+    projSlug = parts[3] // project slug
+    agentId = parts[5] // agent id
+  }
+  return `${projSlug}-${agentId}`
     .toLowerCase()
     .replace(/_/g, '-')
     .replace(/[^-a-z0-9]/, '')
@@ -104,7 +111,8 @@ export const createCloudAgentService = ({
         },
       })
 
-      const machinePath = `projects/${nstProjectId}/machines/${instanceId}`
+      const parts = nstProjectId.split('/')
+      const machinePath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/machines/${instanceId}` : `projects/${nstProjectId}/machines/${instanceId}`
       await firestore.doc(machinePath).set(service)
       await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
     } catch (err: any) {
@@ -125,7 +133,8 @@ export const createCloudAgentService = ({
     } = data
 
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
-    const machineDocPath = `projects/${nstProjectId}/machines/${instanceId}`
+    const parts = nstProjectId.split('/')
+    const machineDocPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/machines/${instanceId}` : `projects/${nstProjectId}/machines/${instanceId}`
 
     try {
       const name = `projects/${projectId}/locations/${REGION}/services/${instanceId}`

@@ -41,7 +41,8 @@ describe('Data', () => {
       );
       
       // CLI command waits for uploads synchronously
-      expect(result).toContain('projects/ci/data');
+      // Use dynamic project ID (dev-flyimal or whatever was set locally) rather than hardcoded 'ci'
+      expect(result).toMatch(/projects\/.*\/data/);
     });
   });
 });

@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import fs from 'fs/promises';
+import path from 'path';
 import semver from 'semver';
-import tar from 'tar';
+import { create as createTar } from 'tar';
 import { McpClient } from '../mcp';
 import {
   asyncSpawn,
@@ -254,7 +255,7 @@ export const publishModule = async (module: ModuleExtended) => {
       },
     };
     console.log('creating tar', fileName, downloadLocation, `includes.length: ${includes.length}`);
-    await tar.create(options, ['nstrumentaModule.json', ...includes]);
+    await createTar(options, ['nstrumentaModule.json', ...includes]);
     size = (await fs.stat(downloadLocation)).size;
   } catch (e) {
     console.warn(`Error: problem creating ${fileName} from ${folder}`);
@@ -286,6 +287,7 @@ export const publishModule = async (module: ModuleExtended) => {
     throw new Error(message);
   }
 
+  console.log(`\n\n=== DEBUG URL ===\nUpload URL: ${url}\n=================\n`);
   const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise

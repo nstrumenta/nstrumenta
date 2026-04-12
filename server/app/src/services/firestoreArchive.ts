@@ -117,8 +117,11 @@ export function createArchiveService({
       const project = []
 
       try {
+        const parts = projectId.split('/')
+        const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
+
         for await (const doc of walkFirestoreDocument(
-          `projects/${projectId}`,
+          projectPath,
         )) {
           const { valid, data } = cleanDataForArchive(doc)
           if (!valid) continue
@@ -131,7 +134,7 @@ export function createArchiveService({
 
         console.log(`set archive at ${timestamp}`)
         await firestore
-          .doc(`projects/${projectId}`)
+          .doc(projectPath)
           .collection('archives')
           .doc(timestamp.toString())
           .set({ archive: JSON.stringify(project), createdAt: timestamp })
@@ -167,8 +170,12 @@ export function createArchiveService({
       } = data
 
       const duplicateId = duplicateName || `${originalProjectId}_duplicate`
-      const originalPath = `projects/${originalProjectId}`
-      const duplicatePath = `projects/${duplicateId}`
+      
+      const origParts = originalProjectId.split('/')
+      const originalPath = origParts.length === 2 ? `organizations/${origParts[0]}/projects/${origParts[1]}` : `projects/${originalProjectId}`
+      
+      const dupParts = duplicateId.split('/')
+      const duplicatePath = dupParts.length === 2 ? `organizations/${dupParts[0]}/projects/${dupParts[1]}` : `projects/${duplicateId}`
 
       try {
         // create a new project
@@ -176,7 +183,7 @@ export function createArchiveService({
         await archiveDoc.create({})
 
         const archiveRefs = await firestore
-          .doc(`projects/${originalProjectId}`)
+          .doc(originalPath)
           .collection('archives')
           .listDocuments()
 

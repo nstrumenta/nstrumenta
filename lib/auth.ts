@@ -31,6 +31,10 @@ export async function validateApiKey(
       return { authenticated: false, message: 'invalid key', projectId: '' };
     }
 
+    if (docData.expiresAt && docData.expiresAt < Date.now()) {
+      return { authenticated: false, message: 'key expired', projectId: '' };
+    }
+
     if (docData.version !== 'v2' || !docData.salt || !docData.hash) {
       return { authenticated: false, message: 'invalid key version', projectId: '' };
     }

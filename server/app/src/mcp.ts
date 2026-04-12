@@ -15,7 +15,9 @@ import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {
-    const actionDoc = firestore.collection(`projects/${projectId}/actions`).doc();
+    const parts = projectId.split('/');
+    const path = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/actions` : `projects/${projectId}/actions`;
+    const actionDoc = firestore.collection(path).doc();
     await actionDoc.set(action);
     return actionDoc.id;
 }
@@ -43,6 +45,21 @@ function getUserId(): string | undefined {
     return context?.userId;
 }
 
+export async function getStoragePathPrefix(projectId: string): Promise<string> {
+    const parts = projectId.split('/');
+    if (parts.length === 2 && parts[0] && parts[1]) {
+        return `${parts[0]}/${parts[1]}`;
+    }
+    
+    // Fallback for old flat schema mappings
+    const projectDoc = await firestore.doc(`projects/${projectId}`).get();
+    const data = projectDoc.data();
+    if (data?.orgSlug && data?.slug) {
+        return `${data.orgSlug}/${data.slug}`;
+    }
+    return `projects/${projectId}`;
+}
+
 function getAuthType(): 'apiKey' | 'firebase' {
     const context = requestContext.getStore();
     return context?.authType || 'apiKey';
@@ -68,7 +85,12 @@ async function unifiedAuth(req: Request, res: Response): Promise<UnifiedAuthResu
         const requestedProjectId = req.headers['x-nstrumenta-project-id'] as string | undefined;
 
         if (requestedProjectId) {
-            const projectDoc = await firestore.doc(`projects/${requestedProjectId}`).get();
+            const parts = requestedProjectId.split('/');
+            const projectPath = parts.length === 2 
+                ? `organizations/${parts[0]}/projects/${parts[1]}`
+                : `projects/${requestedProjectId}`; // fallback for old IDs
+
+            const projectDoc = await firestore.doc(projectPath).get();
             if (!projectDoc.exists) {
                 return {
                     authenticated: false,
@@ -839,7 +861,7 @@ server.registerTool(
             let confirmedUnique = false;
             let projectSlug = slugBase;
             while (!confirmedUnique) {
-                const existing = await firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`).get();
+                const existing = await firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug).get();
                 if (!existing.exists) {
                     confirmedUnique = true;
                 } else {
@@ -847,10 +869,10 @@ server.registerTool(
                 }
             }
 
-            const projectId = firestore.collection('projects').doc().id;
+            const projectId = `${targetOrgSlug}/${projectSlug}`;
             const batch = firestore.batch();
 
-            batch.set(firestore.collection('projects').doc(projectId), {
+            batch.set(firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug), {
                 name,
                 slug: projectSlug,
                 orgId: targetOrgId,
@@ -861,9 +883,11 @@ server.registerTool(
                 visibility: 'private',
             });
 
+            // Keep project mapping in old system for fallback, but it's redundant.
             batch.set(firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`), { projectId });
 
-            batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId), {
+            // Use the slug string in users profile
+            batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId.replace('/', ':')), {
                 name,
                 orgSlug: targetOrgSlug,
                 slug: projectSlug,
@@ -911,7 +935,12 @@ server.registerTool(
                 throw new Error('Firebase authentication required for API key creation');
             }
 
-            const projectDoc = await firestore.collection('projects').doc(projectId).get();
+            const parts = projectId.split('/');
+            const projectPath = parts.length === 2 
+                ? `organizations/${parts[0]}/projects/${parts[1]}`
+                : `projects/${projectId}`; // fallback for old IDs
+
+            const projectDoc = await firestore.doc(projectPath).get();
             if (!projectDoc.exists) {
                 throw new Error('Project not found');
             }
@@ -1007,7 +1036,7 @@ server.registerTool(
             const { generateV4UploadSignedUrl } = require('./shared/utils');
             
             const path = originalPath.replace(/^(\/)*/, '/');
-            const storagePathBase = `projects/${projectId}`;
+            const storagePathBase = await getStoragePathPrefix(projectId);
             const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, getOrigin());
 
             return {
@@ -1038,12 +1067,13 @@ server.registerTool(
             const projectId = getProjectId();
             const { generateV4ReadSignedUrl } = require('./shared/utils');
 
-            // Accept both relative ("data/file.mcap") and full ("projects/{id}/data/file.mcap") paths
+            // Accept both relative ("data/file.mcap") and full storage paths
             // Strip any leading slash before checking prefix
             const normalizedPath = originalPath.replace(/^\//, '');
-            const fullPath = normalizedPath.startsWith('projects/')
+            const storagePathBase = await getStoragePathPrefix(projectId);
+            const fullPath = normalizedPath.startsWith(storagePathBase + '/') || normalizedPath.startsWith('projects/' + projectId + '/')
                 ? normalizedPath
-                : `projects/${projectId}/${normalizedPath}`;
+                : `${storagePathBase}/${normalizedPath}`;
 
             const downloadUrl = await generateV4ReadSignedUrl(fullPath);
 
@@ -1078,9 +1108,11 @@ server.registerTool(
             const crypto = require('crypto');
             const path = require('path');
 
+            const storagePathBase = await getStoragePathPrefix(projectId);
+
             // Verify the file belongs to this project
-            const expectedPrefix = `projects/${projectId}/`;
-            if (!filePath.startsWith(expectedPrefix)) {
+            const expectedPrefix = `${storagePathBase}/`;
+            if (!filePath.startsWith(expectedPrefix) && !filePath.startsWith(`projects/${projectId}/`)) {
                 throw new Error(`File path does not belong to project ${projectId}`);
             }
 
@@ -1126,9 +1158,10 @@ server.registerTool(
             const { v4: uuid } = require('uuid');
             const { storage, bucketName } = require('./authentication/ServiceAccount');
             
+            const storagePathBase = await getStoragePathPrefix(projectId);
             const timestamp = Date.now();
             const dataId = uuid();
-            const filePath = `projects/${projectId}/data/${dataId}/${name}`;
+            const filePath = `${storagePathBase}/data/${dataId}/${name}`;
             
             const bucket = storage.bucket(bucketName);
             const file = bucket.file(filePath);

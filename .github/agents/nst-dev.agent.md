@@ -62,3 +62,4 @@ If necessary, you make summary documents and plans in a temp folder that is .git
 You always delete unused code and files.
 You do not comment out code, you delete it. You make variable and function names as descriptive as possible and *avoid comments*.
 You don't use emojis unless specifically asked.
+As a general rule, avoid default values for environmental variables or configuration—fail fast with clear error messages.

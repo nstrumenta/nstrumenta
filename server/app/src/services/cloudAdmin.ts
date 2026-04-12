@@ -111,8 +111,11 @@ export const createCloudAdminService = ({
         .doc(actionPath)
         .set({ status: 'started' }, { merge: true })
 
+      const parts = nstProjectId.split('/')
+      const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${nstProjectId}`
+      
       const projectData = (
-        await firestore.doc(`/projects/${nstProjectId}`).get()
+        await firestore.doc(projectPath).get()
       ).data()
 
       let hostingBucket = projectData?.hostingBucket
@@ -147,7 +150,7 @@ export const createCloudAdminService = ({
         await bucket.setCorsConfiguration(CORS_CONFIG)
 
         await firestore
-          .doc(`/projects/${nstProjectId}`)
+          .doc(projectPath)
           .set({ hostingBucket }, { merge: true })
       }
 
@@ -158,9 +161,10 @@ export const createCloudAdminService = ({
       const extractFolder = `${workingDirectory}/${moduleName}`
       await mkdir(extractFolder, { recursive: true })
       const tarFilePath = `${workingDirectory}/${name}`
+      const storagePrefix = parts.length === 2 ? `${parts[0]}/${parts[1]}` : `projects/${nstProjectId}`
       await storage
         .bucket(bucketName)
-        .file(`projects/${nstProjectId}/modules/${name}`)
+        .file(`${storagePrefix}/modules/${name}`)
         .download({ destination: tarFilePath })
 
       await tarExtract(tarFilePath, extractFolder)

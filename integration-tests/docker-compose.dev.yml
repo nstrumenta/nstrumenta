@@ -15,6 +15,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - FIREBASE_API_KEY=${FIREBASE_API_KEY}
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
+      - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NST_API_URL=http://localhost:5999
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro

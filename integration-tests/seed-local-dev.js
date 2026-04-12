@@ -17,12 +17,18 @@ const db = admin.firestore();
 async function seedLocalDev() {
   const email = process.env.NST_DEV_EMAIL;
   const password = process.env.NST_DEV_PASSWORD;
-  const username = process.env.NST_DEV_USERNAME || 'devaccount';
-  const projectId = process.env.NST_DEV_PROJECT || 'dev-flyimal';
-  const apiUrl = process.env.NST_API_URL || 'http://localhost:5999';
+  const username = process.env.NST_DEV_USERNAME;
+  const projectId = process.env.NST_DEV_PROJECT;
+  const apiUrl = process.env.NST_API_URL;
 
-  if (!email || !password) {
-    console.error('Error: NST_DEV_EMAIL and NST_DEV_PASSWORD environment variables are required.');
+  if (!email || !password || !username || !projectId || !apiUrl) {
+    console.error('Error: Required environment variables are missing.');
+    console.error('Please ensure the following are set:');
+    console.error('- NST_DEV_EMAIL');
+    console.error('- NST_DEV_PASSWORD');
+    console.error('- NST_DEV_USERNAME');
+    console.error('- NST_DEV_PROJECT');
+    console.error('- NST_API_URL');
     process.exit(1);
   }
 
@@ -111,17 +117,20 @@ async function seedLocalDev() {
   const salt = crypto.randomBytes(16).toString('hex');
   const pepper = process.env.NSTRUMENTA_API_KEY_PEPPER || '';
   const hash = crypto.scryptSync(secretAccessKey, salt + pepper, 64).toString('hex');
-  
+  const now = Date.now();
+  const expiresAt = now + 1000 * 60 * 60 * 24; // 24 hours
+
   await db.collection('keys').doc(accessKeyId).set({
     projectId,
-    createdAt: Date.now(),
+    createdAt: now,
+    expiresAt,
     salt,
     hash,
     version: 'v2'
   });
 
   await db.doc(`projects/${projectId}`).update({
-    [`apiKeys.${accessKeyId}`]: { createdAt: Date.now(), createdBy: uid }
+    [`apiKeys.${accessKeyId}`]: { createdAt: now, expiresAt, createdBy: uid }
   });
 
   const keyWithUrl = `${key}:${Buffer.from(apiUrl).toString('base64')}`;

@@ -30,14 +30,17 @@ export function CreateApiKeyService({
       projectId: string,
       apiUrlParam?: string,
     ) {
+      const parts = projectId.split('/')
+      const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
+
       // Get apiUrl from parameter, project data, or use a default
       const projectData = (
-        await firestore.doc(`/projects/${projectId}`).get()
+        await firestore.doc(projectPath).get()
       ).data()
       const apiUrl =
         apiUrlParam ??
         projectData?.apiUrl ??
-        `https://${projectId}.web.app`
+        `https://${parts.length === 2 ? parts[1] : projectId}.web.app`
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 
@@ -66,7 +69,7 @@ export function CreateApiKeyService({
           version: 'v2' // Mark as new version
         })
 
-        const projectPath = `/projects/${projectId}`
+        const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
 
         const projectDoc = await (await firestore.doc(projectPath).get()).data()
         const apiKeys = projectDoc?.apiKeys ? projectDoc.apiKeys : {}

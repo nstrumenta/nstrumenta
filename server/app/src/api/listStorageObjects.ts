@@ -32,7 +32,8 @@ async function getDocs(path: string) {
 
 export async function getDataList(projectId: string, type: string = 'data') {
   const sanitizedType = sanitizeString(type)
-  const projectPath = `projects/${projectId}`
+  const parts = projectId.split('/')
+  const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
   const path = `${projectPath}/${sanitizedType}`
   const objects = await getDocs(path)
   return objects

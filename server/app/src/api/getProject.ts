@@ -2,7 +2,11 @@ import { APIEndpoint, withAuth } from '../authentication'
 import { firestore } from '../authentication/ServiceAccount'
 
 export async function getProjectInfo(projectId: string) {
-  const projectPath = `projects/${projectId}`
+  const parts = projectId.split('/')
+  const projectPath = parts.length === 2 
+    ? `organizations/${parts[0]}/projects/${parts[1]}` 
+    : `projects/${projectId}`
+    
   const project = await (await firestore.doc(projectPath).get()).data()
   
   if (!project) {

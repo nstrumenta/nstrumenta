@@ -29,25 +29,29 @@ async function createApiKey() {
   // Hash the secret part
   const hash = crypto.scryptSync(secretAccessKey, salt + pepper, 64).toString('hex');
 
-  const createdAt = Date.now();
+  const now = Date.now();
+  const expiresAt = now + 1000 * 60 * 60 * 2; // 2 hours for CI tests
 
   try {
     // Store under accessKeyId (public ID)
     await firestore.collection('keys').doc(accessKeyId).set({
       projectId,
-      createdAt,
+      createdAt: now,
+      expiresAt,
       salt,
       hash,
       version: 'v2'
     });
 
-    const projectPath = `/projects/${projectId}`;
+    const parts = projectId.split('/');
+    const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`;
+    
     const projectDoc = await firestore.doc(projectPath).get();
     
     if (!projectDoc.exists) {
         // Create the project if it doesn't exist
         await firestore.doc(projectPath).set({
-            name: projectId,
+            name: parts.length === 2 ? parts[1] : projectId,
             members: {
               'ci-user': 'owner'
             },
@@ -65,10 +69,7 @@ async function createApiKey() {
     // Re-fetch to ensure we have the data (or just use what we set)
     const projectData = (await firestore.doc(projectPath).get()).data();
     const apiKeys = projectData.apiKeys || {};
-    apiKeys[accessKeyId] = { createdAt };
-
-    await firestore.doc(projectPath).update({ apiKeys });
-
+    apiKeys[accessKeyId] = { createdAt: now, expiresAt, createdBy: 'ci-user' };
     const keyWithUrl = `${key}:${btoa(apiUrl)}`;
     console.log(keyWithUrl);
   } catch (error) {

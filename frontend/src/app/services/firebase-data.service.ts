@@ -60,6 +60,13 @@ import { AuthService } from '../auth/auth.service';
   providedIn: 'root',
 })
 export class FirebaseDataService {
+  getProjectPath(projectId: string): string {
+    const parts = projectId.split('/');
+    if (parts.length === 2 && parts[0] && parts[1]) {
+      return `organizations/${parts[0]}/projects/${parts[1]}`;
+    }
+    return `projects/${projectId}`;
+  }
   private firestore: Firestore;
   private storage: FirebaseStorage;
   private destroyRef = inject(DestroyRef);

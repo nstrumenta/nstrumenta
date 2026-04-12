@@ -35,7 +35,6 @@ export const auth: AuthFunction = async (req, res) => {
     if (rawKey.length === 48 && /^[0-9a-f]+$/i.test(rawKey)) {
       docId = rawKey.substring(0, 16)
     } else {
-      console.log('Auth failed: invalid key format');
       return { authenticated: false, message: 'invalid key format', projectId: '' }
     }
 
@@ -44,12 +43,14 @@ export const auth: AuthFunction = async (req, res) => {
     ).data()
 
     if (docData == undefined) {
-      console.log('Auth failed: key not found in firestore');
       return { authenticated: false, message: 'no', projectId: '' }
     }
 
+    if (docData.expiresAt && docData.expiresAt < Date.now()) {
+      return { authenticated: false, message: 'key expired', projectId: '' }
+    }
+
     if (!docData.salt || !docData.hash) {
-      console.log('Auth failed: invalid key data in firestore');
       return { authenticated: false, message: 'invalid key data', projectId: '' }
     }
 
@@ -68,18 +69,18 @@ export const auth: AuthFunction = async (req, res) => {
       )
     })) as Buffer
 
-    const docHashBuffer = Buffer.from(docData.hash, 'hex')
+    const docHashBuffer = Buffer.from(docData.hash, 'hex');
 
     if (
       hashBuffer.length !== docHashBuffer.length ||
       !crypto.timingSafeEqual(hashBuffer, docHashBuffer)
     ) {
-      console.log('Auth failed: hash mismatch', docId);
       return { authenticated: false, message: 'invalid key', projectId: '' }
     }
 
     const lastUsed = Date.now()
-    const projectPath = `projects/${docData.projectId}`
+    const parts = docData.projectId.split('/')
+    const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${docData.projectId}`
     
     firestore.doc(projectPath).update({
       [`apiKeys.${docId}.lastUsed`]: lastUsed
@@ -87,7 +88,6 @@ export const auth: AuthFunction = async (req, res) => {
 
     return { authenticated: true, projectId: docData.projectId, apiKey: key }
   } catch (error) {
-    console.log(error)
     return { authenticated: false, message: 'error', projectId: '' }
   }
 }
@@ -127,7 +127,6 @@ export function withAuth<T>(
       res.set('Access-Control-Allow-Methods', '*')
       res.set('Access-Control-Allow-Headers', '*')
       res.set('Access-Control-Max-Age', '3600')
-      console.log('CORS', res)
       return res.status(204).send('')
     }
 
