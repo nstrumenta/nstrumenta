@@ -7,8 +7,8 @@ service cloud.firestore {
       allow write: if false; // Only server can write
     }
 
-    // Users can read/write their own user document and subcollections
-    match /users/{user}/{document=**} {
+    // Users can read/write their own user document only (subcollections are server-managed)
+    match /users/{user} {
       allow read, write: if request.auth.uid == user
     }
 
@@ -50,17 +50,6 @@ service cloud.firestore {
       }
     }
 
-    // Projects: check direct membership, org membership, or public visibility
-    match /projects/{project} {
-      allow read: if isProjectMember(project) || isProjectPublic(project);
-      allow write: if isProjectMember(project);
-
-      match /{document=**} {
-        allow read: if isProjectMember(project) || isProjectPublic(project);
-        allow write: if isProjectMember(project);
-      }
-    }
-
     // API keys collection (server-managed, no direct client access)
     match /keys/{keyId} {
       allow read, write: if false;
@@ -86,13 +75,5 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/organizations/$(orgId)/projects/$(projectId)).data.visibility == 'public';
     }
 
-    function isProjectMember(project) {
-      return request.auth != null &&
-        get(/databases/$(database)/documents/projects/$(project)).data.members[request.auth.uid] is string;
-    }
-
-    function isProjectPublic(project) {
-      return get(/databases/$(database)/documents/projects/$(project)).data.visibility == 'public';
-    }
   }
 }
