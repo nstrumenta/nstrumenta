@@ -8,22 +8,32 @@ End-to-end tests for nstrumenta, running in isolated Docker Compose environments
 - ADC configured (`gcloud auth application-default login`)
 - Environment variables from `source credentials/activate.sh`
 
+## Local Dev Seeding
+
+Before running the local stack for the first time, seed a persistent dev user and project:
+
+```shell
+# Set required env vars (add to credentials/local.env or export manually)
+# NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, NSTRUMENTA_API_URL
+
+cd integration-tests && npm run seed
+```
+
+This creates the Firebase Auth user, org, project, and a 24-hour API key.
+Credentials are written to `integration-tests/.seed-output` (gitignored, mode 0600).
+
 ## Running Tests
 
 ```shell
 # From repo root
 npm run test:e2e
 
-# Or directly
-cd integration-tests && ./frontend-e2e.sh
+# CLI E2E only
+cd integration-tests && ./e2e.sh
 ```
 
-This will:
-1. Check for ADC credentials at the well-known gcloud path
-2. Build server and frontend artifacts if missing
-3. Create an ephemeral test user via Firebase Admin
-4. Start server + Playwright containers via Docker Compose
-5. Run Playwright browser tests against the server
+Each test run creates an ephemeral user with randomised credentials via `globalSetup.ts`
+and deletes them on teardown — no manual seeding required for CI.
 
 ## Architecture
 
@@ -37,12 +47,12 @@ ADC is mounted from the host gcloud config directory. No credential files are co
 ## Test Suites
 
 ### Playwright Browser Tests (`frontend/tests/`)
-- `auth.spec.js` - sign-in flow
-- `projects.spec.js` - project CRUD
-- `upload.spec.js` - file upload
+- `data-table.spec.ts` - data file listing and upload
+- `data-detail.spec.ts` - data file detail view
 
 ### CLI Tests (`cli/client/app/`)
 Tests nstrumenta CLI commands against a running server. Run in CI via GitHub Actions.
+`globalSetup.ts` creates an ephemeral user/project and sets `NSTRUMENTA_API_KEY` for the test run.
 
 ### MCP Tests (`frontend/mcp-client.test.js`)
 JSON-RPC 2.0 API integration tests. Run in CI via GitHub Actions.
