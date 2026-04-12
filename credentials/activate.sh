@@ -33,7 +33,7 @@ if [ -n "$NST_DEV_EMAIL" ] && [ -n "$NST_DEV_PASSWORD" ] && [ -n "$NST_DEV_USERN
   export NST_DEV_PASSWORD
   export NST_DEV_USERNAME
   export NST_DEV_PROJECT
-  export NST_API_URL
+  export NSTRUMENTA_API_URL=$NST_API_URL
   export NSTRUMENTA_API_KEY_PEPPER=$(gh secret get NSTRUMENTA_API_KEY_PEPPER 2>/dev/null || echo "")
   echo "Dev Seed Credentials active."
 else

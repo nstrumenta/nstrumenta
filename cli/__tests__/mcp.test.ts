@@ -7,10 +7,13 @@ describe('McpClient', () => {
 
   before(() => {
     originalFetch = global.fetch;
+    // Dummy key: 48 hex chars + ':' + base64('http://localhost:5999')
+    process.env.NSTRUMENTA_API_KEY = `${'0'.repeat(48)}:${Buffer.from('http://localhost:5999').toString('base64')}`;
   });
 
   after(() => {
     global.fetch = originalFetch;
+    delete process.env.NSTRUMENTA_API_KEY;
   });
 
   describe('callTool method', () => {
@@ -264,8 +267,7 @@ describe('McpClient', () => {
       assert.deepStrictEqual(result, { actionId: 'action-123' });
       
       const call = (mockFetch as any).mock.calls[0];
-      // serverUrl is empty in tests without env vars
-      assert.strictEqual(call.arguments[0], '/mcp');
+      assert.strictEqual(call.arguments[0], 'http://localhost:5999/mcp');
       const body = JSON.parse(call.arguments[1].body as string);
       assert.strictEqual(body.method, 'tools/call');
       assert.strictEqual(body.params.name, 'set_agent_action');
@@ -461,8 +463,7 @@ describe('McpClient', () => {
       const headers = call.arguments[1].headers;
       assert.strictEqual(headers['Content-Type'], 'application/json');
       assert.strictEqual(headers['Accept'], 'application/json, text/event-stream');
-      // x-api-key is empty string when no env var is set (test environment)
-      assert.strictEqual(headers['x-api-key'], '');
+      assert.ok(headers['x-api-key'] !== undefined);
     });
   });
 

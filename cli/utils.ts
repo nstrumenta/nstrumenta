@@ -9,16 +9,12 @@ import { Module, ModuleExtended } from './commands/module';
 
 // Inline API key and URL resolution
 export const resolveApiKey = (): string => {
-  const apiKey = process.env.NSTRUMENTA_API_KEY || process.env.NST_API_KEY;
+  const apiKey = process.env.NSTRUMENTA_API_KEY;
   if (!apiKey) {
     console.warn('Warning: NSTRUMENTA_API_KEY environment variable not set');
     return '';
   }
   return apiKey;
-};
-
-export const resolveApiUrl = (): string | undefined => {
-  return process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
 };
 
 const prompt = Inquirer.createPromptModule();

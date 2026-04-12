@@ -1,4 +1,5 @@
 export type { LogConfig } from './types';
+export { parseOrgProject } from './orgProject';
 export { StorageService, getToken } from './storage';
 export type { StorageUploadParameters } from './storage';
 export type {

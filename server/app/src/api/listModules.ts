@@ -10,9 +10,10 @@ interface ListModulesArgs {
   projectId: string
 }
 
+import { orgProjectPath } from '../shared/utils'
+
 export async function getModulesList(projectId: string) {
-  const parts = projectId.split('/')
-  const path = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/modules/` : `projects/${projectId}/modules/`
+  const path = `${orgProjectPath(projectId)}/modules/`
   const moduleCollection = await firestore.collection(path).get()
   const modules = moduleCollection.docs.map((doc: QueryDocumentSnapshot) => {
     const module = doc.data()

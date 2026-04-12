@@ -1,4 +1,5 @@
 export * from './lib/index';
+export { parseOrgProject } from './lib/orgProject';
 
 export interface QueryOptions {
   collection?: 'data' | 'modules';

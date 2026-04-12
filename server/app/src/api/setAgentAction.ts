@@ -1,6 +1,7 @@
 import { v4 as uuid } from 'uuid'
 import { APIEndpoint, withAuth } from '../authentication'
 import { firestore } from '../authentication/ServiceAccount'
+import { orgProjectPath } from '../shared/utils'
 
 export interface SetAgentActionArgs {
   projectId: string
@@ -10,8 +11,7 @@ export async function createAgentAction(projectId: string, agentId: string, acti
   if (!agentId) {
     throw new Error('agentId required')
   }
-  const parts = projectId.split('/')
-  const actionPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/agents/${agentId}/actions` : `projects/${projectId}/agents/${agentId}/actions`
+  const actionPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`
   const actionId = uuid()
   await firestore
     .collection(actionPath)

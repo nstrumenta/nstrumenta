@@ -6,9 +6,10 @@ export interface ListAgentsArgs {
   projectId: string
 }
 
+import { orgProjectPath } from '../shared/utils'
+
 export async function getAgentsList(projectId: string) {
-  const parts = projectId.split('/')
-  const path = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/agents/` : `projects/${projectId}/agents/`
+  const path = `${orgProjectPath(projectId)}/agents/`
   const machines = await firestore.collection(path).get()
   const agents = machines.docs.map((doc: QueryDocumentSnapshot) => [
     doc.id,

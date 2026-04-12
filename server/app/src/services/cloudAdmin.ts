@@ -6,6 +6,7 @@ import { join } from 'path'
 import { v4 as uuid } from 'uuid'
 import { bucketName, projectId } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
+import { orgProjectPath, parseOrgProject } from '../shared/utils'
 
 const CORS_CONFIG = [
   {
@@ -111,8 +112,7 @@ export const createCloudAdminService = ({
         .doc(actionPath)
         .set({ status: 'started' }, { merge: true })
 
-      const parts = nstProjectId.split('/')
-      const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${nstProjectId}`
+      const projectPath = orgProjectPath(nstProjectId)
       
       const projectData = (
         await firestore.doc(projectPath).get()
@@ -161,7 +161,8 @@ export const createCloudAdminService = ({
       const extractFolder = `${workingDirectory}/${moduleName}`
       await mkdir(extractFolder, { recursive: true })
       const tarFilePath = `${workingDirectory}/${name}`
-      const storagePrefix = parts.length === 2 ? `${parts[0]}/${parts[1]}` : `projects/${nstProjectId}`
+      const { orgSlug, projectSlug } = parseOrgProject(nstProjectId)
+      const storagePrefix = `${orgSlug}/${projectSlug}`
       await storage
         .bucket(bucketName)
         .file(`${storagePrefix}/modules/${name}`)

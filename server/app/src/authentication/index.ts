@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { Request, Response } from 'express'
 import { firestore } from './ServiceAccount'
+import { parseOrgProject } from '../shared/utils'
 
 export type AuthResult =
   | { authenticated: false; projectId: string; message?: string }
@@ -79,10 +80,8 @@ export const auth: AuthFunction = async (req, res) => {
     }
 
     const lastUsed = Date.now()
-    const parts = docData.projectId.split('/')
-    const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${docData.projectId}`
-    
-    firestore.doc(projectPath).update({
+    const { orgSlug, projectSlug } = parseOrgProject(docData.projectId)
+    firestore.doc(`organizations/${orgSlug}/projects/${projectSlug}`).update({
       [`apiKeys.${docId}.lastUsed`]: lastUsed
     })
 

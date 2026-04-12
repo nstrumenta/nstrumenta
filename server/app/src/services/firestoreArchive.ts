@@ -9,6 +9,7 @@ import {
   Firestore,
 } from '@google-cloud/firestore'
 import { ActionData } from '../index'
+import { orgProjectPath } from '../shared/utils'
 
 export interface FirestoreArchiveServiceDependencies {
   firestore: Firestore
@@ -117,8 +118,7 @@ export function createArchiveService({
       const project = []
 
       try {
-        const parts = projectId.split('/')
-        const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
+        const projectPath = orgProjectPath(projectId)
 
         for await (const doc of walkFirestoreDocument(
           projectPath,
@@ -171,11 +171,8 @@ export function createArchiveService({
 
       const duplicateId = duplicateName || `${originalProjectId}_duplicate`
       
-      const origParts = originalProjectId.split('/')
-      const originalPath = origParts.length === 2 ? `organizations/${origParts[0]}/projects/${origParts[1]}` : `projects/${originalProjectId}`
-      
-      const dupParts = duplicateId.split('/')
-      const duplicatePath = dupParts.length === 2 ? `organizations/${dupParts[0]}/projects/${dupParts[1]}` : `projects/${duplicateId}`
+      const originalPath = orgProjectPath(originalProjectId)
+      const duplicatePath = orgProjectPath(duplicateId)
 
       try {
         // create a new project

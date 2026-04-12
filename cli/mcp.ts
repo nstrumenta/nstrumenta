@@ -3,18 +3,13 @@ export class McpClient {
   private serverUrl: string;
 
   constructor() {
-    // Get API key from environment (allow empty for testing)
-    const apiKey = process.env.NSTRUMENTA_API_KEY || process.env.NST_API_KEY || '';
-    this.apiKey = apiKey;
-    
-    // Get URL from environment or decode from API key
-    const apiUrl = process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
-    if (apiUrl) {
-      this.serverUrl = apiUrl;
-    } else if (apiKey) {
-      this.serverUrl = Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
-    } else {
-      this.serverUrl = '';
+    this.apiKey = process.env.NSTRUMENTA_API_KEY ?? '';
+    this.serverUrl = Buffer.from(this.apiKey.split(':')[1] ?? '', 'base64').toString().trim();
+
+    if (!this.serverUrl) {
+      throw new Error(
+        'Server URL could not be determined. Set NSTRUMENTA_API_KEY=<key>:<base64-url>.'
+      );
     }
   }
 

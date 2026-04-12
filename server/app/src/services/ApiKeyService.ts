@@ -2,8 +2,8 @@ import { Firestore } from '@google-cloud/firestore'
 import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
-
 import { projectId } from '../authentication/ServiceAccount'
+import { orgProjectPath, parseOrgProject } from '../shared/utils'
 
 export interface ApiKeyServiceDependencies {
   firestore: Firestore
@@ -30,8 +30,8 @@ export function CreateApiKeyService({
       projectId: string,
       apiUrlParam?: string,
     ) {
-      const parts = projectId.split('/')
-      const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
+      const { projectSlug } = parseOrgProject(projectId)
+      const projectPath = orgProjectPath(projectId)
 
       // Get apiUrl from parameter, project data, or use a default
       const projectData = (
@@ -40,7 +40,7 @@ export function CreateApiKeyService({
       const apiUrl =
         apiUrlParam ??
         projectData?.apiUrl ??
-        `https://${parts.length === 2 ? parts[1] : projectId}.web.app`
+        `https://${projectSlug}.web.app`
 
       console.log('createAndAddApiKey', projectId, apiUrl)
 
@@ -69,9 +69,7 @@ export function CreateApiKeyService({
           version: 'v2' // Mark as new version
         })
 
-        const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`
-
-        const projectDoc = await (await firestore.doc(projectPath).get()).data()
+        const projectDoc = await (await firestore.doc(orgProjectPath(projectId)).get()).data()
         const apiKeys = projectDoc?.apiKeys ? projectDoc.apiKeys : {}
         
         // Store metadata in project

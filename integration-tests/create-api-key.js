@@ -9,6 +9,13 @@ if (process.argv.length !== 4) {
 const projectId = process.argv[2];
 const apiUrl = process.argv[3];
 
+if (!projectId.includes('/') || projectId.split('/').length !== 2) {
+  console.error(`Error: projectId must be in 'orgSlug/projectSlug' format. Got: '${projectId}'`);
+  process.exit(1);
+}
+
+const [orgSlug, projectSlug] = projectId.split('/');
+
 admin.initializeApp({
   credential: admin.credential.applicationDefault()
 });
@@ -43,15 +50,14 @@ async function createApiKey() {
       version: 'v2'
     });
 
-    const parts = projectId.split('/');
-    const projectPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}` : `projects/${projectId}`;
+    const projectPath = `organizations/${orgSlug}/projects/${projectSlug}`;
     
     const projectDoc = await firestore.doc(projectPath).get();
     
     if (!projectDoc.exists) {
         // Create the project if it doesn't exist
         await firestore.doc(projectPath).set({
-            name: parts.length === 2 ? parts[1] : projectId,
+            name: projectSlug,
             members: {
               'ci-user': 'owner'
             },

@@ -44,6 +44,7 @@ TEST_USER_JSON=$(node create-test-user.js)
 export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
 export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
 TEST_USER_UID=$(echo "$TEST_USER_JSON" | jq -r .uid)
+TEST_USER_USERNAME=$(echo "$TEST_USER_JSON" | jq -r .username)
 
 TEST_ADMIN_JSON=$(node create-test-user.js --admin)
 export TEST_ADMIN_EMAIL=$(echo "$TEST_ADMIN_JSON" | jq -r .email)
@@ -57,7 +58,7 @@ cleanup_users() {
 }
 trap cleanup_users EXIT
 
-export NSTRUMENTA_API_KEY=$(node create-api-key.js ci http://server:5999)
+export NSTRUMENTA_API_KEY=$(node create-api-key.js "${TEST_USER_USERNAME}/ci" http://server:5999)
 
 PLAYWRIGHT_EXIT_CODE=0
 if [ -n "$TEST_ARGS" ]; then

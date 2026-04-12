@@ -40,9 +40,8 @@ describe('Data', () => {
         { cwd: testFolderBase }
       );
       
-      // CLI command waits for uploads synchronously
-      // Use dynamic project ID (dev-flyimal or whatever was set locally) rather than hardcoded 'ci'
-      expect(result).toMatch(/projects\/.*\/data/);
+      // CLI returns the remoteFilePath using the new orgSlug/projectSlug storage prefix
+      expect(result).toMatch(/^[a-z0-9-]+\/[a-z0-9-]+\/data\//m);
     });
   });
 });

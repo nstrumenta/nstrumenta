@@ -225,7 +225,7 @@ describe('Multi-tenancy: Firebase Auth with project-id header', () => {
       exists: true,
       data: () => ({ members: { 'user-1': { role: 'owner' } } })
     })
-    req.headers = { 'x-nstrumenta-project-id': 'my-project' }
+    req.headers = { 'x-nstrumenta-project-id': 'test-org/my-project' }
 
     await handleMcpRequest(req as Request, res as Response)
 
@@ -237,7 +237,7 @@ describe('Multi-tenancy: Firebase Auth with project-id header', () => {
     mockAuthFn.mockResolvedValue({ authenticated: false })
     mockFirebaseAuthFn.mockResolvedValue({ authenticated: true, userId: 'user-1' })
     mockFirestoreGet.mockResolvedValue({ exists: false })
-    req.headers = { 'x-nstrumenta-project-id': 'nonexistent-project' }
+    req.headers = { 'x-nstrumenta-project-id': 'test-org/nonexistent-project' }
 
     await handleMcpRequest(req as Request, res as Response)
 
@@ -258,7 +258,7 @@ describe('Multi-tenancy: Firebase Auth with project-id header', () => {
       exists: true,
       data: () => ({ members: { 'other-user': { role: 'owner' } } })
     })
-    req.headers = { 'x-nstrumenta-project-id': 'their-project' }
+    req.headers = { 'x-nstrumenta-project-id': 'test-org/their-project' }
 
     await handleMcpRequest(req as Request, res as Response)
 

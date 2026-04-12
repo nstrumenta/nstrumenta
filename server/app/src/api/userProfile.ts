@@ -65,8 +65,6 @@ const setupUsernameBase = async (
   }
 
   try {
-    const orgId = firestore.collection('organizations').doc().id
-
     await firestore.runTransaction(async (transaction) => {
       const slugRef = firestore.doc(`slugs/${normalizedUsername}`)
       const slugDoc = await transaction.get(slugRef)
@@ -81,9 +79,9 @@ const setupUsernameBase = async (
         id: userId,
       })
 
-      // 2. Create the personal organization
+      // 2. Create the personal organization — slug is the doc ID
       const timestamp = Date.now()
-      const orgRef = firestore.doc(`organizations/${orgId}`)
+      const orgRef = firestore.doc(`organizations/${normalizedUsername}`)
       transaction.set(orgRef, {
         name: normalizedUsername,
         slug: normalizedUsername,
@@ -93,7 +91,7 @@ const setupUsernameBase = async (
       })
 
       // 3. Add user as owner of the org
-      const memberRef = firestore.doc(`organizations/${orgId}/members/${userId}`)
+      const memberRef = firestore.doc(`organizations/${normalizedUsername}/members/${userId}`)
       transaction.set(memberRef, {
         role: 'owner',
         addedAt: timestamp,
@@ -101,7 +99,7 @@ const setupUsernameBase = async (
       })
 
       // 4. Initialize billing
-      const billingRef = firestore.doc(`organizations/${orgId}/billing/current`)
+      const billingRef = firestore.doc(`organizations/${normalizedUsername}/billing/current`)
       transaction.set(billingRef, {
         plan: 'free_trial',
         creditBalanceCents: INITIAL_CREDIT_CENTS,
@@ -111,7 +109,7 @@ const setupUsernameBase = async (
       })
 
       // 5. Add org reference to user subcollection (for listUserOrgs)
-      const userOrgRef = firestore.doc(`users/${userId}/organizations/${orgId}`)
+      const userOrgRef = firestore.doc(`users/${userId}/organizations/${normalizedUsername}`)
       transaction.set(userOrgRef, {
         name: normalizedUsername,
         slug: normalizedUsername,
@@ -122,13 +120,13 @@ const setupUsernameBase = async (
       const userRef = firestore.doc(`users/${userId}`)
       transaction.set(userRef, {
         username: normalizedUsername,
-        personalOrgId: orgId,
+        personalOrgId: normalizedUsername,
       }, { merge: true })
     })
 
     return res.status(200).json({ 
       username: normalizedUsername,
-      personalOrgId: orgId 
+      personalOrgId: normalizedUsername,
     })
   } catch (error: any) {
     if (error.message === 'USERNAME_TAKEN') {

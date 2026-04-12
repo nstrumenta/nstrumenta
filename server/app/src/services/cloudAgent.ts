@@ -2,6 +2,7 @@ import { Firestore } from '@google-cloud/firestore'
 import { ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
 import { projectId } from '../authentication/ServiceAccount'
+import { orgProjectPath } from '../shared/utils'
 import {
   ActionData,
   nstrumentaImageRepository,
@@ -111,9 +112,7 @@ export const createCloudAgentService = ({
         },
       })
 
-      const parts = nstProjectId.split('/')
-      const machinePath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/machines/${instanceId}` : `projects/${nstProjectId}/machines/${instanceId}`
-      await firestore.doc(machinePath).set(service)
+      await firestore.doc(`${orgProjectPath(nstProjectId)}/machines/${instanceId}`).set(service)
       await firestore.doc(actionPath).set({ status: 'complete' }, { merge: true })
     } catch (err: any) {
       console.log(`failed to deploy cloudAgent ${err.message}`)
@@ -133,8 +132,7 @@ export const createCloudAgentService = ({
     } = data
 
     await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
-    const parts = nstProjectId.split('/')
-    const machineDocPath = parts.length === 2 ? `organizations/${parts[0]}/projects/${parts[1]}/machines/${instanceId}` : `projects/${nstProjectId}/machines/${instanceId}`
+    const machineDocPath = `${orgProjectPath(nstProjectId)}/machines/${instanceId}`
 
     try {
       const name = `projects/${projectId}/locations/${REGION}/services/${instanceId}`

@@ -1,6 +1,6 @@
 // Extract base URL from API key by decoding base64 portion
 const getServerUrl = (apiKey: string): string => {
-  const urlOverride = process.env.NSTRUMENTA_API_URL || process.env.NST_API_URL;
+  const urlOverride = process.env.NSTRUMENTA_API_URL;
   return urlOverride || Buffer.from(apiKey.split(':')[1] || '', 'base64').toString().trim();
 };
 
