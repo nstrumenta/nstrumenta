@@ -7,11 +7,6 @@ service cloud.firestore {
       allow write: if false; // Only server can write
     }
 
-    match /project-slugs/{projectSlug} {
-      allow read: if true;
-      allow write: if false; // Only server can write
-    }
-
     // Users can read/write their own user document and subcollections
     match /users/{user}/{document=**} {
       allow read, write: if request.auth.uid == user

@@ -870,9 +870,6 @@ server.registerTool(
                 visibility: 'private',
             });
 
-            // Keep project mapping in old system for fallback, but it's redundant.
-            batch.set(firestore.collection('project-slugs').doc(`${targetOrgSlug}:${projectSlug}`), { projectId });
-
             // Use the slug string in users profile
             batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId.replace('/', ':')), {
                 name,

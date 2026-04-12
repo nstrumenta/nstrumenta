@@ -328,18 +328,15 @@ export class FirebaseDataService {
   async resolveAndSetProject(owner: string, project: string): Promise<string | null> {
     try {
       const db = this.firestore;
-      const projectSlugDoc = await getDoc(
-        doc(db, `project-slugs/${owner}:${project}`)
+      const projectDoc = await getDoc(
+        doc(db, `organizations/${owner}/projects/${project}`)
       );
-      
-      if (projectSlugDoc.exists()) {
-        const data = projectSlugDoc.data();
-        const resolvedId = data['projectId'];
-        this.setProject(resolvedId);
-        return resolvedId;
+      if (projectDoc.exists()) {
+        const projectId = `${owner}/${project}`;
+        this.setProject(projectId);
+        return projectId;
       } else {
-        console.error('Project not found for slugs', owner, project);
-        // Could also push empty string to clear the current project
+        console.error('Project not found', owner, project);
         this.setProject('');
         return null;
       }
