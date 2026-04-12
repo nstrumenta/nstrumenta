@@ -4,7 +4,8 @@
   "description": "Utilities for integration tests",
   "main": "create-api-key.js",
   "scripts": {
-    "create-key": "node create-api-key.js"
+    "create-key": "node create-api-key.js",
+    "seed": "npx tsx cli/client/app/globalSetup.ts --seed"
   },
   "dependencies": {
     "firebase-admin": "^13.6.0",

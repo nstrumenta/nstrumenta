@@ -1,4 +1,6 @@
 import { randomBytes, scryptSync } from 'crypto';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 import { initializeApp, applicationDefault, getApps, App } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -118,4 +120,72 @@ export async function setup(): Promise<() => Promise<void>> {
   return async () => {
     await auth.deleteUser(uid);
   };
+}
+
+export async function seedLocalDev(): Promise<void> {
+  const email = process.env.NST_DEV_EMAIL;
+  const password = process.env.NST_DEV_PASSWORD;
+  const username = process.env.NST_DEV_USERNAME;
+  const projectSlug = process.env.NST_DEV_PROJECT;
+  const apiUrl = process.env.NSTRUMENTA_API_URL;
+
+  if (!email || !password || !username || !projectSlug || !apiUrl) {
+    console.error('Missing required env vars: NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, NSTRUMENTA_API_URL');
+    process.exit(1);
+  }
+
+  getAdminApp();
+  const auth = getAuth();
+  const firestore = getFirestore();
+
+  let uid: string;
+  try {
+    const existing = await auth.getUserByEmail(email);
+    await auth.updateUser(existing.uid, { password });
+    uid = existing.uid;
+  } catch {
+    const created = await auth.createUser({ email, password, emailVerified: true, displayName: 'Dev Engineer' });
+    uid = created.uid;
+  }
+
+  const timestamp = Date.now();
+  await firestore.runTransaction(async (tx) => {
+    tx.set(firestore.doc(`slugs/${username}`), { type: 'user', id: uid });
+    tx.set(firestore.doc(`organizations/${username}`), {
+      name: username, slug: username, type: 'personal', createdAt: timestamp, createdBy: uid,
+    });
+    tx.set(firestore.doc(`organizations/${username}/members/${uid}`), {
+      role: 'owner', addedAt: timestamp, addedBy: uid,
+    });
+    tx.set(firestore.doc(`users/${uid}`), {
+      username, personalOrgId: username, status: 'approved', email, createdAt: timestamp,
+    }, { merge: true });
+    tx.set(firestore.doc(`users/${uid}/organizations/${username}`), {
+      name: username, slug: username, role: 'owner',
+    });
+    tx.set(firestore.doc(`organizations/${username}/projects/${projectSlug}`), {
+      name: projectSlug, slug: projectSlug, orgSlug: username,
+      members: { [uid]: 'owner' }, createdAt: timestamp, createdBy: uid,
+      apiUrl, apiKeys: {},
+    }, { merge: true });
+  });
+
+  const projectId = `${username}/${projectSlug}`;
+  const keyWithUrl = await createApiKey(projectId, apiUrl, uid);
+
+  const outputPath = join(__dirname, '..', '..', '..', '..', '.seed-output');
+  writeFileSync(outputPath, [
+    `URL:      http://localhost:5008/${username}/${projectSlug}`,
+    `Login:    ${email}`,
+    `API_KEY:  ${keyWithUrl}`,
+  ].join('\n') + '\n', { mode: 0o600 });
+
+  console.log('Seed complete. Credentials written to .seed-output');
+}
+
+if (process.argv.includes('--seed')) {
+  seedLocalDev().catch((err) => {
+    console.error(err.message);
+    process.exit(1);
+  });
 }
