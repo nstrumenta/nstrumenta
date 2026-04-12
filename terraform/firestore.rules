@@ -42,6 +42,17 @@ service cloud.firestore {
         allow read: if isOrgOwner(orgId);
         allow write: if false; // billing is managed server-side only
       }
+
+      // Projects and all subcollections (data, modules, agents, actions, etc.)
+      match /projects/{projectId} {
+        allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
+        allow write: if isOrgMember(orgId);
+
+        match /{document=**} {
+          allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
+          allow write: if isOrgMember(orgId);
+        }
+      }
     }
 
     // Projects: check direct membership, org membership, or public visibility
@@ -74,6 +85,10 @@ service cloud.firestore {
     function isOrgOwner(orgId) {
       return request.auth != null &&
         get(/databases/$(database)/documents/organizations/$(orgId)/members/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    function isOrgProjectPublic(orgId, projectId) {
+      return get(/databases/$(database)/documents/organizations/$(orgId)/projects/$(projectId)).data.visibility == 'public';
     }
 
     function isProjectMember(project) {
