@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -23,7 +25,7 @@ async function seedLocalDev() {
   }
 
   const projectId = `${username}/${projectSlug}`;
-  console.log(`Seeding local dev environment: ${projectId}`);
+  console.log(`Seeding local dev environment: ${username}/${projectSlug}`);
 
   // 1. Upsert Firebase Auth user
   let user;
@@ -107,9 +109,15 @@ async function seedLocalDev() {
 
   const keyWithUrl = `${key}:${Buffer.from(apiUrl).toString('base64')}`;
 
-  console.log(`URL:      http://localhost:5008/${username}/${projectSlug}`);
-  console.log(`Login:    ${email}  /  ${password}`);
-  console.log(`API_KEY:  ${keyWithUrl}`);
+  const seedOutput = [
+    `URL:      http://localhost:5008/${username}/${projectSlug}`,
+    `Login:    ${email}`,
+    `API_KEY:  ${keyWithUrl}`,
+  ].join('\n');
+
+  const outputPath = path.join(__dirname, '.seed-output');
+  fs.writeFileSync(outputPath, seedOutput + '\n', { mode: 0o600 });
+  console.log(`Seed complete. Credentials written to ${outputPath}`);
 }
 
 seedLocalDev().catch(console.error);
