@@ -40,10 +40,15 @@ else
   echo "Warning: Some Dev Seed Credentials are missing. Ensure NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, and NST_API_URL are set."
 fi
 
-# Generate an ephemeral API key for local CLI interactions scoped to the nstrumenta project
-if [ -n "$NST_DEV_PROJECT" ] && [ -d "$NST_ROOT/integration-tests/node_modules" ] && [ -f "$NST_ROOT/integration-tests/create-api-key.js" ]; then
-  export NSTRUMENTA_API_KEY=$(node "$NST_ROOT/integration-tests/create-api-key.js" "$NST_DEV_PROJECT" "http://localhost:5999" 2>/dev/null | tail -n 1)
-  echo "Generated temporary local NSTRUMENTA_API_KEY for nstrumenta project=$NST_DEV_PROJECT"
+# Generate an ephemeral API key for local CLI interactions scoped to the nstrumenta project.
+# Only generated when --api-key flag is passed explicitly.
+if [[ " $* " == *" --api-key "* ]]; then
+  if [ -n "$NST_DEV_PROJECT" ] && [ -d "$NST_ROOT/integration-tests/node_modules" ] && [ -f "$NST_ROOT/integration-tests/create-api-key.js" ]; then
+    export NSTRUMENTA_API_KEY=$(node "$NST_ROOT/integration-tests/create-api-key.js" "$NST_DEV_PROJECT" "http://localhost:5999" 2>/dev/null | tail -n 1)
+    echo "Generated temporary local NSTRUMENTA_API_KEY for nstrumenta project=$NST_DEV_PROJECT"
+  else
+    echo "Warning: Cannot generate NSTRUMENTA_API_KEY — NST_DEV_PROJECT or integration-tests/node_modules missing"
+  fi
 fi
 
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"
