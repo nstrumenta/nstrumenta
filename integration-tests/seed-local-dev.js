@@ -25,7 +25,7 @@ async function seedLocalDev() {
   }
 
   const projectId = `${username}/${projectSlug}`;
-  console.log(`Seeding local dev environment: ${username}/${projectSlug}`);
+  console.log('Seeding local dev environment...');
 
   // 1. Upsert Firebase Auth user
   let user;
