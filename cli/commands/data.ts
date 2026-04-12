@@ -62,7 +62,7 @@ export const Upload = async (
     }
   }
 
-  console.log(results);
+  console.log((results as UploadResponse[]).map((r) => r.remoteFilePath).join('\n'));
 };
 
 interface UploadResponse {
