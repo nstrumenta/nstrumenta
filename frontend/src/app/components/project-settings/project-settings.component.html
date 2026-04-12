@@ -6,7 +6,7 @@
     apiUrl: <a [href]="projectSettings?.apiUrl" class="link">{{ projectSettings?.apiUrl }}</a>
   </mat-list-item>
 </mat-list>
-<button mat-flat-button (click)="addProjectMember()">Add User</button>
+
 
 <mat-table #table [dataSource]="membersDataSource" class="animate">
   <ng-container matColumnDef="memberId">
@@ -19,16 +19,7 @@
     <mat-cell *matCellDef="let member">{{ member.role }} </mat-cell>
   </ng-container>
 
-  <ng-container matColumnDef="action">
-    <mat-header-cell *matHeaderCellDef></mat-header-cell>
-    <mat-cell *matCellDef="let member">
-      @if (member.role !== 'owner') {
-        <button mat-button (click)="removeMember(member.memberId)">
-          remove
-        </button>
-      }
-    </mat-cell>
-  </ng-container>
+
 
   <mat-header-row *matHeaderRowDef="membersDisplayedColumns"></mat-header-row>
   <mat-row *matRowDef="let row; columns: membersDisplayedColumns" class="animate"></mat-row>

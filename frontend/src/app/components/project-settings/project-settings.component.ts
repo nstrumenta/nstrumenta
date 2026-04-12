@@ -3,17 +3,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { ServerService } from 'src/app/services/server.service';
 import { ProjectService } from 'src/app/services/project.service';
-import {
-  AddProjectMemberDialogComponent,
-  AddProjectMemberDialogResponse,
-} from '../add-project-member-dialog/add-project-member-dialog.component';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
-import {
-  CreateKeyDialogComponent,
-  CreateKeyDialogResponse,
-} from '../create-key-dialog/create-key-dialog.component';
+import { CreateKeyDialogComponent } from '../create-key-dialog/create-key-dialog.component';
 import { MatList, MatListItem } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
@@ -43,13 +35,12 @@ interface ApiKeyEntry {
     imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ProjectSettingsComponent {
-  membersDisplayedColumns = ['memberId', 'role', 'action'];
+  membersDisplayedColumns = ['memberId', 'role'];
   membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
   apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
   private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
-  private serverService = inject(ServerService);
   private projectService = inject(ProjectService);
 
   get projectId() { return this.firebaseDataService.projectId(); }
@@ -86,61 +77,14 @@ export class ProjectSettingsComponent {
     });
   }
 
-  async updateProjectName(name: string) {
-    try {
-      await this.firebaseDataService.updateProjectSettings(this.projectId, { name });
-    } catch (error) {
-      console.error('Error updating project name:', error);
-    }
-  }
-
-  removeMember(memberId: string) {
-    const dialogRef = this.dialog.open(ConfirmationDialogComponent);
-
-    dialogRef.afterClosed().subscribe(async (response) => {
-      if (response) {
-        const members = { ...this.projectSettings.members };
-        delete members[memberId];
-        await this.firebaseDataService.updateProjectSettings(this.projectId, { members });
-      }
-    });
-  }
-
-  addProjectMember() {
-    const dialogRef = this.dialog.open(AddProjectMemberDialogComponent);
-
-    dialogRef.afterClosed().subscribe(async (response: AddProjectMemberDialogResponse) => {
-      if (response && response.email) {
-        // TODO: Call server-side invite endpoint that resolves email to userId
-        // For now, store email as the member key (server will resolve on next auth)
-        const members = { ...this.projectSettings.members };
-        members[response.email] = response.role;
-        await this.firebaseDataService.updateProjectSettings(this.projectId, { members });
-      }
-    });
-  }
-
   createApiKey() {
-    const dialogRef = this.dialog.open(CreateKeyDialogComponent);
-    dialogRef.afterClosed().subscribe(async (response: CreateKeyDialogResponse) => {
-      if (response && response.keyId) {
-        const apiKeys = this.projectSettings.apiKeys ? { ...this.projectSettings.apiKeys } : {};
-        apiKeys[response.keyId] = { createdAt: response.createdAt };
-        await this.firebaseDataService.updateProjectSettings(this.projectId, { apiKeys });
-      }
-    });
+    this.dialog.open(CreateKeyDialogComponent);
   }
   revokeApiKey(keyId: string) {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent);
-
     dialogRef.afterClosed().subscribe((response) => {
       if (response) {
-        this.projectService.revokeApiKey(keyId).then(async (actionResponse) => {
-          const apiKeys = this.projectSettings.apiKeys ? { ...this.projectSettings.apiKeys } : {};
-          delete apiKeys[keyId];
-          await this.firebaseDataService.updateProjectSettings(this.projectId, { apiKeys });
-          console.log('revokeApiKey response', actionResponse);
-        });
+        this.projectService.revokeApiKey(keyId);
       }
     });
   }

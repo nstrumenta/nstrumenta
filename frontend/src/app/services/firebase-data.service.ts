@@ -17,8 +17,6 @@ import {
   onSnapshot,
   orderBy,
   query,
-  setDoc,
-  updateDoc,
   getFirestore,
   DocumentData,
   Query,
@@ -416,7 +414,6 @@ export class FirebaseDataService {
 
   // CRUD Operations - all centralized here to maintain injection context
 
-  // Add operations
   async addRepository(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const repositoriesCollection = collection(
@@ -427,75 +424,9 @@ export class FirebaseDataService {
     });
   }
 
-  async addRecord(projectId: string, data: unknown): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const recordsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/data`);
-      await addDoc(recordsCollection, data);
-    });
-  }
-
-  async addAction(projectId: string, data: unknown): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const actionsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/actions`);
-      await addDoc(actionsCollection, data);
-    });
-  }
-
-  // Update operations
-  async updateRepository(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/repositories/${id}`);
-      await updateDoc(docRef, data);
-    });
-  }
-
-  async updateRecord(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/data/${id}`);
-      await updateDoc(docRef, data);
-    });
-  }
-
-  // Record collection CRUD operations (distinct from data collection)
-  async addRecording(projectId: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const collectionRef = collection(this.firestore, `/${this.getProjectPath(projectId)}/record`);
-      await addDoc(collectionRef, { ...(data as object), lastModified: Date.now() });
-    });
-  }
-
-  async updateRecording(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/record/${id}`);
-      await setDoc(docRef, data, { merge: true });
-    });
-  }
-
-  async deleteRecording(projectId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/record/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
-
-  async updateAction(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/actions/${id}`);
-      await setDoc(docRef, data, { merge: true });
-    });
-  }
-
-  // Delete operations
   async deleteRepository(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/repositories/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
-
-  async deleteRecord(projectId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/data/${id}`);
       await deleteDoc(docRef);
     });
   }
@@ -507,62 +438,10 @@ export class FirebaseDataService {
     });
   }
 
-  async deleteModule(projectId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/modules/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
-
-  async deleteAgent(projectId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
-
-  // Agent actions CRUD operations
-  async addAgentAction(projectId: string, agentId: string, data: unknown): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const collectionRef = collection(
-        this.firestore,
-        `/${this.getProjectPath(projectId)}/agents/${agentId}/actions`
-      );
-      await addDoc(collectionRef, data);
-    });
-  }
-
-  async updateAgentAction(
-    projectId: string,
-    agentId: string,
-    id: string,
-    data: Record<string, unknown>
-  ): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${agentId}/actions/${id}`);
-      await setDoc(docRef, data, { merge: true });
-    });
-  }
-
-  async deleteAgentAction(projectId: string, agentId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${agentId}/actions/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
-
   // Get single document
   getDocument(projectId: string, collection: string, id: string): Observable<FirebaseDocument> {
     const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/${collection}/${id}`);
     return this.docData(docRef).pipe(map((data) => data as FirebaseDocument));
-  }
-
-  // Project settings operations
-  async updateProjectSettings(projectId: string, data: Record<string, unknown>): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}`);
-      await setDoc(docRef, data, { merge: true });
-    });
   }
 
   // User project operations

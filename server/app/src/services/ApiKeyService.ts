@@ -1,4 +1,4 @@
-import { Firestore } from '@google-cloud/firestore'
+import { Firestore, FieldValue } from '@google-cloud/firestore'
 import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
 import { ActionData } from '../index'
@@ -104,8 +104,12 @@ export function CreateApiKeyService({
       console.log('revokeApiKey', projectId, data)
       const keyId = data.payload.keyId
       try {
-        const doc = firestore.collection('keys').doc(keyId)
-        await doc.delete()
+        await firestore.collection('keys').doc(keyId).delete()
+
+        const projectPath = orgProjectPath(projectId)
+        await firestore.doc(projectPath).update({
+          [`apiKeys.${keyId}`]: FieldValue.delete(),
+        })
 
         await firestore
           .doc(actionPath)
