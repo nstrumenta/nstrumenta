@@ -30,11 +30,7 @@ export class UploadService {
   uploads = this.uploadsMap.asReadonly();
 
   getProjectPath(projectId: string): string {
-    const parts = projectId.split('/');
-    if (parts.length === 2 && parts[0] && parts[1]) {
-      return `organizations/${parts[0]}/projects/${parts[1]}`;
-    }
-    return `projects/${projectId}`;
+    return projectId;
   }
 
   async uploadFile(projectId: string, file: File, folder?: string): Promise<string> {

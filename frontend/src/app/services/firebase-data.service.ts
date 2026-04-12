@@ -557,21 +557,9 @@ export class FirebaseDataService {
       }
     }
 
-    // get_upload_url expects a path relative to the project root (e.g. "data/file.mcap"),
-    // but callers pass the full GCS path (e.g. "/{orgSlug}/{projectSlug}/data/file.mcap").
-    // Strip the {orgSlug}/{projectSlug}/ storage prefix so the server doesn't double it.
     const projectId = this.projectId();
-    const [orgSlug, projectSlug] = projectId.split('/');
-    const prefix = `${orgSlug}/${projectSlug}/`;
-    const leadingSlashPrefix = `/${prefix}`;
-    const relativePath = path.startsWith(leadingSlashPrefix)
-      ? path.slice(leadingSlashPrefix.length)
-      : path.startsWith(prefix)
-      ? path.slice(prefix.length)
-      : path;
-
     const progress$ = await this.apiService.uploadFileToPath(
-      relativePath,
+      path,
       file,
       projectId,
       flatMeta

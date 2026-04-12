@@ -992,9 +992,9 @@ server.registerTool(
     'get_upload_url',
     {
         title: 'Get Upload URL',
-        description: 'Gets a signed URL for uploading a module file to cloud storage.',
+        description: 'Gets a signed URL for uploading a file to cloud storage. Accepts a path relative to the project root (e.g. "data/file.mcap", "modules/tool.tar.gz").',
         inputSchema: {
-            path: z.string().describe('File path relative to project'),
+            path: z.string().describe('File path relative to project root (e.g. "data/file.mcap")'),
             metadata: z.record(z.string(), z.string()).optional().describe('Optional file metadata'),
         },
         outputSchema: {
@@ -1005,10 +1005,13 @@ server.registerTool(
         try {
             const projectId = getProjectId();
             const { generateV4UploadSignedUrl } = require('./shared/utils');
-            
-            const path = originalPath.replace(/^(\/)*/, '/');
+
             const storagePathBase = getStoragePathPrefix(projectId);
-            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}${path}`, metadata, getOrigin());
+            const stripped = originalPath.replace(/^\/+/, '');
+            const relativePath = stripped.startsWith(storagePathBase + '/')
+                ? stripped.slice(storagePathBase.length + 1)
+                : stripped;
+            const uploadUrl = await generateV4UploadSignedUrl(`${storagePathBase}/${relativePath}`, metadata, getOrigin());
 
             return {
                 content: [{ type: 'text', text: uploadUrl }],
@@ -1025,9 +1028,9 @@ server.registerTool(
     'get_download_url',
     {
         title: 'Get Download URL',
-        description: 'Gets a signed URL for downloading a file from cloud storage.',
+        description: 'Gets a signed URL for downloading a file from cloud storage. Accepts a path relative to the project root (e.g. "data/file.mcap").',
         inputSchema: {
-            path: z.string().describe('File path relative to project (e.g. "data/file.mcap") or full storage path'),
+            path: z.string().describe('File path relative to project root (e.g. "data/file.mcap")'),
         },
         outputSchema: {
             downloadUrl: z.string().describe('Signed URL for download'),
@@ -1038,13 +1041,14 @@ server.registerTool(
             const projectId = getProjectId();
             const { generateV4ReadSignedUrl } = require('./shared/utils');
 
-            // Accept both relative ("data/file.mcap") and full storage paths
-            // Strip any leading slash before checking prefix
-            const normalizedPath = originalPath.replace(/^\//, '');
             const storagePathBase = getStoragePathPrefix(projectId);
-            const fullPath = normalizedPath.startsWith(storagePathBase + '/') || normalizedPath.startsWith('projects/' + projectId + '/')
-                ? normalizedPath
-                : `${storagePathBase}/${normalizedPath}`;
+            // Strip leading slashes and strip the project prefix if the caller included it,
+            // so both "data/file.mcap" and "org/project/data/file.mcap" are accepted.
+            const stripped = originalPath.replace(/^\/+/, '');
+            const relativePath = stripped.startsWith(storagePathBase + '/')
+                ? stripped.slice(storagePathBase.length + 1)
+                : stripped;
+            const fullPath = `${storagePathBase}/${relativePath}`;
 
             const downloadUrl = await generateV4ReadSignedUrl(fullPath);
 
