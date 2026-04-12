@@ -857,9 +857,8 @@ server.registerTool(
             }
 
             const projectId = `${targetOrgSlug}/${projectSlug}`;
-            const batch = firestore.batch();
 
-            batch.set(firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug), {
+            await firestore.collection(`organizations/${targetOrgSlug}/projects`).doc(projectSlug).set({
                 name,
                 slug: projectSlug,
                 orgId: targetOrgId,
@@ -869,15 +868,6 @@ server.registerTool(
                 createdBy: userId,
                 visibility: 'private',
             });
-
-            // Use the slug string in users profile
-            batch.set(firestore.collection(`users/${userId}/projects`).doc(projectId.replace('/', ':')), {
-                name,
-                orgSlug: targetOrgSlug,
-                slug: projectSlug,
-            });
-
-            await batch.commit();
 
             return {
                 content: [{ type: 'text', text: `Project created: ${targetOrgSlug}/${projectSlug}` }],

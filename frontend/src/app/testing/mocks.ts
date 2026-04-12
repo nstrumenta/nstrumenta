@@ -27,7 +27,6 @@ export class MockFirebaseDataService {
   deleteRecord() {}
   deleteModule() {}
   setUser() {}
-  updateUserProject() {}
   userProjectsObservable$ = of([]);
   getDownloadUrl() { return Promise.resolve('http://localhost/test.file'); }
 }

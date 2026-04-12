@@ -67,7 +67,7 @@ async function seedLocalDev() {
       role: 'owner',
     });
 
-    // 3. Mirror create_project: project under org, project-slugs lookup index
+    // 3. Mirror create_project: project under org
     tx.set(db.doc(`organizations/${username}/projects/${projectSlug}`), {
       name: projectSlug,
       slug: projectSlug,
@@ -78,8 +78,6 @@ async function seedLocalDev() {
       apiUrl,
       apiKeys: {},
     }, { merge: true });
-
-    tx.set(db.doc(`project-slugs/${username}:${projectSlug}`), { projectId });
   });
 
   // 4. Generate CLI access key
@@ -191,11 +189,6 @@ seedLocalDev().catch(console.error);
       apiKeys: {}
     }, { merge: true });
 
-    // Project Slug for Frontend Resolution (localhost:5008/devaccount/dev-flyimal)
-    tx.set(db.doc(`project-slugs/${username}:${projectId}`), {
-      projectId: projectId
-    });
-    
     // Bind project to User's subcollection
     tx.set(db.doc(`users/${uid}/projects/${projectId}`), {
       role: 'owner',
