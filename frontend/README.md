@@ -31,20 +31,20 @@ E2E tests live in `integration-tests/frontend/tests/` and run against a full ser
 
 ### Fast iteration (watch mode — recommended for frontend work)
 
-Start the watch stack once (`pw.sh` handles credentials automatically after this):
+Start the watch stack once (`frontend-e2e-watch.sh` handles credentials automatically after this):
 
 ```shell
 cd /workspaces/nstrumenta/integration-tests
 docker compose -f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml up -d server frontend-dev
 ```
 
-Then use `pw.sh` to run tests. The stack stays running between runs:
+Then use `frontend-e2e-watch.sh` to run tests. The stack stays running between runs:
 
 ```shell
-/workspaces/nstrumenta/integration-tests/pw.sh tests/record.spec.js
+/workspaces/nstrumenta/integration-tests/frontend-e2e-watch.sh tests/record.spec.js
 ```
 
-`pw.sh` builds the frontend, sets up test credentials, runs Playwright, and prints timing and a report link. The server container persists between runs — tear it down manually when done:
+`frontend-e2e-watch.sh` builds the frontend, sets up test credentials, runs Playwright, and prints timing and a report link. The server container persists between runs — tear it down manually when done:
 
 ```shell
 cd /workspaces/nstrumenta/integration-tests
@@ -57,7 +57,7 @@ Rebuilds the server image from scratch with the frontend baked in — identical 
 
 ```shell
 source /workspaces/nstrumenta/credentials/activate.sh
-/workspaces/nstrumenta/integration-tests/e2e.sh
+/workspaces/nstrumenta/integration-tests/frontend-e2e.sh
 ```
 
 ### View the Playwright HTML report

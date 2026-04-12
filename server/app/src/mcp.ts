@@ -129,7 +129,7 @@ server.resource(
                 throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
             }
 
-            const doc = await firestore.doc(`projects/${projectId}/actions/${actionId}`).get();
+            const doc = await firestore.doc(`${orgProjectPath(projectId)}/actions/${actionId}`).get();
             if (!doc.exists) {
                 throw new Error(`Action ${actionId} not found`);
             }
@@ -158,7 +158,7 @@ server.resource(
                 throw new Error(`Access denied: authenticated for project '${authProjectId}', not '${projectId}'`);
             }
 
-            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            const actionsPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`;
             const snapshot = await firestore.collection(actionsPath)
                 .where('status', '==', 'pending')
                 .get();
@@ -498,7 +498,7 @@ server.registerTool(
     async ({ actionId, status, error, progress, logs }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
             
             const updateData: Record<string, any> = {
                 status,
@@ -539,7 +539,7 @@ server.registerTool(
     async ({ actionId, timeout = 600000 }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
             
             return new Promise((resolve, reject) => {
                 const startTime = Date.now();
@@ -717,7 +717,7 @@ server.registerTool(
     async ({ agentId, status }) => {
         try {
             const projectId = getProjectId();
-            const actionsPath = `projects/${projectId}/agents/${agentId}/actions`;
+            const actionsPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions`;
             let query = firestore.collection(actionsPath);
             
             if (status) {
@@ -765,7 +765,7 @@ server.registerTool(
     async ({ agentId, actionId, status, error }) => {
         try {
             const projectId = getProjectId();
-            const actionPath = `projects/${projectId}/agents/${agentId}/actions/${actionId}`;
+            const actionPath = `${orgProjectPath(projectId)}/agents/${agentId}/actions/${actionId}`;
             const updateData: any = {
                 status,
                 lastModified: Date.now(),
@@ -972,7 +972,7 @@ server.registerTool(
     async ({ path, name, version, size, type, entry }) => {
         try {
             const projectId = getProjectId();
-            const modulesPath = `projects/${projectId}/modules`;
+            const modulesPath = `${orgProjectPath(projectId)}/modules`;
             const moduleDoc = firestore.collection(modulesPath).doc();
             
             // Filter out undefined values to avoid Firestore errors
@@ -1096,7 +1096,7 @@ server.registerTool(
 
             // Verify the file belongs to this project
             const expectedPrefix = `${storagePathBase}/`;
-            if (!filePath.startsWith(expectedPrefix) && !filePath.startsWith(`projects/${projectId}/`)) {
+            if (!filePath.startsWith(expectedPrefix) && !filePath.startsWith(`${orgProjectPath(projectId)}/`)) {
                 throw new Error(`File path does not belong to project ${projectId}`);
             }
 
@@ -1104,10 +1104,10 @@ server.registerTool(
 
             // Delete Firestore metadata doc - either by provided ID or by hash-derived path
             if (firestoreDocId) {
-                await firestore.doc(`projects/${projectId}/data/${firestoreDocId}`).delete();
+                await firestore.doc(`${orgProjectPath(projectId)}/data/${firestoreDocId}`).delete();
             } else {
                 const hash = crypto.createHash('sha256').update(filePath).digest('hex');
-                await firestore.doc(`projects/${projectId}/data/${hash}`).delete();
+                await firestore.doc(`${orgProjectPath(projectId)}/data/${hash}`).delete();
             }
 
             return {
@@ -1190,7 +1190,7 @@ server.registerTool(
             const projectId = getProjectId();
             const { v4: uuid } = require('uuid');
             
-            const agentsPath = `projects/${projectId}/agents`;
+            const agentsPath = `${orgProjectPath(projectId)}/agents`;
             const agentId = uuid();
             const timestamp = Date.now();
             
@@ -1299,7 +1299,7 @@ server.registerTool(
     async ({ collection, limit, field, comparison, value }) => {
         try {
             const projectId = getProjectId();
-            const collectionPath = `projects/${projectId}/${collection}`;
+            const collectionPath = `${orgProjectPath(projectId)}/${collection}`;
             let query: any = firestore.collection(collectionPath);
             
             if (field && comparison && value !== undefined) {
@@ -1343,7 +1343,7 @@ server.registerTool(
     async ({ dataId, metadata }) => {
         try {
             const projectId = getProjectId();
-            const dataPath = `projects/${projectId}/data/${dataId}`;
+            const dataPath = `${orgProjectPath(projectId)}/data/${dataId}`;
             
             await firestore.doc(dataPath).set(metadata, { merge: true });
 
@@ -1376,7 +1376,7 @@ server.registerTool(
     async ({ dataId }) => {
         try {
             const projectId = getProjectId();
-            const dataPath = `projects/${projectId}/data/${dataId}`;
+            const dataPath = `${orgProjectPath(projectId)}/data/${dataId}`;
             
             const doc = await firestore.doc(dataPath).get();
             if (!doc.exists) {

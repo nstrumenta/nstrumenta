@@ -1,37 +1,19 @@
 #!/bin/bash -e
-# Playwright fast iteration — runs tests against a persistent Angular dev server (hot reload, no build).
+# Full frontend E2E run — CI-equivalent: builds server image, runs all Playwright tests, tears down.
+# For fast iteration with hot reload, use frontend-e2e-watch.sh instead.
+# Prerequisites: source credentials/activate.sh
 #
 # Usage:
-#   ./pw.sh up                 # start watch stack (server + frontend-dev)
-#   ./pw.sh down               # tear down watch stack
-#   ./pw.sh                    # run all playwright tests
-#   ./pw.sh tests/foo.spec.js  # run specific test file
+#   ./frontend-e2e.sh                    # run all tests
+#   ./frontend-e2e.sh tests/foo.spec.js  # run specific test file
 
 cd "$(dirname "$0")"
-
-source ../credentials/activate.sh
-
-COMPOSE_FILES="-f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml"
-SUBCOMMAND="${1:-}"
-
-case "$SUBCOMMAND" in
-  up)
-    eval "$(node get-project-config.js)"
-    docker compose $COMPOSE_FILES up -d server frontend-dev
-    exit 0
-    ;;
-  down)
-    docker compose $COMPOSE_FILES down
-    exit 0
-    ;;
-esac
 
 START_SECONDS=$SECONDS
 TEST_ARGS="$*"
 
-# Verify the watch stack is running before wasting time on setup
-if ! docker compose $COMPOSE_FILES exec -T server sh -c "wget -qO- http://localhost:5999/health" > /dev/null 2>&1; then
-    echo "Error: server is not running. Start the watch stack first: ./pw.sh up"
+if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
+    echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
     exit 1
 fi
 
@@ -39,6 +21,11 @@ if [ ! -d "node_modules" ]; then npm install; fi
 
 eval "$(node get-project-config.js)"
 export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT 2>/dev/null || echo '')
+
+if [ ! -d "../frontend/dist" ]; then
+    echo "Building frontend..."
+    (cd ../frontend && npm install && npm run build)
+fi
 
 TEST_USER_JSON=$(node create-test-user.js)
 export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
@@ -60,27 +47,32 @@ trap cleanup_users EXIT
 
 export NSTRUMENTA_API_KEY=$(node create-api-key.js "${TEST_USER_USERNAME}/ci" http://server:5999)
 
+COMPOSE_FILES="-f docker-compose.e2e.yml"
+docker compose $COMPOSE_FILES up --build -d server
+
 PLAYWRIGHT_EXIT_CODE=0
 if [ -n "$TEST_ARGS" ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm --no-deps playwright sh -c "npm run test:playwright -- $TEST_ARGS"
+    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright
+    docker compose $COMPOSE_FILES run --build --rm playwright
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 fi
+
+docker compose $COMPOSE_FILES down
 
 ELAPSED=$(( SECONDS - START_SECONDS ))
 REPORT_PATH="$(pwd)/frontend/playwright-report/index.html"
 
 if [ $PLAYWRIGHT_EXIT_CODE -ne 0 ]; then
-    echo "Tests failed in ${ELAPSED}s"
+    echo "E2E tests failed in ${ELAPSED}s"
     echo "Report: file://${REPORT_PATH}"
     exit $PLAYWRIGHT_EXIT_CODE
 else
-    echo "Tests passed in ${ELAPSED}s"
+    echo "E2E tests passed in ${ELAPSED}s"
     echo "Report: file://${REPORT_PATH}"
 fi

@@ -6,7 +6,7 @@
 #   docker compose -f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml up -d server frontend-dev
 #
 # Then iterate (edit frontend code, run tests — no rebuild needed):
-#   ./pw.sh tests/record.spec.js
+#   ./frontend-e2e-watch.sh tests/record.spec.js
 services:
   frontend-dev:
     image: node:24-slim

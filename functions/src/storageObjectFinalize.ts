@@ -5,22 +5,21 @@ import crypto from 'crypto';
 
 const firestore = new Firestore();
 
-function generateHash(input: string): { dirname: string; documentPath: string } {
-  const hash = crypto.createHash('sha256').update(input).digest('hex');
-
-  // dirname is the directory of the file relative to the project data folder
-  const segments = input.split(path.sep);
-  const basePath = path.join(segments[0], segments[1], segments[2]);
-  const dirname = path.relative(basePath, path.dirname(input));
-
-  const documentPath = path.join(basePath, hash);
-
-  return { dirname, documentPath };
+function firestorePathForStorageObject(filePath: string): string {
+  const segments = filePath.split('/');
+  if (segments.length < 3) {
+    throw new Error(`Unexpected GCS path format: ${filePath}`);
+  }
+  const orgSlug = segments[0];
+  const projectSlug = segments[1];
+  const hash = crypto.createHash('sha256').update(filePath).digest('hex');
+  return `organizations/${orgSlug}/projects/${projectSlug}/data/${hash}`;
 }
 
 interface StorageObjectData {
   name: string;
   size?: string;
+  contentType?: string;
   bucket?: string;
   [key: string]: unknown;
 }
@@ -37,14 +36,13 @@ export const storageObjectFinalize = cloudEvent<StorageObjectData>(
       console.log('The trigger file is a directory. Skipping processing.');
       return;
     }
-    const { documentPath, dirname } = generateHash(file.name);
-    await firestore.doc(documentPath).set({
+    const firestorePath = firestorePathForStorageObject(file.name);
+    await firestore.doc(firestorePath).set({
       name: path.basename(file.name),
-      dirname,
-      lastModified: Date.now(),
       filePath: file.name,
+      lastModified: Date.now(),
       size: file.size ? parseInt(file.size, 10) : undefined,
-      file,
+      contentType: file.contentType,
     });
   }
 );

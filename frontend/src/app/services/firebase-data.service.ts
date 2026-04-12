@@ -62,10 +62,10 @@ import { AuthService } from '../auth/auth.service';
 export class FirebaseDataService {
   getProjectPath(projectId: string): string {
     const parts = projectId.split('/');
-    if (parts.length === 2 && parts[0] && parts[1]) {
-      return `organizations/${parts[0]}/projects/${parts[1]}`;
+    if (parts.length !== 2 || !parts[0] || !parts[1]) {
+      throw new Error(`Invalid projectId format '${projectId}': expected 'orgSlug/projectSlug'`);
     }
-    return `projects/${projectId}`;
+    return `organizations/${parts[0]}/projects/${parts[1]}`;
   }
   private firestore: Firestore;
   private storage: FirebaseStorage;
@@ -118,7 +118,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const modulesCollection = collection(this.firestore, `/projects/${projectId}/modules`);
+          const modulesCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/modules`);
           const modulesQuery = query(modulesCollection);
           return this.collectionData(modulesQuery);
         });
@@ -129,7 +129,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const dataCollection = collection(this.firestore, `/projects/${projectId}/data`);
+          const dataCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/data`);
           const dataQuery = query(dataCollection);
           return this.collectionData(dataQuery);
         });
@@ -140,7 +140,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const recordCollection = collection(this.firestore, `/projects/${projectId}/record`);
+          const recordCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/record`);
           const orderedRecordQuery = query(recordCollection, orderBy('lastModified', 'desc'));
           return this.collectionData(orderedRecordQuery);
         });
@@ -151,7 +151,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
+          const actionsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/actions`);
           const orderedActionsQuery = query(actionsCollection, orderBy('created', 'desc'));
           return this.collectionData(orderedActionsQuery);
         });
@@ -164,7 +164,7 @@ export class FirebaseDataService {
         return runInInjectionContext(this.injector, () => {
           const agentActionsCollection = collection(
             this.firestore,
-            `/projects/${projectId}/agents/${agentId}/actions`
+            `/${this.getProjectPath(projectId)}/agents/${agentId}/actions`
           );
           const orderedAgentActionsQuery = query(
             agentActionsCollection,
@@ -190,7 +190,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const repositoriesCollection = collection(this.firestore, `/projects/${projectId}/repositories`);
+          const repositoriesCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/repositories`);
           const repositoriesQuery = query(repositoriesCollection);
           return this.collectionData(repositoriesQuery);
         });
@@ -201,7 +201,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const agentsCollection = collection(this.firestore, `/projects/${projectId}/agents`);
+          const agentsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/agents`);
           const agentsQuery = query(agentsCollection);
           return this.collectionData(agentsQuery);
         });
@@ -212,7 +212,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
         return runInInjectionContext(this.injector, () => {
-          const machinesCollection = collection(this.firestore, `/projects/${projectId}/machines`);
+          const machinesCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/machines`);
           const machinesQuery = query(machinesCollection);
           return this.collectionData(machinesQuery);
         });
@@ -237,7 +237,7 @@ export class FirebaseDataService {
             return from(
               Promise.all(
                 missingSlug.map(p =>
-                  getDoc(doc(this.firestore, `projects/${p['id']}`))
+                  getDoc(doc(this.firestore, this.getProjectPath(p['id'] as string)))
                     .then(snap => ({ refId: p['id'], data: snap.exists() ? snap.data() : null }))
                     .catch(() => ({ refId: p['id'], data: null }))
                 )
@@ -271,7 +271,7 @@ export class FirebaseDataService {
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of(null);
         return runInInjectionContext(this.injector, () =>
-          this.docData(doc(this.firestore, `/projects/${projectId}`))
+          this.docData(doc(this.firestore, `/${this.getProjectPath(projectId)}`))
         );
       })
     );
@@ -428,7 +428,7 @@ export class FirebaseDataService {
       if (!projectId || !agentId) return of([]);
       const agentActionsCollection = collection(
         this.firestore,
-        `/projects/${projectId}/agents/${agentId}/actions`
+        `/${this.getProjectPath(projectId)}/agents/${agentId}/actions`
       );
       const agentActionsQuery = query(agentActionsCollection);
       return this.collectionData(agentActionsQuery);
@@ -452,7 +452,7 @@ export class FirebaseDataService {
     await runInInjectionContext(this.injector, async () => {
       const repositoriesCollection = collection(
         this.firestore,
-        `/projects/${projectId}/repositories`
+        `/${this.getProjectPath(projectId)}/repositories`
       );
       await addDoc(repositoriesCollection, data);
     });
@@ -460,14 +460,14 @@ export class FirebaseDataService {
 
   async addRecord(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const recordsCollection = collection(this.firestore, `/projects/${projectId}/data`);
+      const recordsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/data`);
       await addDoc(recordsCollection, data);
     });
   }
 
   async addAction(projectId: string, data: unknown): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const actionsCollection = collection(this.firestore, `/projects/${projectId}/actions`);
+      const actionsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/actions`);
       await addDoc(actionsCollection, data);
     });
   }
@@ -475,14 +475,14 @@ export class FirebaseDataService {
   // Update operations
   async updateRepository(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/repositories/${id}`);
       await updateDoc(docRef, data);
     });
   }
 
   async updateRecord(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/data/${id}`);
       await updateDoc(docRef, data);
     });
   }
@@ -490,28 +490,28 @@ export class FirebaseDataService {
   // Record collection CRUD operations (distinct from data collection)
   async addRecording(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const collectionRef = collection(this.firestore, `/projects/${projectId}/record`);
+      const collectionRef = collection(this.firestore, `/${this.getProjectPath(projectId)}/record`);
       await addDoc(collectionRef, { ...(data as object), lastModified: Date.now() });
     });
   }
 
   async updateRecording(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/record/${id}`);
       await setDoc(docRef, data, { merge: true });
     });
   }
 
   async deleteRecording(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/record/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/record/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   async updateAction(projectId: string, id: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
     });
   }
@@ -519,35 +519,35 @@ export class FirebaseDataService {
   // Delete operations
   async deleteRepository(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/repositories/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/repositories/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   async deleteRecord(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/data/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/data/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   async deleteAction(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/actions/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/actions/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   async deleteModule(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/modules/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/modules/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   async deleteAgent(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/agents/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${id}`);
       await deleteDoc(docRef);
     });
   }
@@ -557,7 +557,7 @@ export class FirebaseDataService {
     await runInInjectionContext(this.injector, async () => {
       const collectionRef = collection(
         this.firestore,
-        `/projects/${projectId}/agents/${agentId}/actions`
+        `/${this.getProjectPath(projectId)}/agents/${agentId}/actions`
       );
       await addDoc(collectionRef, data);
     });
@@ -570,28 +570,28 @@ export class FirebaseDataService {
     data: Record<string, unknown>
   ): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${agentId}/actions/${id}`);
       await setDoc(docRef, data, { merge: true });
     });
   }
 
   async deleteAgentAction(projectId: string, agentId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}/agents/${agentId}/actions/${id}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/agents/${agentId}/actions/${id}`);
       await deleteDoc(docRef);
     });
   }
 
   // Get single document
   getDocument(projectId: string, collection: string, id: string): Observable<FirebaseDocument> {
-    const docRef = doc(this.firestore, `/projects/${projectId}/${collection}/${id}`);
+    const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/${collection}/${id}`);
     return this.docData(docRef).pipe(map((data) => data as FirebaseDocument));
   }
 
   // Project settings operations
   async updateProjectSettings(projectId: string, data: Record<string, unknown>): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/projects/${projectId}`);
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}`);
       await setDoc(docRef, data, { merge: true });
     });
   }
@@ -659,7 +659,7 @@ export class FirebaseDataService {
       };
 
       runInInjectionContext(this.injector, () => {
-        const actionsCollection = collection(this.firestore, `projects/${projectId}/actions`);
+        const actionsCollection = collection(this.firestore, `${this.getProjectPath(projectId)}/actions`);
         addDoc(actionsCollection, action)
           .then((ref) => {
             const key = ref.path;
@@ -728,10 +728,11 @@ export class FirebaseDataService {
     }
 
     // get_upload_url expects a path relative to the project root (e.g. "data/file.mcap"),
-    // but callers pass the full GCS path (e.g. "/projects/${projectId}/data/file.mcap").
-    // Strip the projects/${projectId}/ prefix so the server doesn't double it.
+    // but callers pass the full GCS path (e.g. "/{orgSlug}/{projectSlug}/data/file.mcap").
+    // Strip the {orgSlug}/{projectSlug}/ storage prefix so the server doesn't double it.
     const projectId = this.projectId();
-    const prefix = `projects/${projectId}/`;
+    const [orgSlug, projectSlug] = projectId.split('/');
+    const prefix = `${orgSlug}/${projectSlug}/`;
     const leadingSlashPrefix = `/${prefix}`;
     const relativePath = path.startsWith(leadingSlashPrefix)
       ? path.slice(leadingSlashPrefix.length)

@@ -184,7 +184,7 @@ jobs:
       - name: Run Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: cd integration-tests && ./e2e.sh
+        run: cd integration-tests && ./frontend-e2e.sh
 
   # ---------------------------------------------------------------------------
   # CD: Deploy on merge to main

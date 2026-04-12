@@ -1,23 +1,20 @@
 import { Firestore } from '@google-cloud/firestore';
 import { Storage } from '@google-cloud/storage';
 import { CloudEvent, cloudEvent } from '@google-cloud/functions-framework';
-import path from 'path';
 import crypto from 'crypto';
 
 const firestore = new Firestore();
 export const storage = new Storage();
 
-function generateHash(input: string): { dirname: string; documentPath: string } {
-  const hash = crypto.createHash('sha256').update(input).digest('hex');
-
-  // dirname is the directory of the file relative to the project data folder
-  const segments = input.split(path.sep);
-  const basePath = path.join(segments[0], segments[1], segments[2]);
-  const dirname = path.relative(basePath, path.dirname(input));
-
-  const documentPath = path.join(basePath, hash);
-
-  return { dirname, documentPath };
+function firestorePathForStorageObject(filePath: string): string {
+  const segments = filePath.split('/');
+  if (segments.length < 3) {
+    throw new Error(`Unexpected GCS path format: ${filePath}`);
+  }
+  const orgSlug = segments[0];
+  const projectSlug = segments[1];
+  const hash = crypto.createHash('sha256').update(filePath).digest('hex');
+  return `organizations/${orgSlug}/projects/${projectSlug}/data/${hash}`;
 }
 
 interface StorageObjectData {
@@ -37,10 +34,10 @@ export const storageObjectDelete = cloudEvent<StorageObjectData>(
     // delete triggers when overwriting in gcsfuse
     // check to see if the file exists before removing the firestore doc
     const exists = (await storage.bucket(file.bucket).file(file.name).exists())[0];
-    const { documentPath } = generateHash(file.name);
+    const firestorePath = firestorePathForStorageObject(file.name);
     if (!exists) {
       console.log(`file ${file.name} doesn't exist, deleting`);
-      await firestore.doc(documentPath).delete();
+      await firestore.doc(firestorePath).delete();
     } else {
       console.log(`file ${file.name} exists, ignoring overwrite`);
     }

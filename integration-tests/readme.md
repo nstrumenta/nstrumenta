@@ -15,7 +15,7 @@ End-to-end tests for nstrumenta, running in isolated Docker Compose environments
 npm run test:e2e
 
 # Or directly
-cd integration-tests && ./e2e.sh playwright
+cd integration-tests && ./frontend-e2e.sh
 ```
 
 This will:
