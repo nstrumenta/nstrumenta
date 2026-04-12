@@ -7,9 +7,10 @@ service cloud.firestore {
       allow write: if false; // Only server can write
     }
 
-    // Users can read/write their own user document only (subcollections are server-managed)
+    // Users can read their own user document; all writes go through server API
     match /users/{user} {
-      allow read, write: if request.auth.uid == user
+      allow read: if request.auth.uid == user;
+      allow write: if false;
     }
 
     // Organizations: members can read, owners/admins can write
