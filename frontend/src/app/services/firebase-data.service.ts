@@ -17,6 +17,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  updateDoc,
   getFirestore,
   DocumentData,
   Query,
