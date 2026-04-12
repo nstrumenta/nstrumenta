@@ -169,6 +169,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: integration-tests/node_modules
+          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
+      - name: Install integration-tests deps
+        run: cd integration-tests && npm install --quiet
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -200,6 +206,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - uses: actions/cache@v4
+        with:
+          path: integration-tests/node_modules
+          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
       - name: Install integration-tests deps
         run: cd integration-tests && npm install --quiet
       - uses: google-github-actions/auth@v2
