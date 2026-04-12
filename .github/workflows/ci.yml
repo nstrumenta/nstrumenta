@@ -187,12 +187,21 @@ jobs:
         run: cd integration-tests && ./frontend-e2e.sh
 
   cli-e2e:
-    needs: [build]
+    needs: [build, build-frontend]
     runs-on: ubuntu-latest
     env:
       CI: true
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend
+          path: frontend/dist
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install integration-tests deps
+        run: cd integration-tests && npm install --quiet
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
