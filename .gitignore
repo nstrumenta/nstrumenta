@@ -90,3 +90,4 @@ secrets
 frontend/.firebase/*
 **/.vscode/settings.json
 server/app/nst-compute/logs/
+.seed-output

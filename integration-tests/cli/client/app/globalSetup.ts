@@ -175,7 +175,8 @@ export async function seedLocalDev(): Promise<void> {
   const projectId = `${username}/${projectSlug}`;
   const keyWithUrl = await createApiKey(projectId, SERVER_URL, uid);
 
-  const outputPath = join(__dirname, '..', '..', '..', '..', '.seed-output');
+  // We resolve relative to process.cwd() since this is run via `npm run seed` from integration-tests directory
+  const outputPath = join(process.cwd(), '..', '.seed-output');
   writeFileSync(outputPath, [
     `URL:      http://localhost:5008/${username}/${projectSlug}`,
     `Login:    ${email}`,
