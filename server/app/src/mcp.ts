@@ -14,6 +14,22 @@ import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
 import { parseOrgProject, orgProjectPath } from './shared/utils';
+import { createCloudAdminService } from './services/cloudAdmin';
+import { createCloudDataJobService } from './services/cloudDataJob';
+import { spawn } from 'child_process';
+import { storage } from './authentication/ServiceAccount';
+
+const cloudAdminService = createCloudAdminService({
+    firestore,
+    spawn,
+    storage,
+});
+
+const cloudDataJobService = createCloudDataJobService({
+    firestore,
+    spawn,
+    storage,
+});
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {
     const path = `${orgProjectPath(projectId)}/actions`;
@@ -404,6 +420,10 @@ server.registerTool(
                 },
             };
             const actionId = await createProjectAction(projectId, action);
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
+            
+            // Fire and forget the background process
+            cloudAdminService.hostModule(actionPath, projectId, action as any).catch(console.error);
 
             return {
                 content: [
@@ -461,6 +481,10 @@ server.registerTool(
             };
             console.log('Creating action:', JSON.stringify(action, null, 2));
             const actionId = await createProjectAction(projectId, action);
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
+            
+            // Fire and forget the background process
+            cloudDataJobService.createService(actionPath, projectId, action as any).catch(console.error);
 
             return {
                 content: [

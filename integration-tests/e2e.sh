@@ -50,7 +50,14 @@ export NSTRUMENTA_API_KEY=$(node create-api-key.js "${TEST_USER_USERNAME}/ci" ht
 COMPOSE_FILES="-f docker-compose.e2e.yml"
 docker compose $COMPOSE_FILES up --build -d server
 
+CLI_EXIT_CODE=0
 PLAYWRIGHT_EXIT_CODE=0
+
+set +e
+docker compose $COMPOSE_FILES run --build --rm cli-tests
+CLI_EXIT_CODE=$?
+set -e
+
 if [ -n "$TEST_ARGS" ]; then
     set +e
     docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_ARGS"
@@ -63,15 +70,21 @@ else
     set -e
 fi
 
+if [ $CLI_EXIT_CODE -ne 0 ] || [ $PLAYWRIGHT_EXIT_CODE -ne 0 ]; then
+    echo "--- server logs ---"
+    docker compose $COMPOSE_FILES logs server
+fi
+
 docker compose $COMPOSE_FILES down
 
 ELAPSED=$(( SECONDS - START_SECONDS ))
 REPORT_PATH="$(pwd)/frontend/playwright-report/index.html"
 
-if [ $PLAYWRIGHT_EXIT_CODE -ne 0 ]; then
-    echo "E2E tests failed in ${ELAPSED}s"
+OVERALL_EXIT_CODE=$(( CLI_EXIT_CODE || PLAYWRIGHT_EXIT_CODE ))
+if [ $OVERALL_EXIT_CODE -ne 0 ]; then
+    echo "E2E tests failed in ${ELAPSED}s (cli=$CLI_EXIT_CODE playwright=$PLAYWRIGHT_EXIT_CODE)"
     echo "Report: file://${REPORT_PATH}"
-    exit $PLAYWRIGHT_EXIT_CODE
+    exit $OVERALL_EXIT_CODE
 else
     echo "E2E tests passed in ${ELAPSED}s"
     echo "Report: file://${REPORT_PATH}"

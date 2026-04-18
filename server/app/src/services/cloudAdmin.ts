@@ -93,8 +93,9 @@ export const createCloudAdminService = ({
   }
 
   function uniqueName(id: string): string {
-    return `${projectId.split('-')[0]}-${id.slice(0, 20)}-${uuid().replaceAll(
-      '-',
+    const sanitizedId = id.replace(/[^a-z0-9-]/gi, '-');
+    return `${projectId.split('-')[0]}-${sanitizedId.slice(0, 20)}-${uuid().replace(
+      /-/g,
       '',
     )}`
       .slice(0, 30)

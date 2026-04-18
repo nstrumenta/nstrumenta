@@ -35,6 +35,7 @@ services:
       - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NSTRUMENTA_SERVER_URL=http://server:5999
+      - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
     volumes:
       - ./cli:/app/cli-tests
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro

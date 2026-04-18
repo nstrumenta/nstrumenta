@@ -13,12 +13,14 @@ fi
 export GOOGLE_CLOUD_PROJECT="$CI_PROJECT_ID"
 gcloud config set project "$CI_PROJECT_ID" --quiet
 
-# Check if application default credentials are valid before forcing a new login
-if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
-  echo "Authenticating application-default credentials..."
-  gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
+# Check if application default credentials are valid and using the correct impersonation
+ADC_FILE="$HOME/.config/gcloud/application_default_credentials.json"
+if grep -q "$CI_SERVICE_ACCOUNT" "$ADC_FILE" 2>/dev/null && \
+   gcloud auth application-default print-access-token >/dev/null 2>&1; then
+  echo "Application default credentials are valid and correctly impersonating $CI_SERVICE_ACCOUNT."
 else
-  echo "Application default credentials are valid."
+  echo "Authenticating application-default credentials with impersonation..."
+  gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
 fi
 
 # Fetch Developer Seed Credentials from GitHub

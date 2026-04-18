@@ -287,7 +287,6 @@ export const publishModule = async (module: ModuleExtended) => {
     throw new Error(message);
   }
 
-  console.log(`\n\n=== DEBUG URL ===\nUpload URL: ${url}\n=================\n`);
   const fileBuffer = await fs.readFile(downloadLocation);
 
   // start the request, return promise
