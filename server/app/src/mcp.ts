@@ -21,7 +21,6 @@ import { storage } from './authentication/ServiceAccount';
 
 const cloudAdminService = createCloudAdminService({
     firestore,
-    spawn,
     storage,
 });
 

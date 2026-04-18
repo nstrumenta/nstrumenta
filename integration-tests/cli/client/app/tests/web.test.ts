@@ -81,35 +81,26 @@ describe('web', () => {
     expect(result).toEqual(expect.stringMatching(moduleName));
   }, 10_000);
 
-  test('host serves html from GCS', async () => {
+  test('host serves html via Cloud Run preview service', async () => {
     const hostOutput = await asyncSpawn('nst', `module host ${moduleName}`.split(' '), {
       cwd: testFolderBase,
     });
     console.log(hostOutput);
-    expect(hostOutput).toContain('created action');
+    expect(hostOutput).toContain('Action completed successfully');
 
-    // Poll module list until the url field is populated by the host action
-    let hostedUrl = '';
-    for (let i = 0; i < 30; i++) {
-      const listOutput = await asyncSpawn('nst', 'module list --json'.split(' '), {
-        cwd: testFolderBase,
-        quiet: true,
-      });
-      const modules = JSON.parse(listOutput);
-      const match = modules.find((m: any) => m.name === moduleName && m.url);
-      if (match) {
-        hostedUrl = match.url;
-        break;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-    }
-
-    expect(hostedUrl).toBeTruthy();
+    const listOutput = await asyncSpawn('nst', 'module list --json'.split(' '), {
+      cwd: testFolderBase,
+      quiet: true,
+    });
+    const modules = JSON.parse(listOutput);
+    const hostedModule = modules.find((m: any) => m.name === moduleName && m.url);
+    expect(hostedModule).toBeTruthy();
+    const hostedUrl: string = hostedModule.url;
     console.log(`hosted URL: ${hostedUrl}`);
 
     const response = await fetch(hostedUrl);
     expect(response.status).toBe(200);
     const htmlText = await response.text();
     expect(htmlText).toContain(`<title>${testId}</title>`);
-  }, 90_000);
+  }, 300_000);
 });

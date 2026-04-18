@@ -106,6 +106,7 @@ resource "google_project_service" "fs" {
     "firebasehosting.googleapis.com",
     "iamcredentials.googleapis.com",
     "iam.googleapis.com",
+    "artifactregistry.googleapis.com",
   ])
   service = each.key
 
@@ -154,6 +155,10 @@ resource "google_identity_platform_config" "auth" {
   depends_on = [
     google_project_service.fs
   ]
+
+  lifecycle {
+    ignore_changes = [authorized_domains]
+  }
 }
 
 # GitHub OAuth configuration
@@ -330,6 +335,13 @@ resource "google_storage_bucket_iam_member" "app_engine_object_admin" {
   member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
+# Cloud Build workers run as the compute default SA — grant read access to the module bucket
+resource "google_storage_bucket_iam_member" "cloudbuild_object_viewer" {
+  bucket = google_storage_bucket.default.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
 resource "google_service_account_iam_member" "app_engine_token_creator" {
   service_account_id = data.google_app_engine_default_service_account.default.name
   role               = "roles/iam.serviceAccountTokenCreator"
@@ -443,6 +455,10 @@ resource "google_cloud_run_v2_service" "default" {
       env {
         name  = "GOOGLE_CLOUD_PROJECT"
         value = google_project.fs.project_id
+      }
+      env {
+        name  = "PREVIEW_IMAGE_REGISTRY"
+        value = "us-west1-docker.pkg.dev/${google_project.fs.project_id}/preview"
       }
       env {
         name = "NSTRUMENTA_API_KEY_PEPPER"
@@ -592,6 +608,40 @@ resource "google_artifact_registry_repository" "server" {
   format        = "DOCKER"
 }
 
+# artifact registry for per-project preview images built by hostModule
+resource "google_artifact_registry_repository" "preview" {
+  project       = google_project.fs.project_id
+  location      = "us-west1"
+  repository_id = "preview"
+  description   = "Docker repository for hosted module preview images"
+  format        = "DOCKER"
+
+  depends_on = [google_project_service.fs["artifactregistry.googleapis.com"]]
+}
+
+# Allow the app engine default SA (used by Cloud Run server) to push preview images
+resource "google_artifact_registry_repository_iam_member" "server_preview_writer" {
+  project    = google_project.fs.project_id
+  location   = google_artifact_registry_repository.preview.location
+  repository = google_artifact_registry_repository.preview.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# Allow the app engine default SA to submit Cloud Build jobs
+resource "google_project_iam_member" "server_cloudbuild_builder" {
+  project = google_project.fs.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# Allow the app engine default SA to deploy Cloud Run services
+resource "google_project_iam_member" "server_run_admin" {
+  project = google_project.fs.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 # Allow CI service account to push images to this project's Artifact Registry (for CD image promotion)
 resource "google_artifact_registry_repository_iam_member" "ci_writer" {
   count      = var.ci_service_account_email != null ? 1 : 0
@@ -661,6 +711,10 @@ output "domain" {
 
 output "cloud_run_url" {
   value = google_cloud_run_v2_service.default.uri
+}
+
+output "preview_image_registry" {
+  value = "us-west1-docker.pkg.dev/${google_project.fs.project_id}/preview"
 }
 
 output "firebase_hosting_site" {

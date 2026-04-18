@@ -65,6 +65,9 @@ export const Host = async function (
     const mcp = new McpClient();
     const { actionId } = await mcp.hostModule(moduleName, { version, args });
     console.log(`created action: ${actionId} to host ${moduleName}`);
+    if (actionId) {
+      await waitForAction(actionId);
+    }
   } catch (err) {
     console.error('Error:', (err as Error).message);
     process.exit(1);
@@ -158,7 +161,7 @@ const waitForAction = async (actionId: string) => {
   console.log(`Action ${actionId} created. Watching for completion...`);
   try {
     const mcp = new McpClient();
-    const result = await mcp.watchAction(actionId, 600000);
+    const result = await mcp.watchAction(actionId, 240000);
     if (result.status === 'complete') {
       console.log('✓ Action completed successfully');
     } else if (result.status === 'error') {

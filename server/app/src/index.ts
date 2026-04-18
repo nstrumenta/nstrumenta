@@ -126,6 +126,5 @@ const cloudDataJobService = createCloudDataJobService({
 })
 const cloudAdminService = createCloudAdminService({
   firestore,
-  spawn,
   storage,
 })

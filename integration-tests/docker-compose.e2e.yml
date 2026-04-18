@@ -15,6 +15,7 @@ services:
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NSTRUMENTA_API_URL=http://server:5999
+      - PREVIEW_IMAGE_REGISTRY=${PREVIEW_IMAGE_REGISTRY}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     healthcheck:
@@ -36,11 +37,12 @@ services:
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NSTRUMENTA_SERVER_URL=http://server:5999
       - NSTRUMENTA_API_KEY=${NSTRUMENTA_API_KEY}
+      - CLI_TEST_ARGS=${CLI_TEST_ARGS:-}
     volumes:
       - ./cli:/app/cli-tests
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     working_dir: /app/cli-tests/client/app
-    command: sh -c 'npm install && npm test'
+    command: sh -c 'npm install && npm test -- ${CLI_TEST_ARGS}'
 
   playwright:
     build:

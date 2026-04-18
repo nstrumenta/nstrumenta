@@ -53,4 +53,6 @@ if [[ " $* " == *" --api-key "* ]]; then
   fi
 fi
 
+export PREVIEW_IMAGE_REGISTRY="us-west1-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/preview"
+
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"

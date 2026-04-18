@@ -10,7 +10,17 @@
 cd "$(dirname "$0")"
 
 START_SECONDS=$SECONDS
-TEST_ARGS="$*"
+CLI_TEST_ARGS=""
+PLAYWRIGHT_TEST_ARGS=""
+for arg in "$@"; do
+    if echo "$arg" | grep -q 'tests/.*\.ts'; then
+        CLI_TEST_ARGS="$arg"
+    else
+        PLAYWRIGHT_TEST_ARGS="$PLAYWRIGHT_TEST_ARGS $arg"
+    fi
+done
+export CLI_TEST_ARGS
+TEST_ARGS="$PLAYWRIGHT_TEST_ARGS"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
     echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
