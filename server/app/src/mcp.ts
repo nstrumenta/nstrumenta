@@ -16,7 +16,6 @@ import { cancelAgentActions } from './api/closePendingAgentActions';
 import { parseOrgProject, orgProjectPath } from './shared/utils';
 import { createCloudAdminService } from './services/cloudAdmin';
 import { createCloudDataJobService } from './services/cloudDataJob';
-import { spawn } from 'child_process';
 import { storage } from './authentication/ServiceAccount';
 
 const cloudAdminService = createCloudAdminService({
@@ -26,8 +25,6 @@ const cloudAdminService = createCloudAdminService({
 
 const cloudDataJobService = createCloudDataJobService({
     firestore,
-    spawn,
-    storage,
 });
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {

@@ -57,6 +57,8 @@ vi.mock('../authentication/ServiceAccount', () => ({
     })),
     collection: mockFirestoreCollection
   },
+  storage: {},
+  bucketName: 'test-bucket',
   serviceAccount: { project_id: 'test' },
   projectId: 'test-project',
   cloudRegion: 'us-west1',

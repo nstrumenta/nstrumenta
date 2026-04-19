@@ -1,7 +1,7 @@
 import { Firestore, FieldValue } from '@google-cloud/firestore'
 import { randomBytes, scryptSync } from 'crypto'
 import { v4 as uuid } from 'uuid'
-import { ActionData } from '../index'
+import { ActionData } from '../types'
 import { projectId } from '../authentication/ServiceAccount'
 import { orgProjectPath, parseOrgProject } from '../shared/utils'
 

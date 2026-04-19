@@ -3,7 +3,7 @@ import { Firestore } from '@google-cloud/firestore'
 import { ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
 import { bucketName, cloudRegion, previewImageRegistry, projectId } from '../authentication/ServiceAccount'
-import { ActionData } from '../index'
+import { ActionData } from '../types'
 import { parseOrgProject } from '../shared/utils'
 
 export interface CloudAdminService {
