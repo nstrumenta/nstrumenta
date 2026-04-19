@@ -2,12 +2,9 @@ import { CloudBuildClient } from '@google-cloud/cloudbuild'
 import { Firestore } from '@google-cloud/firestore'
 import { ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
-import { bucketName, projectId } from '../authentication/ServiceAccount'
+import { bucketName, cloudRegion, previewImageRegistry, projectId } from '../authentication/ServiceAccount'
 import { ActionData } from '../index'
 import { parseOrgProject } from '../shared/utils'
-
-const PREVIEW_IMAGE_REGISTRY = process.env.PREVIEW_IMAGE_REGISTRY
-const PREVIEW_REGION = 'us-west1'
 
 export interface CloudAdminService {
   hostModule(
@@ -53,7 +50,7 @@ export const createCloudAdminService = ({ firestore, storage }: CloudAdminServic
 
   async function getPreviousImage(nstProjectId: string): Promise<string | null> {
     const serviceName = previewServiceName(nstProjectId)
-    const projectPath = `projects/${projectId}/locations/${PREVIEW_REGION}/services/${serviceName}`
+    const projectPath = `projects/${projectId}/locations/${cloudRegion}/services/${serviceName}`
     try {
       const [service] = await cloudRun.getService({ name: projectPath })
       const image = service.template?.containers?.[0]?.image
@@ -80,7 +77,7 @@ export const createCloudAdminService = ({ firestore, storage }: CloudAdminServic
 
   async function deployPreviewService(nstProjectId: string, imageUri: string): Promise<string> {
     const serviceName = previewServiceName(nstProjectId)
-    const parent = `projects/${projectId}/locations/${PREVIEW_REGION}`
+    const parent = `projects/${projectId}/locations/${cloudRegion}`
     const fullServiceName = `${parent}/services/${serviceName}`
 
     const serviceConfig = {
@@ -129,9 +126,6 @@ export const createCloudAdminService = ({ firestore, storage }: CloudAdminServic
     data: ActionData,
   ) {
     console.log({ nstProjectId }, 'hostModule')
-    if (!PREVIEW_IMAGE_REGISTRY) {
-      throw new Error('PREVIEW_IMAGE_REGISTRY env var is required for hostModule')
-    }
 
     try {
       await firestore.doc(actionPath).set({ status: 'started' }, { merge: true })
@@ -143,7 +137,7 @@ export const createCloudAdminService = ({ firestore, storage }: CloudAdminServic
       const tarGcsPath = `${storagePrefix}/${modulePath}`
 
       const previousImage = await getPreviousImage(nstProjectId)
-      const newImageTag = `${PREVIEW_IMAGE_REGISTRY}/${previewServiceName(nstProjectId)}:latest`
+      const newImageTag = `${previewImageRegistry}/${previewServiceName(nstProjectId)}:latest`
       const dockerfile = buildDockerfile(moduleName, previousImage)
 
       const [buildOperation] = await cloudBuild.createBuild({

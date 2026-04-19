@@ -1,7 +1,7 @@
 import { Firestore } from '@google-cloud/firestore'
 import { ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
-import { projectId } from '../authentication/ServiceAccount'
+import { cloudRegion, projectId } from '../authentication/ServiceAccount'
 import { orgProjectPath } from '../shared/utils'
 import {
   ActionData,
@@ -10,7 +10,7 @@ import {
 } from '../index'
 import { ApiKeyService } from './ApiKeyService'
 
-const REGION = 'us-west1'
+const REGION = cloudRegion
 
 const buildResourceName = (actionPath: string) => {
   const parts = actionPath.split('/')

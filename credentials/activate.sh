@@ -53,6 +53,10 @@ if [[ " $* " == *" --api-key "* ]]; then
   fi
 fi
 
-export PREVIEW_IMAGE_REGISTRY="us-west1-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/preview"
 
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"
+
+# Derive CLOUD_REGION and PREVIEW_IMAGE_REGISTRY from terraform outputs
+TERRAFORM_DIR="$NST_ROOT/terraform"
+export CLOUD_REGION=$(cd "$TERRAFORM_DIR" && terraform output -raw location_id 2>/dev/null || echo 'us-west1')
+export PREVIEW_IMAGE_REGISTRY=$(cd "$TERRAFORM_DIR" && terraform output -raw preview_image_registry 2>/dev/null || echo '')

@@ -501,8 +501,12 @@ resource "google_cloud_run_v2_service" "default" {
         value = google_project.fs.project_id
       }
       env {
+        name  = "CLOUD_REGION"
+        value = var.location_id
+      }
+      env {
         name  = "PREVIEW_IMAGE_REGISTRY"
-        value = "us-west1-docker.pkg.dev/${google_project.fs.project_id}/preview"
+        value = "${google_artifact_registry_repository.preview.location}-docker.pkg.dev/${google_project.fs.project_id}/${google_artifact_registry_repository.preview.repository_id}"
       }
       env {
         name = "NSTRUMENTA_API_KEY_PEPPER"
@@ -664,7 +668,7 @@ resource "google_cloudfunctions2_function" "delete" {
 # artifact registry for server container images
 resource "google_artifact_registry_repository" "server" {
   project       = google_project.fs.project_id
-  location      = "us-west1"
+  location      = var.location_id
   repository_id = "server"
   description   = "Docker repository for server images"
   format        = "DOCKER"
@@ -673,7 +677,7 @@ resource "google_artifact_registry_repository" "server" {
 # artifact registry for per-project preview images built by hostModule
 resource "google_artifact_registry_repository" "preview" {
   project       = google_project.fs.project_id
-  location      = "us-west1"
+  location      = var.location_id
   repository_id = "preview"
   description   = "Docker repository for hosted module preview images"
   format        = "DOCKER"
@@ -767,6 +771,10 @@ output "project_id" {
   value = google_project.fs.project_id
 }
 
+output "location_id" {
+  value = var.location_id
+}
+
 output "domain" {
   value = local.domain
 }
@@ -776,7 +784,7 @@ output "cloud_run_url" {
 }
 
 output "preview_image_registry" {
-  value = "us-west1-docker.pkg.dev/${google_project.fs.project_id}/preview"
+  value = "${google_artifact_registry_repository.preview.location}-docker.pkg.dev/${google_project.fs.project_id}/${google_artifact_registry_repository.preview.repository_id}"
 }
 
 output "firebase_hosting_site" {

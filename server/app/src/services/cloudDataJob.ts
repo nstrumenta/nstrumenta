@@ -2,7 +2,7 @@ import { Firestore } from '@google-cloud/firestore'
 import { JobsClient, ExecutionsClient, ServicesClient } from '@google-cloud/run'
 import { Storage } from '@google-cloud/storage'
 import { ChildProcessWithoutNullStreams } from 'child_process'
-import { projectId as gcpProjectId } from '../authentication/ServiceAccount'
+import { cloudRegion, projectId as gcpProjectId } from '../authentication/ServiceAccount'
 import {
   ActionData,
   nstrumentaImageRepository,
@@ -10,7 +10,7 @@ import {
 } from '../index'
 import { CreateApiKeyService } from './ApiKeyService'
 
-const REGION = 'us-west1'
+const REGION = cloudRegion
 
 export interface CloudDataJobService {
   createJob(

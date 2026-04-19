@@ -16,6 +16,8 @@ fi
 
 eval "$(node get-project-config.js)"
 export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT 2>/dev/null || echo '')
+export CLOUD_REGION=$(cd ../terraform && terraform output -raw location_id 2>/dev/null || echo 'us-west1')
+export PREVIEW_IMAGE_REGISTRY=$(cd ../terraform && terraform output -raw preview_image_registry 2>/dev/null || echo '')
 
 COMPOSE_FILES="-f docker-compose.e2e.yml"
 docker compose $COMPOSE_FILES up --build -d server

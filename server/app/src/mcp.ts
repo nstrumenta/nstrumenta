@@ -1280,7 +1280,8 @@ server.registerTool(
             const { ServicesClient } = require('@google-cloud/run');
             
             const servicesClient = new ServicesClient();
-            const parent = `projects/${gcpProjectId}/locations/us-west1`;
+            const { cloudRegion: region } = require('./authentication/ServiceAccount');
+            const parent = `projects/${gcpProjectId}/locations/${region}`;
             const [services] = await servicesClient.listServices({ parent });
 
             return {

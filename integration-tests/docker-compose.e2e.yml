@@ -15,6 +15,7 @@ services:
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NSTRUMENTA_API_URL=http://server:5999
+      - CLOUD_REGION=${CLOUD_REGION}
       - PREVIEW_IMAGE_REGISTRY=${PREVIEW_IMAGE_REGISTRY}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
