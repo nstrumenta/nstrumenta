@@ -28,8 +28,11 @@ test.describe('Data Detail', () => {
     const browserErrors = [];
     page.on('console', msg => {
       if (msg.type() === 'error') {
-        console.log('Browser error: ' + msg.text());
-        browserErrors.push(msg.text());
+        const text = msg.text();
+        console.log('Browser error: ' + text);
+        if (!text.includes('Could not reach Cloud Firestore backend')) {
+          browserErrors.push(text);
+        }
       }
     });
 
