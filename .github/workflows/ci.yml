@@ -367,12 +367,14 @@ jobs:
           workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
           service_account: ${{ env.PROD_SERVICE_ACCOUNT }}
       - name: Deploy to Cloud Run
+        env:
+          PROD_PREVIEW_IMAGE_REGISTRY: ${{ vars.PROD_PREVIEW_IMAGE_REGISTRY }}
         run: |
           gcloud run services update cloudrun-service \
             --project=$PROD_PROJECT_ID \
             --image=$PROD_IMAGE \
             --region=us-west1 \
-            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$PROD_PROJECT_ID"
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$PROD_PROJECT_ID,CLOUD_REGION=$CLOUD_REGION,PREVIEW_IMAGE_REGISTRY=$PROD_PREVIEW_IMAGE_REGISTRY"
 
   deploy-preview:
     needs: [build-frontend, build-ci-images]
