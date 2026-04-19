@@ -20,6 +20,7 @@ import { registerOAuthRoutes } from './oauth'
 import { registerOrgRoutes } from './orgRoutes'
 import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
+import { registerGithubRoutes } from './githubRoutes'
 
 const version = require('../package.json').version
 
@@ -69,6 +70,7 @@ registerOAuthRoutes(app)
 registerOrgRoutes(app)
 registerUserRoutes(app)
 registerAdminRoutes(app)
+registerGithubRoutes(app)
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version, buildSha: nstrumentaImageVersionTag })

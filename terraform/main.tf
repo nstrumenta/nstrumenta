@@ -56,6 +56,8 @@ variable "trusted_github_actors" {
   default     = []
 }
 
+
+
 locals {
   domain = var.custom_domain
 }
@@ -410,6 +412,48 @@ resource "google_secret_manager_secret_iam_member" "app_engine_pepper" {
   member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
+# GitHub App webhook secret (auto-generated; copy the output value into the App's webhook settings)
+resource "random_password" "github_webhook_secret" {
+  length  = 32
+  special = false
+}
+
+resource "google_secret_manager_secret" "github_webhook_secret" {
+  secret_id = "GITHUB_APP_WEBHOOK_SECRET"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "github_webhook_secret" {
+  secret      = google_secret_manager_secret.github_webhook_secret.id
+  secret_data = random_password.github_webhook_secret.result
+}
+
+resource "google_secret_manager_secret_iam_member" "server_webhook_secret" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.github_webhook_secret.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# GitHub App private key (populated manually: download from github.com/settings/apps/nstrumenta-github-ci or -github)
+resource "google_secret_manager_secret" "github_app_private_key" {
+  secret_id = "GITHUB_APP_PRIVATE_KEY"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "server_github_app_private_key" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.github_app_private_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 # server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
   name                = "cloudrun-service"
@@ -476,6 +520,24 @@ resource "google_cloud_run_v2_service" "default" {
       env {
         name  = "FIREBASE_APP_ID"
         value = google_firebase_web_app.web_app.app_id
+      }
+      env {
+        name = "GITHUB_APP_WEBHOOK_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = "GITHUB_APP_WEBHOOK_SECRET"
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "GITHUB_APP_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = "GITHUB_APP_PRIVATE_KEY"
+            version = "latest"
+          }
+        }
       }
     }
     scaling {
@@ -727,4 +789,15 @@ output "workload_identity_provider" {
 
 output "service_account_email" {
   value = data.google_app_engine_default_service_account.default.email
+}
+
+output "github_app_webhook_secret" {
+  description = "Paste this value into the GitHub App webhook secret field."
+  value       = random_password.github_webhook_secret.result
+  sensitive   = true
+}
+
+output "github_app_private_key_secret_name" {
+  description = "After apply, populate this secret with the .pem downloaded from the GitHub App settings."
+  value       = google_secret_manager_secret.github_app_private_key.name
 }
