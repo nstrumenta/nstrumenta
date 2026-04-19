@@ -36,7 +36,8 @@ if [ -n "$NST_DEV_EMAIL" ] && [ -n "$NST_DEV_PASSWORD" ] && [ -n "$NST_DEV_USERN
   export NST_DEV_USERNAME
   export NST_DEV_PROJECT
   export NSTRUMENTA_API_URL=$NST_API_URL
-  export NSTRUMENTA_API_KEY_PEPPER=$(gh secret get NSTRUMENTA_API_KEY_PEPPER 2>/dev/null || echo "")
+  NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project="$GOOGLE_CLOUD_PROJECT") || { echo "ERROR: Failed to read NSTRUMENTA_API_KEY_PEPPER from GCP secrets"; return 1; }
+  export NSTRUMENTA_API_KEY_PEPPER
   echo "Dev Seed Credentials active."
 else
   echo "Warning: Some Dev Seed Credentials are missing. Ensure NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, and NST_API_URL are set."
@@ -58,5 +59,7 @@ echo "Activated: project=$GOOGLE_CLOUD_PROJECT"
 
 # Derive CLOUD_REGION and PREVIEW_IMAGE_REGISTRY from terraform outputs
 TERRAFORM_DIR="$NST_ROOT/terraform"
-export CLOUD_REGION=$(cd "$TERRAFORM_DIR" && terraform output -raw location_id 2>/dev/null || echo 'us-west1')
-export PREVIEW_IMAGE_REGISTRY=$(cd "$TERRAFORM_DIR" && terraform output -raw preview_image_registry 2>/dev/null || echo '')
+CLOUD_REGION=$(cd "$TERRAFORM_DIR" && terraform output -raw location_id) || { echo "ERROR: Failed to get CLOUD_REGION from terraform output"; return 1; }
+export CLOUD_REGION
+PREVIEW_IMAGE_REGISTRY=$(cd "$TERRAFORM_DIR" && terraform output -raw preview_image_registry) || { echo "ERROR: Failed to get PREVIEW_IMAGE_REGISTRY from terraform output"; return 1; }
+export PREVIEW_IMAGE_REGISTRY

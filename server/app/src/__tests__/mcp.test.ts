@@ -45,7 +45,8 @@ vi.mock('../authentication', () => ({
 }))
 
 vi.mock('../authentication/firebaseAuth', () => ({
-  firebaseAuth: mockFirebaseAuthFn
+  firebaseAuth: mockFirebaseAuthFn,
+  withFirebaseAuth: (fn: any) => fn,
 }))
 
 vi.mock('../authentication/ServiceAccount', () => ({
@@ -56,7 +57,10 @@ vi.mock('../authentication/ServiceAccount', () => ({
     })),
     collection: mockFirestoreCollection
   },
-  serviceAccount: { project_id: 'test' }
+  serviceAccount: { project_id: 'test' },
+  projectId: 'test-project',
+  cloudRegion: 'us-west1',
+  previewImageRegistry: 'us-west1-docker.pkg.dev/test-project/preview',
 }))
 
 vi.mock('../api/setAgentAction', () => ({

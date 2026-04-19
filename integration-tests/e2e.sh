@@ -30,7 +30,8 @@ fi
 if [ ! -d "node_modules" ]; then npm install; fi
 
 eval "$(node get-project-config.js)"
-export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT 2>/dev/null || echo '')
+NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT)
+export NSTRUMENTA_API_KEY_PEPPER
 
 if [ ! -d "../frontend/dist" ]; then
     echo "Building frontend..."
