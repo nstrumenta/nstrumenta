@@ -15,7 +15,7 @@ case "$SUBCOMMAND" in
     $COMPOSE down
     ;;
   up|*)
-    source "$NST_ROOT/credentials/activate.sh"
+    source "$NST_ROOT/credentials/activate.sh" || exit 1
     eval "$(cd "$NST_ROOT/integration-tests" && node get-project-config.js)"
     $COMPOSE up -d "${@:2}"
     ;;

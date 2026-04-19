@@ -15,6 +15,8 @@ env:
   PROD_WIF_PROVIDER: ${{ vars.PROD_WIF_PROVIDER }}
   PROD_SERVICE_ACCOUNT: ${{ vars.PROD_SERVICE_ACCOUNT }}
   PROD_PROJECT_ID: ${{ vars.PROD_PROJECT_ID }}
+  CLOUD_REGION: ${{ vars.CLOUD_REGION }}
+  PREVIEW_IMAGE_REGISTRY: ${{ vars.PREVIEW_IMAGE_REGISTRY }}
 
 permissions:
   contents: read
@@ -186,28 +188,10 @@ jobs:
           mkdir -p $HOME/.config/gcloud
           cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
           gcloud config set project $GOOGLE_CLOUD_PROJECT
-      - name: Read config from CI Cloud Run service
-        id: cloudrun-config
-        env:
-          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: |
-          ENV_YAML=$(gcloud run services describe cloudrun-service \
-            --project=$GOOGLE_CLOUD_PROJECT --region=us-west1 \
-            --format='yaml(spec.template.spec.containers[0].env)')
-          CLOUD_REGION=$(echo "$ENV_YAML" | grep -A1 'name: CLOUD_REGION' | grep 'value:' | awk '{print $2}')
-          PREVIEW_IMAGE_REGISTRY=$(echo "$ENV_YAML" | grep -A1 'name: PREVIEW_IMAGE_REGISTRY' | grep 'value:' | awk '{print $2}')
-          if [ -z "$CLOUD_REGION" ] || [ -z "$PREVIEW_IMAGE_REGISTRY" ]; then
-            echo "::error::Failed to read CLOUD_REGION or PREVIEW_IMAGE_REGISTRY from cloudrun-service"
-            exit 1
-          fi
-          echo "cloud_region=$CLOUD_REGION" >> "$GITHUB_OUTPUT"
-          echo "preview_image_registry=$PREVIEW_IMAGE_REGISTRY" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - name: Run Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-          CLOUD_REGION: ${{ steps.cloudrun-config.outputs.cloud_region }}
-          PREVIEW_IMAGE_REGISTRY: ${{ steps.cloudrun-config.outputs.preview_image_registry }}
         run: cd integration-tests && ./frontend-e2e.sh
 
   cli-e2e:
@@ -241,28 +225,10 @@ jobs:
           mkdir -p $HOME/.config/gcloud
           cp $GOOGLE_APPLICATION_CREDENTIALS $HOME/.config/gcloud/application_default_credentials.json
           gcloud config set project $GOOGLE_CLOUD_PROJECT
-      - name: Read config from CI Cloud Run service
-        id: cloudrun-config
-        env:
-          GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-        run: |
-          ENV_YAML=$(gcloud run services describe cloudrun-service \
-            --project=$GOOGLE_CLOUD_PROJECT --region=us-west1 \
-            --format='yaml(spec.template.spec.containers[0].env)')
-          CLOUD_REGION=$(echo "$ENV_YAML" | grep -A1 'name: CLOUD_REGION' | grep 'value:' | awk '{print $2}')
-          PREVIEW_IMAGE_REGISTRY=$(echo "$ENV_YAML" | grep -A1 'name: PREVIEW_IMAGE_REGISTRY' | grep 'value:' | awk '{print $2}')
-          if [ -z "$CLOUD_REGION" ] || [ -z "$PREVIEW_IMAGE_REGISTRY" ]; then
-            echo "::error::Failed to read CLOUD_REGION or PREVIEW_IMAGE_REGISTRY from cloudrun-service"
-            exit 1
-          fi
-          echo "cloud_region=$CLOUD_REGION" >> "$GITHUB_OUTPUT"
-          echo "preview_image_registry=$PREVIEW_IMAGE_REGISTRY" >> "$GITHUB_OUTPUT"
       - uses: docker/setup-buildx-action@v3
       - name: Run CLI E2E tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
-          CLOUD_REGION: ${{ steps.cloudrun-config.outputs.cloud_region }}
-          PREVIEW_IMAGE_REGISTRY: ${{ steps.cloudrun-config.outputs.preview_image_registry }}
         run: cd integration-tests && ./cli-e2e.sh
 
   # ---------------------------------------------------------------------------
