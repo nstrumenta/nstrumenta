@@ -1,6 +1,10 @@
 import crypto from 'crypto'
 import express from 'express'
+import rateLimit from 'express-rate-limit'
 import { firestore } from './authentication/ServiceAccount'
+
+const webhookRateLimit = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false })
+const linkRateLimit = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false })
 
 const GITHUB_APP_WEBHOOK_SECRET = process.env.GITHUB_APP_WEBHOOK_SECRET
 
@@ -82,7 +86,7 @@ async function handlePullRequest(action: string, installationId: string, repoFul
 
 export function registerGithubRoutes(app: express.Application) {
   // Must receive raw body for HMAC verification — register before global json middleware applies to this path
-  app.post('/api/github/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  app.post('/api/github/webhook', webhookRateLimit, express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['x-hub-signature-256'] as string | undefined
     if (!verifySignature(req.body as Buffer, sig)) {
       res.status(401).json({ error: 'invalid signature' })
@@ -133,7 +137,7 @@ export function registerGithubRoutes(app: express.Application) {
   })
 
   // Link an installation to a project (called from frontend after App install callback)
-  app.post('/api/github/installations/link', express.json(), async (req, res) => {
+  app.post('/api/github/installations/link', linkRateLimit, express.json(), async (req, res) => {
     const { installationId, projectId } = req.body
     if (!installationId || !projectId) {
       res.status(400).json({ error: 'installationId and projectId are required' })
