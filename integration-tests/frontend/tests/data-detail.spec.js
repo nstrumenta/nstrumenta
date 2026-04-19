@@ -25,8 +25,12 @@ async function signIn(page) {
 
 test.describe('Data Detail', () => {
   test('should upload a JSON file and render its contents in the detail view', async ({ page }) => {
+    const browserErrors = [];
     page.on('console', msg => {
-      if (msg.type() === 'error') console.log('Browser error: ' + msg.text());
+      if (msg.type() === 'error') {
+        console.log('Browser error: ' + msg.text());
+        browserErrors.push(msg.text());
+      }
     });
 
     await signIn(page);
@@ -47,14 +51,17 @@ test.describe('Data Detail', () => {
     const fileBuffer = Buffer.from(JSON.stringify(fileContent));
 
     const uploadDone = page.waitForResponse(
-      r => new URL(r.url()).hostname.endsWith('.googleapis.com') && r.request().method() === 'PUT'
-    );
+      r => new URL(r.url()).hostname.endsWith('.googleapis.com') && r.request().method() === 'PUT',
+      { timeout: 10000 }
+    ).catch(() => null);
     const fileChooserPromise = page.waitForEvent('filechooser');
     await page.locator('button#fab').click();
     const fileChooser = await fileChooserPromise;
     await fileChooser.setFiles({ name: filename, mimeType: 'application/json', buffer: fileBuffer });
 
     const uploadResponse = await uploadDone;
+    expect(browserErrors, 'no browser errors before upload').toEqual([]);
+    expect(uploadResponse, 'GCS upload response should exist — check server signed URL generation').not.toBeNull();
     expect(uploadResponse.status(), 'GCS upload should succeed').toBeLessThan(400);
 
     // File should appear in the data table (waits for storageObjectFinalize → Firestore)

@@ -14,6 +14,18 @@ import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
 import { parseOrgProject, orgProjectPath } from './shared/utils';
+import { createCloudAdminService } from './services/cloudAdmin';
+import { createCloudDataJobService } from './services/cloudDataJob';
+import { storage } from './authentication/ServiceAccount';
+
+const cloudAdminService = createCloudAdminService({
+    firestore,
+    storage,
+});
+
+const cloudDataJobService = createCloudDataJobService({
+    firestore,
+});
 
 async function createProjectAction(projectId: string, action: any): Promise<string> {
     const path = `${orgProjectPath(projectId)}/actions`;
@@ -404,6 +416,10 @@ server.registerTool(
                 },
             };
             const actionId = await createProjectAction(projectId, action);
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
+            
+            // Fire and forget the background process
+            cloudAdminService.hostModule(actionPath, projectId, action as any).catch(console.error);
 
             return {
                 content: [
@@ -461,6 +477,10 @@ server.registerTool(
             };
             console.log('Creating action:', JSON.stringify(action, null, 2));
             const actionId = await createProjectAction(projectId, action);
+            const actionPath = `${orgProjectPath(projectId)}/actions/${actionId}`;
+            
+            // Fire and forget the background process
+            cloudDataJobService.createService(actionPath, projectId, action as any).catch(console.error);
 
             return {
                 content: [
@@ -1257,7 +1277,8 @@ server.registerTool(
             const { ServicesClient } = require('@google-cloud/run');
             
             const servicesClient = new ServicesClient();
-            const parent = `projects/${gcpProjectId}/locations/us-west1`;
+            const { cloudRegion: region } = require('./authentication/ServiceAccount');
+            const parent = `projects/${gcpProjectId}/locations/${region}`;
             const [services] = await servicesClient.listServices({ parent });
 
             return {

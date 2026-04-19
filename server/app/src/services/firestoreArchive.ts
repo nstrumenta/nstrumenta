@@ -8,7 +8,7 @@ import {
   DocumentSnapshot,
   Firestore,
 } from '@google-cloud/firestore'
-import { ActionData } from '../index'
+import { ActionData } from '../types'
 import { orgProjectPath } from '../shared/utils'
 
 export interface FirestoreArchiveServiceDependencies {

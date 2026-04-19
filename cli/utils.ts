@@ -98,8 +98,6 @@ export const getFolderFromStorage = async (moduleTarName: string) => {
     }
 
     // get the file, write to the nst directory
-    console.log('get url', url);
-
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);

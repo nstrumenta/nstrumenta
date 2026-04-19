@@ -1,5 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { Request, Response } from 'express'
+
+vi.mock('../authentication/ServiceAccount', () => ({
+  projectId: 'test-project',
+  cloudRegion: 'us-west1',
+  previewImageRegistry: 'us-west1-docker.pkg.dev/test-project/preview',
+  bucketName: 'test-bucket',
+  firestore: {},
+  storage: {},
+}))
+
 import { parseOrgProject } from '../shared/utils'
 
 describe('MCP Tools', () => {

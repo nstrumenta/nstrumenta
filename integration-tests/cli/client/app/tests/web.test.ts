@@ -7,12 +7,14 @@ const testId = process.env.TEST_ID || randomUUID();
 describe('web', () => {
   const testFolderBase = `./temp/${testId}/web`;
   const moduleName = `web-module-${testId}`;
+  let projectId: string;
+  let version: string;
 
   beforeAll(async () => {
-    const version = `0.0.${Date.now()}`;
+    version = `0.0.${Date.now()}`;
     await mkdir(`${testFolderBase}/.nstrumenta`, { recursive: true });
 
-    const projectId = (
+    projectId = (
       await asyncSpawn('nst', `project id`.split(' '), {
         cwd: testFolderBase,
       })
@@ -79,12 +81,26 @@ describe('web', () => {
     expect(result).toEqual(expect.stringMatching(moduleName));
   }, 10_000);
 
-  test('host', async () => {
-    console.log(`nst module host ${moduleName}`);
-    const output = await asyncSpawn('nst', `module host ${moduleName} -- ${testId}`.split(' '), {
+  test('host serves html via Cloud Run preview service', async () => {
+    const hostOutput = await asyncSpawn('nst', `module host ${moduleName}`.split(' '), {
       cwd: testFolderBase,
     });
+    console.log(hostOutput);
+    expect(hostOutput).toContain('Action completed successfully');
 
-    expect(output).toBeTruthy();
-  }, 5_000);
+    const listOutput = await asyncSpawn('nst', 'module list --json'.split(' '), {
+      cwd: testFolderBase,
+      quiet: true,
+    });
+    const modules = JSON.parse(listOutput);
+    const hostedModule = modules.find((m: any) => m.name === moduleName && m.url);
+    expect(hostedModule).toBeTruthy();
+    const hostedUrl: string = hostedModule.url;
+    console.log(`hosted URL: ${hostedUrl}`);
+
+    const response = await fetch(hostedUrl);
+    expect(response.status).toBe(200);
+    const htmlText = await response.text();
+    expect(htmlText).toContain(`<title>${testId}</title>`);
+  }, 300_000);
 });

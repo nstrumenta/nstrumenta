@@ -1,9 +1,6 @@
 #!/usr/bin/env node
 import { CreateApiKeyService } from './services/ApiKeyService'
-import { createCloudAgentService } from './services/cloudAgent'
-import { createArchiveService } from './services/firestoreArchive'
 
-import { spawn } from 'child_process'
 import cors from 'cors'
 import express, { Request, Response, NextFunction } from 'express'
 import { mkdir } from 'fs/promises'
@@ -20,23 +17,15 @@ import { registerOAuthRoutes } from './oauth'
 import { registerOrgRoutes } from './orgRoutes'
 import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
+import { registerGithubRoutes } from './githubRoutes'
 
 const version = require('../package.json').version
 
-export const nstrumentaImageRepository =
-  process.env.IMAGE_REPOSITORY ?? 'nstrumenta'
-export const nstrumentaImageVersionTag =
-  process.env.IMAGE_VERSION_TAG ?? 'latest'
+export { ActionData } from './types'
 
-console.log(
-  `Starting server ${version} \nIMAGE_REPOSITORY: ${nstrumentaImageRepository} \nIMAGE_VERSION_TAG: ${nstrumentaImageVersionTag}`,
-)
+const imageVersionTag = process.env.IMAGE_VERSION_TAG ?? ''
 
-export interface ActionData {
-  payload: { projectId: string; [key: string]: any }
-
-  [key: string]: any
-}
+console.log(`Starting server ${version}`)
 
 const port = process.env.API_PORT ?? 5999
 
@@ -69,9 +58,10 @@ registerOAuthRoutes(app)
 registerOrgRoutes(app)
 registerUserRoutes(app)
 registerAdminRoutes(app)
+registerGithubRoutes(app)
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', version, buildSha: nstrumentaImageVersionTag })
+  res.status(200).json({ status: 'ok', version, buildSha: imageVersionTag })
 })
 
 app.get('/config', (req, res) => {
@@ -84,7 +74,7 @@ app.get('/config', (req, res) => {
     projectId: projectId,
     appId: process.env.FIREBASE_APP_ID,
     apiUrl: process.env.NST_API_URL || `${protocol}://${host}`,
-    serverSha: nstrumentaImageVersionTag
+    serverSha: imageVersionTag
   })
 })
 
@@ -113,19 +103,9 @@ const bucket = storage.bucket(bucketName)
 
 // Wire services to their dependencies
 
-const archiveService = createArchiveService({ firestore })
-const cloudAgentService = createCloudAgentService({
-  firestore,
-  storage,
-})
 const apiKeyService = CreateApiKeyService({ firestore })
-const cloudDataJobService = createCloudDataJobService({
-  firestore,
-  spawn,
-  storage,
-})
+const cloudDataJobService = createCloudDataJobService({ firestore })
 const cloudAdminService = createCloudAdminService({
   firestore,
-  spawn,
   storage,
 })

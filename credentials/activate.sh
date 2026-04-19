@@ -13,12 +13,14 @@ fi
 export GOOGLE_CLOUD_PROJECT="$CI_PROJECT_ID"
 gcloud config set project "$CI_PROJECT_ID" --quiet
 
-# Check if application default credentials are valid before forcing a new login
-if ! gcloud auth application-default print-access-token > /dev/null 2>&1; then
-  echo "Authenticating application-default credentials..."
-  gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
+# Check if application default credentials are valid and using the correct impersonation
+ADC_FILE="$HOME/.config/gcloud/application_default_credentials.json"
+if grep -q "$CI_SERVICE_ACCOUNT" "$ADC_FILE" 2>/dev/null && \
+   gcloud auth application-default print-access-token >/dev/null 2>&1; then
+  echo "Application default credentials are valid and correctly impersonating $CI_SERVICE_ACCOUNT."
 else
-  echo "Application default credentials are valid."
+  echo "Authenticating application-default credentials with impersonation..."
+  gcloud auth application-default login --impersonate-service-account "$CI_SERVICE_ACCOUNT"
 fi
 
 # Fetch Developer Seed Credentials from GitHub
@@ -34,7 +36,8 @@ if [ -n "$NST_DEV_EMAIL" ] && [ -n "$NST_DEV_PASSWORD" ] && [ -n "$NST_DEV_USERN
   export NST_DEV_USERNAME
   export NST_DEV_PROJECT
   export NSTRUMENTA_API_URL=$NST_API_URL
-  export NSTRUMENTA_API_KEY_PEPPER=$(gh secret get NSTRUMENTA_API_KEY_PEPPER 2>/dev/null || echo "")
+  NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project="$GOOGLE_CLOUD_PROJECT") || { echo "ERROR: Failed to read NSTRUMENTA_API_KEY_PEPPER from GCP secrets"; return 1; }
+  export NSTRUMENTA_API_KEY_PEPPER
   echo "Dev Seed Credentials active."
 else
   echo "Warning: Some Dev Seed Credentials are missing. Ensure NST_DEV_EMAIL, NST_DEV_PASSWORD, NST_DEV_USERNAME, NST_DEV_PROJECT, and NST_API_URL are set."
@@ -51,4 +54,12 @@ if [[ " $* " == *" --api-key "* ]]; then
   fi
 fi
 
+
 echo "Activated: project=$GOOGLE_CLOUD_PROJECT"
+
+# Derive CLOUD_REGION and PREVIEW_IMAGE_REGISTRY from terraform outputs
+TERRAFORM_DIR="$NST_ROOT/terraform"
+CLOUD_REGION=$(cd "$TERRAFORM_DIR" && terraform output -raw location_id) || { echo "ERROR: Failed to get CLOUD_REGION from terraform output"; return 1; }
+export CLOUD_REGION
+PREVIEW_IMAGE_REGISTRY=$(cd "$TERRAFORM_DIR" && terraform output -raw preview_image_registry) || { echo "ERROR: Failed to get PREVIEW_IMAGE_REGISTRY from terraform output"; return 1; }
+export PREVIEW_IMAGE_REGISTRY

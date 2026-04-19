@@ -15,7 +15,13 @@ if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
 fi
 
 eval "$(node get-project-config.js)"
-export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT 2>/dev/null || echo '')
+NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT)
+export NSTRUMENTA_API_KEY_PEPPER
+
+if [ -z "$CLOUD_REGION" ] || [ -z "$PREVIEW_IMAGE_REGISTRY" ]; then
+    echo "CLOUD_REGION and PREVIEW_IMAGE_REGISTRY are not set. Run: source credentials/activate.sh"
+    exit 1
+fi
 
 COMPOSE_FILES="-f docker-compose.e2e.yml"
 docker compose $COMPOSE_FILES up --build -d server

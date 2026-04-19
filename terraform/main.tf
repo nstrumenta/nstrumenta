@@ -56,6 +56,8 @@ variable "trusted_github_actors" {
   default     = []
 }
 
+
+
 locals {
   domain = var.custom_domain
 }
@@ -106,6 +108,7 @@ resource "google_project_service" "fs" {
     "firebasehosting.googleapis.com",
     "iamcredentials.googleapis.com",
     "iam.googleapis.com",
+    "artifactregistry.googleapis.com",
   ])
   service = each.key
 
@@ -154,6 +157,10 @@ resource "google_identity_platform_config" "auth" {
   depends_on = [
     google_project_service.fs
   ]
+
+  lifecycle {
+    ignore_changes = [authorized_domains]
+  }
 }
 
 # GitHub OAuth configuration
@@ -330,6 +337,13 @@ resource "google_storage_bucket_iam_member" "app_engine_object_admin" {
   member = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
+# Cloud Build workers run as the compute default SA — grant read access to the module bucket
+resource "google_storage_bucket_iam_member" "cloudbuild_object_viewer" {
+  bucket = google_storage_bucket.default.name
+  role   = "roles/storage.objectViewer"
+  member = "serviceAccount:${data.google_compute_default_service_account.default.email}"
+}
+
 resource "google_service_account_iam_member" "app_engine_token_creator" {
   service_account_id = data.google_app_engine_default_service_account.default.name
   role               = "roles/iam.serviceAccountTokenCreator"
@@ -398,6 +412,48 @@ resource "google_secret_manager_secret_iam_member" "app_engine_pepper" {
   member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
+# GitHub App webhook secret (auto-generated; copy the output value into the App's webhook settings)
+resource "random_password" "github_webhook_secret" {
+  length  = 32
+  special = false
+}
+
+resource "google_secret_manager_secret" "github_webhook_secret" {
+  secret_id = "GITHUB_APP_WEBHOOK_SECRET"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_version" "github_webhook_secret" {
+  secret      = google_secret_manager_secret.github_webhook_secret.id
+  secret_data = random_password.github_webhook_secret.result
+}
+
+resource "google_secret_manager_secret_iam_member" "server_webhook_secret" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.github_webhook_secret.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# GitHub App private key (populated manually: download from github.com/settings/apps/nstrumenta-github-ci or -github)
+resource "google_secret_manager_secret" "github_app_private_key" {
+  secret_id = "GITHUB_APP_PRIVATE_KEY"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+}
+
+resource "google_secret_manager_secret_iam_member" "server_github_app_private_key" {
+  project   = google_project.fs.project_id
+  secret_id = google_secret_manager_secret.github_app_private_key.secret_id
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
 # server in cloudrun service
 resource "google_cloud_run_v2_service" "default" {
   name                = "cloudrun-service"
@@ -445,6 +501,14 @@ resource "google_cloud_run_v2_service" "default" {
         value = google_project.fs.project_id
       }
       env {
+        name  = "CLOUD_REGION"
+        value = var.location_id
+      }
+      env {
+        name  = "PREVIEW_IMAGE_REGISTRY"
+        value = "${google_artifact_registry_repository.preview.location}-docker.pkg.dev/${google_project.fs.project_id}/${google_artifact_registry_repository.preview.repository_id}"
+      }
+      env {
         name = "NSTRUMENTA_API_KEY_PEPPER"
         value_source {
           secret_key_ref {
@@ -460,6 +524,24 @@ resource "google_cloud_run_v2_service" "default" {
       env {
         name  = "FIREBASE_APP_ID"
         value = google_firebase_web_app.web_app.app_id
+      }
+      env {
+        name = "GITHUB_APP_WEBHOOK_SECRET"
+        value_source {
+          secret_key_ref {
+            secret  = "GITHUB_APP_WEBHOOK_SECRET"
+            version = "latest"
+          }
+        }
+      }
+      env {
+        name = "GITHUB_APP_PRIVATE_KEY"
+        value_source {
+          secret_key_ref {
+            secret  = "GITHUB_APP_PRIVATE_KEY"
+            version = "latest"
+          }
+        }
       }
     }
     scaling {
@@ -586,10 +668,44 @@ resource "google_cloudfunctions2_function" "delete" {
 # artifact registry for server container images
 resource "google_artifact_registry_repository" "server" {
   project       = google_project.fs.project_id
-  location      = "us-west1"
+  location      = var.location_id
   repository_id = "server"
   description   = "Docker repository for server images"
   format        = "DOCKER"
+}
+
+# artifact registry for per-project preview images built by hostModule
+resource "google_artifact_registry_repository" "preview" {
+  project       = google_project.fs.project_id
+  location      = var.location_id
+  repository_id = "preview"
+  description   = "Docker repository for hosted module preview images"
+  format        = "DOCKER"
+
+  depends_on = [google_project_service.fs["artifactregistry.googleapis.com"]]
+}
+
+# Allow the app engine default SA (used by Cloud Run server) to push preview images
+resource "google_artifact_registry_repository_iam_member" "server_preview_writer" {
+  project    = google_project.fs.project_id
+  location   = google_artifact_registry_repository.preview.location
+  repository = google_artifact_registry_repository.preview.repository_id
+  role       = "roles/artifactregistry.writer"
+  member     = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# Allow the app engine default SA to submit Cloud Build jobs
+resource "google_project_iam_member" "server_cloudbuild_builder" {
+  project = google_project.fs.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# Allow the app engine default SA to deploy Cloud Run services
+resource "google_project_iam_member" "server_run_admin" {
+  project = google_project.fs.project_id
+  role    = "roles/run.admin"
+  member  = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
 }
 
 # Allow CI service account to push images to this project's Artifact Registry (for CD image promotion)
@@ -655,12 +771,20 @@ output "project_id" {
   value = google_project.fs.project_id
 }
 
+output "location_id" {
+  value = var.location_id
+}
+
 output "domain" {
   value = local.domain
 }
 
 output "cloud_run_url" {
   value = google_cloud_run_v2_service.default.uri
+}
+
+output "preview_image_registry" {
+  value = "${google_artifact_registry_repository.preview.location}-docker.pkg.dev/${google_project.fs.project_id}/${google_artifact_registry_repository.preview.repository_id}"
 }
 
 output "firebase_hosting_site" {
@@ -673,4 +797,15 @@ output "workload_identity_provider" {
 
 output "service_account_email" {
   value = data.google_app_engine_default_service_account.default.email
+}
+
+output "github_app_webhook_secret" {
+  description = "Paste this value into the GitHub App webhook secret field."
+  value       = random_password.github_webhook_secret.result
+  sensitive   = true
+}
+
+output "github_app_private_key_secret_name" {
+  description = "After apply, populate this secret with the .pem downloaded from the GitHub App settings."
+  value       = google_secret_manager_secret.github_app_private_key.name
 }
