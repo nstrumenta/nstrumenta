@@ -83,7 +83,6 @@ const inviteMemberBase = async (
       })
     }
 
-    // TODO: Send invitation email via transactional email service (SendGrid/Resend)
     console.log(`Invitation created for ${email} to org ${orgId} - email sending not yet implemented`)
 
     return res.status(201).json({

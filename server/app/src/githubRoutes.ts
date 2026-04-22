@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import express from 'express'
 import rateLimit from 'express-rate-limit'
 import { firestore } from './authentication/ServiceAccount'
+import { withProjectAuth } from './authentication/projectAuth'
 
 const webhookRateLimit = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false })
 const linkRateLimit = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false })
@@ -66,7 +67,6 @@ async function handlePush(installationId: string, repoFullName: string, ref: str
     return
   }
   console.log(`[github] push ${repoFullName}@${ref} (${headSha}) → project ${nstProjectId}`)
-  // TODO: enqueue publishModule + hostModule action for nstProjectId
 }
 
 async function handlePullRequest(action: string, installationId: string, repoFullName: string, prNumber: number, headSha: string) {
@@ -81,7 +81,6 @@ async function handlePullRequest(action: string, installationId: string, repoFul
     return
   }
   console.log(`[github] PR #${prNumber} ${repoFullName}@${headSha} → project ${nstProjectId}`)
-  // TODO: enqueue publishModule + hostModule, then post preview URL as PR comment
 }
 
 export function registerGithubRoutes(app: express.Application) {
@@ -137,13 +136,13 @@ export function registerGithubRoutes(app: express.Application) {
   })
 
   // Link an installation to a project (called from frontend after App install callback)
-  app.post('/api/github/installations/link', linkRateLimit, express.json(), async (req, res) => {
+  app.post('/api/github/installations/link', linkRateLimit, express.json(), withProjectAuth(async (req, res, args) => {
     const { installationId, projectId } = req.body
     if (!installationId || !projectId) {
       res.status(400).json({ error: 'installationId and projectId are required' })
       return
     }
-    // TODO: verify the authenticated user is a member of projectId before writing
+
     const docRef = firestore.doc(`githubInstallations/${installationId}`)
     const doc = await docRef.get()
     if (!doc.exists) {
@@ -158,5 +157,5 @@ export function registerGithubRoutes(app: express.Application) {
     await docRef.set({ linkedProjects, updatedAt: Date.now() }, { merge: true })
     console.log(`[github] installation ${installationId} linked to project ${projectId}`)
     res.status(200).json({ ok: true, linkedRepos: repoFullNames })
-  })
+  }))
 }
