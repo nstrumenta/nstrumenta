@@ -147,7 +147,7 @@ export function createArchiveService({
         console.log('archive is', project)
         console.log('archive succeeded :O')
 
-        return firestore.doc(`projects/${projectId}`)
+        return firestore.doc(projectPath)
       } catch (err) {
         await firestore
           .doc(actionPath)

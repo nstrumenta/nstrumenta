@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { auth } from './index'
 import { firebaseAuth } from './firebaseAuth'
 import { firestore } from './ServiceAccount'
-import { parseOrgProject } from '../shared/utils'
+import { orgProjectPath, parseOrgProject } from '../shared/utils'
 
 export type ProjectAuthResult =
   | { authenticated: true; type: 'api-key'; projectId: string; apiKey: string; userId?: never }
@@ -52,12 +52,18 @@ export function withProjectAuth<T>(
          return res.status(400).json({ error: 'projectId must be a string' })
       }
 
-      const { orgSlug, projectSlug } = parseOrgProject(requestedProjectId)
-      const memberDoc = await firestore
-        .doc(`organizations/${orgSlug}/projects/${projectSlug}/members/${userAuth.userId}`)
+      try {
+        parseOrgProject(requestedProjectId)
+      } catch {
+        return res.status(400).json({ error: 'projectId must be in a valid organization/project format' })
+      }
+
+      const projectDoc = await firestore
+        .doc(orgProjectPath(requestedProjectId))
         .get()
-      
-      if (!memberDoc.exists) {
+      const isProjectMember = !!projectDoc.data()?.members?.[userAuth.userId]
+
+      if (!projectDoc.exists || !isProjectMember) {
         return res.status(403).json({ error: 'Not a member of this project' })
       }
 

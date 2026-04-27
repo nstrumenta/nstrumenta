@@ -137,9 +137,14 @@ export function registerGithubRoutes(app: express.Application) {
 
   // Link an installation to a project (called from frontend after App install callback)
   app.post('/api/github/installations/link', linkRateLimit, express.json(), withProjectAuth(async (req, res, args) => {
-    const { installationId, projectId } = req.body
-    if (!installationId || !projectId) {
+    const { installationId: rawInstallationId, projectId } = req.body
+    if (!rawInstallationId || !projectId) {
       res.status(400).json({ error: 'installationId and projectId are required' })
+      return
+    }
+    const installationId = String(rawInstallationId)
+    if (installationId.includes('/')) {
+      res.status(400).json({ error: 'invalid installationId' })
       return
     }
 
