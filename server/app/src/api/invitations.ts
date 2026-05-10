@@ -99,6 +99,164 @@ const inviteMemberBase = async (
 
 export const inviteMember = withFirebaseAuth(inviteMemberBase)
 
+// POST /api/orgs/:orgId/projects/:projectId/invitations
+const inviteProjectMemberBase = async (
+  req: Request,
+  res: Response,
+  args: { orgId: string; projectId: string; email: string; role: string } & FirebaseAuthResult,
+) => {
+  const { authenticated, userId, orgId, projectId, email, role } = args
+  if (!authenticated || !userId) return res.status(401).send('Authentication required')
+  if (!email) return res.status(400).send('email is required')
+
+  const validRoles = ['admin', 'viewer']
+  if (!validRoles.includes(role)) {
+    return res.status(400).send(`role must be one of: ${validRoles.join(', ')}`)
+  }
+
+  const projectPath = `organizations/${orgId}/projects/${projectId}`
+
+  try {
+    const projectDoc = await firestore.doc(projectPath).get()
+    if (!projectDoc.exists) return res.status(404).send('Project not found')
+
+    const members = projectDoc.data()?.members || {}
+    if (members[userId] !== 'admin') {
+      return res.status(403).send('Only project admins can invite members')
+    }
+
+    let existingUser = false
+    let targetUserId: string | null = null
+    try {
+      const userRecord = await getAuth().getUserByEmail(email)
+      targetUserId = userRecord.uid
+      existingUser = true
+
+      if (members[targetUserId]) {
+        return res.status(409).send('User is already a member of this project')
+      }
+    } catch {
+      // User does not exist yet, leave invitation pending.
+    }
+
+    const invitationPath = `${projectPath}/invitations`
+    const existingInvitations = await firestore
+      .collection(invitationPath)
+      .where('email', '==', email)
+      .where('status', '==', 'pending')
+      .limit(1)
+      .get()
+
+    if (!existingInvitations.empty) {
+      return res.status(409).send('A pending invitation already exists for this email')
+    }
+
+    const timestamp = Date.now()
+    const invitationRef = firestore.collection(invitationPath).doc()
+    await invitationRef.set({
+      email,
+      role,
+      invitedBy: userId,
+      status: 'pending',
+      createdAt: timestamp,
+      expiresAt: timestamp + INVITATION_EXPIRY_MS,
+    })
+
+    if (existingUser && targetUserId) {
+      await firestore.doc(projectPath).update({
+        members: {
+          ...members,
+          [targetUserId]: role,
+        },
+      })
+
+      await invitationRef.update({
+        status: 'accepted',
+        acceptedAt: timestamp,
+        acceptedBy: targetUserId,
+      })
+
+      return res.status(201).json({
+        invitationId: invitationRef.id,
+        email,
+        status: 'accepted',
+        existingUser: true,
+      })
+    }
+
+    console.log(`Project invitation created for ${email} in ${orgId}/${projectId} - email sending not yet implemented`)
+
+    return res.status(201).json({
+      invitationId: invitationRef.id,
+      email,
+      status: 'pending',
+      existingUser: false,
+    })
+  } catch (error) {
+    console.error('Failed to create project invitation:', error)
+    return res.status(500).send('Failed to create project invitation')
+  }
+}
+
+export const inviteProjectMember = withFirebaseAuth(inviteProjectMemberBase)
+
+// POST /api/orgs/:orgId/projects/:projectId/invitations/:invitationId/accept
+const acceptProjectInvitationBase = async (
+  req: Request,
+  res: Response,
+  args: { orgId: string; projectId: string; invitationId: string } & FirebaseAuthResult,
+) => {
+  const { authenticated, userId, orgId, projectId, invitationId } = args
+  if (!authenticated || !userId) return res.status(401).send('Authentication required')
+
+  const projectPath = `organizations/${orgId}/projects/${projectId}`
+  const invitationPath = `${projectPath}/invitations/${invitationId}`
+
+  try {
+    const invitationRef = firestore.doc(invitationPath)
+    const invitationDoc = await invitationRef.get()
+    if (!invitationDoc.exists) return res.status(404).send('Invitation not found')
+
+    const invitation = invitationDoc.data()!
+    if (invitation.status !== 'pending') {
+      return res.status(400).send(`Invitation is ${invitation.status}`)
+    }
+    if (invitation.expiresAt < Date.now()) {
+      await invitationRef.update({ status: 'expired' })
+      return res.status(400).send('Invitation has expired')
+    }
+
+    const userRecord = await getAuth().getUser(userId)
+    if (userRecord.email !== invitation.email) {
+      return res.status(403).send('This invitation is for a different email address')
+    }
+
+    const projectDoc = await firestore.doc(projectPath).get()
+    if (!projectDoc.exists) return res.status(404).send('Project not found')
+
+    const members = projectDoc.data()?.members || {}
+    await firestore.doc(projectPath).update({
+      members: {
+        ...members,
+        [userId]: invitation.role,
+      },
+    })
+
+    await invitationRef.update({
+      status: 'accepted',
+      acceptedAt: Date.now(),
+      acceptedBy: userId,
+    })
+
+    return res.status(200).json({ accepted: true, orgId, projectId })
+  } catch (error) {
+    console.error('Failed to accept project invitation:', error)
+    return res.status(500).send('Failed to accept project invitation')
+  }
+}
+
+export const acceptProjectInvitation = withFirebaseAuth(acceptProjectInvitationBase)
+
 // POST /api/orgs/:orgId/invitations/:invitationId/accept
 const acceptInvitationBase = async (
   req: Request,

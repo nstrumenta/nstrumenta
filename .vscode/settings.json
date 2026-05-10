@@ -46,7 +46,8 @@
         "curl": false,
         "wget": false,
         "xargs": false,
-        "eval": false
+        "eval": false,
+        "npx vitest": true
     },
     /* Moves output to the actual Terminal Panel */
     "chat.tools.terminal.outputLocation": "terminal",
