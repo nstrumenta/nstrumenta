@@ -176,6 +176,16 @@ const inviteProjectMemberBase = async (
         acceptedBy: targetUserId,
       })
 
+      await firestore.collection(`users/${targetUserId}/notifications`).doc().set({
+        type: 'project_membership_added',
+        orgId,
+        projectId: `${orgId}/${projectId}`,
+        role,
+        createdAt: timestamp,
+        read: false,
+        message: `You were added to project ${orgId}/${projectId} as ${role}`,
+      })
+
       return res.status(201).json({
         invitationId: invitationRef.id,
         email,
@@ -184,13 +194,30 @@ const inviteProjectMemberBase = async (
       })
     }
 
-    console.log(`Project invitation created for ${email} in ${orgId}/${projectId} - email sending not yet implemented`)
+    const origin = req.headers.origin
+    const appUrl = (typeof origin === 'string' && origin) || process.env.NSTRUMENTA_APP_URL
+    if (!appUrl) {
+      return res.status(500).send('NSTRUMENTA_APP_URL or Origin header required for invitation links')
+    }
+
+    const acceptInviteUrl = new URL('/accept-invite', appUrl)
+    acceptInviteUrl.searchParams.set('orgId', orgId)
+    acceptInviteUrl.searchParams.set('projectId', projectId)
+    acceptInviteUrl.searchParams.set('invitationId', invitationRef.id)
+
+    await getAuth().generateSignInWithEmailLink(email, {
+      url: acceptInviteUrl.toString(),
+      handleCodeInApp: true,
+    })
+
+    console.log(`Project invitation created for ${email} in ${orgId}/${projectId} with Firebase sign-in link`)
 
     return res.status(201).json({
       invitationId: invitationRef.id,
       email,
       status: 'pending',
       existingUser: false,
+      delivery: 'firebase_signin_link',
     })
   } catch (error) {
     console.error('Failed to create project invitation:', error)

@@ -4,9 +4,11 @@ import { Request, Response } from 'express'
 const {
   mockGetUserByEmail,
   mockGetUser,
+  mockGenerateSignInWithEmailLink,
 } = vi.hoisted(() => ({
   mockGetUserByEmail: vi.fn(),
   mockGetUser: vi.fn(),
+  mockGenerateSignInWithEmailLink: vi.fn(),
 }))
 
 const {
@@ -57,6 +59,7 @@ vi.mock('firebase-admin/auth', () => ({
   getAuth: () => ({
     getUserByEmail: mockGetUserByEmail,
     getUser: mockGetUser,
+    generateSignInWithEmailLink: mockGenerateSignInWithEmailLink,
   }),
 }))
 
@@ -85,6 +88,7 @@ describe('project invitations', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCollectionGet.mockResolvedValue({ empty: true, docs: [] })
+    mockGenerateSignInWithEmailLink.mockResolvedValue('https://example.com/invite-link')
   })
 
   it('returns 403 when caller is not a project admin', async () => {
@@ -114,7 +118,7 @@ describe('project invitations', () => {
   })
 
   it('adds existing user directly to project members map', async () => {
-    const req = { body: {} } as Request
+    const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
     const res = makeRes() as Response
 
     mockGetUserByEmail.mockResolvedValue({ uid: 'user-2' })
@@ -143,8 +147,50 @@ describe('project invitations', () => {
         members: expect.objectContaining({ 'user-2': 'viewer' }),
       }),
     )
+    expect(mockCollectionDocSet).toHaveBeenCalledWith(
+      'users/user-2/notifications',
+      expect.objectContaining({
+        type: 'project_membership_added',
+        projectId: 'org1/proj1',
+      }),
+    )
     expect(res.status).toHaveBeenCalledWith(201)
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'accepted', existingUser: true }))
+  })
+
+  it('generates Firebase sign-in link for new-user project invitations', async () => {
+    const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
+    const res = makeRes() as Response
+
+    mockGetUserByEmail.mockRejectedValue(new Error('not found'))
+    mockDocGet.mockImplementation(async (path: string) => {
+      if (path === 'organizations/org1/projects/proj1') {
+        return {
+          exists: true,
+          data: () => ({ members: { caller1: 'admin' } }),
+        }
+      }
+      return { exists: false, data: () => ({}) }
+    })
+
+    await (inviteProjectMember as any)(req, res, {
+      authenticated: true,
+      userId: 'caller1',
+      orgId: 'org1',
+      projectId: 'proj1',
+      email: 'new@example.com',
+      role: 'viewer',
+    })
+
+    expect(mockGenerateSignInWithEmailLink).toHaveBeenCalledWith(
+      'new@example.com',
+      expect.objectContaining({
+        url: expect.stringContaining('/accept-invite?'),
+        handleCodeInApp: true,
+      }),
+    )
+    expect(res.status).toHaveBeenCalledWith(201)
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'pending', existingUser: false }))
   })
 
   it('accepts project invitation when user email matches', async () => {
