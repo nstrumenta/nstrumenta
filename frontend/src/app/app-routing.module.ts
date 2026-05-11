@@ -14,6 +14,7 @@ import { ProjectSettingsComponent } from './components/project-settings/project-
 import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
+import { NotificationsComponent } from './components/notifications/notifications.component';
 import { HomeComponent } from './pages/home/home.component';
 import { AcceptInviteComponent } from './pages/accept-invite/accept-invite.component';
 import { waitlistGuard } from './guards/waitlist.guard';
@@ -69,6 +70,10 @@ const userRoutes: Routes = [
           {
             path: 'profile',
             component: UserProfileComponent,
+          },
+          {
+            path: 'notifications',
+            component: NotificationsComponent,
           },
           {
             path: '',

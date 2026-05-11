@@ -87,6 +87,7 @@ export class FirebaseDataService {
   private agentsSignal = signal<Agent[]>([]);
   private machinesSignal = signal<Machine[]>([]);
   private userProjectsSignal = signal<Project[]>([]);
+  private notificationsSignal = signal<DocumentData[]>([]);
 
   // Project settings signal
   private projectSettingsSignal = signal<ProjectSettings | null>(null);
@@ -102,6 +103,7 @@ export class FirebaseDataService {
   private machinesObservable$: Observable<unknown[]>;
   public userProjectsObservable$: Observable<Project[]>; // Made public for ProjectService
   private projectSettingsObservable$: Observable<unknown>;
+  private notificationsObservable$: Observable<unknown[]>;
 
   constructor() {
     this.firestore = getFirestore();
@@ -238,6 +240,17 @@ export class FirebaseDataService {
       })
     );
 
+    this.notificationsObservable$ = toObservable(this.authService.currentUser).pipe(
+      switchMap((user) => {
+        if (!user?.uid) return of([]);
+        return runInInjectionContext(this.injector, () => {
+          const notificationsCollection = collection(this.firestore, `users/${user.uid}/notifications`);
+          const notificationsQuery = query(notificationsCollection, orderBy('createdAt', 'desc'));
+          return this.collectionData(notificationsQuery);
+        });
+      })
+    );
+
     this.projectSettingsObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of(null);
@@ -288,6 +301,10 @@ export class FirebaseDataService {
     this.userProjectsObservable$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((data) => this.userProjectsSignal.set((data as Project[]) || []));
+
+    this.notificationsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.notificationsSignal.set((data as DocumentData[]) || []));
 
     this.projectSettingsObservable$
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -366,6 +383,10 @@ export class FirebaseDataService {
 
   get userProjects() {
     return this.userProjectsSignal.asReadonly();
+  }
+
+  get notifications() {
+    return this.notificationsSignal.asReadonly();
   }
 
   get userProjectsObservable() {

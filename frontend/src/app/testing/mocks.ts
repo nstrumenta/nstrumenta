@@ -15,6 +15,7 @@ export class MockFirebaseDataService {
   get agents() { return () => []; }
   get machines() { return () => []; }
   get userProjects() { return () => []; }
+  get notifications() { return () => []; }
   get projectSettings() { return () => null; }
   get projectId() { return () => 'test-project'; }
   get agentId() { return () => ''; }
