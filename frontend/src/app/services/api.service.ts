@@ -1,3 +1,4 @@
+import { ProjectRoles } from "../models/projectSettings.model";
 import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
@@ -34,6 +35,19 @@ export interface CreateApiKeyResponse {
 export interface UploadDataResponse {
   uploadUrl: string;
   filePath: string;
+}
+
+export interface InviteProjectMemberRequest {
+  projectId: string;
+  email: string;
+  role: ProjectRoles;
+}
+
+export interface InviteProjectMemberResponse {
+  invitationId: string;
+  email: string;
+  status: 'pending' | 'accepted';
+  existingUser: boolean;
 }
 
 @Injectable({
@@ -163,6 +177,31 @@ export class ApiService {
       createdAt: result.createdAt,
       message: result.message
     };
+  }
+
+  async inviteProjectMember(request: InviteProjectMemberRequest): Promise<InviteProjectMemberResponse> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.post<InviteProjectMemberResponse>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/invitations`,
+      {
+        email: request.email,
+        role: request.role,
+      },
+      { headers },
+    ).toPromise();
+
+    if (!response) {
+      throw new Error('Empty response from project invitation endpoint');
+    }
+
+    return response;
   }
 
 

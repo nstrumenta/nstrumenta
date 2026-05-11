@@ -6,6 +6,7 @@ import { Project } from '../models/firebase.model';
 import { ServerService } from './server.service';
 import { ApiService } from './api.service';
 import { FirebaseDataService } from './firebase-data.service';
+import { ProjectRoles } from '../models/projectSettings.model';
 
 @Injectable({
   providedIn: 'root',
@@ -64,5 +65,17 @@ export class ProjectService {
       { keyId },
       console.log
     );
+  }
+
+  async inviteProjectMember(request: { email: string; role: ProjectRoles }) {
+    const projectId = this.currentProjectId;
+    if (!projectId) {
+      throw new Error('No project selected. Please select a project first.');
+    }
+    return this.apiService.inviteProjectMember({
+      projectId,
+      email: request.email,
+      role: request.role,
+    });
   }
 }

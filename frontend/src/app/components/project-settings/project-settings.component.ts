@@ -10,6 +10,7 @@ import { MatList, MatListItem } from '@angular/material/list';
 import { MatButton } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { ProjectRoles } from 'src/app/models/projectSettings.model';
+import { AddProjectMemberDialogComponent, AddProjectMemberDialogResponse } from '../add-project-member-dialog/add-project-member-dialog.component';
 
 interface MemberEntry {
   memberId: string;
@@ -86,6 +87,19 @@ export class ProjectSettingsComponent {
       if (response) {
         this.projectService.revokeApiKey(keyId);
       }
+    });
+  }
+
+  inviteMember() {
+    const dialogRef = this.dialog.open(AddProjectMemberDialogComponent);
+    dialogRef.afterClosed().subscribe((response: AddProjectMemberDialogResponse | undefined) => {
+      if (!response?.email) {
+        return;
+      }
+      this.projectService.inviteProjectMember({
+        email: response.email,
+        role: response.role,
+      }).catch(console.error);
     });
   }
 }

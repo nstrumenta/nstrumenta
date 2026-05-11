@@ -85,6 +85,7 @@ export class MockProjectService {
   currentProjectId = 'test-project';
   currentProject = new BehaviorSubject<string>('test-project');
   userProjectsObservable$ = of([{ projectId: 'test-project' }]);
+  inviteProjectMember() { return Promise.resolve({}); }
 }
 
 export class MockServerService {
