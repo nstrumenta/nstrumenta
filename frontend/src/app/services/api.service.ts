@@ -50,6 +50,18 @@ export interface InviteProjectMemberResponse {
   existingUser: boolean;
 }
 
+export interface AcceptProjectInvitationRequest {
+  orgId: string;
+  projectId: string;
+  invitationId: string;
+}
+
+export interface AcceptProjectInvitationResponse {
+  accepted: boolean;
+  orgId: string;
+  projectId: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -199,6 +211,24 @@ export class ApiService {
 
     if (!response) {
       throw new Error('Empty response from project invitation endpoint');
+    }
+
+    return response;
+  }
+
+  async acceptProjectInvitation(request: AcceptProjectInvitationRequest): Promise<AcceptProjectInvitationResponse> {
+    const fullProjectId = `${request.orgId}/${request.projectId}`;
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(fullProjectId);
+
+    const response = await this.http.post<AcceptProjectInvitationResponse>(
+      `${apiUrl}/api/orgs/${request.orgId}/projects/${request.projectId}/invitations/${request.invitationId}/accept`,
+      {},
+      { headers },
+    ).toPromise();
+
+    if (!response) {
+      throw new Error('Empty response from project invitation acceptance endpoint');
     }
 
     return response;

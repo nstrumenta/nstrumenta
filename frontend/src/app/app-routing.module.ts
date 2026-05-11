@@ -15,6 +15,7 @@ import { RecordComponent } from './components/record/record.component';
 import { RepositoriesComponent } from './components/repositories/repositories.component';
 import { UserProfileComponent } from './components/user-profile/user-profile.component';
 import { HomeComponent } from './pages/home/home.component';
+import { AcceptInviteComponent } from './pages/accept-invite/accept-invite.component';
 import { waitlistGuard } from './guards/waitlist.guard';
 import { usernameGuard } from './guards/username.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
@@ -41,6 +42,11 @@ const userRoutes: Routes = [
   {
     path: 'waitlist',
     component: WaitlistComponent
+  },
+  {
+    path: 'accept-invite',
+    component: AcceptInviteComponent,
+    canActivate: [waitlistGuard],
   },
   {
     path: 'admin',
