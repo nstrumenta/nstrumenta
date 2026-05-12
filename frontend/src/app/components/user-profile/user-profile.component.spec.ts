@@ -54,4 +54,24 @@ describe('UserProfileComponent', () => {
     expect(sendSpy).toHaveBeenCalledWith('person@example.com');
     expect(component.emailLinkSent).toBe(true);
   });
+
+  it('supports manual completion when callback has no pending email in storage', async () => {
+    vi.spyOn(authService, 'hasPendingEmailLinkInUrl').mockReturnValue(true);
+    vi.spyOn(authService, 'completePendingEmailLink')
+      .mockRejectedValueOnce({ code: 'auth/missing-email-for-link', message: 'Enter your email address to complete verification.' })
+      .mockResolvedValueOnce('linked');
+
+    fixture = TestBed.createComponent(UserProfileComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(component.requiresEmailForLinkCompletion).toBe(true);
+
+    component.emailInput = 'person@example.com';
+    await component.completeEmailLinkFromInput();
+
+    expect(authService.completePendingEmailLink).toHaveBeenLastCalledWith('person@example.com');
+    expect(component.requiresEmailForLinkCompletion).toBe(false);
+  });
 });

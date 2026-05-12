@@ -32,6 +32,9 @@
       @if (!authService.currentUser()?.email) {
         <div class="email-linking">
           <p>Add and verify an email address so invitations can be matched to your account.</p>
+          @if (requiresEmailForLinkCompletion) {
+            <p>Verification link opened without saved session state. Enter the same email address to complete linking.</p>
+          }
           <mat-form-field>
             <mat-label>Email address</mat-label>
             <input matInput
@@ -51,6 +54,13 @@
                   (click)="sendEmailLink()">
             {{ isSendingEmailLink ? 'Sending...' : 'Send verification link' }}
           </button>
+          @if (hasEmailLinkCallback) {
+            <button mat-stroked-button
+                    [disabled]="isCompletingEmailLink"
+                    (click)="completeEmailLinkFromInput()">
+              {{ isCompletingEmailLink ? 'Completing...' : 'Complete verification' }}
+            </button>
+          }
         </div>
       }
       

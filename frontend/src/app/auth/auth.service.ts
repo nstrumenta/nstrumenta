@@ -118,14 +118,20 @@ export class AuthService {
     window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, normalizedEmail);
   }
 
-  async completePendingEmailLink(): Promise<'linked' | 'none'> {
+  hasPendingEmailLinkInUrl(): boolean {
+    return isSignInWithEmailLink(this.auth, window.location.href);
+  }
+
+  async completePendingEmailLink(emailOverride?: string): Promise<'linked' | 'none'> {
     if (!isSignInWithEmailLink(this.auth, window.location.href)) {
       return 'none';
     }
 
-    const pendingEmail = window.localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
+    const pendingEmail = (window.localStorage.getItem(EMAIL_LINK_STORAGE_KEY) || emailOverride || '').trim().toLowerCase();
     if (!pendingEmail) {
-      throw new Error('Missing pending email. Start the add-email flow again from profile.');
+      const error: Error & { code?: string } = new Error('Enter your email address to complete verification.');
+      error.code = 'auth/missing-email-for-link';
+      throw error;
     }
 
     const user = this.currentUser();
@@ -147,6 +153,9 @@ export class AuthService {
         window.localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
         this.clearEmailLinkParams();
         return 'linked';
+      }
+      if (code === 'auth/credential-already-in-use') {
+        throw new Error('This email is already linked to a different account. Sign in with that account instead.');
       }
       throw error;
     }

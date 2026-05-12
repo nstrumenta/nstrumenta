@@ -35,6 +35,9 @@ export class UserProfileComponent implements OnInit {
   emailLinkError = '';
   emailLinkSent = false;
   isSendingEmailLink = false;
+  hasEmailLinkCallback = false;
+  requiresEmailForLinkCompletion = false;
+  isCompletingEmailLink = false;
 
   private readonly USERNAME_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
   private readonly RESERVED = new Set([
@@ -47,15 +50,20 @@ export class UserProfileComponent implements OnInit {
     if (!user) return;
 
     this.emailInput = user.email || '';
+    this.hasEmailLinkCallback = this.authService.hasPendingEmailLinkInUrl();
 
     try {
       const linkResult = await this.authService.completePendingEmailLink();
       if (linkResult === 'linked') {
         this.emailLinkSent = false;
         this.emailLinkError = '';
+        this.requiresEmailForLinkCompletion = false;
         this.snackBar.open('Email linked successfully.', 'Close', { duration: 3000 });
       }
     } catch (error: any) {
+      if (error?.code === 'auth/missing-email-for-link') {
+        this.requiresEmailForLinkCompletion = true;
+      }
       this.emailLinkError = error?.message || 'Failed to complete email linking.';
     }
 
@@ -94,6 +102,28 @@ export class UserProfileComponent implements OnInit {
       this.emailLinkError = error?.message || 'Failed to send email verification link.';
     } finally {
       this.isSendingEmailLink = false;
+    }
+  }
+
+  async completeEmailLinkFromInput(): Promise<void> {
+    this.emailLinkError = '';
+
+    if (!this.emailInput.trim()) {
+      this.emailLinkError = 'Email is required';
+      return;
+    }
+
+    this.isCompletingEmailLink = true;
+    try {
+      const result = await this.authService.completePendingEmailLink(this.emailInput);
+      if (result === 'linked') {
+        this.requiresEmailForLinkCompletion = false;
+        this.snackBar.open('Email linked successfully.', 'Close', { duration: 3000 });
+      }
+    } catch (error: any) {
+      this.emailLinkError = error?.message || 'Failed to complete email linking.';
+    } finally {
+      this.isCompletingEmailLink = false;
     }
   }
 

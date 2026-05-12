@@ -74,7 +74,8 @@ export class MockAuthService {
   loginWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   registerWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   sendEmailLinkForCurrentUser(_email: string) { return Promise.resolve(); }
-  completePendingEmailLink() { return Promise.resolve<'linked' | 'none'>('none'); }
+  hasPendingEmailLinkInUrl() { return false; }
+  completePendingEmailLink(_emailOverride?: string) { return Promise.resolve<'linked' | 'none'>('none'); }
   logout() { return Promise.resolve(); }
   getAuth() { return {} as any; }
 }
