@@ -10,6 +10,9 @@ export const waitlistGuard: CanActivateFn = (_route, state) => {
     return router.createUrlTree(['/'], { queryParams: { returnUrl: state.url } });
   }
   if (authService.userStatus() === 'pending') {
+    if (state.url.startsWith('/account/profile')) {
+      return true;
+    }
     return router.parseUrl('/waitlist');
   }
   return true;
