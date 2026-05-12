@@ -10,7 +10,13 @@
 cd "$(dirname "$0")"
 
 START_SECONDS=$SECONDS
-TEST_ARGS="$*"
+PLAYWRIGHT_TEST_ARGS=()
+for arg in "$@"; do
+    normalized_arg="${arg#./}"
+    normalized_arg="${normalized_arg#tests/}"
+    PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
+done
+TEST_ARGS="$(printf ' %q' "${PLAYWRIGHT_TEST_ARGS[@]}")"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
     echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
@@ -52,9 +58,9 @@ COMPOSE_FILES="-f docker-compose.e2e.yml"
 docker compose $COMPOSE_FILES up --build -d server
 
 PLAYWRIGHT_EXIT_CODE=0
-if [ -n "$TEST_ARGS" ]; then
+if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_ARGS"
+    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

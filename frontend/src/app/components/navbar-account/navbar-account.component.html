@@ -5,6 +5,10 @@
         <mat-icon>settings</mat-icon>
         Settings
       </button>
+      <button mat-menu-item [routerLink]="['/account/notifications']" queryParamsHandling="preserve">
+        <mat-icon>notifications</mat-icon>
+        Notifications
+      </button>
       @if (authService.currentUserRole() === 'admin') {
         <button mat-menu-item routerLink="/admin/users">
           <mat-icon>admin_panel_settings</mat-icon>

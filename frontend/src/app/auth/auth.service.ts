@@ -1,6 +1,22 @@
 import { Injectable, signal } from '@angular/core';
-import { Auth, User, GoogleAuthProvider, GithubAuthProvider, signInWithPopup, onAuthStateChanged, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import {
+  Auth,
+  User,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  EmailAuthProvider,
+  linkWithCredential,
+} from 'firebase/auth';
 import { Firestore, doc, getFirestore, onSnapshot, Unsubscribe } from 'firebase/firestore';
+
+const EMAIL_LINK_STORAGE_KEY = 'nstrumenta.pendingEmailLinkAddress';
 
 @Injectable({
   providedIn: 'root',
@@ -86,6 +102,62 @@ export class AuthService {
 
   async login(): Promise<void> {
     return this.loginWithGoogle();
+  }
+
+  async sendEmailLinkForCurrentUser(email: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new Error('Email is required');
+    }
+
+    await sendSignInLinkToEmail(this.auth, normalizedEmail, {
+      url: `${window.location.origin}/account/profile?emailLink=1`,
+      handleCodeInApp: true,
+    });
+
+    window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, normalizedEmail);
+  }
+
+  async completePendingEmailLink(): Promise<'linked' | 'none'> {
+    if (!isSignInWithEmailLink(this.auth, window.location.href)) {
+      return 'none';
+    }
+
+    const pendingEmail = window.localStorage.getItem(EMAIL_LINK_STORAGE_KEY);
+    if (!pendingEmail) {
+      throw new Error('Missing pending email. Start the add-email flow again from profile.');
+    }
+
+    const user = this.currentUser();
+    if (!user) {
+      throw new Error('Sign in first, then open the email link again to link your email.');
+    }
+
+    try {
+      const credential = EmailAuthProvider.credentialWithLink(pendingEmail, window.location.href);
+      await linkWithCredential(user, credential);
+      await user.reload();
+      this.currentUser.set(this.auth.currentUser);
+      window.localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
+      this.clearEmailLinkParams();
+      return 'linked';
+    } catch (error: any) {
+      const code = error?.code ?? '';
+      if (code === 'auth/provider-already-linked') {
+        window.localStorage.removeItem(EMAIL_LINK_STORAGE_KEY);
+        this.clearEmailLinkParams();
+        return 'linked';
+      }
+      throw error;
+    }
+  }
+
+  private clearEmailLinkParams(): void {
+    const url = new URL(window.location.href);
+    ['apiKey', 'oobCode', 'mode', 'lang', 'continueUrl', 'emailLink'].forEach((name) => {
+      url.searchParams.delete(name);
+    });
+    window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
   }
 
   async logout(): Promise<void> {

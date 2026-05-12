@@ -31,6 +31,10 @@ export class UserProfileComponent implements OnInit {
   usernameAvailable: boolean | null = null;
   usernameError = '';
   isSaving = false;
+  emailInput = '';
+  emailLinkError = '';
+  emailLinkSent = false;
+  isSendingEmailLink = false;
 
   private readonly USERNAME_REGEX = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
   private readonly RESERVED = new Set([
@@ -42,6 +46,19 @@ export class UserProfileComponent implements OnInit {
     const user = this.authService.currentUser();
     if (!user) return;
 
+    this.emailInput = user.email || '';
+
+    try {
+      const linkResult = await this.authService.completePendingEmailLink();
+      if (linkResult === 'linked') {
+        this.emailLinkSent = false;
+        this.emailLinkError = '';
+        this.snackBar.open('Email linked successfully.', 'Close', { duration: 3000 });
+      }
+    } catch (error: any) {
+      this.emailLinkError = error?.message || 'Failed to complete email linking.';
+    }
+
     const snapshot = await this.firebaseDataService.getUserDocOnce(user.uid);
     const existing = snapshot['username'] as string | undefined;
     if (existing) {
@@ -50,13 +67,34 @@ export class UserProfileComponent implements OnInit {
     }
 
     // Pre-fill suggestion from GitHub provider or email prefix
-    const githubProvider = user.providerData.find(p => p.providerId === 'github.com');
+    const githubProvider = (user.providerData || []).find(p => p.providerId === 'github.com');
     const suggestion = githubProvider?.displayName
       ?? user.displayName
       ?? user.email?.split('@')[0]
       ?? '';
     this.usernameInput = suggestion.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/^-+|-+$/g, '');
     await this.checkAvailability();
+  }
+
+  async sendEmailLink(): Promise<void> {
+    this.emailLinkError = '';
+    this.emailLinkSent = false;
+
+    if (!this.emailInput.trim()) {
+      this.emailLinkError = 'Email is required';
+      return;
+    }
+
+    this.isSendingEmailLink = true;
+    try {
+      await this.authService.sendEmailLinkForCurrentUser(this.emailInput);
+      this.emailLinkSent = true;
+      this.snackBar.open(`Verification link sent to ${this.emailInput}.`, 'Close', { duration: 4000 });
+    } catch (error: any) {
+      this.emailLinkError = error?.message || 'Failed to send email verification link.';
+    } finally {
+      this.isSendingEmailLink = false;
+    }
   }
 
   async checkAvailability(): Promise<void> {
