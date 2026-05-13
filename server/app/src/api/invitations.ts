@@ -5,6 +5,23 @@ import { withFirebaseAuth, FirebaseAuthResult } from '../authentication/firebase
 
 const INVITATION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
+function getAppUrlFromRequest(req: Request): string | null {
+  const origin = req.headers.origin
+  const appUrl = (typeof origin === 'string' && origin) || process.env.NSTRUMENTA_APP_URL
+  return appUrl || null
+}
+
+function buildProjectInviteUrl(req: Request, orgId: string, projectId: string, invitationId: string): string | null {
+  const appUrl = getAppUrlFromRequest(req)
+  if (!appUrl) return null
+
+  const acceptInviteUrl = new URL('/accept-invite', appUrl)
+  acceptInviteUrl.searchParams.set('orgId', orgId)
+  acceptInviteUrl.searchParams.set('projectId', projectId)
+  acceptInviteUrl.searchParams.set('invitationId', invitationId)
+  return acceptInviteUrl.toString()
+}
+
 // POST /api/orgs/:orgId/invitations
 const inviteMemberBase = async (
   req: Request,
@@ -187,27 +204,36 @@ const inviteProjectMemberBase = async (
         message: `You were added to project ${orgId}/${projectId} as ${role}`,
       })
 
+      let delivery: 'firebase_signin_link' | 'none' = 'none'
+      const inviteUrl = buildProjectInviteUrl(req, orgId, projectId, invitationRef.id)
+      if (inviteUrl) {
+        try {
+          await getAuth().generateSignInWithEmailLink(email, {
+            url: inviteUrl,
+            handleCodeInApp: true,
+          })
+          delivery = 'firebase_signin_link'
+        } catch (error) {
+          console.error('Failed to send project invitation email for auto-accepted user:', error)
+        }
+      }
+
       return res.status(201).json({
         invitationId: invitationRef.id,
         email,
         status: 'accepted',
         existingUser: true,
+        delivery,
       })
     }
 
-    const origin = req.headers.origin
-    const appUrl = (typeof origin === 'string' && origin) || process.env.NSTRUMENTA_APP_URL
-    if (!appUrl) {
+    const inviteUrl = buildProjectInviteUrl(req, orgId, projectId, invitationRef.id)
+    if (!inviteUrl) {
       return res.status(500).send('NSTRUMENTA_APP_URL or Origin header required for invitation links')
     }
 
-    const acceptInviteUrl = new URL('/accept-invite', appUrl)
-    acceptInviteUrl.searchParams.set('orgId', orgId)
-    acceptInviteUrl.searchParams.set('projectId', projectId)
-    acceptInviteUrl.searchParams.set('invitationId', invitationRef.id)
-
     await getAuth().generateSignInWithEmailLink(email, {
-      url: acceptInviteUrl.toString(),
+      url: inviteUrl,
       handleCodeInApp: true,
     })
 

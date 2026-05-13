@@ -154,8 +154,58 @@ describe('project invitations', () => {
         projectId: 'org1/proj1',
       }),
     )
+    expect(mockGenerateSignInWithEmailLink).toHaveBeenCalledWith(
+      'existing@example.com',
+      expect.objectContaining({
+        url: expect.stringContaining('/accept-invite?'),
+        handleCodeInApp: true,
+      }),
+    )
     expect(res.status).toHaveBeenCalledWith(201)
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'accepted', existingUser: true }))
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'accepted',
+      existingUser: true,
+      delivery: 'firebase_signin_link',
+    }))
+  })
+
+  it('keeps auto-accepted invite successful when email-link delivery fails', async () => {
+    const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
+    const res = makeRes() as Response
+
+    mockGetUserByEmail.mockResolvedValue({ uid: 'user-2' })
+    mockGenerateSignInWithEmailLink.mockRejectedValue(new Error('delivery failed'))
+    mockDocGet.mockImplementation(async (path: string) => {
+      if (path === 'organizations/org1/projects/proj1') {
+        return {
+          exists: true,
+          data: () => ({ members: { caller1: 'admin' } }),
+        }
+      }
+      return { exists: false, data: () => ({}) }
+    })
+
+    await (inviteProjectMember as any)(req, res, {
+      authenticated: true,
+      userId: 'caller1',
+      orgId: 'org1',
+      projectId: 'proj1',
+      email: 'existing@example.com',
+      role: 'viewer',
+    })
+
+    expect(mockCollectionDocSet).toHaveBeenCalledWith(
+      'users/user-2/notifications',
+      expect.objectContaining({
+        type: 'project_membership_added',
+      }),
+    )
+    expect(res.status).toHaveBeenCalledWith(201)
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'accepted',
+      existingUser: true,
+      delivery: 'none',
+    }))
   })
 
   it('generates Firebase sign-in link for new-user project invitations', async () => {
