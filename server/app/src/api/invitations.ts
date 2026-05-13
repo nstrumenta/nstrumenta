@@ -121,8 +121,9 @@ const inviteProjectMemberBase = async (
     if (!projectDoc.exists) return res.status(404).send('Project not found')
 
     const members = projectDoc.data()?.members || {}
-    if (members[userId] !== 'admin') {
-      return res.status(403).send('Only project admins can invite members')
+    const inviterRole = members[userId]
+    if (inviterRole !== 'admin' && inviterRole !== 'owner') {
+      return res.status(403).send('Only project owners and admins can invite members')
     }
 
     let existingUser = false
