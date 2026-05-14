@@ -117,7 +117,7 @@ describe('project invitations', () => {
     expect(res.status).toHaveBeenCalledWith(403)
   })
 
-  it('adds existing user directly to project members map', async () => {
+  it('creates pending invitation and notifies existing user', async () => {
     const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
     const res = makeRes() as Response
 
@@ -141,17 +141,12 @@ describe('project invitations', () => {
       role: 'viewer',
     })
 
-    expect(mockDocUpdate).toHaveBeenCalledWith(
-      'organizations/org1/projects/proj1',
-      expect.objectContaining({
-        members: expect.objectContaining({ 'user-2': 'viewer' }),
-      }),
-    )
     expect(mockCollectionDocSet).toHaveBeenCalledWith(
       'users/user-2/notifications',
       expect.objectContaining({
-        type: 'project_membership_added',
+        type: 'project_invitation_pending',
         projectId: 'org1/proj1',
+        invitationId: 'invite-123',
       }),
     )
     expect(mockGenerateSignInWithEmailLink).toHaveBeenCalledWith(
@@ -163,13 +158,13 @@ describe('project invitations', () => {
     )
     expect(res.status).toHaveBeenCalledWith(201)
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'accepted',
+      status: 'pending',
       existingUser: true,
       delivery: 'firebase_signin_link',
     }))
   })
 
-  it('keeps auto-accepted invite successful when email-link delivery fails', async () => {
+  it('keeps pending invite successful when email-link delivery fails', async () => {
     const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
     const res = makeRes() as Response
 
@@ -197,12 +192,12 @@ describe('project invitations', () => {
     expect(mockCollectionDocSet).toHaveBeenCalledWith(
       'users/user-2/notifications',
       expect.objectContaining({
-        type: 'project_membership_added',
+        type: 'project_invitation_pending',
       }),
     )
     expect(res.status).toHaveBeenCalledWith(201)
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'accepted',
+      status: 'pending',
       existingUser: true,
       delivery: 'none',
     }))
@@ -286,6 +281,13 @@ describe('project invitations', () => {
     expect(mockDocUpdate).toHaveBeenCalledWith(
       'organizations/org1/projects/proj1/invitations/invite-1',
       expect.objectContaining({ status: 'accepted', acceptedBy: 'user-2' }),
+    )
+    expect(mockCollectionDocSet).toHaveBeenCalledWith(
+      'users/user-2/notifications',
+      expect.objectContaining({
+        type: 'project_membership_added',
+        projectId: 'org1/proj1',
+      }),
     )
     expect(res.status).toHaveBeenCalledWith(200)
   })

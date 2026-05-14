@@ -44,6 +44,23 @@
   </mat-sidenav>
   <mat-sidenav-content layout>
     <app-toolbar [projectContext]="projectContext()" (drawerToggleClick)="drawer.toggle()"></app-toolbar>
+    @if (pendingProjectInvitations().length > 0) {
+      <div class="pending-invite-banner-list">
+        @for (invitation of pendingProjectInvitations(); track invitation.invitationId) {
+          <mat-card class="pending-invite-banner">
+            <div class="pending-invite-banner-content">
+              <div class="pending-invite-message">{{ invitation.message }}</div>
+              <a
+                mat-flat-button
+                [routerLink]="['/accept-invite']"
+                [queryParams]="getAcceptInviteQueryParams(invitation)">
+                Review Invite
+              </a>
+            </div>
+          </mat-card>
+        }
+      </div>
+    }
     <router-outlet></router-outlet>
   </mat-sidenav-content>
 </mat-sidenav-container>

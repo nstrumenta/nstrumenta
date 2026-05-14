@@ -11,6 +11,7 @@ import { MatButton } from '@angular/material/button';
 import { DatePipe } from '@angular/common';
 import { ProjectRoles } from 'src/app/models/projectSettings.model';
 import { AddProjectMemberDialogComponent, AddProjectMemberDialogResponse } from '../add-project-member-dialog/add-project-member-dialog.component';
+import { AuthService } from 'src/app/auth/auth.service';
 
 interface MemberEntry {
   memberId: string;
@@ -36,13 +37,14 @@ interface ApiKeyEntry {
     imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
 })
 export class ProjectSettingsComponent {
-  membersDisplayedColumns = ['memberId', 'role'];
+  membersDisplayedColumns = ['memberId', 'role', 'action'];
   membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
   apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
   private firebaseDataService = inject(FirebaseDataService);
   public dialog = inject(MatDialog);
   private projectService = inject(ProjectService);
+  private authService = inject(AuthService);
 
   get projectId() { return this.firebaseDataService.projectId(); }
   projectPath: string;
@@ -100,6 +102,50 @@ export class ProjectSettingsComponent {
         email: response.email,
         role: response.role,
       }).catch(console.error);
+    });
+  }
+
+  private get currentUserId(): string {
+    return this.authService.currentUser()?.uid || '';
+  }
+
+  private get currentUserProjectRole(): ProjectRoles | null {
+    return this.projectSettings?.members?.[this.currentUserId] || null;
+  }
+
+  canManageMembers(): boolean {
+    return this.currentUserProjectRole === 'owner' || this.currentUserProjectRole === 'admin';
+  }
+
+  canRemoveMember(member: MemberEntry): boolean {
+    if (!this.canManageMembers()) return false;
+    if (member.memberId === this.currentUserId) return false;
+    if (this.currentUserProjectRole === 'admin' && member.role === 'owner') return false;
+    return true;
+  }
+
+  canSetRole(member: MemberEntry, nextRole: ProjectRoles): boolean {
+    if (!this.canManageMembers()) return false;
+    if (member.role === nextRole) return false;
+    if (member.memberId === this.currentUserId) return false;
+    if (this.currentUserProjectRole === 'admin' && (member.role === 'owner' || nextRole === 'owner')) {
+      return false;
+    }
+    return true;
+  }
+
+  setMemberRole(member: MemberEntry, role: ProjectRoles) {
+    if (!this.canSetRole(member, role)) return;
+    this.projectService.updateProjectMemberRole({ memberId: member.memberId, role }).catch(console.error);
+  }
+
+  removeMember(member: MemberEntry) {
+    if (!this.canRemoveMember(member)) return;
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent);
+    dialogRef.afterClosed().subscribe((response) => {
+      if (response) {
+        this.projectService.removeProjectMember(member.memberId).catch(console.error);
+      }
     });
   }
 }

@@ -13,7 +13,7 @@ START_SECONDS=$SECONDS
 PLAYWRIGHT_TEST_ARGS=()
 for arg in "$@"; do
     normalized_arg="${arg#./}"
-    normalized_arg="${normalized_arg#tests/}"
+    normalized_arg="${normalized_arg#frontend/}"
     PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
 done
 TEST_ARGS="$(printf ' %q' "${PLAYWRIGHT_TEST_ARGS[@]}")"
@@ -60,7 +60,7 @@ docker compose $COMPOSE_FILES up --build -d server
 PLAYWRIGHT_EXIT_CODE=0
 if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
+    docker compose $COMPOSE_FILES run --build --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

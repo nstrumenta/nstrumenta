@@ -90,6 +90,8 @@ export class MockProjectService {
   currentProject = new BehaviorSubject<string>('test-project');
   userProjectsObservable$ = of([{ projectId: 'test-project' }]);
   inviteProjectMember() { return Promise.resolve({}); }
+  updateProjectMemberRole() { return Promise.resolve({}); }
+  removeProjectMember() { return Promise.resolve({}); }
 }
 
 export class MockServerService {

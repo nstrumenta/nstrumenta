@@ -21,6 +21,21 @@
     <mat-cell *matCellDef="let member">{{ member.role }} </mat-cell>
   </ng-container>
 
+  <ng-container matColumnDef="action">
+    <mat-header-cell *matHeaderCellDef> action </mat-header-cell>
+    <mat-cell *matCellDef="let member">
+      @if (canSetRole(member, 'admin')) {
+        <button mat-button (click)="setMemberRole(member, 'admin')">Make admin</button>
+      }
+      @if (canSetRole(member, 'viewer')) {
+        <button mat-button (click)="setMemberRole(member, 'viewer')">Make viewer</button>
+      }
+      @if (canRemoveMember(member)) {
+        <button mat-button (click)="removeMember(member)">Remove</button>
+      }
+    </mat-cell>
+  </ng-container>
+
 
 
   <mat-header-row *matHeaderRowDef="membersDisplayedColumns"></mat-header-row>

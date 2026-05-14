@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 
 const TEST_USER_EMAIL = process.env.TEST_USER_EMAIL;
 const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD;
+const TEST_USER_USERNAME = TEST_USER_EMAIL ? TEST_USER_EMAIL.split('@')[0] : '';
 
 if (!TEST_USER_EMAIL || !TEST_USER_PASSWORD) {
   throw new Error('TEST_USER_EMAIL and TEST_USER_PASSWORD environment variables are required');
@@ -21,6 +22,8 @@ async function signIn(page) {
     await page.locator('button[type="submit"]:has-text("Sign In")').click();
     await page.locator('h2:has-text("Sign In")').waitFor({ state: 'hidden' });
   }
+
+  await expect(page.locator('app-navbar-account button[mat-icon-button]')).toBeVisible({ timeout: 15000 });
 }
 
 test.describe('Invitations and Notifications UX', () => {
@@ -30,7 +33,7 @@ test.describe('Invitations and Notifications UX', () => {
     await page.goto('/account');
     await expect(page.locator('mat-toolbar:has-text("User Settings")')).toBeVisible();
 
-    await page.locator('mat-toolbar button:has(mat-icon:text("account_circle"))').click();
+    await page.locator('app-navbar-account button[mat-icon-button]').click();
     await expect(page.locator('button[mat-menu-item]:has-text("Notifications")')).toBeVisible();
     await page.locator('button[mat-menu-item]:has-text("Notifications")').click();
     await expect(page).toHaveURL(/\/account\/notifications/);
@@ -41,21 +44,21 @@ test.describe('Invitations and Notifications UX', () => {
 
     await page.goto('/');
 
+    const projectName = `invite-flow-${Date.now()}`;
     const fabButton = page.locator('button#fab mat-icon:has-text("add")');
     await expect(fabButton).toBeVisible();
     await fabButton.click();
 
     await expect(page.locator('h2:has-text("Add New Project")')).toBeVisible();
-
-    const projectName = `invite-flow-${Date.now()}`;
     await page.locator('app-new-project-dialog mat-form-field').first().locator('input').fill(projectName);
     await expect(page.locator('app-new-project-dialog mat-select')).not.toHaveAttribute('aria-disabled', 'true');
     await page.locator('app-new-project-dialog mat-select').click();
     await page.locator('mat-option').first().click();
     await page.locator('button:has-text("Create")').click();
 
-    await expect(page).toHaveURL(/\/settings|\/data/);
-    await page.goto(page.url().replace(/\/(data|record|actions|agents|machines|repositories|modules).*$/, '/settings'));
+    await expect(page).toHaveURL(/\/(overview|data)/);
+    await page.locator('a[mat-list-item]:has-text("Settings")').click();
+    await expect(page).toHaveURL(/\/settings/);
 
     await expect(page.locator('button:has-text("Invite Member")')).toBeVisible();
     await page.locator('button:has-text("Invite Member")').click();
@@ -69,6 +72,6 @@ test.describe('Invitations and Notifications UX', () => {
     await signIn(page);
 
     await page.goto('/accept-invite?orgId=test-org');
-    await expect(page.locator('mat-card-content')).toContainText('Missing invitation parameters.');
+    await expect(page.locator('text=Missing invitation parameters.')).toBeVisible();
   });
 });

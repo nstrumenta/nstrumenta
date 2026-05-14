@@ -62,6 +62,17 @@ export interface AcceptProjectInvitationResponse {
   projectId: string;
 }
 
+export interface UpdateProjectMemberRoleRequest {
+  projectId: string;
+  memberId: string;
+  role: ProjectRoles;
+}
+
+export interface RemoveProjectMemberRequest {
+  projectId: string;
+  memberId: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -229,6 +240,49 @@ export class ApiService {
 
     if (!response) {
       throw new Error('Empty response from project invitation acceptance endpoint');
+    }
+
+    return response;
+  }
+
+  async updateProjectMemberRole(request: UpdateProjectMemberRoleRequest): Promise<{ memberId: string; role: ProjectRoles }> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.patch<{ memberId: string; role: ProjectRoles }>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
+      { role: request.role },
+      { headers },
+    ).toPromise();
+
+    if (!response) {
+      throw new Error('Empty response from project member role update endpoint');
+    }
+
+    return response;
+  }
+
+  async removeProjectMember(request: RemoveProjectMemberRequest): Promise<{ removed: string }> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.delete<{ removed: string }>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
+      { headers },
+    ).toPromise();
+
+    if (!response) {
+      throw new Error('Empty response from project member removal endpoint');
     }
 
     return response;

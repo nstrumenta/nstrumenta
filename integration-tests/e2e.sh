@@ -17,7 +17,7 @@ for arg in "$@"; do
         CLI_TEST_ARGS="$arg"
     else
         normalized_arg="${arg#./}"
-        normalized_arg="${normalized_arg#tests/}"
+        normalized_arg="${normalized_arg#frontend/}"
         PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
     fi
 done
@@ -73,7 +73,7 @@ set -e
 
 if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
+    docker compose $COMPOSE_FILES run --build --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

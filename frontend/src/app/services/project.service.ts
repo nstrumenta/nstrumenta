@@ -78,4 +78,27 @@ export class ProjectService {
       role: request.role,
     });
   }
+
+  async updateProjectMemberRole(request: { memberId: string; role: ProjectRoles }) {
+    const projectId = this.currentProjectId;
+    if (!projectId) {
+      throw new Error('No project selected. Please select a project first.');
+    }
+    return this.apiService.updateProjectMemberRole({
+      projectId,
+      memberId: request.memberId,
+      role: request.role,
+    });
+  }
+
+  async removeProjectMember(memberId: string) {
+    const projectId = this.currentProjectId;
+    if (!projectId) {
+      throw new Error('No project selected. Please select a project first.');
+    }
+    return this.apiService.removeProjectMember({
+      projectId,
+      memberId,
+    });
+  }
 }
