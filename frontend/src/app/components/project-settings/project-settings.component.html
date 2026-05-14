@@ -18,18 +18,31 @@
 
   <ng-container matColumnDef="role">
     <mat-header-cell *matHeaderCellDef> role </mat-header-cell>
-    <mat-cell *matCellDef="let member">{{ member.role }} </mat-cell>
+    <mat-cell *matCellDef="let member">
+      @let roles = availableRoles(member);
+      <div class="member-role-cell">
+        @if (roles.length > 0) {
+          <button mat-button class="member-role-chip" [matMenuTriggerFor]="roleMenu">
+            <span>{{ member.role }}</span>
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #roleMenu="matMenu">
+            @for (role of roles; track role) {
+              <button mat-menu-item (click)="setMemberRole(member, role)">{{ role }}</button>
+            }
+          </mat-menu>
+        } @else {
+          <button mat-button disabled class="member-role-chip is-static">
+            <span>{{ member.role }}</span>
+          </button>
+        }
+      </div>
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="action">
-    <mat-header-cell *matHeaderCellDef> action </mat-header-cell>
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
     <mat-cell *matCellDef="let member">
-      @if (canSetRole(member, 'admin')) {
-        <button mat-button (click)="setMemberRole(member, 'admin')">Make admin</button>
-      }
-      @if (canSetRole(member, 'viewer')) {
-        <button mat-button (click)="setMemberRole(member, 'viewer')">Make viewer</button>
-      }
       @if (canRemoveMember(member)) {
         <button mat-button (click)="removeMember(member)">Remove</button>
       }

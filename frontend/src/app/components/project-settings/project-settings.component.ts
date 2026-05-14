@@ -12,6 +12,8 @@ import { DatePipe } from '@angular/common';
 import { ProjectRoles } from 'src/app/models/projectSettings.model';
 import { AddProjectMemberDialogComponent, AddProjectMemberDialogResponse } from '../add-project-member-dialog/add-project-member-dialog.component';
 import { AuthService } from 'src/app/auth/auth.service';
+import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
+import { MatIcon } from '@angular/material/icon';
 
 interface MemberEntry {
   memberId: string;
@@ -32,12 +34,43 @@ interface ApiKeyEntry {
           .mat-column-keyId {
             flex: 0 0 60%;
           }
+
+          .member-role-cell {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+
+          .member-role-chip {
+            align-items: center;
+            border: 1px solid var(--mat-sys-outline, rgba(0, 0, 0, 0.12));
+            border-radius: 999px;
+            display: inline-flex;
+            gap: 4px;
+            line-height: 1;
+            min-height: 32px;
+            padding-inline: 12px 8px;
+            text-transform: capitalize;
+          }
+
+          .member-role-chip.is-static {
+            cursor: default;
+          }
+
+          .member-role-chip mat-icon {
+            font-size: 18px;
+            height: 18px;
+            margin-right: -2px;
+            width: 18px;
+          }
         `,
     ],
-    imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
+    imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, MatMenuTrigger, MatMenu, MatMenuItem, MatIcon]
 })
 export class ProjectSettingsComponent {
   membersDisplayedColumns = ['memberId', 'role', 'action'];
+  readonly assignableRoles: ProjectRoles[] = ['owner', 'admin', 'viewer'];
   membersDataSource: MatTableDataSource<MemberEntry>;
   apiKeysDisplayedColumns = ['keyId', 'createdAt', 'lastUsed', 'action'];
   apiKeysDataSource: MatTableDataSource<ApiKeyEntry>;
@@ -132,6 +165,10 @@ export class ProjectSettingsComponent {
       return false;
     }
     return true;
+  }
+
+  availableRoles(member: MemberEntry): ProjectRoles[] {
+    return this.assignableRoles.filter((role) => this.canSetRole(member, role));
   }
 
   setMemberRole(member: MemberEntry, role: ProjectRoles) {
