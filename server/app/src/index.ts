@@ -61,11 +61,11 @@ registerUserRoutes(app)
 registerAdminRoutes(app)
 registerGithubRoutes(app)
 
-app.patch('/api/notifications/:notificationId', (req, res) => {
+app.patch('/api/notifications/:notificationId', apiLimiter, (req, res) => {
   req.body = { ...req.body, ...req.params }
   markNotificationRead(req, res)
 })
-app.delete('/api/notifications/:notificationId', (req, res) => {
+app.delete('/api/notifications/:notificationId', apiLimiter, (req, res) => {
   req.body = { ...req.body, ...req.params }
   deleteNotification(req, res)
 })
