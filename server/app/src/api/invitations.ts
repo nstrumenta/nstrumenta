@@ -22,6 +22,50 @@ function buildProjectInviteUrl(req: Request, orgId: string, projectId: string, i
   return acceptInviteUrl.toString()
 }
 
+function createProjectInvitationResponse(
+  invitationId: string,
+  email: string,
+  existingUser: boolean,
+  inviteUrl: string | null,
+) {
+  return {
+    invitationId,
+    email,
+    status: 'pending' as const,
+    existingUser,
+    requiresEmailBootstrap: !existingUser,
+    ...(inviteUrl
+      ? {
+          firebaseEmailLink: {
+            email,
+            continueUrl: inviteUrl,
+            handleCodeInApp: true,
+          },
+        }
+      : {}),
+  }
+}
+
+async function upsertProjectInvitationNotification(
+  userId: string,
+  invitationId: string,
+  orgId: string,
+  projectId: string,
+  role: string,
+  createdAt: number,
+) {
+  await firestore.doc(`users/${userId}/notifications/${invitationId}`).set({
+    type: 'project_invitation_pending',
+    orgId,
+    projectId: `${orgId}/${projectId}`,
+    invitationId,
+    role,
+    createdAt,
+    read: false,
+    message: `You have a pending invitation to join ${orgId}/${projectId} as ${role}`,
+  })
+}
+
 // POST /api/orgs/:orgId/invitations
 const inviteMemberBase = async (
   req: Request,
@@ -165,57 +209,38 @@ const inviteProjectMemberBase = async (
       .limit(1)
       .get()
 
-    if (!existingInvitations.empty) {
-      return res.status(409).send('A pending invitation already exists for this email')
+    const timestamp = Date.now()
+    const existingInvitation = existingInvitations.empty ? null : existingInvitations.docs[0]
+    const invitationId = existingInvitation?.id ?? firestore.collection(invitationPath).doc().id
+    const invitationRef = firestore.doc(`${invitationPath}/${invitationId}`)
+    const inviteUrl = buildProjectInviteUrl(req, orgId, projectId, invitationId)
+
+    if (!inviteUrl) {
+      return res.status(500).send('Project invitation email link is unavailable')
     }
 
-    const timestamp = Date.now()
-    const invitationRef = firestore.collection(invitationPath).doc()
-    await invitationRef.set({
+    const invitationData = {
       email,
       role,
       invitedBy: userId,
       status: 'pending',
       createdAt: timestamp,
       expiresAt: timestamp + INVITATION_EXPIRY_MS,
-    })
-
-    if (existingUser && targetUserId) {
-      await firestore.collection(`users/${targetUserId}/notifications`).doc().set({
-        type: 'project_invitation_pending',
-        orgId,
-        projectId: `${orgId}/${projectId}`,
-        invitationId: invitationRef.id,
-        role,
-        createdAt: timestamp,
-        read: false,
-        message: `You have a pending invitation to join ${orgId}/${projectId} as ${role}`,
-      })
     }
 
-    let delivery: 'firebase_signin_link' | 'none' = 'none'
-    const inviteUrl = buildProjectInviteUrl(req, orgId, projectId, invitationRef.id)
-    if (inviteUrl) {
-      try {
-        await getAuth().generateSignInWithEmailLink(email, {
-          url: inviteUrl,
-          handleCodeInApp: true,
-        })
-        delivery = 'firebase_signin_link'
-      } catch (error) {
-        console.error('Failed to send project invitation email link:', error)
-      }
+    if (existingInvitation) {
+      await invitationRef.update(invitationData)
+    } else {
+      await invitationRef.set(invitationData)
+    }
+
+    if (existingUser && targetUserId) {
+      await upsertProjectInvitationNotification(targetUserId, invitationId, orgId, projectId, role, timestamp)
     }
 
     console.log(`Project invitation created for ${email} in ${orgId}/${projectId}`)
 
-    return res.status(201).json({
-      invitationId: invitationRef.id,
-      email,
-      status: 'pending',
-      existingUser,
-      delivery,
-    })
+    return res.status(201).json(createProjectInvitationResponse(invitationId, email, existingUser, inviteUrl))
   } catch (error) {
     console.error('Failed to create project invitation:', error)
     return res.status(500).send('Failed to create project invitation')
@@ -272,7 +297,10 @@ const acceptProjectInvitationBase = async (
       acceptedBy: userId,
     })
 
-    await firestore.collection(`users/${userId}/notifications`).doc().set({
+    const notificationsRef = firestore.collection(`users/${userId}/notifications`)
+    await notificationsRef.doc(invitationId).delete()
+
+    await notificationsRef.doc().set({
       type: 'project_membership_added',
       orgId,
       projectId: `${orgId}/${projectId}`,
@@ -381,6 +409,9 @@ async function acceptInvitationInternal(
     slug: orgData?.slug || '',
     role: invitation.role,
   })
+
+  // Clear pending invitation notification
+  batch.delete(firestore.doc(`users/${userId}/notifications/${invitationId}`))
 
   await batch.commit()
 }

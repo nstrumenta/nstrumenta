@@ -2,7 +2,7 @@ import { Component, inject, effect } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
 import { ProjectSettings } from 'src/app/models/projectSettings.model';
-import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { FirebaseDataService, ProjectInvitationRecord } from 'src/app/services/firebase-data.service';
 import { ProjectService } from 'src/app/services/project.service';
 import { ConfirmationDialogComponent } from '../confirmation-dialog/confirmation-dialog.component';
 import { CreateKeyDialogComponent } from '../create-key-dialog/create-key-dialog.component';
@@ -14,10 +14,16 @@ import { AddProjectMemberDialogComponent, AddProjectMemberDialogResponse } from 
 import { AuthService } from 'src/app/auth/auth.service';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { ApiService } from 'src/app/services/api.service';
 
 interface MemberEntry {
+  kind: 'member' | 'invitation';
   memberId: string;
   role: ProjectRoles;
+  invitationId?: string;
+  email?: string;
+  status?: 'pending';
 }
 
 interface ApiKeyEntry {
@@ -64,6 +70,17 @@ interface ApiKeyEntry {
             margin-right: -2px;
             width: 18px;
           }
+
+          .pending-chip {
+            border: 1px solid var(--mat-sys-outline, rgba(0, 0, 0, 0.12));
+            border-radius: 999px;
+            display: inline-flex;
+            font-size: 12px;
+            line-height: 1;
+            margin-left: 8px;
+            padding: 4px 8px;
+            text-transform: uppercase;
+          }
         `,
     ],
     imports: [MatList, MatListItem, MatButton, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, MatMenuTrigger, MatMenu, MatMenuItem, MatIcon]
@@ -78,25 +95,31 @@ export class ProjectSettingsComponent {
   public dialog = inject(MatDialog);
   private projectService = inject(ProjectService);
   private authService = inject(AuthService);
+  private snackBar = inject(MatSnackBar);
+  private apiService = inject(ApiService);
 
   get projectId() { return this.firebaseDataService.projectId(); }
   projectPath: string;
   projectSettings: ProjectSettings;
+  memberEmails: Record<string, string> = {};
 
   constructor() {
     effect(() => {
       const settings = this.firebaseDataService.projectSettings();
       this.projectPath = `/projects/${this.projectId}`;
+
       if (settings) {
         this.projectSettings = settings;
-        
-        // Transform members object to table data
-        const memberTableData = Object.keys(settings.members || {}).map((key) => {
-          return { memberId: key, role: settings.members[key] };
-        });
-        this.membersDataSource = new MatTableDataSource(memberTableData);
+        this.updateMembersTable();
 
-        // Transform apiKeys object to table data
+        if (this.projectId) {
+          this.apiService.listProjectMembers(this.projectId).then(members => {
+            this.memberEmails = {};
+            members.forEach(m => this.memberEmails[m.memberId] = m.email || m.displayName);
+            this.updateMembersTable();
+          }).catch(() => {});  // non-critical, fall back to uid display
+        }
+
         const apiKeysData = Object.keys(settings.apiKeys ? settings.apiKeys : {})
           .map((key) => {
             return { 
@@ -116,6 +139,25 @@ export class ProjectSettingsComponent {
   createApiKey() {
     this.dialog.open(CreateKeyDialogComponent);
   }
+
+  updateMembersTable() {
+    if (!this.projectSettings) return;
+    const settings = this.projectSettings;
+    const memberTableData = Object.keys(settings.members || {}).map((key) => {
+      return { kind: 'member' as const, memberId: key, email: this.memberEmails[key], role: settings.members![key] };
+    });
+    const pendingInvitationRows = this.firebaseDataService.projectInvitations()
+      .filter((invitation) => invitation?.status === 'pending')
+      .map((invitation: ProjectInvitationRecord) => ({
+        kind: 'invitation' as const,
+        memberId: invitation.email,
+        email: invitation.email,
+        invitationId: invitation.id,
+        role: invitation.role as ProjectRoles,
+        status: 'pending' as const,
+      }));
+    this.membersDataSource = new MatTableDataSource([...memberTableData, ...pendingInvitationRows]);
+  }
   revokeApiKey(keyId: string) {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent);
     dialogRef.afterClosed().subscribe((response) => {
@@ -134,7 +176,33 @@ export class ProjectSettingsComponent {
       this.projectService.inviteProjectMember({
         email: response.email,
         role: response.role,
-      }).catch(console.error);
+      })
+        .then(async (inviteResponse) => {
+          const emailLink = inviteResponse.firebaseEmailLink;
+          if (!emailLink && inviteResponse.existingUser) {
+            this.snackBar.open('Invitation created. User can accept in app.', 'Close', { duration: 4000 });
+            return;
+          }
+
+          if (!emailLink) {
+            this.snackBar.open('Invitation created. Email setup unavailable.', 'Close', { duration: 4000 });
+            return;
+          }
+
+          await this.authService.sendInvitationEmailLink(emailLink.email, emailLink.continueUrl);
+          this.snackBar.open(
+            inviteResponse.existingUser
+              ? 'Invitation created. Email sent and user can accept in app.'
+              : 'Invitation email sent.',
+            'Close',
+            { duration: 4000 },
+          );
+        })
+        .catch((error) => {
+          console.error(error);
+          const message = error instanceof Error ? error.message : 'Failed to create invitation';
+          this.snackBar.open(message, 'Close', { duration: 4000 });
+        });
     });
   }
 
@@ -152,12 +220,14 @@ export class ProjectSettingsComponent {
 
   canRemoveMember(member: MemberEntry): boolean {
     if (!this.canManageMembers()) return false;
+    if (member.kind === 'invitation') return true;
     if (member.memberId === this.currentUserId) return false;
     if (this.currentUserProjectRole === 'admin' && member.role === 'owner') return false;
     return true;
   }
 
   canSetRole(member: MemberEntry, nextRole: ProjectRoles): boolean {
+    if (member.kind === 'invitation') return false;
     if (!this.canManageMembers()) return false;
     if (member.role === nextRole) return false;
     if (member.memberId === this.currentUserId) return false;
@@ -181,7 +251,10 @@ export class ProjectSettingsComponent {
     const dialogRef = this.dialog.open(ConfirmationDialogComponent);
     dialogRef.afterClosed().subscribe((response) => {
       if (response) {
-        this.projectService.removeProjectMember(member.memberId).catch(console.error);
+        const removal = member.kind === 'invitation' && member.invitationId
+          ? this.projectService.revokeProjectInvitation(member.invitationId)
+          : this.projectService.removeProjectMember(member.memberId);
+        removal.catch(console.error);
       }
     });
   }

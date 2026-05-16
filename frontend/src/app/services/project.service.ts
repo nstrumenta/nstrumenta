@@ -101,4 +101,12 @@ export class ProjectService {
       memberId,
     });
   }
+
+  async revokeProjectInvitation(invitationId: string) {
+    const projectId = this.currentProjectId;
+    if (!projectId) {
+      throw new Error('No project selected. Please select a project first.');
+    }
+    return this.firebaseDataService.deleteProjectInvitation(projectId, invitationId);
+  }
 }

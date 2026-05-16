@@ -2,7 +2,7 @@ import express from 'express'
 import rateLimit from 'express-rate-limit'
 import { createOrg, getOrg, listOrgMembers, removeOrgMember, listUserOrgs } from './api/organizations'
 import { inviteMember, acceptInvitation, listInvitations, revokeInvitation, inviteProjectMember, acceptProjectInvitation } from './api/invitations'
-import { updateProjectMemberRole, removeProjectMember } from './api/projectMembers'
+import { listProjectMembers, updateProjectMemberRole, removeProjectMember } from './api/projectMembers'
 import { getBilling, getUsage } from './api/billing'
 
 const orgLimiter = rateLimit({
@@ -29,6 +29,7 @@ export function registerOrgRoutes(app: express.Application) {
   router.delete('/:orgId/members/:memberId', mergeParams, removeOrgMember)
   router.post('/:orgId/projects/:projectId/invitations', mergeParams, inviteProjectMember)
   router.post('/:orgId/projects/:projectId/invitations/:invitationId/accept', mergeParams, acceptProjectInvitation)
+  router.get('/:orgId/projects/:projectId/members', mergeParams, listProjectMembers)
   router.patch('/:orgId/projects/:projectId/members/:memberId', mergeParams, updateProjectMemberRole)
   router.delete('/:orgId/projects/:projectId/members/:memberId', mergeParams, removeProjectMember)
 

@@ -11,6 +11,7 @@ import {
   createUserWithEmailAndPassword,
   sendSignInLinkToEmail,
   isSignInWithEmailLink,
+  signInWithEmailLink,
   EmailAuthProvider,
   linkWithCredential,
 } from 'firebase/auth';
@@ -118,6 +119,18 @@ export class AuthService {
     window.localStorage.setItem(EMAIL_LINK_STORAGE_KEY, normalizedEmail);
   }
 
+  async sendInvitationEmailLink(email: string, continueUrl: string): Promise<void> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new Error('Email is required');
+    }
+
+    await sendSignInLinkToEmail(this.auth, normalizedEmail, {
+      url: continueUrl,
+      handleCodeInApp: true,
+    });
+  }
+
   hasPendingEmailLinkInUrl(): boolean {
     return isSignInWithEmailLink(this.auth, window.location.href);
   }
@@ -159,6 +172,24 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  async signInWithInvitationEmailLink(email: string): Promise<'signed-in' | 'none'> {
+    if (!isSignInWithEmailLink(this.auth, window.location.href)) {
+      return 'none';
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      const error: Error & { code?: string } = new Error('Email is required to complete sign-in.');
+      error.code = 'auth/missing-email-for-link';
+      throw error;
+    }
+
+    const result = await signInWithEmailLink(this.auth, normalizedEmail, window.location.href);
+    this.currentUser.set(result.user);
+    this.clearEmailLinkParams();
+    return 'signed-in';
   }
 
   private clearEmailLinkParams(): void {

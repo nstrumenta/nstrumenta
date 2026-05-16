@@ -11,6 +11,11 @@ service cloud.firestore {
     match /users/{user} {
       allow read: if request.auth.uid == user;
       allow write: if false;
+
+      match /notifications/{notificationId} {
+        allow read: if request.auth.uid == user;
+        allow write: if false;
+      }
     }
 
     // Organizations: all writes go through server API (Admin SDK bypasses rules)

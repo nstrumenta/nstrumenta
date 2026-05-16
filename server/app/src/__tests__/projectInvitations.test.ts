@@ -4,11 +4,9 @@ import { Request, Response } from 'express'
 const {
   mockGetUserByEmail,
   mockGetUser,
-  mockGenerateSignInWithEmailLink,
 } = vi.hoisted(() => ({
   mockGetUserByEmail: vi.fn(),
   mockGetUser: vi.fn(),
-  mockGenerateSignInWithEmailLink: vi.fn(),
 }))
 
 const {
@@ -17,6 +15,7 @@ const {
   mockDocUpdate,
   mockCollectionGet,
   mockCollectionDocSet,
+  mockCollectionDocDelete,
   mockFirestoreDoc,
   mockFirestoreCollection,
 } = vi.hoisted(() => {
@@ -26,6 +25,7 @@ const {
   const mockCollectionGet = vi.fn()
   const mockCollectionDocSet = vi.fn().mockResolvedValue(undefined)
   const mockCollectionDocUpdate = vi.fn().mockResolvedValue(undefined)
+  const mockCollectionDocDelete = vi.fn().mockResolvedValue(undefined)
 
   const mockFirestoreDoc = vi.fn((path: string) => ({
     get: () => mockDocGet(path),
@@ -37,10 +37,11 @@ const {
     where: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     get: () => mockCollectionGet(path),
-    doc: vi.fn(() => ({
-      id: 'invite-123',
+    doc: vi.fn((docId?: string) => ({
+      id: docId ?? 'invite-123',
       set: (data: unknown) => mockCollectionDocSet(path, data),
       update: (data: unknown) => mockCollectionDocUpdate(path, data),
+      delete: () => mockCollectionDocDelete(path, docId),
     })),
   }))
 
@@ -50,6 +51,7 @@ const {
     mockDocUpdate,
     mockCollectionGet,
     mockCollectionDocSet,
+    mockCollectionDocDelete,
     mockFirestoreDoc,
     mockFirestoreCollection,
   }
@@ -59,7 +61,6 @@ vi.mock('firebase-admin/auth', () => ({
   getAuth: () => ({
     getUserByEmail: mockGetUserByEmail,
     getUser: mockGetUser,
-    generateSignInWithEmailLink: mockGenerateSignInWithEmailLink,
   }),
 }))
 
@@ -88,7 +89,6 @@ describe('project invitations', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCollectionGet.mockResolvedValue({ empty: true, docs: [] })
-    mockGenerateSignInWithEmailLink.mockResolvedValue('https://example.com/invite-link')
   })
 
   it('returns 403 when caller is not a project admin', async () => {
@@ -141,35 +141,45 @@ describe('project invitations', () => {
       role: 'viewer',
     })
 
-    expect(mockCollectionDocSet).toHaveBeenCalledWith(
-      'users/user-2/notifications',
+    expect(mockDocSet).toHaveBeenCalledWith(
+      'users/user-2/notifications/invite-123',
       expect.objectContaining({
         type: 'project_invitation_pending',
         projectId: 'org1/proj1',
         invitationId: 'invite-123',
       }),
     )
-    expect(mockGenerateSignInWithEmailLink).toHaveBeenCalledWith(
-      'existing@example.com',
-      expect.objectContaining({
-        url: expect.stringContaining('/accept-invite?'),
-        handleCodeInApp: true,
-      }),
-    )
     expect(res.status).toHaveBeenCalledWith(201)
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
       status: 'pending',
       existingUser: true,
-      delivery: 'firebase_signin_link',
+      requiresEmailBootstrap: false,
+      firebaseEmailLink: expect.objectContaining({
+        email: 'existing@example.com',
+        continueUrl: expect.stringContaining('/accept-invite?'),
+        handleCodeInApp: true,
+      }),
     }))
   })
 
-  it('keeps pending invite successful when email-link delivery fails', async () => {
+  it('reuses an existing pending invitation as a resend', async () => {
     const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
     const res = makeRes() as Response
 
     mockGetUserByEmail.mockResolvedValue({ uid: 'user-2' })
-    mockGenerateSignInWithEmailLink.mockRejectedValue(new Error('delivery failed'))
+    mockCollectionGet.mockResolvedValue({
+      empty: false,
+      docs: [
+        {
+          id: 'invite-existing',
+          data: () => ({
+            email: 'existing@example.com',
+            role: 'viewer',
+            status: 'pending',
+          }),
+        },
+      ],
+    })
     mockDocGet.mockImplementation(async (path: string) => {
       if (path === 'organizations/org1/projects/proj1') {
         return {
@@ -186,24 +196,38 @@ describe('project invitations', () => {
       orgId: 'org1',
       projectId: 'proj1',
       email: 'existing@example.com',
-      role: 'viewer',
+      role: 'admin',
     })
 
-    expect(mockCollectionDocSet).toHaveBeenCalledWith(
-      'users/user-2/notifications',
+    expect(mockDocUpdate).toHaveBeenCalledWith(
+      'organizations/org1/projects/proj1/invitations/invite-existing',
       expect.objectContaining({
-        type: 'project_invitation_pending',
+        email: 'existing@example.com',
+        role: 'admin',
+        status: 'pending',
+      }),
+    )
+    expect(mockDocSet).toHaveBeenCalledWith(
+      'users/user-2/notifications/invite-existing',
+      expect.objectContaining({
+        invitationId: 'invite-existing',
+        role: 'admin',
       }),
     )
     expect(res.status).toHaveBeenCalledWith(201)
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      status: 'pending',
+      invitationId: 'invite-existing',
       existingUser: true,
-      delivery: 'none',
+      requiresEmailBootstrap: false,
+      firebaseEmailLink: expect.objectContaining({
+        email: 'existing@example.com',
+        continueUrl: expect.stringContaining('/accept-invite?'),
+        handleCodeInApp: true,
+      }),
     }))
   })
 
-  it('generates Firebase sign-in link for new-user project invitations', async () => {
+  it('returns Firebase email bootstrap config for new-user project invitations', async () => {
     const req = { body: {}, headers: { origin: 'https://app.example.com' } } as Request
     const res = makeRes() as Response
 
@@ -227,15 +251,17 @@ describe('project invitations', () => {
       role: 'viewer',
     })
 
-    expect(mockGenerateSignInWithEmailLink).toHaveBeenCalledWith(
-      'new@example.com',
-      expect.objectContaining({
-        url: expect.stringContaining('/accept-invite?'),
+    expect(res.status).toHaveBeenCalledWith(201)
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'pending',
+      existingUser: false,
+      requiresEmailBootstrap: true,
+      firebaseEmailLink: expect.objectContaining({
+        email: 'new@example.com',
+        continueUrl: expect.stringContaining('/accept-invite?'),
         handleCodeInApp: true,
       }),
-    )
-    expect(res.status).toHaveBeenCalledWith(201)
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ status: 'pending', existingUser: false }))
+    }))
   })
 
   it('accepts project invitation when user email matches', async () => {
@@ -281,6 +307,10 @@ describe('project invitations', () => {
     expect(mockDocUpdate).toHaveBeenCalledWith(
       'organizations/org1/projects/proj1/invitations/invite-1',
       expect.objectContaining({ status: 'accepted', acceptedBy: 'user-2' }),
+    )
+    expect(mockCollectionDocDelete).toHaveBeenCalledWith(
+      'users/user-2/notifications',
+      'invite-1',
     )
     expect(mockCollectionDocSet).toHaveBeenCalledWith(
       'users/user-2/notifications',

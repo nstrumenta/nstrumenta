@@ -25,12 +25,10 @@ Credentials are written to `integration-tests/.seed-output` (gitignored, mode 06
 ## Running Tests
 
 ```shell
-# From repo root
-npm run test:e2e
-
-# CLI E2E only
-cd integration-tests && ./e2e.sh
+source credentials/activate.sh && npm run test:e2e -- --rebuild-frontend
 ```
+
+The `--rebuild-frontend` flag forces a frontend build before running. Omit it in CI where `frontend/dist` is built fresh as part of the pipeline.
 
 Each test run creates an ephemeral user with randomised credentials via `globalSetup.ts`
 and deletes them on teardown — no manual seeding required for CI.

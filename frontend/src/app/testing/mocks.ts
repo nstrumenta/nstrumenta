@@ -74,8 +74,10 @@ export class MockAuthService {
   loginWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   registerWithEmail(_email: string, _password: string) { return Promise.resolve(); }
   sendEmailLinkForCurrentUser(_email: string) { return Promise.resolve(); }
+  sendInvitationEmailLink(_email: string, _continueUrl: string) { return Promise.resolve(); }
   hasPendingEmailLinkInUrl() { return false; }
   completePendingEmailLink(_emailOverride?: string) { return Promise.resolve<'linked' | 'none'>('none'); }
+  signInWithInvitationEmailLink(_email: string) { return Promise.resolve<'signed-in' | 'none'>('signed-in'); }
   logout() { return Promise.resolve(); }
   getAuth() { return {} as any; }
 }

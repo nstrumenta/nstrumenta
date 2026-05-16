@@ -4,14 +4,20 @@
 # Prerequisites: source credentials/activate.sh
 #
 # Usage:
-#   ./frontend-e2e.sh                    # run all tests
-#   ./frontend-e2e.sh tests/foo.spec.js  # run specific test file
+#   ./frontend-e2e.sh                                   # run all tests
+#   ./frontend-e2e.sh tests/foo.spec.js                 # run specific test file
+#   ./frontend-e2e.sh --rebuild-frontend                # force frontend rebuild before running
 
 cd "$(dirname "$0")"
 
 START_SECONDS=$SECONDS
+REBUILD_FRONTEND=false
 PLAYWRIGHT_TEST_ARGS=()
 for arg in "$@"; do
+    if [ "$arg" = "--rebuild-frontend" ]; then
+        REBUILD_FRONTEND=true
+        continue
+    fi
     normalized_arg="${arg#./}"
     normalized_arg="${normalized_arg#frontend/}"
     PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
@@ -29,7 +35,7 @@ eval "$(node get-project-config.js)"
 NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT)
 export NSTRUMENTA_API_KEY_PEPPER
 
-if [ ! -d "../frontend/dist" ]; then
+if [ "$REBUILD_FRONTEND" = true ] || [ ! -d "../frontend/dist" ]; then
     echo "Building frontend..."
     (cd ../frontend && npm install && npm run build)
 fi

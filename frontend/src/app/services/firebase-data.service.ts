@@ -55,6 +55,15 @@ import { ProjectSettings } from '../models/projectSettings.model';
 import { ApiService } from './api.service';
 import { AuthService } from '../auth/auth.service';
 
+export interface ProjectInvitationRecord extends DocumentData {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  createdAt?: number;
+  expiresAt?: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -88,6 +97,7 @@ export class FirebaseDataService {
   private machinesSignal = signal<Machine[]>([]);
   private userProjectsSignal = signal<Project[]>([]);
   private notificationsSignal = signal<DocumentData[]>([]);
+  private projectInvitationsSignal = signal<ProjectInvitationRecord[]>([]);
 
   // Project settings signal
   private projectSettingsSignal = signal<ProjectSettings | null>(null);
@@ -104,6 +114,7 @@ export class FirebaseDataService {
   public userProjectsObservable$: Observable<Project[]>; // Made public for ProjectService
   private projectSettingsObservable$: Observable<unknown>;
   private notificationsObservable$: Observable<unknown[]>;
+  private projectInvitationsObservable$: Observable<unknown[]>;
 
   constructor() {
     this.firestore = getFirestore();
@@ -248,6 +259,10 @@ export class FirebaseDataService {
           const notificationsQuery = query(notificationsCollection, orderBy('createdAt', 'desc'));
           return this.collectionData(notificationsQuery);
         });
+      }),
+      catchError((error) => {
+        console.error('Error loading notifications:', error);
+        return of([]);
       })
     );
 
@@ -257,6 +272,17 @@ export class FirebaseDataService {
         return runInInjectionContext(this.injector, () =>
           this.docData(doc(this.firestore, `/${this.getProjectPath(projectId)}`))
         );
+      })
+    );
+
+    this.projectInvitationsObservable$ = projectWithAuth$.pipe(
+      switchMap(([projectId, user]) => {
+        if (!projectId || !user) return of([]);
+        return runInInjectionContext(this.injector, () => {
+          const invitationsCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/invitations`);
+          const invitationsQuery = query(invitationsCollection, orderBy('createdAt', 'desc'));
+          return this.collectionData(invitationsQuery);
+        });
       })
     );
 
@@ -309,6 +335,10 @@ export class FirebaseDataService {
     this.projectSettingsObservable$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((data) => this.projectSettingsSignal.set(data as ProjectSettings | null));
+
+    this.projectInvitationsObservable$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => this.projectInvitationsSignal.set((data as ProjectInvitationRecord[]) || []));
   }
 
   // Public methods to set project and agent
@@ -397,6 +427,10 @@ export class FirebaseDataService {
     return this.projectSettingsSignal.asReadonly();
   }
 
+  get projectInvitations() {
+    return this.projectInvitationsSignal.asReadonly();
+  }
+
   get projectId() {
     return this.currentProjectId.asReadonly();
   }
@@ -456,6 +490,13 @@ export class FirebaseDataService {
   async deleteAction(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {
       const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/actions/${id}`);
+      await deleteDoc(docRef);
+    });
+  }
+
+  async deleteProjectInvitation(projectId: string, invitationId: string): Promise<void> {
+    await runInInjectionContext(this.injector, async () => {
+      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/invitations/${invitationId}`);
       await deleteDoc(docRef);
     });
   }

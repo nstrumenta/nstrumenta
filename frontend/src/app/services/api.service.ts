@@ -1,5 +1,5 @@
 import { ProjectRoles } from "../models/projectSettings.model";
-import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
@@ -48,6 +48,12 @@ export interface InviteProjectMemberResponse {
   email: string;
   status: 'pending' | 'accepted';
   existingUser: boolean;
+  requiresEmailBootstrap?: boolean;
+  firebaseEmailLink?: {
+    email: string;
+    continueUrl: string;
+    handleCodeInApp: boolean;
+  };
 }
 
 export interface AcceptProjectInvitationRequest {
@@ -93,6 +99,18 @@ export class ApiService {
       throw new Error(errorText);
     }
     return response.result?.structuredContent || response.result;
+  }
+
+  private rethrowHttpError(error: unknown): never {
+    if (error instanceof HttpErrorResponse) {
+      const serverMessage = typeof error.error === 'string'
+        ? error.error.trim()
+        : error.error?.message;
+      const parsedError = new Error(serverMessage || error.message || `HTTP ${error.status}`);
+      (parsedError as any).status = error.status;
+      throw parsedError;
+    }
+    throw error;
   }
 
   private async buildMcpHeaders(projectId?: string): Promise<HttpHeaders> {
@@ -218,7 +236,7 @@ export class ApiService {
         role: request.role,
       },
       { headers },
-    ).toPromise();
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     if (!response) {
       throw new Error('Empty response from project invitation endpoint');
@@ -236,7 +254,7 @@ export class ApiService {
       `${apiUrl}/api/orgs/${request.orgId}/projects/${request.projectId}/invitations/${request.invitationId}/accept`,
       {},
       { headers },
-    ).toPromise();
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     if (!response) {
       throw new Error('Empty response from project invitation acceptance endpoint');
@@ -258,7 +276,7 @@ export class ApiService {
       `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
       { role: request.role },
       { headers },
-    ).toPromise();
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     if (!response) {
       throw new Error('Empty response from project member role update endpoint');
@@ -279,7 +297,7 @@ export class ApiService {
     const response = await this.http.delete<{ removed: string }>(
       `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
       { headers },
-    ).toPromise();
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     if (!response) {
       throw new Error('Empty response from project member removal endpoint');
@@ -288,6 +306,31 @@ export class ApiService {
     return response;
   }
 
+  async listProjectMembers(projectId: string): Promise<{ memberId: string; email: string; displayName: string; role: ProjectRoles }[]> {    const [orgId, projectSlug] = projectId.split('/');
+    if (!orgId || !projectSlug) throw new Error(`Invalid projectId format: ${projectId}`);
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    return this.http.get<{ memberId: string; email: string; displayName: string; role: ProjectRoles }[]>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectSlug}/members`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error)) as Promise<any>;
+  }
+
+  async markNotificationRead(notificationId: string): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+    await this.http.patch(`${apiUrl}/api/notifications/${notificationId}`, {}, { headers })
+      .toPromise().catch((error) => this.rethrowHttpError(error));
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+    await this.http.delete(`${apiUrl}/api/notifications/${notificationId}`, { headers })
+      .toPromise().catch((error) => this.rethrowHttpError(error));
+  }
 
   async uploadFileToPath(
     path: string,
