@@ -18,6 +18,7 @@ import { registerOrgRoutes } from './orgRoutes'
 import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
 import { registerGithubRoutes } from './githubRoutes'
+import { markNotificationRead, deleteNotification } from './api/notifications'
 
 const version = require('../package.json').version
 
@@ -53,12 +54,26 @@ const mcpLimiter = rateLimit({
   legacyHeaders: false,
 })
 
+app.use('/api/', (req, res, next) => {
+  if (req.path === '/github/webhook') return next()
+  return apiLimiter(req, res, next)
+})
+
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
 registerOrgRoutes(app)
 registerUserRoutes(app)
 registerAdminRoutes(app)
 registerGithubRoutes(app)
+
+app.patch('/api/notifications/:notificationId', (req, res) => {
+  req.body = { ...req.body, ...req.params }
+  markNotificationRead(req, res)
+})
+app.delete('/api/notifications/:notificationId', (req, res) => {
+  req.body = { ...req.body, ...req.params }
+  deleteNotification(req, res)
+})
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version, buildSha: imageVersionTag })

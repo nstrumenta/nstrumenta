@@ -27,7 +27,13 @@ case "$SUBCOMMAND" in
 esac
 
 START_SECONDS=$SECONDS
-TEST_ARGS="$*"
+PLAYWRIGHT_TEST_ARGS=()
+for arg in "$@"; do
+    normalized_arg="${arg#./}"
+    normalized_arg="${normalized_arg#tests/}"
+    PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
+done
+TEST_ARGS="$(printf ' %q' "${PLAYWRIGHT_TEST_ARGS[@]}")"
 
 # Verify the watch stack is running before wasting time on setup
 if ! docker compose $COMPOSE_FILES exec -T server sh -c "wget -qO- http://localhost:5999/health" > /dev/null 2>&1; then
@@ -61,9 +67,9 @@ trap cleanup_users EXIT
 export NSTRUMENTA_API_KEY=$(node create-api-key.js "${TEST_USER_USERNAME}/ci" http://server:5999)
 
 PLAYWRIGHT_EXIT_CODE=0
-if [ -n "$TEST_ARGS" ]; then
+if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm --no-deps playwright sh -c "npm run test:playwright -- $TEST_ARGS"
+    docker compose $COMPOSE_FILES run --rm --no-deps playwright sh -c "npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

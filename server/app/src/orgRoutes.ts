@@ -1,15 +1,8 @@
 import express from 'express'
-import rateLimit from 'express-rate-limit'
 import { createOrg, getOrg, listOrgMembers, removeOrgMember, listUserOrgs } from './api/organizations'
-import { inviteMember, acceptInvitation, listInvitations, revokeInvitation } from './api/invitations'
+import { inviteMember, acceptInvitation, listInvitations, revokeInvitation, inviteProjectMember, acceptProjectInvitation } from './api/invitations'
+import { listProjectMembers, updateProjectMemberRole, removeProjectMember } from './api/projectMembers'
 import { getBilling, getUsage } from './api/billing'
-
-const orgLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
 
 function mergeParams(req: express.Request, _res: express.Response, next: express.NextFunction) {
   req.body = { ...req.body, ...req.params }
@@ -18,7 +11,6 @@ function mergeParams(req: express.Request, _res: express.Response, next: express
 
 export function registerOrgRoutes(app: express.Application) {
   const router = express.Router()
-  router.use(orgLimiter)
 
   router.post('/', createOrg)
   router.get('/', listUserOrgs)
@@ -26,6 +18,11 @@ export function registerOrgRoutes(app: express.Application) {
 
   router.get('/:orgId/members', mergeParams, listOrgMembers)
   router.delete('/:orgId/members/:memberId', mergeParams, removeOrgMember)
+  router.post('/:orgId/projects/:projectId/invitations', mergeParams, inviteProjectMember)
+  router.post('/:orgId/projects/:projectId/invitations/:invitationId/accept', mergeParams, acceptProjectInvitation)
+  router.get('/:orgId/projects/:projectId/members', mergeParams, listProjectMembers)
+  router.patch('/:orgId/projects/:projectId/members/:memberId', mergeParams, updateProjectMemberRole)
+  router.delete('/:orgId/projects/:projectId/members/:memberId', mergeParams, removeProjectMember)
 
   router.post('/:orgId/invitations', mergeParams, inviteMember)
   router.get('/:orgId/invitations', mergeParams, listInvitations)

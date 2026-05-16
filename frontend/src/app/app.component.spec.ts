@@ -4,7 +4,8 @@ import { AppComponent } from './app.component';
 import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { AuthService } from './auth/auth.service';
 import { OrganizationService } from './services/organization.service';
-import { MockAuthService } from './testing/mocks';
+import { FirebaseDataService } from './services/firebase-data.service';
+import { MockAuthService, MockFirebaseDataService } from './testing/mocks';
 import { signal } from '@angular/core';
 
 const mockOrganizationService = { organizations: signal([]) };
@@ -16,6 +17,7 @@ describe('AppComponent', () => {
     schemas: [CUSTOM_ELEMENTS_SCHEMA],
     providers: [
       { provide: AuthService, useClass: MockAuthService },
+      { provide: FirebaseDataService, useClass: MockFirebaseDataService },
       { provide: OrganizationService, useValue: mockOrganizationService },
     ],
 }).compileComponents();

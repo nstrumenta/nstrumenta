@@ -6,7 +6,7 @@ import { signal } from '@angular/core';
 import { waitlistGuard } from './waitlist.guard';
 import { AuthService } from '../auth/auth.service';
 
-const mockState: any = { url: '/dashboard' };
+let mockState: any = { url: '/dashboard' };
 
 function runGuard(): boolean | UrlTree {
   return TestBed.runInInjectionContext(() => waitlistGuard(null as any, mockState)) as boolean | UrlTree;
@@ -18,6 +18,7 @@ describe('waitlistGuard', () => {
   let userStatusSignal: ReturnType<typeof signal<string | null>>;
 
   beforeEach(() => {
+    mockState = { url: '/dashboard' };
     currentUserSignal = signal<any>({ uid: 'test-uid' });
     userStatusSignal = signal<string | null>('approved');
     routerSpy = {
@@ -58,5 +59,16 @@ describe('waitlistGuard', () => {
     const result = runGuard();
     expect(result).toBe(mockUrlTree);
     expect(routerSpy.parseUrl).toHaveBeenCalledWith('/waitlist');
+  });
+
+  it('allows /account/profile for pending users', () => {
+    mockState = { url: '/account/profile?emailLink=1' };
+    currentUserSignal.set({ uid: 'test-uid' });
+    userStatusSignal.set('pending');
+
+    const result = runGuard();
+
+    expect(result).toBe(true);
+    expect(routerSpy.parseUrl).not.toHaveBeenCalled();
   });
 });

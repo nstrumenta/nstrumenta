@@ -143,6 +143,7 @@ resource "google_identity_platform_config" "auth" {
   sign_in {
     email {
       enabled = true
+      password_required = false
     }
 
     phone_number {

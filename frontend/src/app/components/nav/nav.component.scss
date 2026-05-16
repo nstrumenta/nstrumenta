@@ -31,3 +31,33 @@ mat-nav-list a[mat-list-item] {
   background-color: var(--mat-sys-secondary-container);
   color: var(--mat-sys-on-secondary-container);
 }
+
+.pending-invite-banner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+}
+
+.pending-invite-banner {
+  border-left: 4px solid var(--mat-sys-tertiary);
+}
+
+.pending-invite-banner-content {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+}
+
+.pending-invite-message {
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .pending-invite-banner-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

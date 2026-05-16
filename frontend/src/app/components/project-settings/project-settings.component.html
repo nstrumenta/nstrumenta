@@ -7,16 +7,51 @@
   </mat-list-item>
 </mat-list>
 
+<button mat-flat-button (click)="inviteMember()">Invite Member</button>
+
 
 <mat-table #table [dataSource]="membersDataSource" class="animate">
   <ng-container matColumnDef="memberId">
-    <mat-header-cell *matHeaderCellDef> memberId </mat-header-cell>
-    <mat-cell *matCellDef="let member">{{ member.memberId }} </mat-cell>
+    <mat-header-cell *matHeaderCellDef> member </mat-header-cell>
+    <mat-cell *matCellDef="let member">
+      {{ member.email || member.memberId }}
+      @if (member.kind === 'invitation') {
+        <span class="pending-chip">pending</span>
+      }
+    </mat-cell>
   </ng-container>
 
   <ng-container matColumnDef="role">
     <mat-header-cell *matHeaderCellDef> role </mat-header-cell>
-    <mat-cell *matCellDef="let member">{{ member.role }} </mat-cell>
+    <mat-cell *matCellDef="let member">
+      @let roles = availableRoles(member);
+      <div class="member-role-cell">
+        @if (roles.length > 0) {
+          <button mat-button class="member-role-chip" [matMenuTriggerFor]="roleMenu">
+            <span>{{ member.role }}</span>
+            <mat-icon>arrow_drop_down</mat-icon>
+          </button>
+          <mat-menu #roleMenu="matMenu">
+            @for (role of roles; track role) {
+              <button mat-menu-item (click)="setMemberRole(member, role)">{{ role }}</button>
+            }
+          </mat-menu>
+        } @else {
+          <button mat-button disabled class="member-role-chip is-static">
+            <span>{{ member.role }}</span>
+          </button>
+        }
+      </div>
+    </mat-cell>
+  </ng-container>
+
+  <ng-container matColumnDef="action">
+    <mat-header-cell *matHeaderCellDef></mat-header-cell>
+    <mat-cell *matCellDef="let member">
+      @if (canRemoveMember(member)) {
+        <button mat-button (click)="removeMember(member)">{{ member.kind === 'invitation' ? 'Cancel' : 'Remove' }}</button>
+      }
+    </mat-cell>
   </ng-container>
 
 

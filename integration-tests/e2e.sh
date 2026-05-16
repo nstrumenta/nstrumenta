@@ -11,16 +11,18 @@ cd "$(dirname "$0")"
 
 START_SECONDS=$SECONDS
 CLI_TEST_ARGS=""
-PLAYWRIGHT_TEST_ARGS=""
+PLAYWRIGHT_TEST_ARGS=()
 for arg in "$@"; do
     if echo "$arg" | grep -q 'tests/.*\.ts'; then
         CLI_TEST_ARGS="$arg"
     else
-        PLAYWRIGHT_TEST_ARGS="$PLAYWRIGHT_TEST_ARGS $arg"
+        normalized_arg="${arg#./}"
+        normalized_arg="${normalized_arg#frontend/}"
+        PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
     fi
 done
 export CLI_TEST_ARGS
-TEST_ARGS="$PLAYWRIGHT_TEST_ARGS"
+TEST_ARGS="$(printf ' %q' "${PLAYWRIGHT_TEST_ARGS[@]}")"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
     echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
@@ -69,9 +71,9 @@ docker compose $COMPOSE_FILES run --build --rm cli-tests
 CLI_EXIT_CODE=$?
 set -e
 
-if [ -n "$TEST_ARGS" ]; then
+if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_ARGS"
+    docker compose $COMPOSE_FILES run --build --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

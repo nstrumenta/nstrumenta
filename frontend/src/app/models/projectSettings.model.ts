@@ -9,6 +9,7 @@ export interface ApiKeyInfo {
 export interface ProjectSettings {
   name?: string;
   orgId?: string;
+  orgSlug?: string;
   visibility?: ProjectVisibility;
   members?: Record<string, ProjectRoles>;
   apiKeys?: Record<string, ApiKeyInfo>;

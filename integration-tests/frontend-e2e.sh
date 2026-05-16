@@ -4,13 +4,25 @@
 # Prerequisites: source credentials/activate.sh
 #
 # Usage:
-#   ./frontend-e2e.sh                    # run all tests
-#   ./frontend-e2e.sh tests/foo.spec.js  # run specific test file
+#   ./frontend-e2e.sh                                   # run all tests
+#   ./frontend-e2e.sh tests/foo.spec.js                 # run specific test file
+#   ./frontend-e2e.sh --rebuild-frontend                # force frontend rebuild before running
 
 cd "$(dirname "$0")"
 
 START_SECONDS=$SECONDS
-TEST_ARGS="$*"
+REBUILD_FRONTEND=false
+PLAYWRIGHT_TEST_ARGS=()
+for arg in "$@"; do
+    if [ "$arg" = "--rebuild-frontend" ]; then
+        REBUILD_FRONTEND=true
+        continue
+    fi
+    normalized_arg="${arg#./}"
+    normalized_arg="${normalized_arg#frontend/}"
+    PLAYWRIGHT_TEST_ARGS+=("$normalized_arg")
+done
+TEST_ARGS="$(printf ' %q' "${PLAYWRIGHT_TEST_ARGS[@]}")"
 
 if [ -z "$GOOGLE_CLOUD_PROJECT" ]; then
     echo "GOOGLE_CLOUD_PROJECT is not set. Run: source credentials/activate.sh"
@@ -23,7 +35,7 @@ eval "$(node get-project-config.js)"
 NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secret=NSTRUMENTA_API_KEY_PEPPER --project=$GOOGLE_CLOUD_PROJECT)
 export NSTRUMENTA_API_KEY_PEPPER
 
-if [ ! -d "../frontend/dist" ]; then
+if [ "$REBUILD_FRONTEND" = true ] || [ ! -d "../frontend/dist" ]; then
     echo "Building frontend..."
     (cd ../frontend && npm install && npm run build)
 fi
@@ -52,9 +64,9 @@ COMPOSE_FILES="-f docker-compose.e2e.yml"
 docker compose $COMPOSE_FILES up --build -d server
 
 PLAYWRIGHT_EXIT_CODE=0
-if [ -n "$TEST_ARGS" ]; then
+if [ ${#PLAYWRIGHT_TEST_ARGS[@]} -gt 0 ]; then
     set +e
-    docker compose $COMPOSE_FILES run --rm playwright sh -c "npm install && npm run test:playwright -- $TEST_ARGS"
+    docker compose $COMPOSE_FILES run --build --rm playwright sh -c "npm install && npm run test:playwright --$TEST_ARGS"
     PLAYWRIGHT_EXIT_CODE=$?
     set -e
 else

@@ -1,4 +1,10 @@
-<mat-toolbar>User Settings</mat-toolbar>
+<mat-toolbar>
+  <span>User Settings</span>
+  <span class="toolbar-spacer"></span>
+  @if (authService.currentUser()?.email) {
+    <span class="account-email">{{ authService.currentUser()?.email }}</span>
+  }
+</mat-toolbar>
 <div class="content">
   <router-outlet></router-outlet>
 </div>

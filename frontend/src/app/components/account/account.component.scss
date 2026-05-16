@@ -1,4 +1,13 @@
 
+.toolbar-spacer {
+  flex: 1;
+}
+
+.account-email {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
 .content {
   padding: 16px;
   height: calc(100vh - 64px);

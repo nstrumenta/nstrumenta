@@ -20,10 +20,47 @@
         </button>
       </div>
       
-      @if (authService.currentUser()?.email) {
-        <div class="detail-item">
-          <strong>Email:</strong>
+      <div class="detail-item">
+        <strong>Email:</strong>
+        @if (authService.currentUser()?.email) {
           <span>{{authService.currentUser()?.email}}</span>
+        } @else {
+          <span>Not available from sign-in provider</span>
+        }
+      </div>
+
+      @if (!authService.currentUser()?.email) {
+        <div class="email-linking">
+          <p>Add and verify an email address so invitations can be matched to your account.</p>
+          @if (requiresEmailForLinkCompletion) {
+            <p>Verification link opened without saved session state. Enter the same email address to complete linking.</p>
+          }
+          <mat-form-field>
+            <mat-label>Email address</mat-label>
+            <input matInput
+                   [(ngModel)]="emailInput"
+                   type="email"
+                   autocomplete="email"
+                   placeholder="name@example.com" />
+            @if (emailLinkError) {
+              <mat-error>{{ emailLinkError }}</mat-error>
+            }
+            @if (emailLinkSent) {
+              <mat-hint>Check your inbox and open the link while still signed in.</mat-hint>
+            }
+          </mat-form-field>
+          <button mat-flat-button
+                  [disabled]="isSendingEmailLink"
+                  (click)="sendEmailLink()">
+            {{ isSendingEmailLink ? 'Sending...' : 'Send verification link' }}
+          </button>
+          @if (hasEmailLinkCallback) {
+            <button mat-stroked-button
+                    [disabled]="isCompletingEmailLink"
+                    (click)="completeEmailLinkFromInput()">
+              {{ isCompletingEmailLink ? 'Completing...' : 'Complete verification' }}
+            </button>
+          }
         </div>
       }
       

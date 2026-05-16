@@ -1,4 +1,5 @@
-import { HttpClient, HttpHeaders, HttpEvent, HttpEventType } from '@angular/common/http';
+import { ProjectRoles } from "../models/projectSettings.model";
+import { HttpClient, HttpHeaders, HttpEvent, HttpEventType, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
@@ -36,6 +37,48 @@ export interface UploadDataResponse {
   filePath: string;
 }
 
+export interface InviteProjectMemberRequest {
+  projectId: string;
+  email: string;
+  role: ProjectRoles;
+}
+
+export interface InviteProjectMemberResponse {
+  invitationId: string;
+  email: string;
+  status: 'pending' | 'accepted';
+  existingUser: boolean;
+  requiresEmailBootstrap?: boolean;
+  firebaseEmailLink?: {
+    email: string;
+    continueUrl: string;
+    handleCodeInApp: boolean;
+  };
+}
+
+export interface AcceptProjectInvitationRequest {
+  orgId: string;
+  projectId: string;
+  invitationId: string;
+}
+
+export interface AcceptProjectInvitationResponse {
+  accepted: boolean;
+  orgId: string;
+  projectId: string;
+}
+
+export interface UpdateProjectMemberRoleRequest {
+  projectId: string;
+  memberId: string;
+  role: ProjectRoles;
+}
+
+export interface RemoveProjectMemberRequest {
+  projectId: string;
+  memberId: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -56,6 +99,18 @@ export class ApiService {
       throw new Error(errorText);
     }
     return response.result?.structuredContent || response.result;
+  }
+
+  private rethrowHttpError(error: unknown): never {
+    if (error instanceof HttpErrorResponse) {
+      const serverMessage = typeof error.error === 'string'
+        ? error.error.trim()
+        : error.error?.message;
+      const parsedError = new Error(serverMessage || error.message || `HTTP ${error.status}`);
+      (parsedError as any).status = error.status;
+      throw parsedError;
+    }
+    throw error;
   }
 
   private async buildMcpHeaders(projectId?: string): Promise<HttpHeaders> {
@@ -165,6 +220,117 @@ export class ApiService {
     };
   }
 
+  async inviteProjectMember(request: InviteProjectMemberRequest): Promise<InviteProjectMemberResponse> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.post<InviteProjectMemberResponse>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/invitations`,
+      {
+        email: request.email,
+        role: request.role,
+      },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project invitation endpoint');
+    }
+
+    return response;
+  }
+
+  async acceptProjectInvitation(request: AcceptProjectInvitationRequest): Promise<AcceptProjectInvitationResponse> {
+    const fullProjectId = `${request.orgId}/${request.projectId}`;
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(fullProjectId);
+
+    const response = await this.http.post<AcceptProjectInvitationResponse>(
+      `${apiUrl}/api/orgs/${request.orgId}/projects/${request.projectId}/invitations/${request.invitationId}/accept`,
+      {},
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project invitation acceptance endpoint');
+    }
+
+    return response;
+  }
+
+  async updateProjectMemberRole(request: UpdateProjectMemberRoleRequest): Promise<{ memberId: string; role: ProjectRoles }> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.patch<{ memberId: string; role: ProjectRoles }>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
+      { role: request.role },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project member role update endpoint');
+    }
+
+    return response;
+  }
+
+  async removeProjectMember(request: RemoveProjectMemberRequest): Promise<{ removed: string }> {
+    const [orgId, projectId] = request.projectId.split('/');
+    if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${request.projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(request.projectId);
+
+    const response = await this.http.delete<{ removed: string }>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectId}/members/${request.memberId}`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project member removal endpoint');
+    }
+
+    return response;
+  }
+
+  async listProjectMembers(projectId: string): Promise<{ memberId: string; email: string; displayName: string; role: ProjectRoles }[]> {    const [orgId, projectSlug] = projectId.split('/');
+    if (!orgId || !projectSlug) throw new Error(`Invalid projectId format: ${projectId}`);
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    return this.http.get<{ memberId: string; email: string; displayName: string; role: ProjectRoles }[]>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectSlug}/members`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error)) as Promise<any>;
+  }
+
+  async markNotificationRead(notificationId: string): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+    await this.http.patch(`${apiUrl}/api/notifications/${notificationId}`, {}, { headers })
+      .toPromise().catch((error) => this.rethrowHttpError(error));
+  }
+
+  async deleteNotification(notificationId: string): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+    await this.http.delete(`${apiUrl}/api/notifications/${notificationId}`, { headers })
+      .toPromise().catch((error) => this.rethrowHttpError(error));
+  }
 
   async uploadFileToPath(
     path: string,

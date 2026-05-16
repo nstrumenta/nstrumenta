@@ -139,7 +139,6 @@ export function createArchiveService({
           .doc(timestamp.toString())
           .set({ archive: JSON.stringify(project), createdAt: timestamp })
 
-        // TODO: this should be managed by the listener which spawned this service action
         console.log(`set action ${actionPath} to complete`)
         await firestore
           .doc(actionPath)
@@ -148,8 +147,7 @@ export function createArchiveService({
         console.log('archive is', project)
         console.log('archive succeeded :O')
 
-        // TODO: Create archive metadata
-        return firestore.doc(`projects/${{ projectId }}`)
+        return firestore.doc(projectPath)
       } catch (err) {
         await firestore
           .doc(actionPath)
@@ -210,10 +208,6 @@ export function createArchiveService({
             originalPath,
           })
 
-          // TODO: sanitize the data;
-          // here's pme prob w/storing the archives within the project
-          // this cleaning step should already be taken care of when archive is created
-          // but we'll just make sure here
           if (!!data.archive) {
             console.log(`data is an archive`)
             return

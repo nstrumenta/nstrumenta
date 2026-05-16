@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from '../auth/auth.service';
 import { ApiService } from './api.service';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationDoc } from '../models/organization.model';
+import { OrganizationDoc, OrgMemberDoc } from '../models/organization.model';
 
 @Injectable({ providedIn: 'root' })
 export class OrganizationService {
@@ -33,7 +33,9 @@ export class OrganizationService {
 
   async createOrganization(name: string, slug?: string): Promise<OrganizationDoc> {
     const url = await this.apiService.getApiUrl();
-    const headers = await (this.apiService as any).buildMcpHeaders();
+    // Use type assertion since buildMcpHeaders is private/not in the interface
+    const getHeaders = (this.apiService as any).buildMcpHeaders ? (this.apiService as any).buildMcpHeaders.bind(this.apiService) : async () => new HttpHeaders();
+    const headers = await getHeaders();
     return firstValueFrom(
       this.http.post<OrganizationDoc>(
         `${url}/api/orgs`,
@@ -41,5 +43,25 @@ export class OrganizationService {
         { headers }
       )
     );
+  }
+
+  async getOrgMembers(orgId: string): Promise<OrgMemberDoc[]> {
+    const url = await this.apiService.getApiUrl();
+    const user = this.authService.currentUser();
+    if (!user) return [];
+    
+    try {
+      const idToken = await user.getIdToken();
+      const headers = new HttpHeaders()
+        .set('Authorization', `Bearer ${idToken}`)
+        .set('Accept', 'application/json');
+        
+      return await firstValueFrom(
+        this.http.get<OrgMemberDoc[]>(`${url}/api/orgs/${orgId}/members`, { headers })
+      );
+    } catch (e) {
+      console.warn('Failed to load org members', e);
+      return [];
+    }
   }
 }

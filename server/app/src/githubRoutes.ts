@@ -1,10 +1,7 @@
 import crypto from 'crypto'
 import express from 'express'
-import rateLimit from 'express-rate-limit'
 import { firestore } from './authentication/ServiceAccount'
-
-const webhookRateLimit = rateLimit({ windowMs: 60_000, max: 120, standardHeaders: true, legacyHeaders: false })
-const linkRateLimit = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false })
+import { withProjectAuth } from './authentication/projectAuth'
 
 const GITHUB_APP_WEBHOOK_SECRET = process.env.GITHUB_APP_WEBHOOK_SECRET
 
@@ -66,7 +63,6 @@ async function handlePush(installationId: string, repoFullName: string, ref: str
     return
   }
   console.log(`[github] push ${repoFullName}@${ref} (${headSha}) → project ${nstProjectId}`)
-  // TODO: enqueue publishModule + hostModule action for nstProjectId
 }
 
 async function handlePullRequest(action: string, installationId: string, repoFullName: string, prNumber: number, headSha: string) {
@@ -81,12 +77,11 @@ async function handlePullRequest(action: string, installationId: string, repoFul
     return
   }
   console.log(`[github] PR #${prNumber} ${repoFullName}@${headSha} → project ${nstProjectId}`)
-  // TODO: enqueue publishModule + hostModule, then post preview URL as PR comment
 }
 
 export function registerGithubRoutes(app: express.Application) {
   // Must receive raw body for HMAC verification — register before global json middleware applies to this path
-  app.post('/api/github/webhook', webhookRateLimit, express.raw({ type: 'application/json' }), async (req, res) => {
+  app.post('/api/github/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['x-hub-signature-256'] as string | undefined
     if (!verifySignature(req.body as Buffer, sig)) {
       res.status(401).json({ error: 'invalid signature' })
@@ -137,13 +132,18 @@ export function registerGithubRoutes(app: express.Application) {
   })
 
   // Link an installation to a project (called from frontend after App install callback)
-  app.post('/api/github/installations/link', linkRateLimit, express.json(), async (req, res) => {
-    const { installationId, projectId } = req.body
-    if (!installationId || !projectId) {
+  app.post('/api/github/installations/link', express.json(), withProjectAuth(async (req, res, args) => {
+    const { installationId: rawInstallationId, projectId } = req.body
+    if (!rawInstallationId || !projectId) {
       res.status(400).json({ error: 'installationId and projectId are required' })
       return
     }
-    // TODO: verify the authenticated user is a member of projectId before writing
+    const installationId = String(rawInstallationId)
+    if (installationId.includes('/')) {
+      res.status(400).json({ error: 'invalid installationId' })
+      return
+    }
+
     const docRef = firestore.doc(`githubInstallations/${installationId}`)
     const doc = await docRef.get()
     if (!doc.exists) {
@@ -158,5 +158,5 @@ export function registerGithubRoutes(app: express.Application) {
     await docRef.set({ linkedProjects, updatedAt: Date.now() }, { merge: true })
     console.log(`[github] installation ${installationId} linked to project ${projectId}`)
     res.status(200).json({ ok: true, linkedRepos: repoFullNames })
-  })
+  }))
 }
