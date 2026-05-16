@@ -1,16 +1,8 @@
 import express from 'express'
-import rateLimit from 'express-rate-limit'
 import { createOrg, getOrg, listOrgMembers, removeOrgMember, listUserOrgs } from './api/organizations'
 import { inviteMember, acceptInvitation, listInvitations, revokeInvitation, inviteProjectMember, acceptProjectInvitation } from './api/invitations'
 import { listProjectMembers, updateProjectMemberRole, removeProjectMember } from './api/projectMembers'
 import { getBilling, getUsage } from './api/billing'
-
-const orgLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-})
 
 function mergeParams(req: express.Request, _res: express.Response, next: express.NextFunction) {
   req.body = { ...req.body, ...req.params }
@@ -19,7 +11,6 @@ function mergeParams(req: express.Request, _res: express.Response, next: express
 
 export function registerOrgRoutes(app: express.Application) {
   const router = express.Router()
-  router.use(orgLimiter)
 
   router.post('/', createOrg)
   router.get('/', listUserOrgs)

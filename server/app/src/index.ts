@@ -54,7 +54,10 @@ const mcpLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-app.use('/api/', apiLimiter)
+app.use('/api/', (req, res, next) => {
+  if (req.path === '/github/webhook') return next()
+  return apiLimiter(req, res, next)
+})
 
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
