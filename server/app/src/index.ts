@@ -54,6 +54,8 @@ const mcpLimiter = rateLimit({
   legacyHeaders: false,
 })
 
+app.use('/api/', apiLimiter)
+
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
 registerOrgRoutes(app)
@@ -61,11 +63,11 @@ registerUserRoutes(app)
 registerAdminRoutes(app)
 registerGithubRoutes(app)
 
-app.patch('/api/notifications/:notificationId', apiLimiter, (req, res) => {
+app.patch('/api/notifications/:notificationId', (req, res) => {
   req.body = { ...req.body, ...req.params }
   markNotificationRead(req, res)
 })
-app.delete('/api/notifications/:notificationId', apiLimiter, (req, res) => {
+app.delete('/api/notifications/:notificationId', (req, res) => {
   req.body = { ...req.body, ...req.params }
   deleteNotification(req, res)
 })
