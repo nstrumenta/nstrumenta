@@ -17,6 +17,7 @@ import { UserProfileComponent } from './components/user-profile/user-profile.com
 import { NotificationsComponent } from './components/notifications/notifications.component';
 import { HomeComponent } from './pages/home/home.component';
 import { AcceptInviteComponent } from './pages/accept-invite/accept-invite.component';
+import { GithubInstalledComponent } from './pages/github-installed/github-installed.component';
 import { waitlistGuard } from './guards/waitlist.guard';
 import { usernameGuard } from './guards/username.guard';
 import { WaitlistComponent } from './pages/waitlist/waitlist.component';
@@ -89,6 +90,11 @@ const userRoutes: Routes = [
     component: HomeComponent,
     pathMatch: 'full',
     canActivate: [usernameGuard]
+  },
+  {
+    path: 'github/installed',
+    component: GithubInstalledComponent,
+    canActivate: [waitlistGuard, usernameGuard],
   },
   {
     path: ':owner',

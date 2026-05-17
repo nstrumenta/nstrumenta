@@ -34,7 +34,11 @@
   <ng-container matColumnDef="id">
     <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
     <mat-cell *matCellDef="let fileDocument">
-      {{ fileDocument.file.name }}
+      @if (fileDocument.id) {
+        <a mat-menu-item [routerLink]="[fileDocument.id]">{{ getModuleLabel(fileDocument) }}</a>
+      } @else {
+        {{ getModuleLabel(fileDocument) }}
+      }
     </mat-cell>
   </ng-container>
 

@@ -1,56 +1,112 @@
-<div>
-  <mat-form-field subscriptSizing="dynamic">
-    <mat-label>Filter</mat-label>
-    <mat-icon matPrefix>search</mat-icon>
-    <input matInput (keyup)="applyFilter($event.target.value)" />
-  </mat-form-field>
-  @if (selection.hasValue()) {
-    {{selection.selected.length}} items selected:
-    <button mat-icon-button matTooltip="Delete Selected" (click)="deleteSelected()">
-      <mat-icon>delete</mat-icon>
-    </button>
+<section class="repositories">
+  <header class="repositories__header">
+    <div class="repositories__title-container">
+      <div class="repositories__title-row">
+        <mat-icon class="repositories__title-icon">code</mat-icon>
+        <h1 class="mat-headline-5">GitHub Repositories</h1>
+      </div>
+      <p class="mat-body-1 repositories__subtitle">
+        Connect the GitHub App to this project and manage linked installations here.
+      </p>
+    </div>
+    @if (connectUrl()) {
+      <a mat-flat-button [href]="connectUrl()" target="_blank" rel="noopener noreferrer">
+        <mat-icon>add_link</mat-icon>
+        Connect GitHub
+      </a>
+    }
+  </header>
+
+  @if (error()) {
+    <p class="error-text"><mat-icon inline>error</mat-icon> {{ error() }}</p>
   }
-</div>
 
-<mat-table #table [dataSource]="dataSource" matSort matSortActive="lastModified" matSortDirection="desc"
-  class="animate">
+  @if (isLoading()) {
+    <p class="mat-body-2 hint-text">Loading repositories...</p>
+  }
 
-  <ng-container matColumnDef="select">
-    <mat-header-cell *matHeaderCellDef>
-      <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
-        [indeterminate]="selection.hasValue() && !isAllSelected()">
-      </mat-checkbox>
-    </mat-header-cell>
-    <mat-cell *matCellDef="let row">
-      <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
-        [checked]="selection.isSelected(row)">
-      </mat-checkbox>
-    </mat-cell>
-  </ng-container>
+  <section class="repositories__section">
+    <h2 class="mat-title-medium section-title">Linked Repositories</h2>
+    
+    @if (linkedInstallations().length === 0) {
+      <div class="empty-state">
+        <mat-icon>link_off</mat-icon>
+        <p class="mat-body-1">No GitHub repositories are linked to this project yet.</p>
+        <p class="mat-body-2 hint-text">Repositories linked via the GitHub App will appear here.</p>
+      </div>
+    } @else {
+      <div class="repositories__grid">
+        @for (installation of linkedInstallations(); track installation.installationId) {
+          <mat-card class="installation-card">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>corporate_fare</mat-icon>
+              <mat-card-title>{{ installation.account.login || 'Installation ' + installation.installationId }}</mat-card-title>
+              <mat-card-subtitle>
+                @if (installation.updatedAt) {
+                  Synced {{ installation.updatedAt | date:'mediumDate' }}
+                } @else {
+                  Installed App ID: {{ installation.installationId }}
+                }
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <mat-list>
+                @for (repository of installation.repositories; track repository.fullName) {
+                  <mat-list-item>
+                    <mat-icon matListItemIcon>book</mat-icon>
+                    <div matListItemTitle>
+                      <a class="repo-link" [href]="githubUrl(repository.fullName)" target="_blank" rel="noopener noreferrer">
+                        {{ repository.fullName }}
+                      </a>
+                    </div>
+                  </mat-list-item>
+                }
+              </mat-list>
+            </mat-card-content>
+            
+            <mat-card-actions align="end">
+              <button mat-button color="warn" (click)="unlinkInstallation(installation.installationId)" [disabled]="unlinkingInstallationId() === installation.installationId">
+                <mat-icon>link_off</mat-icon>
+                {{ unlinkingInstallationId() === installation.installationId ? 'Unlinking...' : 'Unlink Installation' }}
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    }
+  </section>
 
-  <ng-container matColumnDef="name">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Id </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument">
-      <a mat-button [routerLink]="fileDocument.key + '/jobs'" queryParamsHandling="preserve">{{ fileDocument.key }}</a>
-    </mat-cell>
-  </ng-container>
+  @if (availableInstallations().length > 0) {
+    <section class="repositories__section available-section">
+      <h2 class="mat-title-medium section-title">Available Installations</h2>
+      <p class="mat-body-2 hint-text">These installations exist on your account but aren't mapped to this project yet.</p>
 
+      <div class="repositories__grid">
+        @for (installation of availableInstallations(); track installation.installationId) {
+          <mat-card class="installation-card installation-card--available">
+            <mat-card-header>
+              <mat-icon mat-card-avatar>inventory_2</mat-icon>
+              <mat-card-title>{{ installation.account.login || 'Installation ' + installation.installationId }}</mat-card-title>
+              <mat-card-subtitle>ID: {{ installation.installationId }} • {{ installation.repositories.length }} repo(s)</mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <p class="mat-body-2 hint-text">Includes repos like: 
+                {{ installation.repositories[0]?.fullName }}
+                @if (installation.repositories.length > 1) { and {{installation.repositories.length - 1}} more }
+              </p>
+            </mat-card-content>
 
-  <ng-container matColumnDef="url">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Url </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument">
-      <a mat-button href="{{fileDocument.url}}" target="_blank">{{ fileDocument.url }}</a>
-    </mat-cell>
-  </ng-container>
-
-  <ng-container matColumnDef="lastModified">
-    <mat-header-cell *matHeaderCellDef mat-sort-header> Modified </mat-header-cell>
-    <mat-cell *matCellDef="let fileDocument"> {{ fileDocument.lastModified | date : 'medium'}} </mat-cell>
-  </ng-container>
-
-  <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-  <mat-row *matRowDef="let row; columns: displayedColumns;" class="animate"></mat-row>
-</mat-table>
-<button mat-fab id="fab" (click)="openDialog()">
-  <mat-icon>add</mat-icon>
-</button>
+            <mat-card-actions align="end">
+              <button mat-button color="primary" (click)="linkInstallation(installation.installationId)" [disabled]="linkingInstallationId() === installation.installationId">
+                <mat-icon>link</mat-icon>
+                {{ linkingInstallationId() === installation.installationId ? 'Linking...' : 'Link to Project' }}
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        }
+      </div>
+    </section>
+  }
+</section>

@@ -1,0 +1,103 @@
+.repositories {
+  display: grid;
+  gap: 1.5rem;
+  padding-bottom: 2rem;
+}
+
+.repositories__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.repositories__title-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.repositories__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.repositories__title-icon {
+  color: var(--md-sys-color-primary, #6750A4);
+}
+
+.repositories__subtitle {
+  margin: 0.25rem 0 0;
+  opacity: 0.8;
+}
+
+.error-text {
+  color: var(--md-sys-color-error, #b3261e);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hint-text {
+  opacity: 0.7;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.section-title {
+  margin: 0 0 1rem;
+}
+
+.repositories__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+
+.installation-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.installation-card mat-card-content {
+  flex: 1;
+}
+
+.installation-card--available {
+  background: var(--md-sys-color-surface-container-low, rgba(0, 0, 0, 0.03));
+}
+
+.repo-link {
+  color: var(--md-sys-color-primary, #6750A4);
+  text-decoration: none;
+}
+
+.repo-link:hover {
+  text-decoration: underline;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background: var(--md-sys-color-surface-container-low, rgba(0, 0, 0, 0.03));
+  border-radius: 12px;
+  border: 1px dashed var(--md-sys-color-outline, rgba(0, 0, 0, 0.12));
+}
+
+.empty-state mat-icon {
+  font-size: 3rem;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .repositories__header {
+    flex-direction: column;
+  }
+}

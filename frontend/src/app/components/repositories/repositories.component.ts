@@ -1,105 +1,126 @@
-import { Component, ViewChild, inject, effect } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSort, MatSortHeader } from '@angular/material/sort';
-import { MatTableDataSource, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow } from '@angular/material/table';
-import { SelectionModel } from '@angular/cdk/collections';
-import { RouterLink } from '@angular/router';
-import { AddItemDialogComponent } from '../add-item-dialog/add-item-dialog.component';
-import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { MatFormField, MatLabel } from '@angular/material/form-field';
-import { MatInput } from '@angular/material/input';
 import { DatePipe } from '@angular/common';
-import { MatIconButton, MatButton, MatFabButton } from '@angular/material/button';
-import { MatTooltip } from '@angular/material/tooltip';
+import { Component, computed, effect, inject, signal } from '@angular/core';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { ApiService, GithubInstallation } from 'src/app/services/api.service';
+import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { MatCheckbox } from '@angular/material/checkbox';
-import { Repository } from 'src/app/models/firebase.model';
+import { MatCardModule } from '@angular/material/card';
+import { MatListModule } from '@angular/material/list';
 
 @Component({
     selector: 'app-repositories',
     templateUrl: './repositories.component.html',
     styleUrls: ['./repositories.component.scss'],
-    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatButton, RouterLink, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatFabButton, DatePipe]
+  imports: [MatButton, MatIcon, MatCardModule, MatListModule, DatePipe]
 })
 export class RepositoriesComponent {
-  displayedColumns = ['select', 'name', 'url', 'lastModified'];
-  dataSource: MatTableDataSource<Repository>;
-  selection = new SelectionModel<Repository>(true, []);
-  get projectId() { return this.firebaseDataService.projectId(); }
-
-  @ViewChild(MatSort, { static: true }) sort: MatSort;
-
   private firebaseDataService = inject(FirebaseDataService);
-  public dialog = inject(MatDialog);
+  private apiService = inject(ApiService);
+
+  readonly installations = signal<GithubInstallation[]>([]);
+  readonly isLoading = signal(false);
+  readonly error = signal('');
+  readonly linkingInstallationId = signal('');
+  readonly unlinkingInstallationId = signal('');
+  readonly projectId = computed(() => this.firebaseDataService.projectId());
+  readonly connectUrl = computed(() => {
+    const projectId = this.projectId();
+    if (!projectId) return '';
+    return `https://github.com/apps/nstrumenta-github/installations/new?state=${encodeURIComponent(projectId)}`;
+  });
+
+  readonly linkedInstallations = computed(() => {
+    const projectId = this.projectId();
+    return this.installations()
+      .map((installation) => ({
+        ...installation,
+        repositories: installation.repositories.filter((repository) => repository.linkedProjectId === projectId),
+      }))
+      .filter((installation) => installation.repositories.length > 0);
+  });
+
+  readonly availableInstallations = computed(() => this.installations()
+    .map((installation) => ({
+      ...installation,
+      repositories: installation.repositories.filter((repository) => !repository.linkedProjectId),
+    }))
+    .filter((installation) => installation.repositories.length > 0));
 
   constructor() {
-    effect(() => {
-      const repositories = this.firebaseDataService.repositories();
-      this.dataSource = new MatTableDataSource(repositories);
-      this.dataSource.sort = this.sort;
+    effect((cleanup) => {
+      const projectId = this.projectId();
+      if (!projectId) {
+        this.installations.set([]);
+        return;
+      }
+
+      let cancelled = false;
+      this.isLoading.set(true);
+      this.error.set('');
+
+      this.apiService.listGithubInstallations(projectId)
+        .then((response) => {
+          if (!cancelled) {
+            this.installations.set(response.installations);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            this.error.set(error instanceof Error ? error.message : 'Failed to load repositories');
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            this.isLoading.set(false);
+          }
+        });
+
+      cleanup(() => {
+        cancelled = true;
+      });
     });
   }
 
-  applyFilter(filterValue: string) {
-    filterValue = filterValue.trim();
-    filterValue = filterValue.toLowerCase();
-    this.dataSource.filter = filterValue;
+  githubUrl(fullName: string): string {
+    return `https://github.com/${fullName}`;
   }
 
-  /** Whether the number of selected elements matches the total number of rows. */
-  isAllSelected() {
-    const numSelected = this.selection.selected.length;
-    const numRows = this.dataSource.data.length;
-    return numSelected === numRows;
+  private async refreshInstallations() {
+    const projectId = this.projectId();
+    if (!projectId) return;
+    const response = await this.apiService.listGithubInstallations(projectId);
+    this.installations.set(response.installations);
   }
 
-  /** Selects all rows if they are not all selected; otherwise clear selection. */
-  masterToggle() {
-    if (this.isAllSelected()) {
-      this.selection.clear();
-    } else {
-      this.dataSource.data.forEach((row) => this.selection.select(row));
+  async linkInstallation(installationId: string): Promise<void> {
+    const projectId = this.projectId();
+    if (!projectId || this.linkingInstallationId()) return;
+
+    this.linkingInstallationId.set(installationId);
+    this.error.set('');
+    try {
+      await this.apiService.linkGithubInstallation(projectId, installationId);
+      await this.refreshInstallations();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Failed to link installation');
+    } finally {
+      this.linkingInstallationId.set('');
     }
   }
 
-  renameFile(fileDocument) {
-    console.log('renameFile', fileDocument.name);
-    // Note: Firestore update operation needs to be implemented
-    console.warn('renameFile not yet implemented with modern Firestore');
-  }
+  async unlinkInstallation(installationId: string): Promise<void> {
+    const projectId = this.projectId();
+    if (!projectId || this.unlinkingInstallationId()) return;
 
-  deleteSelected() {
-    this.selection.selected.forEach((item) => {
-      console.log('deleting', item);
-      this.firebaseDataService.deleteRepository(this.projectId, item.key);
-    });
-    this.selection.clear();
-  }
-
-  downloadSelected() {
-    this.selection.selected.forEach((item) => {
-      console.log('downloading', item);
-      window.open(item.downloadURL as string);
-    });
-  }
-
-  openDialog() {
-    const dialogRef = this.dialog.open(AddItemDialogComponent, {
-      data: {
-        title: 'Add Repository',
-        description: 'Enter your full github URL:\n e.g. https://github.com/example/example.git',
-        item: {
-          url: null,
-        },
-      },
-    });
-
-    dialogRef.afterClosed().subscribe((result) => {
-      console.dir(result);
-      if (result) {
-        result.lastModified = Date.now();
-        this.firebaseDataService.addRepository(this.projectId, result);
-      }
-    });
+    this.unlinkingInstallationId.set(installationId);
+    this.error.set('');
+    try {
+      await this.apiService.unlinkGithubInstallation(projectId, installationId);
+      await this.refreshInstallations();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Failed to unlink installation');
+    } finally {
+      this.unlinkingInstallationId.set('');
+    }
   }
 }

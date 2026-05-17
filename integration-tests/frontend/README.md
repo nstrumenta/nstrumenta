@@ -15,14 +15,22 @@ JSON-RPC 2.0 API tests for the MCP endpoint.
 ## Running
 
 ```bash
-# From repo root (runs via Docker Compose)
-npm run test:e2e
+# Full CI-like run from integration-tests/
+source ../credentials/activate.sh
+./frontend-e2e.sh
+
+# Watch mode for fast frontend iteration
+./frontend-e2e-watch.sh up
+./frontend-e2e-watch.sh tests/auth.spec.js
+./frontend-e2e-watch.sh down
 
 # MCP tests standalone (requires running server + NSTRUMENTA_API_KEY)
 cd integration-tests/frontend
 npm install
 npx vitest run mcp-client.test.js
 ```
+
+`frontend-e2e.sh` expects credentials to already be loaded. `frontend-e2e-watch.sh` loads them internally.
 
 ## Environment Variables
 

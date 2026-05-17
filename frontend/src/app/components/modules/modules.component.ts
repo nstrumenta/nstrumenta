@@ -13,13 +13,14 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { MatIcon } from '@angular/material/icon';
 import { MatCheckbox } from '@angular/material/checkbox';
 import { MatMenuItem } from '@angular/material/menu';
+import { RouterLink } from '@angular/router';
 import { Module } from 'src/app/models/firebase.model';
 
 @Component({
     selector: 'app-modules',
     templateUrl: './modules.component.html',
     styleUrls: ['./modules.component.scss'],
-    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe]
+    imports: [MatFormField, MatLabel, MatInput, MatIconButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCheckbox, MatCellDef, MatCell, MatSortHeader, MatMenuItem, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, DatePipe, RouterLink]
 })
 export class ModulesComponent {
   displayedColumns = ['select', 'id', 'url', 'modified'];
@@ -75,6 +76,10 @@ export class ModulesComponent {
         window.open(url);
       })
       .catch(console.error);
+  }
+
+  getModuleLabel(module: Module): string {
+    return module.name || (module as { file?: { name?: string } }).file?.name || module.id || 'Unnamed module';
   }
 
   /** Selects all rows if they are not all selected; otherwise clear selection. */

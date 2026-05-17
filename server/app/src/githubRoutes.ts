@@ -3,6 +3,19 @@ import express from 'express'
 import { firestore } from './authentication/ServiceAccount'
 import { withProjectAuth } from './authentication/projectAuth'
 
+type InstallationRepositorySummary = {
+  id: string
+  fullName: string
+  linkedProjectId?: string
+}
+
+type InstallationSummary = {
+  installationId: string
+  account: { login?: string; type?: string }
+  repositories: InstallationRepositorySummary[]
+  updatedAt?: number
+}
+
 const GITHUB_APP_WEBHOOK_SECRET = process.env.GITHUB_APP_WEBHOOK_SECRET
 
 function verifySignature(rawBody: Buffer, signature: string | undefined): boolean {
@@ -10,6 +23,22 @@ function verifySignature(rawBody: Buffer, signature: string | undefined): boolea
   if (!GITHUB_APP_WEBHOOK_SECRET) throw new Error('GITHUB_APP_WEBHOOK_SECRET env var is required')
   const expected = `sha256=${crypto.createHmac('sha256', GITHUB_APP_WEBHOOK_SECRET).update(rawBody).digest('hex')}`
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+}
+
+function summarizeInstallation(data: any): InstallationSummary {
+  const linkedProjects: Record<string, string> = data?.linkedProjects ?? {}
+  const repositories = (data?.repositories ?? []).map((repository: any) => ({
+    id: repository.id,
+    fullName: repository.fullName,
+    linkedProjectId: linkedProjects[repository.fullName],
+  }))
+
+  return {
+    installationId: String(data?.installationId ?? ''),
+    account: data?.account ?? {},
+    repositories,
+    updatedAt: data?.updatedAt,
+  }
 }
 
 async function handleInstallation(action: string, installation: any, repositories: any[] = []) {
@@ -151,12 +180,65 @@ export function registerGithubRoutes(app: express.Application) {
       return
     }
     const repoFullNames: string[] = (doc.data()?.repositories ?? []).map((r: any) => r.fullName)
-    const linkedProjects: Record<string, string> = {}
+    const linkedProjects: Record<string, string> = { ...(doc.data()?.linkedProjects ?? {}) }
+    const linkedRepos: string[] = []
+    const skippedRepos: Array<{ fullName: string; linkedProjectId: string }> = []
+
     for (const fullName of repoFullNames) {
-      linkedProjects[fullName] = projectId
+      const existingProjectId = linkedProjects[fullName]
+      if (!existingProjectId || existingProjectId === projectId) {
+        linkedProjects[fullName] = projectId
+        linkedRepos.push(fullName)
+      } else {
+        skippedRepos.push({ fullName, linkedProjectId: existingProjectId })
+      }
     }
     await docRef.set({ linkedProjects, updatedAt: Date.now() }, { merge: true })
     console.log(`[github] installation ${installationId} linked to project ${projectId}`)
-    res.status(200).json({ ok: true, linkedRepos: repoFullNames })
+    res.status(200).json({ ok: true, linkedRepos, skippedRepos })
+  }))
+
+  app.get('/api/github/installations', withProjectAuth(async (_req, res, args) => {
+    const { projectId } = args
+    const snapshot = await firestore.collection('githubInstallations').get()
+    const installations = snapshot.docs
+      .map((doc) => summarizeInstallation(doc.data()))
+      .map((installation) => ({
+        ...installation,
+        repositories: installation.repositories.filter(
+          (repository) => !repository.linkedProjectId || repository.linkedProjectId === projectId,
+        ),
+      }))
+      .filter((installation) => installation.repositories.length > 0)
+
+    res.status(200).json({ installations })
+  }))
+
+  app.delete('/api/github/installations/:installationId/link', withProjectAuth(async (req, res, args) => {
+    const { projectId } = args
+    const installationId = String(req.params.installationId ?? '')
+    if (!installationId || installationId.includes('/')) {
+      res.status(400).json({ error: 'invalid installationId' })
+      return
+    }
+
+    const docRef = firestore.doc(`githubInstallations/${installationId}`)
+    const doc = await docRef.get()
+    if (!doc.exists) {
+      res.status(404).json({ error: `installation ${installationId} not found` })
+      return
+    }
+
+    const linkedProjects: Record<string, string> = { ...(doc.data()?.linkedProjects ?? {}) }
+    const unlinkedRepos = Object.entries(linkedProjects)
+      .filter(([, linkedProjectId]) => linkedProjectId === projectId)
+      .map(([fullName]) => fullName)
+
+    for (const fullName of unlinkedRepos) {
+      delete linkedProjects[fullName]
+    }
+
+    await docRef.set({ linkedProjects, updatedAt: Date.now() }, { merge: true })
+    res.status(200).json({ ok: true, unlinkedRepos })
   }))
 }

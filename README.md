@@ -25,24 +25,17 @@ gcloud config set project <your-gcp-project-id>
 
 We strictly avoid `.env` files (e.g., `local.env`) for local development to prevent secret sniffing and accidental leakage. Instead, we securely fetch secrets from GitHub or GCP directly into memory.
 
+For agents and day-to-day development, use the dedicated hot-reload stack:
+
 ```shell
 # Authenticate with GitHub to fetch secrets dynamically
 gh auth login
 
-# Activate credentials dynamically (fetches from gh secrets/variables into env)
-source credentials/activate.sh
+# Start the local dev stack with hot-reload server + hot-reload frontend
+./dev.sh
 
-# All services with hot-reload and debugger ports
-docker compose up --build
-
-# Server only
-docker compose up --build server
-
-# Without agent
-docker compose up --build --scale agent=0
-
-# Production mode (no debuggers, no hot-reload)
-docker compose -f docker-compose.yml up --build
+# Stop it
+./dev.sh down
 ```
 
 ## Build

@@ -72,6 +72,49 @@ function getOrigin(): string | undefined {
     return context?.origin;
 }
 
+async function getProjectMemberRole(projectId: string, userId: string): Promise<string | undefined> {
+    const projectDoc = await firestore.doc(orgProjectPath(projectId)).get();
+    return projectDoc.data()?.members?.[userId];
+}
+
+async function resolveProjectModule(projectId: string, moduleName: string, moduleVersion?: string) {
+    const modules = await getModulesList(projectId);
+    return modules.find((module: any) =>
+        (module.name === moduleName || module.name?.startsWith(moduleName))
+        && (!moduleVersion || module.version === moduleVersion),
+    );
+}
+
+async function indexProjectModule(
+    projectId: string,
+    params: {
+        path: string
+        name: string
+        version: string
+        size?: string
+        type?: string
+        entry?: string
+    },
+) {
+    const { path, name, version, size, type, entry } = params
+    const modulesPath = `${orgProjectPath(projectId)}/modules`
+    const moduleDoc = firestore.collection(modulesPath).doc()
+
+    const moduleData: Record<string, any> = {
+        name,
+        version,
+        path,
+        lastModified: Date.now(),
+        createdAt: Date.now(),
+    }
+
+    if (size !== undefined) moduleData.size = parseInt(size, 10)
+    if (type !== undefined) moduleData.type = type
+    if (entry !== undefined) moduleData.entry = entry
+
+    await moduleDoc.set(moduleData)
+}
+
 type UnifiedAuthResult = 
     | { authenticated: false; projectId: string; message?: string }
     | { authenticated: true; projectId: string; userId?: string; authType: 'apiKey' | 'firebase'; message?: string };
@@ -434,6 +477,75 @@ server.registerTool(
             const message =
                 error instanceof Error ? error.message : 'An unknown error occurred';
             throw new Error(`Failed to host module: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'approve_module',
+    {
+        title: 'Approve Module',
+        description: 'Marks a module version as approved for the current project.',
+        inputSchema: {
+            moduleName: z.string().describe('Name of the module to approve'),
+            moduleVersion: z.string().optional().describe('Optional exact version to approve'),
+        },
+        outputSchema: {
+            moduleId: z.string(),
+            approved: z.boolean(),
+            approvedAt: z.number(),
+            approvedBy: z.string(),
+        },
+    },
+    async ({ moduleName, moduleVersion }) => {
+        try {
+            const projectId = getProjectId();
+            const userId = getUserId();
+            const authType = getAuthType();
+
+            if (authType === 'firebase') {
+                if (!userId) {
+                    throw new Error('Authenticated user context missing');
+                }
+                const role = await getProjectMemberRole(projectId, userId);
+                if (role !== 'owner' && role !== 'admin') {
+                    throw new Error('Only project owners and admins can approve modules');
+                }
+            }
+
+            const module = await resolveProjectModule(projectId, moduleName, moduleVersion);
+            if (!module?.moduleDocumentPath) {
+                throw new Error(`Module ${moduleName} ${moduleVersion ? `v${moduleVersion}` : ''} not found`);
+            }
+
+            const approvedAt = Date.now();
+            const approvedBy = userId ?? 'api-key';
+
+            await firestore.doc(module.moduleDocumentPath).set({
+                approved: true,
+                approvedAt,
+                approvedBy,
+                lastModified: approvedAt,
+            }, { merge: true });
+
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Approved ${module.name}${module.version ? `@${module.version}` : ''}`,
+                    },
+                ],
+                structuredContent: {
+                    moduleId: module.id,
+                    approved: true,
+                    approvedAt,
+                    approvedBy,
+                },
+            };
+        } catch (error) {
+            const message =
+                error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to approve module: ${message}`);
         }
     },
 );
@@ -979,23 +1091,7 @@ server.registerTool(
     async ({ path, name, version, size, type, entry }) => {
         try {
             const projectId = getProjectId();
-            const modulesPath = `${orgProjectPath(projectId)}/modules`;
-            const moduleDoc = firestore.collection(modulesPath).doc();
-            
-            // Filter out undefined values to avoid Firestore errors
-            const moduleData: Record<string, any> = {
-                name,
-                version,
-                path,
-                lastModified: Date.now(),
-                createdAt: Date.now(),
-            };
-            
-            if (size !== undefined) moduleData.size = parseInt(size, 10);
-            if (type !== undefined) moduleData.type = type;
-            if (entry !== undefined) moduleData.entry = entry;
-            
-            await moduleDoc.set(moduleData);
+            await indexProjectModule(projectId, { path, name, version, size, type, entry });
 
             return {
                 content: [{ type: 'text', text: 'Module indexed successfully' }],
@@ -1004,6 +1100,39 @@ server.registerTool(
         } catch (error) {
             const message = error instanceof Error ? error.message : 'An unknown error occurred';
             throw new Error(`Failed to index module: ${message}`);
+        }
+    },
+);
+
+server.registerTool(
+    'publish_module',
+    {
+        title: 'Publish Module',
+        description: 'Finalizes publish of an uploaded module archive by indexing it in the project module collection.',
+        inputSchema: {
+            path: z.string().describe('Storage path of the uploaded module file'),
+            name: z.string().describe('Module name'),
+            version: z.string().describe('Module version'),
+            size: z.string().optional().describe('File size in bytes'),
+            type: z.string().optional().describe('Module type (nodejs, script, etc)'),
+            entry: z.string().optional().describe('Entry point'),
+        },
+        outputSchema: {
+            success: z.boolean().describe('Whether publishing succeeded'),
+        },
+    },
+    async ({ path, name, version, size, type, entry }) => {
+        try {
+            const projectId = getProjectId();
+            await indexProjectModule(projectId, { path, name, version, size, type, entry });
+
+            return {
+                content: [{ type: 'text', text: 'Module published successfully' }],
+                structuredContent: { success: true },
+            };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'An unknown error occurred';
+            throw new Error(`Failed to publish module: ${message}`);
         }
     },
 );

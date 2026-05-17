@@ -10,6 +10,12 @@ Angular web application for project management, data visualization, and real-tim
 
 ## Development
 
+If you are an agent, use one of these paths:
+
+- Full-stack hot reload: run `./dev.sh` from the repo root. This is the default when you may touch both frontend and server code.
+- Frontend only: run `npm run serve` in `frontend/` when you only need the Angular app on `http://localhost:5008`.
+- Playwright watch mode: use `frontend-dev` only for E2E iteration.
+
 ```shell
 npm install
 npm run serve
@@ -30,6 +36,8 @@ Runs Karma/Jasmine unit tests in a headless Chrome browser.
 E2E tests live in `integration-tests/frontend/tests/` and run against a full server stack in Docker.
 
 ### Fast iteration (watch mode — recommended for frontend work)
+
+This stack hot-reloads the Angular app for Playwright and depends on a separate `server` container. It is not the primary full-stack `./dev.sh` workflow.
 
 Start the watch stack once (`frontend-e2e-watch.sh` handles credentials automatically after this):
 

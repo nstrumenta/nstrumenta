@@ -18,7 +18,7 @@ import {
 } from './commands/data';
 import { ListMachines } from './commands/machines';
 import { ListServices } from './commands/services';
-import { CloudRun, Host, List, Publish, Run } from './commands/module';
+import { Approve, CloudRun, Host, List, Publish, Run } from './commands/module';
 import { Info as ProjectInfo, ProjectId } from './commands/project';
 import { version } from '../lib/version';
 
@@ -80,6 +80,13 @@ moduleCommand
   .option('--module-version <version>', 'optional specific version - otherwise will use latest')
   .description('host published module on cloud storage')
   .action(Host);
+
+moduleCommand
+  .command('approve')
+  .argument('<module>', 'module reference, optionally in the form name@version')
+  .option('--module-version <version>', 'optional specific version - overrides any @version suffix')
+  .description('approve a published module version')
+  .action(Approve);
 
 moduleCommand
   .command('list')

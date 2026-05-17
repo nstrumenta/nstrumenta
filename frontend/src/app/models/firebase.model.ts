@@ -43,6 +43,14 @@ export interface Module extends DocumentData {
   id?: string;
   name?: string;
   version?: string;
+  type?: string;
+  path?: string;
+  url?: string;
+  entry?: string;
+  size?: number;
+  approved?: boolean;
+  approvedBy?: string;
+  approvedAt?: number;
   lastModified?: number;
   [key: string]: unknown;
 }
