@@ -308,6 +308,10 @@ describe('project invitations', () => {
       'organizations/org1/projects/proj1/invitations/invite-1',
       expect.objectContaining({ status: 'accepted', acceptedBy: 'user-2' }),
     )
+    expect(mockDocSet).toHaveBeenCalledWith(
+      'users/user-2/projects/org1__proj1',
+      expect.objectContaining({ projectId: 'org1/proj1' }),
+    )
     expect(mockCollectionDocDelete).toHaveBeenCalledWith(
       'users/user-2/notifications',
       'invite-1',

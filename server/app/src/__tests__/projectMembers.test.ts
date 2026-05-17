@@ -1,18 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { Request, Response } from 'express'
 
-const { mockDocGet, mockDocUpdate, mockFirestoreDoc } = vi.hoisted(() => {
+const { mockDocGet, mockDocUpdate, mockDocDelete, mockFirestoreDoc } = vi.hoisted(() => {
   const mockDocGet = vi.fn()
   const mockDocUpdate = vi.fn().mockResolvedValue(undefined)
+  const mockDocDelete = vi.fn().mockResolvedValue(undefined)
 
   const mockFirestoreDoc = vi.fn((path: string) => ({
     get: () => mockDocGet(path),
     update: (data: unknown) => mockDocUpdate(path, data),
+    delete: () => mockDocDelete(path),
   }))
 
   return {
     mockDocGet,
     mockDocUpdate,
+    mockDocDelete,
     mockFirestoreDoc,
   }
 })
@@ -108,6 +111,7 @@ describe('project members api', () => {
         },
       }),
     )
+    expect(mockDocDelete).toHaveBeenCalledWith('users/viewer1/projects/org1__proj1')
     expect(res.status).toHaveBeenCalledWith(200)
   })
 

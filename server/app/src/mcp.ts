@@ -13,7 +13,7 @@ import { getDataList } from './api/listStorageObjects';
 import { getProjectInfo } from './api/getProject';
 import { createAgentAction } from './api/setAgentAction';
 import { cancelAgentActions } from './api/closePendingAgentActions';
-import { parseOrgProject, orgProjectPath } from './shared/utils';
+import { parseOrgProject, orgProjectPath, userProjectMembershipPath } from './shared/utils';
 import { createCloudAdminService } from './services/cloudAdmin';
 import { createCloudDataJobService } from './services/cloudDataJob';
 import { storage } from './authentication/ServiceAccount';
@@ -999,6 +999,11 @@ server.registerTool(
                 createdAt: new Date().toISOString(),
                 createdBy: userId,
                 visibility: 'private',
+            });
+
+            await firestore.doc(userProjectMembershipPath(userId, projectId)).set({
+                projectId,
+                addedAt: Date.now(),
             });
 
             return {

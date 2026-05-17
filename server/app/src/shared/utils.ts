@@ -15,6 +15,15 @@ export function orgProjectPath(projectId: string): string {
   return `organizations/${orgSlug}/projects/${projectSlug}`;
 }
 
+export function userProjectMembershipDocId(projectId: string): string {
+  const { orgSlug, projectSlug } = parseOrgProject(projectId);
+  return `${orgSlug}__${projectSlug}`;
+}
+
+export function userProjectMembershipPath(userId: string, projectId: string): string {
+  return `users/${userId}/projects/${userProjectMembershipDocId(projectId)}`;
+}
+
 export async function generateV4UploadSignedUrl(
   fileName: string,
   metadata?: Record<string, string>,
