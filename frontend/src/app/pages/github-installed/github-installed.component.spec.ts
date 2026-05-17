@@ -27,13 +27,13 @@ describe('GithubInstalledComponent', () => {
           useValue: {
             queryParamMap: of(convertToParamMap({
               installation_id: '12345',
-              state: 'test-org/test-project',
+              state: 'test-org/test-project:state-token-123',
               setup_action: 'install',
             })),
             snapshot: {
               queryParamMap: convertToParamMap({
                 installation_id: '12345',
-                state: 'test-org/test-project',
+                state: 'test-org/test-project:state-token-123',
                 setup_action: 'install',
               }),
             },

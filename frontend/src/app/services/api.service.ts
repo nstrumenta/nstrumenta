@@ -99,6 +99,15 @@ export interface GithubInstallation {
   updatedAt?: number;
 }
 
+export interface GithubInstallationConnectUrlResponse {
+  connectUrl: string;
+}
+
+export interface LinkGithubInstallationResponse {
+  ok: boolean;
+  linkedRepos: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -364,13 +373,30 @@ export class ApiService {
     return this.extractMcpResult(response, 'approve_module') as ApproveModuleResponse;
   }
 
-  async linkGithubInstallation(projectId: string, installationId: string): Promise<{ ok: boolean; linkedRepos: string[]; skippedRepos?: { fullName: string; linkedProjectId: string }[] }> {
+  async createGithubInstallationConnectUrl(projectId: string): Promise<GithubInstallationConnectUrlResponse> {
     const apiUrl = await this.getApiUrl();
     const headers = await this.buildMcpHeaders(projectId);
 
-    const response = await this.http.post<{ ok: boolean; linkedRepos: string[]; skippedRepos?: { fullName: string; linkedProjectId: string }[] }>(
+    const response = await this.http.post<GithubInstallationConnectUrlResponse>(
+      `${apiUrl}/api/github/installations/connect-url`,
+      { projectId },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub install connect endpoint');
+    }
+
+    return response;
+  }
+
+  async linkGithubInstallation(projectId: string, installationId: string, stateToken?: string): Promise<LinkGithubInstallationResponse> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.post<LinkGithubInstallationResponse>(
       `${apiUrl}/api/github/installations/link`,
-      { installationId, projectId },
+      { installationId, projectId, ...(stateToken ? { stateToken } : {}) },
       { headers },
     ).toPromise().catch((error) => this.rethrowHttpError(error));
 

@@ -9,6 +9,7 @@
   @if (status() === 'success') {
     <p>{{ message() }}</p>
     @if (linkedRepos().length > 0) {
+      <p><strong>Successfully linked:</strong></p>
       <ul>
         @for (repo of linkedRepos(); track repo) {
           <li>{{ repo }}</li>

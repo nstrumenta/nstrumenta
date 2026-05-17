@@ -9,12 +9,10 @@
         Connect the GitHub App to this project and manage linked installations here.
       </p>
     </div>
-    @if (connectUrl()) {
-      <a mat-flat-button [href]="connectUrl()" target="_blank" rel="noopener noreferrer">
+    <button mat-flat-button type="button" (click)="startGithubInstall()" [disabled]="isConnecting()">
         <mat-icon>add_link</mat-icon>
-        Connect GitHub
-      </a>
-    }
+        {{ isConnecting() ? 'Opening GitHub...' : 'Connect GitHub' }}
+      </button>
   </header>
 
   @if (error()) {
@@ -76,37 +74,4 @@
       </div>
     }
   </section>
-
-  @if (availableInstallations().length > 0) {
-    <section class="repositories__section available-section">
-      <h2 class="mat-title-medium section-title">Available Installations</h2>
-      <p class="mat-body-2 hint-text">These installations exist on your account but aren't mapped to this project yet.</p>
-
-      <div class="repositories__grid">
-        @for (installation of availableInstallations(); track installation.installationId) {
-          <mat-card class="installation-card installation-card--available">
-            <mat-card-header>
-              <mat-icon mat-card-avatar>inventory_2</mat-icon>
-              <mat-card-title>{{ installation.account.login || 'Installation ' + installation.installationId }}</mat-card-title>
-              <mat-card-subtitle>ID: {{ installation.installationId }} • {{ installation.repositories.length }} repo(s)</mat-card-subtitle>
-            </mat-card-header>
-            
-            <mat-card-content>
-              <p class="mat-body-2 hint-text">Includes repos like: 
-                {{ installation.repositories[0]?.fullName }}
-                @if (installation.repositories.length > 1) { and {{installation.repositories.length - 1}} more }
-              </p>
-            </mat-card-content>
-
-            <mat-card-actions align="end">
-              <button mat-button color="primary" (click)="linkInstallation(installation.installationId)" [disabled]="linkingInstallationId() === installation.installationId">
-                <mat-icon>link</mat-icon>
-                {{ linkingInstallationId() === installation.installationId ? 'Linking...' : 'Link to Project' }}
-              </button>
-            </mat-card-actions>
-          </mat-card>
-        }
-      </div>
-    </section>
-  }
 </section>

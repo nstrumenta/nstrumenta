@@ -37,14 +37,26 @@ export class ModuleDetailsComponent {
     });
 
     readonly canPreview = computed(() => {
-        const module = this.module();
-        return module?.type === 'web' && typeof module.url === 'string' && module.url.length > 0;
+        return this.previewUrl() !== null;
     });
 
     readonly previewUrl = computed(() => {
         const module = this.module();
         if (module?.type !== 'web' || typeof module.url !== 'string' || !module.url) return null;
-        return this.sanitizer.bypassSecurityTrustResourceUrl(module.url);
+
+        try {
+            const previewUrl = new URL(module.url);
+            const isLocalhost = previewUrl.hostname === 'localhost' || previewUrl.hostname === '127.0.0.1';
+            const isAllowedProtocol = previewUrl.protocol === 'https:' || (isLocalhost && previewUrl.protocol === 'http:');
+
+            if (!isAllowedProtocol) {
+                return null;
+            }
+
+            return this.sanitizer.bypassSecurityTrustResourceUrl(previewUrl.toString());
+        } catch {
+            return null;
+        }
     });
 
     readonly isApproved = computed(() => Boolean(this.module()?.approved || this.approvalConfirmed()));

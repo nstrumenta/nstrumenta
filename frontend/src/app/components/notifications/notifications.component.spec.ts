@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { NotificationsComponent } from './notifications.component';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
+import { ApiService } from 'src/app/services/api.service';
 
 describe('NotificationsComponent', () => {
   let fixture: ComponentFixture<NotificationsComponent>;
@@ -22,6 +23,14 @@ describe('NotificationsComponent', () => {
                 createdAt: Date.now(),
               },
             ]),
+          },
+        },
+        {
+          provide: ApiService,
+          useValue: {
+            markNotificationRead: () => Promise.resolve(),
+            acceptProjectInvitation: () => Promise.resolve(),
+            deleteNotification: () => Promise.resolve(),
           },
         },
       ],

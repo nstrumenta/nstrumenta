@@ -19,7 +19,7 @@ export class GithubInstalledComponent {
     this.route.queryParamMap.pipe(map((params) => params.get('installation_id') ?? '')),
     { initialValue: this.route.snapshot.queryParamMap.get('installation_id') ?? '' },
   )
-  readonly projectId = toSignal(
+  readonly state = toSignal(
     this.route.queryParamMap.pipe(map((params) => params.get('state') ?? '')),
     { initialValue: this.route.snapshot.queryParamMap.get('state') ?? '' },
   )
@@ -32,6 +32,19 @@ export class GithubInstalledComponent {
   readonly message = signal('Connecting GitHub installation...')
   readonly linkedRepos = signal<string[]>([])
   readonly attempted = signal(false)
+  readonly parsedState = computed(() => {
+    const state = this.state()
+    const separatorIndex = state.lastIndexOf(':')
+    if (separatorIndex <= 0 || separatorIndex === state.length - 1) {
+      return null
+    }
+
+    return {
+      projectId: state.slice(0, separatorIndex),
+      stateToken: state.slice(separatorIndex + 1),
+    }
+  })
+  readonly projectId = computed(() => this.parsedState()?.projectId ?? '')
   readonly returnRoute = computed(() => {
     const projectId = this.projectId()
     const [owner, project] = projectId.split('/')
@@ -42,19 +55,19 @@ export class GithubInstalledComponent {
   constructor() {
     effect(() => {
       const installationId = this.installationId()
-      const projectId = this.projectId()
+      const parsedState = this.parsedState()
       const setupAction = this.setupAction()
 
       if (this.attempted()) return
       this.attempted.set(true)
 
-      if (!installationId || !projectId) {
+      if (!installationId || !parsedState?.projectId || !parsedState.stateToken) {
         this.status.set('error')
-        this.message.set('Missing installation_id or state in the GitHub callback URL.')
+        this.message.set('Missing or invalid installation callback state in the GitHub callback URL.')
         return
       }
 
-      this.apiService.linkGithubInstallation(projectId, installationId)
+      this.apiService.linkGithubInstallation(parsedState.projectId, installationId, parsedState.stateToken)
         .then((response) => {
           this.linkedRepos.set(response.linkedRepos)
           this.status.set('success')

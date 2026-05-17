@@ -19,15 +19,10 @@ export class RepositoriesComponent {
 
   readonly installations = signal<GithubInstallation[]>([]);
   readonly isLoading = signal(false);
+  readonly isConnecting = signal(false);
   readonly error = signal('');
-  readonly linkingInstallationId = signal('');
   readonly unlinkingInstallationId = signal('');
   readonly projectId = computed(() => this.firebaseDataService.projectId());
-  readonly connectUrl = computed(() => {
-    const projectId = this.projectId();
-    if (!projectId) return '';
-    return `https://github.com/apps/nstrumenta-github/installations/new?state=${encodeURIComponent(projectId)}`;
-  });
 
   readonly linkedInstallations = computed(() => {
     const projectId = this.projectId();
@@ -39,13 +34,6 @@ export class RepositoriesComponent {
       .filter((installation) => installation.repositories.length > 0);
   });
 
-  readonly availableInstallations = computed(() => this.installations()
-    .map((installation) => ({
-      ...installation,
-      repositories: installation.repositories.filter((repository) => !repository.linkedProjectId),
-    }))
-    .filter((installation) => installation.repositories.length > 0));
-
   constructor() {
     effect((cleanup) => {
       const projectId = this.projectId();
@@ -55,13 +43,14 @@ export class RepositoriesComponent {
       }
 
       let cancelled = false;
+      this.installations.set([]);
       this.isLoading.set(true);
       this.error.set('');
 
       this.apiService.listGithubInstallations(projectId)
-        .then((response) => {
+        .then((installationsResponse) => {
           if (!cancelled) {
-            this.installations.set(response.installations);
+            this.installations.set(installationsResponse.installations);
           }
         })
         .catch((error) => {
@@ -88,23 +77,30 @@ export class RepositoriesComponent {
   private async refreshInstallations() {
     const projectId = this.projectId();
     if (!projectId) return;
-    const response = await this.apiService.listGithubInstallations(projectId);
-    this.installations.set(response.installations);
+    this.isLoading.set(true);
+    try {
+      const response = await this.apiService.listGithubInstallations(projectId);
+      this.installations.set(response.installations);
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Failed to refresh installations');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
-  async linkInstallation(installationId: string): Promise<void> {
+  async startGithubInstall(): Promise<void> {
     const projectId = this.projectId();
-    if (!projectId || this.linkingInstallationId()) return;
+    if (!projectId || this.isConnecting()) return;
 
-    this.linkingInstallationId.set(installationId);
+    this.isConnecting.set(true);
     this.error.set('');
     try {
-      await this.apiService.linkGithubInstallation(projectId, installationId);
-      await this.refreshInstallations();
+      const response = await this.apiService.createGithubInstallationConnectUrl(projectId);
+      window.location.assign(response.connectUrl);
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Failed to link installation');
+      this.error.set(error instanceof Error ? error.message : 'Failed to start GitHub installation flow');
     } finally {
-      this.linkingInstallationId.set('');
+      this.isConnecting.set(false);
     }
   }
 

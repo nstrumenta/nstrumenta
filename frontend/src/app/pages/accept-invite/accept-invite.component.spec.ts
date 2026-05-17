@@ -56,7 +56,7 @@ describe('AcceptInviteComponent', () => {
   });
 
   it('accepts invitation and redirects to project settings', async () => {
-    await Promise.resolve();
+    await component.onAcceptClick();
 
     expect(apiServiceMock.acceptProjectInvitation).toHaveBeenCalledWith({
       orgId: 'org1',
@@ -124,7 +124,7 @@ describe('AcceptInviteComponent', () => {
     const promptFixture = TestBed.createComponent(AcceptInviteComponent);
     const promptComponent = promptFixture.componentInstance;
     promptFixture.detectChanges();
-    await Promise.resolve();
+    await promptComponent.onAcceptClick();
 
     expect(promptComponent.showEmailPrompt).toBe(true);
     expect(promptComponent.statusMessage).toContain('Enter the invited email');
@@ -160,7 +160,7 @@ describe('AcceptInviteComponent', () => {
     const mismatchFixture = TestBed.createComponent(AcceptInviteComponent);
     const mismatchComponent = mismatchFixture.componentInstance;
     mismatchFixture.detectChanges();
-    await Promise.resolve();
+    await mismatchComponent.onAcceptClick();
 
     expect(mismatchComponent.statusMessage).toContain('different email');
     expect(mismatchComponent.showSignOut).toBe(true);

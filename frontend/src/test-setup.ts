@@ -13,3 +13,11 @@ Object.defineProperty(window, 'matchMedia', {
   }),
 });
 
+window.__NST_CONFIG__ = {
+  apiKey: 'test-api-key',
+  authDomain: 'test.firebaseapp.com',
+  projectId: 'test-project',
+  appId: 'test-app-id',
+  apiUrl: 'http://localhost:5999',
+};
+
