@@ -38,40 +38,52 @@ service cloud.firestore {
         allow write: if false;
       }
 
-      // Project doc is server-managed; subcollections are written directly by clients
       match /projects/{projectId} {
-        allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
-        allow write: if false;
+        allow read, write: if false;
 
-        match /githubConnections/{installationId} {
+        match /data/{document=**} {
+          allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
+          allow write: if false;
+        }
+
+        match /record/{document=**} {
+          allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
+          allow write: if false;
+        }
+
+        match /actions/{actionId} {
+          allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
+          allow write: if isOrgMember(orgId);
+        }
+
+        match /agents/{agentId} {
+          allow read: if isOrgMember(orgId);
+          allow write: if false;
+
+          match /actions/{actionId} {
+            allow read: if isOrgMember(orgId);
+            allow write: if false;
+          }
+        }
+
+        match /machines/{machineId} {
           allow read: if isOrgMember(orgId);
           allow write: if false;
         }
 
-        match /githubLinks/{linkId} {
+        match /invitations/{invitationId} {
           allow read: if isOrgMember(orgId);
-          allow write: if false;
+          allow write: if isOrgMember(orgId);
+        }
+
+        match /repositories/{repositoryId} {
+          allow read, write: if false;
         }
 
         match /modules/{moduleId} {
           allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
-          // Prevent non-admins from spoofing approval state flags
           allow write: if isOrgMember(orgId) && (
             !(request.resource.data.keys().hasAny(['approved', 'approvedAt', 'approvedBy'])) || 
-            isOrgAdmin(orgId)
-          );
-        }
-
-        // We use a wildcard but we must explicitly exclude writing 'modules' since the more permissive rule acts as an OR
-        // However, firestore doesn't allow excluding collection names in deep wildcards cleanly if multiple matches exist.
-        // Let's rely on capturing the root subcollection:
-        match /{collection}/{document=**} {
-          allow read: if isOrgMember(orgId) || isOrgProjectPublic(orgId, projectId);
-          allow write: if isOrgMember(orgId) && (
-            collection != 'modules' || 
-            (
-               !("approved" in request.resource.data) && !("approvedAt" in request.resource.data) && !("approvedBy" in request.resource.data)
-            ) || 
             isOrgAdmin(orgId)
           );
         }

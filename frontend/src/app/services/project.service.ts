@@ -52,19 +52,23 @@ export class ProjectService {
     }
     
     const apiUrl = await this.apiService.getApiUrl();
-    return this.apiService.createApiKey({
+    const response = await this.apiService.createApiKey({
       projectId: projectId,
       apiUrl,
     });
+    this.firebaseDataService.refreshProjectSettings();
+    return response;
   }
 
   async revokeApiKey(keyId: string) {
-    return this.serverService.runServerTask(
+    const response = await this.serverService.runServerTask(
       'revokeApiKey',
       this.currentProjectId,
       { keyId },
       console.log
     );
+    this.firebaseDataService.refreshProjectSettings();
+    return response;
   }
 
   async inviteProjectMember(request: { email: string; role: ProjectRoles }) {
@@ -84,11 +88,13 @@ export class ProjectService {
     if (!projectId) {
       throw new Error('No project selected. Please select a project first.');
     }
-    return this.apiService.updateProjectMemberRole({
+    const response = await this.apiService.updateProjectMemberRole({
       projectId,
       memberId: request.memberId,
       role: request.role,
     });
+    this.firebaseDataService.refreshProjectSettings();
+    return response;
   }
 
   async removeProjectMember(memberId: string) {
@@ -96,10 +102,12 @@ export class ProjectService {
     if (!projectId) {
       throw new Error('No project selected. Please select a project first.');
     }
-    return this.apiService.removeProjectMember({
+    const response = await this.apiService.removeProjectMember({
       projectId,
       memberId,
     });
+    this.firebaseDataService.refreshProjectSettings();
+    return response;
   }
 
   async revokeProjectInvitation(invitationId: string) {

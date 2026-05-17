@@ -88,6 +88,7 @@ export class FirebaseDataService {
   private currentAgentId = signal<string>('');
   private currentUserId = signal<string>('');
   private readonly userProjectsRefresh$ = new Subject<void>();
+  private readonly projectSettingsRefresh$ = new Subject<void>();
 
   // Data signals for different collections
   private modulesSignal = signal<Module[]>([]);
@@ -266,9 +267,17 @@ export class FirebaseDataService {
 
     this.projectSettingsObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
-        if (!projectId || !user) return of(null);
-        return runInInjectionContext(this.injector, () =>
-          this.docData(doc(this.firestore, `/${this.getProjectPath(projectId)}`))
+        return this.projectSettingsRefresh$.pipe(
+          startWith(undefined),
+          switchMap(() => {
+            if (!projectId || !user) return of(null);
+            return from(this.apiService.getProjectSettings(projectId)).pipe(
+              catchError((error) => {
+                console.error('Error loading project settings:', error);
+                return of(null);
+              }),
+            );
+          }),
         );
       })
     );
@@ -343,19 +352,11 @@ export class FirebaseDataService {
   
   async resolveAndSetProject(owner: string, project: string): Promise<string | null> {
     try {
-      const db = this.firestore;
-      const projectDoc = await getDoc(
-        doc(db, `organizations/${owner}/projects/${project}`)
-      );
-      if (projectDoc.exists()) {
-        const projectId = `${owner}/${project}`;
-        this.setProject(projectId);
-        return projectId;
-      } else {
-        console.error('Project not found', owner, project);
-        this.setProject('');
-        return null;
-      }
+      const projectId = `${owner}/${project}`;
+      await this.apiService.getProjectSettings(projectId);
+      this.setProject(projectId);
+      this.refreshProjectSettings();
+      return projectId;
     } catch (e) {
       console.error('Failed to resolve project', e);
       this.setProject('');
@@ -377,6 +378,10 @@ export class FirebaseDataService {
 
   refreshUserProjects() {
     this.userProjectsRefresh$.next();
+  }
+
+  refreshProjectSettings() {
+    this.projectSettingsRefresh$.next();
   }
 
   // Public computed signals for components to use

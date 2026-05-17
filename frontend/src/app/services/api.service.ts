@@ -6,6 +6,7 @@ import { map, shareReplay, catchError } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 import { getNstConfig } from '../nst-config';
 import { Project } from '../models/firebase.model';
+import { ProjectSettings } from '../models/projectSettings.model';
 
 export interface CreateProjectRequest {
   name: string;
@@ -73,6 +74,10 @@ export interface UserProject extends Project {
   id: string;
   slug: string;
   orgSlug: string;
+}
+
+export interface ProjectSettingsResponse extends ProjectSettings {
+  id: string;
 }
 
 export interface UpdateProjectMemberRoleRequest {
@@ -309,6 +314,27 @@ export class ApiService {
     ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     return response ?? [];
+  }
+
+  async getProjectSettings(projectId: string): Promise<ProjectSettingsResponse> {
+    const [orgId, projectSlug] = projectId.split('/');
+    if (!orgId || !projectSlug || projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.get<ProjectSettingsResponse>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectSlug}`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project settings endpoint');
+    }
+
+    return response;
   }
 
   async updateProjectMemberRole(request: UpdateProjectMemberRoleRequest): Promise<{ memberId: string; role: ProjectRoles }> {
