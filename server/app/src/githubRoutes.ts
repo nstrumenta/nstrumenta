@@ -48,7 +48,8 @@ type InstallationSummary = {
 }
 
 const GITHUB_APP_WEBHOOK_SECRET = process.env.GITHUB_APP_WEBHOOK_SECRET
-const GITHUB_APP_INSTALL_URL = 'https://github.com/apps/nstrumenta-github/installations/new'
+const GITHUB_APP_INSTALL_URL = process.env.GITHUB_APP_INSTALL_URL
+if (!GITHUB_APP_INSTALL_URL) throw new Error('GITHUB_APP_INSTALL_URL env var is required')
 const GITHUB_INSTALL_SESSION_TTL_MS = 15 * 60 * 1000
 
 function projectGithubConnectionsPath(projectId: string): string {
@@ -232,6 +233,13 @@ async function deleteInstallationConnections(installationId: string): Promise<vo
   await batch.commit()
 }
 
+function verifySignature(rawBody: Buffer, signature: string | undefined): boolean {
+  if (!signature) return false
+  if (!GITHUB_APP_WEBHOOK_SECRET) throw new Error('GITHUB_APP_WEBHOOK_SECRET env var is required')
+  const expected = `sha256=${crypto.createHmac('sha256', GITHUB_APP_WEBHOOK_SECRET).update(rawBody).digest('hex')}`
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
+}
+
 async function consumeGithubInstallSession(projectId: string, userId: string, stateToken: string): Promise<void> {
   const sessionRef = firestore.doc(githubInstallSessionPath(stateToken))
   const now = Date.now()
@@ -255,13 +263,6 @@ async function consumeGithubInstallSession(projectId: string, userId: string, st
 
     transaction.update(sessionRef, { consumedAt: now })
   })
-}
-
-function verifySignature(rawBody: Buffer, signature: string | undefined): boolean {
-  if (!signature) return false
-  if (!GITHUB_APP_WEBHOOK_SECRET) throw new Error('GITHUB_APP_WEBHOOK_SECRET env var is required')
-  const expected = `sha256=${crypto.createHmac('sha256', GITHUB_APP_WEBHOOK_SECRET).update(rawBody).digest('hex')}`
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))
 }
 
 async function handleInstallation(action: string, installation: any, repositories: any[] = []) {

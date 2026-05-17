@@ -24,6 +24,7 @@ services:
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NST_API_URL=http://localhost:5999
+      - GITHUB_APP_INSTALL_URL=${GITHUB_APP_INSTALL_URL}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     working_dir: /build/server/app

@@ -63,3 +63,4 @@ CLOUD_REGION=$(cd "$TERRAFORM_DIR" && terraform output -raw location_id) || { ec
 export CLOUD_REGION
 PREVIEW_IMAGE_REGISTRY=$(cd "$TERRAFORM_DIR" && terraform output -raw preview_image_registry) || { echo "ERROR: Failed to get PREVIEW_IMAGE_REGISTRY from terraform output"; return 1; }
 export PREVIEW_IMAGE_REGISTRY
+GITHUB_APP_INSTALL_URL=$(gh variable get CI_GITHUB_APP_INSTALL_URL 2>/dev/null) && export GITHUB_APP_INSTALL_URL || echo "Warning: CI_GITHUB_APP_INSTALL_URL not set in gh variables"
