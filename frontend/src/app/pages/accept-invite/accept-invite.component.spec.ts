@@ -5,6 +5,7 @@ import { AcceptInviteComponent } from './accept-invite.component';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../auth/auth.service';
 import { signal } from '@angular/core';
+import { FirebaseDataService } from '../../services/firebase-data.service';
 
 describe('AcceptInviteComponent', () => {
   let fixture: ComponentFixture<AcceptInviteComponent>;
@@ -17,6 +18,7 @@ describe('AcceptInviteComponent', () => {
     signInWithInvitationEmailLink: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
   };
+  let firebaseDataServiceMock: { refreshUserProjects: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
     apiServiceMock = { acceptProjectInvitation: vi.fn().mockResolvedValue({ accepted: true, orgId: "org1", projectId: "proj1" }) };
@@ -28,6 +30,7 @@ describe('AcceptInviteComponent', () => {
       signInWithInvitationEmailLink: vi.fn().mockResolvedValue('signed-in'),
       logout: vi.fn().mockResolvedValue(undefined),
     };
+    firebaseDataServiceMock = { refreshUserProjects: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [AcceptInviteComponent],
@@ -47,6 +50,7 @@ describe('AcceptInviteComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceMock },
       ],
     }).compileComponents();
 
@@ -63,6 +67,7 @@ describe('AcceptInviteComponent', () => {
       projectId: 'proj1',
       invitationId: 'invite-1',
     });
+    expect(firebaseDataServiceMock.refreshUserProjects).toHaveBeenCalled();
     expect(routerMock.navigate).toHaveBeenCalledWith(['/', 'org1', 'proj1', 'settings']);
   });
 
@@ -83,6 +88,7 @@ describe('AcceptInviteComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceMock },
       ],
     }).compileComponents();
 
@@ -118,6 +124,7 @@ describe('AcceptInviteComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceMock },
       ],
     }).compileComponents();
 
@@ -154,6 +161,7 @@ describe('AcceptInviteComponent', () => {
         { provide: ApiService, useValue: apiServiceMock },
         { provide: Router, useValue: routerMock },
         { provide: AuthService, useValue: authServiceMock },
+        { provide: FirebaseDataService, useValue: firebaseDataServiceMock },
       ],
     }).compileComponents();
 

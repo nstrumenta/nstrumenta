@@ -33,11 +33,13 @@ import {
 } from 'firebase/storage';
 import {
   Observable,
+  Subject,
   catchError,
   combineLatest,
   from,
   map,
   of,
+  startWith,
   switchMap
 } from 'rxjs';
 import { Action } from '../models/action.model';
@@ -85,6 +87,7 @@ export class FirebaseDataService {
   private currentProjectId = signal<string>('');
   private currentAgentId = signal<string>('');
   private currentUserId = signal<string>('');
+  private readonly userProjectsRefresh$ = new Subject<void>();
 
   // Data signals for different collections
   private modulesSignal = signal<Module[]>([]);
@@ -232,23 +235,18 @@ export class FirebaseDataService {
     );
 
     this.userProjectsObservable$ = toObservable(this.authService.currentUser).pipe(
-      switchMap((user) => {
-        if (!user?.uid) return of([]);
-        return from(this.getUserDocOnce(user.uid)).pipe(
-          switchMap((userData) => {
-            const username = userData['username'] as string;
-            if (!username) return of([]);
-            return runInInjectionContext(this.injector, () => {
-              const projectsCollection = collection(this.firestore, `organizations/${username}/projects`);
-              return this.collectionData(query(projectsCollection));
-            });
-          }),
-          catchError((error) => {
-            console.error('Error loading user projects:', error);
-            return of([]);
-          })
-        );
-      })
+      switchMap((user) => this.userProjectsRefresh$.pipe(
+        startWith(undefined),
+        switchMap(() => {
+          if (!user?.uid) return of([]);
+          return from(this.apiService.listUserProjects()).pipe(
+            catchError((error) => {
+              console.error('Error loading user projects:', error);
+              return of([]);
+            }),
+          );
+        }),
+      )),
     );
 
     this.notificationsObservable$ = toObservable(this.authService.currentUser).pipe(
@@ -375,6 +373,10 @@ export class FirebaseDataService {
 
   setUser(userId: string) {
     this.currentUserId.set(userId);
+  }
+
+  refreshUserProjects() {
+    this.userProjectsRefresh$.next();
   }
 
   // Public computed signals for components to use

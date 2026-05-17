@@ -5,6 +5,7 @@ import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 import { getNstConfig } from '../nst-config';
+import { Project } from '../models/firebase.model';
 
 export interface CreateProjectRequest {
   name: string;
@@ -66,6 +67,12 @@ export interface AcceptProjectInvitationResponse {
   accepted: boolean;
   orgId: string;
   projectId: string;
+}
+
+export interface UserProject extends Project {
+  id: string;
+  slug: string;
+  orgSlug: string;
 }
 
 export interface UpdateProjectMemberRoleRequest {
@@ -290,6 +297,18 @@ export class ApiService {
     }
 
     return response;
+  }
+
+  async listUserProjects(): Promise<UserProject[]> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+
+    const response = await this.http.get<UserProject[]>(
+      `${apiUrl}/api/user/projects`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    return response ?? [];
   }
 
   async updateProjectMemberRole(request: UpdateProjectMemberRoleRequest): Promise<{ memberId: string; role: ProjectRoles }> {
