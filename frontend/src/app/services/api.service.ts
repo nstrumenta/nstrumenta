@@ -304,6 +304,16 @@ export class ApiService {
     return response;
   }
 
+  async repairUserProjectMemberships(): Promise<void> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+    await this.http.post<{ repaired: number }>(
+      `${apiUrl}/api/user/projects/repair`,
+      {},
+      { headers },
+    ).toPromise().catch(() => undefined);
+  }
+
   async listUserProjects(): Promise<UserProject[]> {
     const apiUrl = await this.getApiUrl();
     const headers = await this.buildMcpHeaders();

@@ -40,7 +40,7 @@ For fast frontend iteration, use watch mode instead:
 ./frontend-e2e-watch.sh down
 ```
 
-`frontend-e2e-watch.sh` sources `../credentials/activate.sh` internally.
+`frontend-e2e-watch.sh` sources `../credentials/activate.sh` internally for both `up` and test runs, so no separate `source` step is required when you use the script.
 
 Each test run creates an ephemeral user with randomised credentials via `globalSetup.ts`
 and deletes them on teardown — no manual seeding required for CI.

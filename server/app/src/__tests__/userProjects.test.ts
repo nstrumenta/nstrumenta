@@ -53,7 +53,7 @@ describe('user projects api', () => {
 
     mockCollectionGet.mockImplementation(async (path: string) => {
       if (path === 'users/user-1/organizations') {
-        return { docs: [{ id: 'org1' }] }
+        return { docs: [{ id: 'org1-id', data: () => ({ slug: 'org1' }) }] }
       }
       if (path === 'users/user-1/projects') {
         return { docs: [{ data: () => ({ projectId: 'org2/proj2' }) }] }
@@ -82,8 +82,8 @@ describe('user projects api', () => {
       userId: 'user-1',
     })
 
-    expect(mockFirestoreCollection).toHaveBeenCalledWith('users/user-1/organizations')
-    expect(mockFirestoreCollection).toHaveBeenCalledWith('users/user-1/projects')
+  expect(mockFirestoreCollection).toHaveBeenCalledWith('users/user-1/organizations')
+  expect(mockFirestoreCollection).toHaveBeenCalledWith('users/user-1/projects')
     expect(mockFirestoreCollection).toHaveBeenCalledWith('organizations/org1/projects')
     expect(mockFirestoreDoc).toHaveBeenCalledWith('organizations/org2/projects/proj2')
     expect(res.status).toHaveBeenCalledWith(200)
@@ -99,7 +99,7 @@ describe('user projects api', () => {
 
     mockCollectionGet.mockImplementation(async (path: string) => {
       if (path === 'users/user-1/organizations') {
-        return { docs: [{ id: 'org1' }] }
+        return { docs: [{ id: 'org1-id', data: () => ({ slug: 'org1' }) }] }
       }
       if (path === 'users/user-1/projects') {
         return { docs: [{ data: () => ({ projectId: 'org1/proj1' }) }] }
@@ -131,5 +131,28 @@ describe('user projects api', () => {
     expect(res.json).toHaveBeenCalledWith([
       expect.objectContaining({ id: 'org1/proj1', name: 'Project One' }),
     ])
+  })
+
+  it('skips malformed indexed project ids instead of failing the entire response', async () => {
+    const req = { body: {} } as Request
+    const res = makeRes() as Response
+
+    mockCollectionGet.mockImplementation(async (path: string) => {
+      if (path === 'users/user-1/organizations') {
+        return { docs: [] }
+      }
+      if (path === 'users/user-1/projects') {
+        return { docs: [{ data: () => ({ projectId: 'not-a-valid-project-id' }) }] }
+      }
+      return { docs: [] }
+    })
+
+    await (listUserProjects as any)(req, res, {
+      authenticated: true,
+      userId: 'user-1',
+    })
+
+    expect(res.status).toHaveBeenCalledWith(200)
+    expect(res.json).toHaveBeenCalledWith([])
   })
 })

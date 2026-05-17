@@ -23,6 +23,59 @@ function addProjectIfMember(
   })
 }
 
+function getOrganizationProjectCollectionPath(organizationDoc: { id: string; data(): Record<string, unknown> }) {
+  const organization = organizationDoc.data()
+  const orgSlug = typeof organization.slug === 'string' && organization.slug ? organization.slug : organizationDoc.id
+  return `organizations/${orgSlug}/projects`
+}
+
+// POST /api/user/projects/repair
+// Backfills users/{uid}/projects index from project_membership_added notifications.
+// Safe to call multiple times — uses set() which is idempotent.
+export const repairUserProjectMembershipsBase = async (
+  _req: Request,
+  res: Response,
+  args: FirebaseAuthResult,
+) => {
+  const { authenticated, userId } = args
+  if (!authenticated || !userId) return res.status(401).json({ message: 'Authentication required' })
+
+  try {
+    const notificationsSnap = await firestore
+      .collection(`users/${userId}/notifications`)
+      .where('type', '==', 'project_membership_added')
+      .get()
+
+    const writes: Promise<unknown>[] = []
+    for (const doc of notificationsSnap.docs) {
+      const data = doc.data()
+      const projectId = typeof data.projectId === 'string' ? data.projectId : null
+      if (!projectId || projectId.split('/').length !== 2) continue
+
+      const { orgSlug, projectSlug } = (function () {
+        const [o, p] = projectId.split('/')
+        return { orgSlug: o, projectSlug: p }
+      })()
+
+      const membershipPath = `users/${userId}/projects/${orgSlug}__${projectSlug}`
+      writes.push(
+        firestore.doc(membershipPath).set(
+          { projectId, addedAt: data.createdAt ?? Date.now() },
+          { merge: true },
+        ),
+      )
+    }
+
+    await Promise.all(writes)
+    return res.status(200).json({ repaired: writes.length })
+  } catch (error) {
+    console.error('Failed to repair user project memberships:', error)
+    return res.status(500).json({ message: 'Failed to repair user project memberships' })
+  }
+}
+
+export const repairUserProjectMemberships = withFirebaseAuth(repairUserProjectMembershipsBase)
+
 // GET /api/user/projects
 const listUserProjectsBase = async (
   _req: Request,
@@ -30,7 +83,7 @@ const listUserProjectsBase = async (
   args: FirebaseAuthResult,
 ) => {
   const { authenticated, userId } = args
-  if (!authenticated || !userId) return res.status(401).send('Authentication required')
+  if (!authenticated || !userId) return res.status(401).json({ message: 'Authentication required' })
 
   try {
     const [organizationRefsSnapshot, projectMembershipSnapshot] = await Promise.all([
@@ -40,7 +93,7 @@ const listUserProjectsBase = async (
 
     const organizationProjectSnapshots = await Promise.all(
       organizationRefsSnapshot.docs.map((organizationDoc) =>
-        firestore.collection(`organizations/${organizationDoc.id}/projects`).get(),
+        firestore.collection(getOrganizationProjectCollectionPath(organizationDoc)).get(),
       ),
     )
 
@@ -49,8 +102,13 @@ const listUserProjectsBase = async (
         const projectId = projectDoc.data()?.projectId
         if (typeof projectId !== 'string' || !projectId) return null
 
-        const snapshot = await firestore.doc(orgProjectPath(projectId)).get()
-        return { projectId, snapshot }
+        try {
+          const snapshot = await firestore.doc(orgProjectPath(projectId)).get()
+          return { projectId, snapshot }
+        } catch (error) {
+          console.warn('Skipping malformed user project membership', { userId, projectId, error })
+          return null
+        }
       }),
     )
 
@@ -86,7 +144,7 @@ const listUserProjectsBase = async (
     return res.status(200).json(sortedProjects)
   } catch (error) {
     console.error('Failed to list user projects:', error)
-    return res.status(500).send('Failed to list user projects')
+    return res.status(500).json({ message: 'Failed to list user projects' })
   }
 }
 

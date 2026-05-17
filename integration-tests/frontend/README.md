@@ -16,6 +16,7 @@ JSON-RPC 2.0 API tests for the MCP endpoint.
 
 ```bash
 # Full CI-like run from integration-tests/
+cd /workspaces/nstrumenta/integration-tests
 source ../credentials/activate.sh
 ./frontend-e2e.sh
 
@@ -25,12 +26,14 @@ source ../credentials/activate.sh
 ./frontend-e2e-watch.sh down
 
 # MCP tests standalone (requires running server + NSTRUMENTA_API_KEY)
-cd integration-tests/frontend
+cd /workspaces/nstrumenta/integration-tests/frontend
 npm install
 npx vitest run mcp-client.test.js
 ```
 
-`frontend-e2e.sh` expects credentials to already be loaded. `frontend-e2e-watch.sh` loads them internally.
+Run `frontend-e2e.sh` from `/workspaces/nstrumenta/integration-tests` after `source ../credentials/activate.sh`.
+
+`frontend-e2e-watch.sh` loads credentials internally for both `up` and test execution.
 
 ## Environment Variables
 

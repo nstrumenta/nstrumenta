@@ -54,7 +54,7 @@ export function withFirebaseAuth<T>(
     const authentication = await firebaseAuth(req, res)
 
     if (!authentication.authenticated) {
-      return res.status(401).send(authentication.message || 'Authentication failed')
+      return res.status(401).json({ message: authentication.message || 'Authentication failed' })
     }
 
     // Extract args from request body
