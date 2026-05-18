@@ -16,7 +16,11 @@
         }
       </ul>
     }
-    <a mat-flat-button [routerLink]="returnRoute()">Return to repositories</a>
+    <a
+      mat-flat-button
+      [routerLink]="returnRoute()"
+      [queryParams]="installationId() ? { installationId: installationId() } : undefined"
+    >Choose repositories</a>
   }
 
   @if (status() === 'error') {

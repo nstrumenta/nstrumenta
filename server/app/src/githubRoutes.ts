@@ -12,6 +12,13 @@ type InstallationRepositorySummary = {
   linkedProjectId?: string
 }
 
+type StoredInstallation = {
+  installationId: string
+  account: { login?: string; type?: string }
+  repositories: Array<{ id: string; fullName: string }>
+  updatedAt?: number
+}
+
 type ProjectGithubConnection = {
   installationId: string
   projectId: string
@@ -73,17 +80,27 @@ function buildGithubLinkId(installationId: string, fullName: string): string {
 
 function summarizeInstallationFromProjectDocs(
   connection: ProjectGithubConnection,
+  installation: StoredInstallation | null,
   links: ProjectGithubLink[],
 ): InstallationSummary {
+  const linkedRepoNames = new Set(links.map((link) => link.fullName))
+  const repositories = installation?.repositories?.length
+    ? installation.repositories.map((repository) => ({
+        id: repository.id,
+        fullName: repository.fullName,
+        linkedProjectId: linkedRepoNames.has(repository.fullName) ? connection.projectId : undefined,
+      }))
+    : links.map((link) => ({
+        id: link.repoId,
+        fullName: link.fullName,
+        linkedProjectId: link.projectId,
+      }))
+
   return {
     installationId: connection.installationId,
-    account: connection.account,
-    repositories: links.map((link) => ({
-      id: link.repoId,
-      fullName: link.fullName,
-      linkedProjectId: link.projectId,
-    })),
-    updatedAt: connection.updatedAt,
+    account: installation?.account ?? connection.account,
+    repositories,
+    updatedAt: installation?.updatedAt ?? connection.updatedAt,
   }
 }
 
@@ -101,13 +118,44 @@ async function listProjectInstallations(projectId: string): Promise<Installation
     linksByInstallationId.set(link.installationId, existing)
   }
 
+  const installationIds = connectionsSnapshot.docs.map((doc) => doc.id)
+  const installationDocs = installationIds.length === 0
+    ? []
+    : await Promise.all(installationIds.map((installationId) => firestore.doc(`githubInstallations/${installationId}`).get()))
+
+  const installationsById = new Map<string, StoredInstallation>()
+  for (const installationDoc of installationDocs) {
+    if (!installationDoc.exists) {
+      continue
+    }
+    installationsById.set(installationDoc.id, installationDoc.data() as StoredInstallation)
+  }
+
   return connectionsSnapshot.docs
     .map((doc) => doc.data() as ProjectGithubConnection)
     .map((connection) => summarizeInstallationFromProjectDocs(
       connection,
+      installationsById.get(connection.installationId) ?? null,
       linksByInstallationId.get(connection.installationId) ?? [],
     ))
     .sort((left, right) => (right.updatedAt ?? 0) - (left.updatedAt ?? 0))
+}
+
+async function upsertProjectGithubConnection(
+  projectId: string,
+  installationId: string,
+  account: { login?: string; type?: string },
+  connectedBy: string,
+): Promise<void> {
+  const now = Date.now()
+  await firestore.doc(`${projectGithubConnectionsPath(projectId)}/${installationId}`).set({
+    installationId,
+    projectId,
+    account,
+    connectedAt: now,
+    connectedBy,
+    updatedAt: now,
+  } satisfies ProjectGithubConnection, { merge: true })
 }
 
 async function createProjectGithubLinks(
@@ -161,6 +209,24 @@ async function deleteProjectGithubLinks(projectId: string, installationId: strin
   }
   await writer.close()
   return unlinkedRepos.filter(Boolean)
+}
+
+async function deleteSelectedProjectGithubLinks(
+  projectId: string,
+  installationId: string,
+  repoFullNames: string[],
+): Promise<string[]> {
+  const uniqueRepoFullNames = [...new Set(repoFullNames.filter(Boolean))]
+  if (uniqueRepoFullNames.length === 0) {
+    return []
+  }
+
+  const writer = firestore.bulkWriter()
+  for (const repoFullName of uniqueRepoFullNames) {
+    writer.delete(firestore.doc(`${projectGithubLinksPath(projectId)}/${buildGithubLinkId(installationId, repoFullName)}`))
+  }
+  await writer.close()
+  return uniqueRepoFullNames
 }
 
 async function fanOutRepoEventProjectIds(installationId: string, repoFullName: string): Promise<string[]> {
@@ -419,7 +485,7 @@ export function registerGithubRoutes(app: express.Application) {
 
   // Link an installation to a project (called from frontend after App install callback)
   app.post('/api/github/installations/link', express.json(), withProjectAuth(async (req, res, args) => {
-    const { installationId: rawInstallationId, projectId, stateToken } = req.body
+    const { installationId: rawInstallationId, projectId, stateToken, selectedRepoFullNames: rawSelectedRepoFullNames } = req.body
     if (!rawInstallationId || !projectId) {
       res.status(400).json({ error: 'installationId and projectId are required' })
       return
@@ -430,7 +496,10 @@ export function registerGithubRoutes(app: express.Application) {
       return
     }
 
-    if (args.type === 'user') {
+    const connectionRef = firestore.doc(`${projectGithubConnectionsPath(projectId)}/${installationId}`)
+    const existingConnection = await connectionRef.get()
+
+    if (args.type === 'user' && !existingConnection.exists) {
       if (typeof stateToken !== 'string' || !stateToken) {
         res.status(400).json({ error: 'stateToken is required for user-authenticated GitHub installation linking' })
         return
@@ -444,19 +513,65 @@ export function registerGithubRoutes(app: express.Application) {
       res.status(404).json({ error: `installation ${installationId} not found` })
       return
     }
+
     const repositories = (doc.data()?.repositories ?? []).map((repository: any) => ({
       id: String(repository.id),
       fullName: String(repository.fullName),
     }))
-    const linkedRepos = await createProjectGithubLinks(
+
+    const selectedRepoFullNames = Array.isArray(rawSelectedRepoFullNames)
+      ? rawSelectedRepoFullNames.map((repo) => String(repo)).filter(Boolean)
+      : []
+    const repositoriesByFullName = new Map(repositories.map((repository: { id: string; fullName: string }) => [repository.fullName, repository]))
+    const selectedRepositories = selectedRepoFullNames.map((repoFullName) => repositoriesByFullName.get(repoFullName)).filter(Boolean) as Array<{ id: string; fullName: string }>
+
+    if (selectedRepoFullNames.length !== selectedRepositories.length) {
+      res.status(400).json({ error: 'selected repositories must belong to this installation' })
+      return
+    }
+
+    const linkedBy = args.type === 'user' ? args.userId : 'api-key'
+    await upsertProjectGithubConnection(
       projectId,
       installationId,
       doc.data()?.account ?? {},
-      repositories,
-      args.type === 'user' ? args.userId : 'api-key',
+      linkedBy,
     )
-    console.log(`[github] installation ${installationId} linked to project ${projectId}`)
+
+    const linkedRepos = selectedRepositories.length === 0
+      ? []
+      : await createProjectGithubLinks(
+          projectId,
+          installationId,
+          doc.data()?.account ?? {},
+          selectedRepositories,
+          linkedBy,
+        )
+
+    console.log(`[github] installation ${installationId} connected to project ${projectId} with ${linkedRepos.length} linked repos`)
     res.status(200).json({ ok: true, linkedRepos })
+  }))
+
+  app.post('/api/github/installations/:installationId/unlink-selected', express.json(), withProjectAuth(async (req, res, args) => {
+    const { projectId } = args
+    const installationId = String(req.params.installationId ?? '')
+    const { selectedRepoFullNames: rawSelectedRepoFullNames } = req.body
+
+    if (!installationId || installationId.includes('/')) {
+      res.status(400).json({ error: 'invalid installationId' })
+      return
+    }
+
+    const selectedRepoFullNames = Array.isArray(rawSelectedRepoFullNames)
+      ? rawSelectedRepoFullNames.map((repo) => String(repo)).filter(Boolean)
+      : []
+    if (selectedRepoFullNames.length === 0) {
+      res.status(400).json({ error: 'selectedRepoFullNames is required' })
+      return
+    }
+
+    const unlinkedRepos = await deleteSelectedProjectGithubLinks(projectId, installationId, selectedRepoFullNames)
+    res.status(200).json({ ok: true, unlinkedRepos })
   }))
 
   app.get('/api/github/installations', withProjectAuth(async (_req, res, args) => {

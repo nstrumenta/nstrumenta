@@ -97,6 +97,11 @@ const userRoutes: Routes = [
     canActivate: [waitlistGuard, usernameGuard],
   },
   {
+    path: 'github-installed',
+    component: GithubInstalledComponent,
+    canActivate: [waitlistGuard, usernameGuard],
+  },
+  {
     path: ':owner',
     canMatch: [reservedPathGuard],
     canActivate: [waitlistGuard, usernameGuard],
