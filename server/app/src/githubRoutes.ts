@@ -340,7 +340,6 @@ async function handlePullRequest(action: string, installationId: string, repoFul
 }
 
 export function registerGithubRoutes(app: express.Application) {
-  // Must receive raw body for HMAC verification — register before global json middleware applies to this path
   app.post('/api/github/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['x-hub-signature-256'] as string | undefined
     if (!verifySignature(req.body as Buffer, sig)) {

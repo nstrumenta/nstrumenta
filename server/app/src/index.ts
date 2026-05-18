@@ -32,7 +32,10 @@ const port = process.env.API_PORT ?? 5999
 
 const app = express()
 app.set('trust proxy', 1)
-app.use(express.json())
+app.use((req, res, next) => {
+  if (req.path === '/api/github/webhook') return next()
+  express.json()(req, res, next)
+})
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
@@ -46,10 +49,7 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
 })
 
-app.use('/api/', (req, res, next) => {
-  if (req.path === '/github/webhook') return next()
-  return apiLimiter(req, res, next)
-})
+app.use('/api/', apiLimiter)
 
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
