@@ -4,7 +4,7 @@ const WINDOW_MS = 15 * 60 * 1000
 
 export const publicIpLimiter = rateLimit({
   windowMs: WINDOW_MS,
-  max: 200,
+  max: 5000,
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === 'OPTIONS',

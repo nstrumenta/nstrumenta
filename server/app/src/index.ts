@@ -68,7 +68,7 @@ app.get('/mcp/sse', handleMcpSseRequest)
 app.post('/mcp/messages', handleMcpSseMessage)
 
 // Serve frontend static files (after API routes)
-app.use(publicIpLimiter, express.static('/app/frontend'))
+app.use(express.static('/app/frontend'))
 
 // Catch-all route for Angular SPA (must be last)
 app.get('/config', publicIpLimiter, (req, res) => {
