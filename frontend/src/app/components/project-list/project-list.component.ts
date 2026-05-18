@@ -46,6 +46,7 @@ export class ProjectListComponent {
   newProjectDialog() {
     this.dialog.open(NewProjectDialogComponent).afterClosed().subscribe(result => {
       if (result?.orgSlug && result?.slug) {
+        this.firebaseDataService.refreshUserProjects();
         this.router.navigate(['/', result.orgSlug, result.slug, 'overview']).catch(console.error);
       }
     });

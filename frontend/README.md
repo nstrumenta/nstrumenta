@@ -13,12 +13,12 @@ Angular web application for project management, data visualization, and real-tim
 If you are an agent, use one of these paths:
 
 - Full-stack hot reload: run `./dev.sh` from the repo root. This is the default when you may touch both frontend and server code.
-- Frontend only: run `npm run serve` in `frontend/` when you only need the Angular app on `http://localhost:5008`.
+- Frontend only: run `npm start` in `frontend/` when you only need the Angular app on `http://localhost:5008`.
 - Playwright watch mode: use `frontend-dev` only for E2E iteration.
 
 ```shell
 npm install
-npm run serve
+npm start
 ```
 
 Open http://localhost:5008. Add `localhost` to Firebase authorized domains.

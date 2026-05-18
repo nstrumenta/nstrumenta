@@ -49,7 +49,6 @@ type InstallationSummary = {
 
 const GITHUB_APP_WEBHOOK_SECRET = process.env.GITHUB_APP_WEBHOOK_SECRET
 const GITHUB_APP_INSTALL_URL = process.env.GITHUB_APP_INSTALL_URL
-if (!GITHUB_APP_INSTALL_URL) throw new Error('GITHUB_APP_INSTALL_URL env var is required')
 const GITHUB_INSTALL_SESSION_TTL_MS = 15 * 60 * 1000
 
 function projectGithubConnectionsPath(projectId: string): string {
@@ -118,11 +117,11 @@ async function createProjectGithubLinks(
   repositories: Array<{ id: string; fullName: string }>,
   linkedBy: string,
 ): Promise<string[]> {
-  const batch = firestore.batch()
+  const writer = firestore.bulkWriter()
   const now = Date.now()
 
   const connectionRef = firestore.doc(`${projectGithubConnectionsPath(projectId)}/${installationId}`)
-  batch.set(connectionRef, {
+  writer.set(connectionRef, {
     installationId,
     projectId,
     account,
@@ -133,7 +132,7 @@ async function createProjectGithubLinks(
 
   for (const repository of repositories) {
     const linkRef = firestore.doc(`${projectGithubLinksPath(projectId)}/${buildGithubLinkId(installationId, repository.fullName)}`)
-    batch.set(linkRef, {
+    writer.set(linkRef, {
       installationId,
       projectId,
       repoId: repository.id,
@@ -145,7 +144,7 @@ async function createProjectGithubLinks(
     } satisfies ProjectGithubLink, { merge: true })
   }
 
-  await batch.commit()
+  await writer.close()
   return repositories.map((repository) => repository.fullName)
 }
 
@@ -155,12 +154,12 @@ async function deleteProjectGithubLinks(projectId: string, installationId: strin
     .get()
 
   const unlinkedRepos = linksSnapshot.docs.map((doc) => String(doc.data()?.fullName ?? ''))
-  const batch = firestore.batch()
-  batch.delete(firestore.doc(`${projectGithubConnectionsPath(projectId)}/${installationId}`))
+  const writer = firestore.bulkWriter()
+  writer.delete(firestore.doc(`${projectGithubConnectionsPath(projectId)}/${installationId}`))
   for (const doc of linksSnapshot.docs) {
-    batch.delete(doc.ref)
+    writer.delete(doc.ref)
   }
-  await batch.commit()
+  await writer.close()
   return unlinkedRepos.filter(Boolean)
 }
 
@@ -391,6 +390,10 @@ export function registerGithubRoutes(app: express.Application) {
   })
 
   app.post('/api/github/installations/connect-url', express.json(), withProjectAuth(async (_req, res, args) => {
+    if (!GITHUB_APP_INSTALL_URL) {
+      res.status(503).json({ error: 'GitHub App install URL is not configured on this server' })
+      return
+    }
     if (args.type !== 'user') {
       res.status(400).json({ error: 'GitHub App installation requires user authentication' })
       return

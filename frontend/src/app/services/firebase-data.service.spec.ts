@@ -196,10 +196,6 @@ describe('FirebaseDataService', () => {
       expect(service.agents).toBeDefined();
     });
 
-    it('should provide access to repositories signal', () => {
-      expect(service.repositories).toBeDefined();
-    });
-
     it('should provide access to userProjects signal', () => {
       expect(service.userProjects).toBeDefined();
     });

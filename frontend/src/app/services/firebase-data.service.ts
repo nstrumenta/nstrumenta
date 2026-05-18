@@ -224,20 +224,14 @@ export class FirebaseDataService {
     this.userProjectsObservable$ = toObservable(this.authService.currentUser).pipe(
       switchMap((user) => this.userProjectsRefresh$.pipe(
         startWith(undefined),
-        switchMap((_, index) => {
+        switchMap(() => {
           if (!user?.uid) return of([]);
-          const load = () => from(this.apiService.listUserProjects()).pipe(
+          return from(this.apiService.listUserProjects()).pipe(
             catchError((error) => {
               console.error('Error loading user projects:', error);
               return of([]);
             }),
           );
-          if (index === 0) {
-            return from(this.apiService.repairUserProjectMemberships()).pipe(
-              switchMap(() => load()),
-            );
-          }
-          return load();
         }),
       )),
     );

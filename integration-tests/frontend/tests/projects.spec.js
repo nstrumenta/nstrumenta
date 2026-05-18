@@ -23,7 +23,9 @@ async function signIn(page) {
 }
 
 async function waitForUserProjects(page) {
-  const response = await page.waitForResponse((resp) => resp.url().includes('/api/user/projects'));
+  const response = await page.waitForResponse(
+    (resp) => resp.request().method() === 'GET' && new URL(resp.url()).pathname === '/api/user/projects',
+  );
   expect(response.status(), 'user projects API should return 200').toBe(200);
   const contentType = response.headers()['content-type'] || '';
   expect(contentType, 'user projects API should return JSON').toContain('application/json');

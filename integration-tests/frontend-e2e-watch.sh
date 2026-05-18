@@ -49,7 +49,7 @@ export NSTRUMENTA_API_KEY_PEPPER=$(gcloud secrets versions access latest --secre
 TEST_USER_JSON=$(node create-test-user.js)
 export TEST_USER_EMAIL=$(echo "$TEST_USER_JSON" | jq -r .email)
 export TEST_USER_PASSWORD=$(echo "$TEST_USER_JSON" | jq -r .password)
-TEST_USER_UID=$(echo "$TEST_USER_JSON" | jq -r .uid)
+export TEST_USER_UID=$(echo "$TEST_USER_JSON" | jq -r .uid)
 TEST_USER_USERNAME=$(echo "$TEST_USER_JSON" | jq -r .username)
 
 TEST_ADMIN_JSON=$(node create-test-user.js --admin)

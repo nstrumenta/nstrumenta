@@ -81,7 +81,7 @@ async function getProjectMemberRole(projectId: string, userId: string): Promise<
 async function resolveProjectModule(projectId: string, moduleName: string, moduleVersion?: string) {
     const modules = await getModulesList(projectId);
     return modules.find((module: any) =>
-        (module.name === moduleName || module.name?.startsWith(moduleName))
+        module.name === moduleName
         && (!moduleVersion || module.version === moduleVersion),
     );
 }
