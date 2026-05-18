@@ -39,17 +39,9 @@ app.use(cors())
 
 import rateLimit from 'express-rate-limit'
 
-// Rate limiters for different endpoints
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes for general API endpoints
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-const mcpLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // 50 requests per 15 minutes
+  windowMs: 15 * 60 * 1000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
 })
@@ -94,9 +86,9 @@ app.get('/config', (req, res) => {
 })
 
 // MCP JSON-RPC 2.0 endpoints
-app.post('/mcp', mcpLimiter, handleMcpRequest)
-app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
-app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
+app.post('/mcp', apiLimiter, handleMcpRequest)
+app.get('/mcp/sse', apiLimiter, handleMcpSseRequest)
+app.post('/mcp/messages', apiLimiter, handleMcpSseMessage)
 
 // Serve frontend static files (after API routes)
 app.use(express.static('/app/frontend'))
