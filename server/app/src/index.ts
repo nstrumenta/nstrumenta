@@ -63,9 +63,9 @@ app.get('/health', (req, res) => {
 })
 
 // MCP JSON-RPC 2.0 endpoints
-app.post('/mcp', handleMcpRequest)
-app.get('/mcp/sse', handleMcpSseRequest)
-app.post('/mcp/messages', handleMcpSseMessage)
+app.post('/mcp', publicIpLimiter, handleMcpRequest)
+app.get('/mcp/sse', publicIpLimiter, handleMcpSseRequest)
+app.post('/mcp/messages', publicIpLimiter, handleMcpSseMessage)
 
 // Serve frontend static files (after API routes)
 app.use(express.static('/app/frontend'))
