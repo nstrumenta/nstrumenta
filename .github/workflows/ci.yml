@@ -433,7 +433,7 @@ jobs:
             --port=5999 \
             --allow-unauthenticated \
             --service-account=${{ steps.firebase-config.outputs.service_account }} \
-            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID,FIREBASE_API_KEY=${{ steps.firebase-config.outputs.api_key }},FIREBASE_APP_ID=${{ steps.firebase-config.outputs.app_id }},CLOUD_REGION=${{ steps.firebase-config.outputs.cloud_region }},PREVIEW_IMAGE_REGISTRY=${{ steps.firebase-config.outputs.preview_image_registry }}"
+            --update-env-vars="IMAGE_VERSION_TAG=$IMAGE_VERSION_TAG,GOOGLE_CLOUD_PROJECT=$CI_PROJECT_ID,FIREBASE_API_KEY=${{ steps.firebase-config.outputs.api_key }},FIREBASE_APP_ID=${{ steps.firebase-config.outputs.app_id }},CLOUD_REGION=${{ steps.firebase-config.outputs.cloud_region }},PREVIEW_IMAGE_REGISTRY=${{ steps.firebase-config.outputs.preview_image_registry }},GITHUB_APP_INSTALL_URL=${{ vars.CI_GITHUB_APP_INSTALL_URL }}"
       - name: Inject config into frontend
         working-directory: frontend
         run: |

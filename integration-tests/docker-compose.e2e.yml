@@ -17,6 +17,7 @@ services:
       - NSTRUMENTA_API_URL=http://server:5999
       - CLOUD_REGION=${CLOUD_REGION}
       - PREVIEW_IMAGE_REGISTRY=${PREVIEW_IMAGE_REGISTRY}
+      - GITHUB_APP_INSTALL_URL=${GITHUB_APP_INSTALL_URL}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
     healthcheck:
