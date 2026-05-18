@@ -30,16 +30,28 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: root-modules-${{ hashFiles('package.json') }}
-      - run: npm install
-      - run: npm run build
+          path: ~/.npm
+          key: build-npm-${{ runner.os }}-${{ hashFiles('package-lock.json', 'server/app/package-lock.json', 'agent-admin-page/package-lock.json', 'vscode-extension/package-lock.json') }}
+      - name: Install and build packages
+        run: |
+          npm ci
+          npm run build:lib
+          npm run build:cli
+          npm run build:browser
+          cd agent-admin-page
+          npm ci
+          npm run build
+          cd ../server/app
+          npm ci
+          npm run build
+          cd ../../vscode-extension
+          npm ci
+          npm run compile
+          cd ..
       - run: npm pack
       - name: Build and pack server
         run: |
           cd server/app
-          npm install
-          npm run build
           npm pack
           mv nst-server-*.tgz ../..
       - name: Collect build artifacts
@@ -69,13 +81,12 @@ jobs:
           path: project
       - uses: actions/cache@v4
         with:
-          path: project/frontend/node_modules
-          key: frontend-modules-${{ hashFiles('project/frontend/package.json') }}
+          path: ~/.npm
+          key: frontend-npm-${{ runner.os }}-${{ hashFiles('project/frontend/package-lock.json') }}
       - name: Install and build
         working-directory: project/frontend
         run: |
-          ./use_cache_or_npm_install.sh
-          npm run build
+          npm ci
           ./build.sh
       - uses: actions/upload-artifact@v4
         with:
@@ -89,12 +100,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: functions/node_modules
-          key: functions-modules-${{ hashFiles('functions/package.json') }}
+          path: ~/.npm
+          key: functions-npm-${{ runner.os }}-${{ hashFiles('functions/package-lock.json') }}
       - name: Install and build
         working-directory: functions
         run: |
-          ./use_cache_or_npm_install.sh
+          npm ci
           ./build.sh
 
   test-server:
@@ -104,12 +115,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: server/app/node_modules
-          key: server-modules-${{ hashFiles('server/app/package.json') }}
+          path: ~/.npm
+          key: server-npm-${{ runner.os }}-${{ hashFiles('server/app/package-lock.json') }}
       - name: Install and test
         working-directory: server/app
         run: |
-          npm install
+          npm ci
           npm test
 
   test-nodejs:
@@ -119,10 +130,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: root-modules-${{ hashFiles('package.json') }}
-      - run: npm install
-      - run: npm run test:client && npm run test:server
+          path: ~/.npm
+          key: root-npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run test:client
 
   test-vscode-extension:
     runs-on: ubuntu-latest
@@ -131,11 +142,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: root-modules-${{ hashFiles('package.json') }}
-      - run: npm install
-      - run: npm run build:vscode-extension
-      - run: npm run test:vscode-extension
+          path: ~/.npm
+          key: vscode-extension-npm-${{ runner.os }}-${{ hashFiles('vscode-extension/package-lock.json') }}
+      - name: Install, build, and test VS Code extension
+        working-directory: vscode-extension
+        run: |
+          npm ci
+          npm run compile
+          npm test
 
   build-ci-images:
     needs: [build-frontend]
@@ -146,6 +160,7 @@ jobs:
         with:
           name: frontend
           path: frontend/dist
+      - uses: docker/setup-buildx-action@v3
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -173,10 +188,10 @@ jobs:
           node-version: 24
       - uses: actions/cache@v4
         with:
-          path: integration-tests/node_modules
-          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
+          path: ~/.npm
+          key: integration-tests-npm-${{ runner.os }}-${{ hashFiles('integration-tests/package-lock.json') }}
       - name: Install integration-tests deps
-        run: cd integration-tests && npm install --quiet
+        run: cd integration-tests && npm ci --quiet
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -211,10 +226,10 @@ jobs:
           node-version: 24
       - uses: actions/cache@v4
         with:
-          path: integration-tests/node_modules
-          key: integration-tests-${{ hashFiles('integration-tests/package-lock.json') }}
+          path: ~/.npm
+          key: integration-tests-npm-${{ runner.os }}-${{ hashFiles('integration-tests/package-lock.json') }}
       - name: Install integration-tests deps
-        run: cd integration-tests && npm install --quiet
+        run: cd integration-tests && npm ci --quiet
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -247,6 +262,10 @@ jobs:
         with:
           name: frontend
           path: frontend/dist
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: firebase-cli-npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -276,10 +295,9 @@ jobs:
       - name: Deploy frontend to CI Firebase Hosting
         working-directory: frontend
         run: |
-          npm install -g firebase-tools
           FIREBASE_PROJECT_ID=$CI_PROJECT_ID node makeFirebaseDeployConfig.js
-          firebase use $CI_PROJECT_ID
-          firebase deploy --only hosting
+          npx firebase-tools use $CI_PROJECT_ID
+          npx firebase-tools deploy --only hosting
 
   deploy-ci-server:
     needs: [build-ci-images]
@@ -312,6 +330,10 @@ jobs:
         with:
           name: frontend
           path: frontend/dist
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: firebase-cli-npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.PROD_WIF_PROVIDER }}
@@ -341,10 +363,9 @@ jobs:
       - name: Deploy to Firebase Hosting
         working-directory: frontend
         run: |
-          npm install -g firebase-tools
           FIREBASE_PROJECT_ID=$PROD_PROJECT_ID node makeFirebaseDeployConfig.js
-          firebase use $PROD_PROJECT_ID
-          firebase deploy --only hosting
+          npx firebase-tools use $PROD_PROJECT_ID
+          npx firebase-tools deploy --only hosting
 
   deploy-server:
     needs: [e2e, cli-e2e, build-ci-images]
@@ -394,6 +415,10 @@ jobs:
         with:
           name: frontend
           path: frontend/dist
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: firebase-cli-npm-${{ runner.os }}-${{ hashFiles('frontend/package-lock.json') }}
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
@@ -449,10 +474,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
           CLOUD_RUN_SERVICE_ID: pr-${{ github.event.number }}
         run: |
-          npm install -g firebase-tools
           node makeFirebaseDeployConfig.js
-          firebase use $FIREBASE_PROJECT_ID
-          DEPLOY_OUTPUT=$(firebase hosting:channel:deploy pr-${{ github.event.number }} \
+          npx firebase-tools use $FIREBASE_PROJECT_ID
+          DEPLOY_OUTPUT=$(npx firebase-tools hosting:channel:deploy pr-${{ github.event.number }} \
             --expires 7d \
             --project $FIREBASE_PROJECT_ID 2>&1)
           echo "$DEPLOY_OUTPUT"
@@ -586,13 +610,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/cache@v4
         with:
-          path: node_modules
-          key: root-modules-${{ hashFiles('package.json') }}
-      - run: npm install
+          path: ~/.npm
+          key: publish-vscode-npm-${{ runner.os }}-${{ hashFiles('vscode-extension/package-lock.json') }}
       - name: Publish VS Code extension
         working-directory: vscode-extension
         run: |
-          npm install
+          npm ci
           npx vsce publish
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
