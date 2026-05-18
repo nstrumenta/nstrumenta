@@ -33,11 +33,13 @@ import {
 } from 'firebase/storage';
 import {
   Observable,
+  Subject,
   catchError,
   combineLatest,
   from,
   map,
   of,
+  startWith,
   switchMap
 } from 'rxjs';
 import { Action } from '../models/action.model';
@@ -49,7 +51,6 @@ import {
   Module,
   Project,
   RecordData,
-  Repository,
 } from '../models/firebase.model';
 import { ProjectSettings } from '../models/projectSettings.model';
 import { ApiService } from './api.service';
@@ -85,6 +86,8 @@ export class FirebaseDataService {
   private currentProjectId = signal<string>('');
   private currentAgentId = signal<string>('');
   private currentUserId = signal<string>('');
+  private readonly userProjectsRefresh$ = new Subject<void>();
+  private readonly projectSettingsRefresh$ = new Subject<void>();
 
   // Data signals for different collections
   private modulesSignal = signal<Module[]>([]);
@@ -92,7 +95,6 @@ export class FirebaseDataService {
   private recordSignal = signal<RecordData[]>([]);
   private actionsSignal = signal<Action[]>([]);
   private agentActionsSignal = signal<Action[]>([]);
-  private repositoriesSignal = signal<Repository[]>([]);
   private agentsSignal = signal<Agent[]>([]);
   private machinesSignal = signal<Machine[]>([]);
   private userProjectsSignal = signal<Project[]>([]);
@@ -108,7 +110,6 @@ export class FirebaseDataService {
   private recordObservable$: Observable<unknown[]>;
   private actionsObservable$: Observable<unknown[]>;
   private agentActionsObservable$: Observable<unknown[]>;
-  private repositoriesObservable$: Observable<unknown[]>;
   private agentsObservable$: Observable<unknown[]>;
   private machinesObservable$: Observable<unknown[]>;
   public userProjectsObservable$: Observable<Project[]>; // Made public for ProjectService
@@ -198,17 +199,6 @@ export class FirebaseDataService {
       })
     );
 
-    this.repositoriesObservable$ = projectWithAuth$.pipe(
-      switchMap(([projectId, user]) => {
-        if (!projectId || !user) return of([]);
-        return runInInjectionContext(this.injector, () => {
-          const repositoriesCollection = collection(this.firestore, `/${this.getProjectPath(projectId)}/repositories`);
-          const repositoriesQuery = query(repositoriesCollection);
-          return this.collectionData(repositoriesQuery);
-        });
-      })
-    );
-
     this.agentsObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
         if (!projectId || !user) return of([]);
@@ -232,23 +222,18 @@ export class FirebaseDataService {
     );
 
     this.userProjectsObservable$ = toObservable(this.authService.currentUser).pipe(
-      switchMap((user) => {
-        if (!user?.uid) return of([]);
-        return from(this.getUserDocOnce(user.uid)).pipe(
-          switchMap((userData) => {
-            const username = userData['username'] as string;
-            if (!username) return of([]);
-            return runInInjectionContext(this.injector, () => {
-              const projectsCollection = collection(this.firestore, `organizations/${username}/projects`);
-              return this.collectionData(query(projectsCollection));
-            });
-          }),
-          catchError((error) => {
-            console.error('Error loading user projects:', error);
-            return of([]);
-          })
-        );
-      })
+      switchMap((user) => this.userProjectsRefresh$.pipe(
+        startWith(undefined),
+        switchMap(() => {
+          if (!user?.uid) return of([]);
+          return from(this.apiService.listUserProjects()).pipe(
+            catchError((error) => {
+              console.error('Error loading user projects:', error);
+              return of([]);
+            }),
+          );
+        }),
+      )),
     );
 
     this.notificationsObservable$ = toObservable(this.authService.currentUser).pipe(
@@ -268,9 +253,17 @@ export class FirebaseDataService {
 
     this.projectSettingsObservable$ = projectWithAuth$.pipe(
       switchMap(([projectId, user]) => {
-        if (!projectId || !user) return of(null);
-        return runInInjectionContext(this.injector, () =>
-          this.docData(doc(this.firestore, `/${this.getProjectPath(projectId)}`))
+        return this.projectSettingsRefresh$.pipe(
+          startWith(undefined),
+          switchMap(() => {
+            if (!projectId || !user) return of(null);
+            return from(this.apiService.getProjectSettings(projectId)).pipe(
+              catchError((error) => {
+                console.error('Error loading project settings:', error);
+                return of(null);
+              }),
+            );
+          }),
         );
       })
     );
@@ -312,10 +305,6 @@ export class FirebaseDataService {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((data) => this.agentActionsSignal.set((data as Action[]) || []));
 
-    this.repositoriesObservable$
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((data) => this.repositoriesSignal.set((data as Repository[]) || []));
-
     this.agentsObservable$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((data) => this.agentsSignal.set((data as Agent[]) || []));
@@ -345,19 +334,11 @@ export class FirebaseDataService {
   
   async resolveAndSetProject(owner: string, project: string): Promise<string | null> {
     try {
-      const db = this.firestore;
-      const projectDoc = await getDoc(
-        doc(db, `organizations/${owner}/projects/${project}`)
-      );
-      if (projectDoc.exists()) {
-        const projectId = `${owner}/${project}`;
-        this.setProject(projectId);
-        return projectId;
-      } else {
-        console.error('Project not found', owner, project);
-        this.setProject('');
-        return null;
-      }
+      const projectId = `${owner}/${project}`;
+      await this.apiService.getProjectSettings(projectId);
+      this.setProject(projectId);
+      this.refreshProjectSettings();
+      return projectId;
     } catch (e) {
       console.error('Failed to resolve project', e);
       this.setProject('');
@@ -375,6 +356,14 @@ export class FirebaseDataService {
 
   setUser(userId: string) {
     this.currentUserId.set(userId);
+  }
+
+  refreshUserProjects() {
+    this.userProjectsRefresh$.next();
+  }
+
+  refreshProjectSettings() {
+    this.projectSettingsRefresh$.next();
   }
 
   // Public computed signals for components to use
@@ -396,10 +385,6 @@ export class FirebaseDataService {
 
   get agentActions() {
     return this.agentActionsSignal.asReadonly();
-  }
-
-  get repositories() {
-    return this.repositoriesSignal.asReadonly();
   }
 
   get agents() {
@@ -469,23 +454,6 @@ export class FirebaseDataService {
   }
 
   // CRUD Operations - all centralized here to maintain injection context
-
-  async addRepository(projectId: string, data: unknown): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const repositoriesCollection = collection(
-        this.firestore,
-        `/${this.getProjectPath(projectId)}/repositories`
-      );
-      await addDoc(repositoriesCollection, data);
-    });
-  }
-
-  async deleteRepository(projectId: string, id: string): Promise<void> {
-    await runInInjectionContext(this.injector, async () => {
-      const docRef = doc(this.firestore, `/${this.getProjectPath(projectId)}/repositories/${id}`);
-      await deleteDoc(docRef);
-    });
-  }
 
   async deleteAction(projectId: string, id: string): Promise<void> {
     await runInInjectionContext(this.injector, async () => {

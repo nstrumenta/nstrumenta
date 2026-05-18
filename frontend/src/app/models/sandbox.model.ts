@@ -1,6 +1,6 @@
 import { AlgorithmBuildRecord } from './algorithms.model';
 import { FileRecord } from './files.model';
-import { Machine } from 'nstrumenta/dist/commands/machines';
+import { Machine } from './firebase.model';
 
 export interface Parameter {
   id: string;

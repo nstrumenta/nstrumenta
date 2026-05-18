@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { getAuth } from 'firebase-admin/auth'
 import { firestore } from '../authentication/ServiceAccount'
 import { withFirebaseAuth, FirebaseAuthResult } from '../authentication/firebaseAuth'
+import { userProjectMembershipPath } from '../shared/utils'
 
 // GET /api/orgs/:orgId/projects/:projectId/members
 const listProjectMembersBase = async (
@@ -141,6 +142,7 @@ const removeProjectMemberBase = async (
     delete updatedMembers[memberId]
 
     await firestore.doc(projectPath).update({ members: updatedMembers })
+    await firestore.doc(userProjectMembershipPath(memberId, `${orgId}/${projectId}`)).delete()
 
     return res.status(200).json({ removed: memberId })
   } catch (error) {

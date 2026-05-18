@@ -3,6 +3,7 @@ import { createOrg, getOrg, listOrgMembers, removeOrgMember, listUserOrgs } from
 import { inviteMember, acceptInvitation, listInvitations, revokeInvitation, inviteProjectMember, acceptProjectInvitation } from './api/invitations'
 import { listProjectMembers, updateProjectMemberRole, removeProjectMember } from './api/projectMembers'
 import { getBilling, getUsage } from './api/billing'
+import { getProjectSettings } from './api/projectSettings'
 
 function mergeParams(req: express.Request, _res: express.Response, next: express.NextFunction) {
   req.body = { ...req.body, ...req.params }
@@ -18,6 +19,7 @@ export function registerOrgRoutes(app: express.Application) {
 
   router.get('/:orgId/members', mergeParams, listOrgMembers)
   router.delete('/:orgId/members/:memberId', mergeParams, removeOrgMember)
+  router.get('/:orgId/projects/:projectId', mergeParams, getProjectSettings)
   router.post('/:orgId/projects/:projectId/invitations', mergeParams, inviteProjectMember)
   router.post('/:orgId/projects/:projectId/invitations/:invitationId/accept', mergeParams, acceptProjectInvitation)
   router.get('/:orgId/projects/:projectId/members', mergeParams, listProjectMembers)

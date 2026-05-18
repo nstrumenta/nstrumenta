@@ -17,6 +17,7 @@ case "$SUBCOMMAND" in
   up|*)
     source "$NST_ROOT/credentials/activate.sh" || exit 1
     eval "$(cd "$NST_ROOT/integration-tests" && node get-project-config.js)"
-    $COMPOSE up -d "${@:2}"
+    $COMPOSE up -d --build "${@:2}"
+    $COMPOSE watch --no-up
     ;;
 esac

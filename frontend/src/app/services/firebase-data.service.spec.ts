@@ -145,13 +145,16 @@ describe('FirebaseDataService', () => {
       // - machinesObservable$
       // - userProjectsObservable$
 
-      const correctPatterns = [
+      const firestoreQueryPatterns = [
         'collectionData(query(collection(this.firestore, `users/${uid}/modules`)))',
         'collectionData(query(collection(this.firestore, `users/${projectUserId}/projects/${projectId}/data`)))',
         'collectionData(query(collection(this.firestore, `users/${uid}/repositories`)))',
         'collectionData(query(collection(this.firestore, `users/${uid}/agents`)))',
         'collectionData(query(collection(this.firestore, `users/${uid}/machines`)))',
-        'collectionData(query(collection(this.firestore, `organizations/${username}/projects`)))',
+      ];
+
+      const apiBackedPatterns = [
+        'from(this.apiService.listUserProjects())',
       ];
 
       const incorrectPatterns = [
@@ -160,9 +163,13 @@ describe('FirebaseDataService', () => {
       ];
 
       // Document that all patterns must use query() wrapper
-      correctPatterns.forEach((pattern) => {
+      firestoreQueryPatterns.forEach((pattern) => {
         expect(pattern).toContain('query(collection(');
         expect(pattern).toMatch(/collectionData\(query\(collection\(/);
+      });
+
+      apiBackedPatterns.forEach((pattern) => {
+        expect(pattern).toContain('this.apiService.listUserProjects()');
       });
 
       incorrectPatterns.forEach((pattern) => {
@@ -175,7 +182,7 @@ describe('FirebaseDataService', () => {
         return /collectionData\(query\(collection\(/.test(pattern);
       };
 
-      expect(correctPatterns.every(hasCorrectStructure)).toBe(true);
+      expect(firestoreQueryPatterns.every(hasCorrectStructure)).toBe(true);
       expect(incorrectPatterns.some(hasCorrectStructure)).toBe(false);
     });
   });
@@ -187,10 +194,6 @@ describe('FirebaseDataService', () => {
 
     it('should provide access to agents signal', () => {
       expect(service.agents).toBeDefined();
-    });
-
-    it('should provide access to repositories signal', () => {
-      expect(service.repositories).toBeDefined();
     });
 
     it('should provide access to userProjects signal', () => {

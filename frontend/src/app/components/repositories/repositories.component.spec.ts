@@ -3,8 +3,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RepositoriesComponent } from './repositories.component';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService } from 'src/app/auth/auth.service';
+import { ApiService } from 'src/app/services/api.service';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { MockActivatedRoute, MockAuthService, MockFirebaseDataService } from 'src/app/testing/mocks';
+import { MockActivatedRoute, MockApiService, MockAuthService, MockFirebaseDataService } from 'src/app/testing/mocks';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('RepositoriesComponent', () => {
@@ -17,6 +18,7 @@ describe('RepositoriesComponent', () => {
       providers: [
         { provide: ActivatedRoute, useClass: MockActivatedRoute },
         { provide: AuthService, useClass: MockAuthService },
+        { provide: ApiService, useClass: MockApiService },
         { provide: FirebaseDataService, useClass: MockFirebaseDataService }
       ]
     }).compileComponents();

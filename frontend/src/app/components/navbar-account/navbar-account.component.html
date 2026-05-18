@@ -6,7 +6,13 @@
         Settings
       </button>
       <button mat-menu-item [routerLink]="['/account/notifications']" queryParamsHandling="preserve">
-        <mat-icon [matBadge]="unreadCount()" [matBadgeHidden]="unreadCount() === 0" matBadgeColor="warn">notifications</mat-icon>
+        <mat-icon
+          [matBadge]="unreadCount()"
+          [matBadgeHidden]="unreadCount() === 0"
+          [matBadgeDescription]="unreadCount() + ' unread notifications'"
+          matBadgeColor="warn"
+          aria-hidden="false"
+        >notifications</mat-icon>
         Notifications
       </button>
       @if (authService.currentUserRole() === 'admin') {

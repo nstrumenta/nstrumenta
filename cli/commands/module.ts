@@ -74,6 +74,40 @@ export const Host = async function (
   }
 };
 
+function parseModuleReference(moduleRef: string): { moduleName: string; moduleVersion?: string } {
+  const atIndex = moduleRef.lastIndexOf('@');
+  if (atIndex <= 0) {
+    return { moduleName: moduleRef };
+  }
+
+  return {
+    moduleName: moduleRef.slice(0, atIndex),
+    moduleVersion: moduleRef.slice(atIndex + 1),
+  };
+}
+
+export const Approve = async function (
+  moduleRef: string,
+  {
+    moduleVersion,
+  }: {
+    moduleVersion?: string;
+  },
+): Promise<void> {
+  try {
+    const parsed = parseModuleReference(moduleRef);
+    const moduleName = parsed.moduleName;
+    const version = moduleVersion || parsed.moduleVersion;
+    const mcp = new McpClient();
+    const result = await mcp.approveModule(moduleName, { version });
+    console.log(`approved ${moduleName}${version ? `@${version}` : ''}`);
+    console.log(result);
+  } catch (err) {
+    console.error('Error:', (err as Error).message);
+    process.exit(1);
+  }
+};
+
 export const CloudRun = async function (
   moduleName: string,
   {
@@ -304,8 +338,8 @@ export const publishModule = async (module: ModuleExtended) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Index the module in Firestore after successful upload
-    await mcp.indexModule({
+    // Finalize publish in Firestore after successful upload
+    await mcp.publishModule({
       path: remoteFileLocation,
       name,
       version,

@@ -5,6 +5,8 @@ import { Observable, of } from 'rxjs';
 import { map, shareReplay, catchError } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 import { getNstConfig } from '../nst-config';
+import { Project } from '../models/firebase.model';
+import { ProjectSettings } from '../models/projectSettings.model';
 
 export interface CreateProjectRequest {
   name: string;
@@ -68,6 +70,16 @@ export interface AcceptProjectInvitationResponse {
   projectId: string;
 }
 
+export interface UserProject extends Project {
+  id: string;
+  slug: string;
+  orgSlug: string;
+}
+
+export interface ProjectSettingsResponse extends ProjectSettings {
+  id: string;
+}
+
 export interface UpdateProjectMemberRoleRequest {
   projectId: string;
   memberId: string;
@@ -77,6 +89,35 @@ export interface UpdateProjectMemberRoleRequest {
 export interface RemoveProjectMemberRequest {
   projectId: string;
   memberId: string;
+}
+
+export interface ApproveModuleResponse {
+  moduleId: string;
+  approved: boolean;
+  approvedAt: number;
+  approvedBy: string;
+}
+
+export interface GithubInstallationRepository {
+  id: string;
+  fullName: string;
+  linkedProjectId?: string;
+}
+
+export interface GithubInstallation {
+  installationId: string;
+  account: { login?: string; type?: string };
+  repositories: GithubInstallationRepository[];
+  updatedAt?: number;
+}
+
+export interface GithubInstallationConnectUrlResponse {
+  connectUrl: string;
+}
+
+export interface LinkGithubInstallationResponse {
+  ok: boolean;
+  linkedRepos: string[];
 }
 
 @Injectable({
@@ -263,6 +304,39 @@ export class ApiService {
     return response;
   }
 
+  async listUserProjects(): Promise<UserProject[]> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders();
+
+    const response = await this.http.get<UserProject[]>(
+      `${apiUrl}/api/user/projects`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    return response ?? [];
+  }
+
+  async getProjectSettings(projectId: string): Promise<ProjectSettingsResponse> {
+    const [orgId, projectSlug] = projectId.split('/');
+    if (!orgId || !projectSlug || projectId.split('/').length !== 2) {
+      throw new Error(`Invalid projectId format '${projectId}': expected 'orgSlug/projectSlug'`);
+    }
+
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.get<ProjectSettingsResponse>(
+      `${apiUrl}/api/orgs/${orgId}/projects/${projectSlug}`,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from project settings endpoint');
+    }
+
+    return response;
+  }
+
   async updateProjectMemberRole(request: UpdateProjectMemberRoleRequest): Promise<{ memberId: string; role: ProjectRoles }> {
     const [orgId, projectId] = request.projectId.split('/');
     if (!orgId || !projectId || request.projectId.split('/').length !== 2) {
@@ -316,6 +390,98 @@ export class ApiService {
       `${apiUrl}/api/orgs/${orgId}/projects/${projectSlug}/members`,
       { headers },
     ).toPromise().catch((error) => this.rethrowHttpError(error)) as Promise<any>;
+  }
+
+  async approveModule(projectId: string, moduleName: string, moduleVersion?: string): Promise<ApproveModuleResponse> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const mcpRequest = {
+      jsonrpc: '2.0',
+      id: Math.random().toString(36).substring(7),
+      method: 'tools/call',
+      params: {
+        name: 'approve_module',
+        arguments: {
+          moduleName,
+          ...(moduleVersion ? { moduleVersion } : {}),
+        },
+      },
+    };
+
+    const response = await this.http.post<any>(
+      `${apiUrl}/mcp`,
+      mcpRequest,
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    return this.extractMcpResult(response, 'approve_module') as ApproveModuleResponse;
+  }
+
+  async createGithubInstallationConnectUrl(projectId: string): Promise<GithubInstallationConnectUrlResponse> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.post<GithubInstallationConnectUrlResponse>(
+      `${apiUrl}/api/github/installations/connect-url`,
+      { projectId },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub install connect endpoint');
+    }
+
+    return response;
+  }
+
+  async linkGithubInstallation(projectId: string, installationId: string, stateToken?: string): Promise<LinkGithubInstallationResponse> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.post<LinkGithubInstallationResponse>(
+      `${apiUrl}/api/github/installations/link`,
+      { installationId, projectId, ...(stateToken ? { stateToken } : {}) },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub installation link endpoint');
+    }
+
+    return response;
+  }
+
+  async listGithubInstallations(projectId: string): Promise<{ installations: GithubInstallation[] }> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.get<{ installations: GithubInstallation[] }>(
+      `${apiUrl}/api/github/installations`,
+      { headers, params: { projectId } },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub installations endpoint');
+    }
+
+    return response;
+  }
+
+  async unlinkGithubInstallation(projectId: string, installationId: string): Promise<{ ok: boolean; unlinkedRepos: string[] }> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.delete<{ ok: boolean; unlinkedRepos: string[] }>(
+      `${apiUrl}/api/github/installations/${installationId}/link`,
+      { headers, params: { projectId } },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub installation unlink endpoint');
+    }
+
+    return response;
   }
 
   async markNotificationRead(notificationId: string): Promise<void> {

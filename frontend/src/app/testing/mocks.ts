@@ -104,6 +104,10 @@ export class MockApiService {
   getApiUrl() { return Promise.resolve('http://localhost:8080'); }
   createApiKey() { return Promise.resolve({}); }
   getDownloadUrl() { return Promise.resolve('https://storage.example.com/signed-read-url'); }
+  approveModule() { return Promise.resolve({ moduleId: 'module-1', approved: true, approvedAt: Date.now(), approvedBy: 'test-user' }); }
+  listGithubInstallations() { return Promise.resolve({ installations: [] }); }
+  linkGithubInstallation() { return Promise.resolve({ ok: true, linkedRepos: [] }); }
+  unlinkGithubInstallation() { return Promise.resolve({ ok: true, unlinkedRepos: [] }); }
   deleteFile() { return Promise.resolve(); }
   uploadFileToPath() { return Promise.resolve(of(100)); }
 }

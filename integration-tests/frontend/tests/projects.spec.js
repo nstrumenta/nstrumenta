@@ -22,12 +22,24 @@ async function signIn(page) {
   await page.goto('/');
 }
 
+async function waitForUserProjects(page) {
+  const response = await page.waitForResponse(
+    (resp) => resp.request().method() === 'GET' && new URL(resp.url()).pathname === '/api/user/projects',
+  );
+  expect(response.status(), 'user projects API should return 200').toBe(200);
+  const contentType = response.headers()['content-type'] || '';
+  expect(contentType, 'user projects API should return JSON').toContain('application/json');
+  return response;
+}
+
 test.describe('Project Management', () => {
   test.beforeEach(async ({ page }) => {
     await signIn(page);
   });
 
   test('should display project list', async ({ page }) => {
+    await page.goto('/');
+    await waitForUserProjects(page);
     const projectGrid = page.locator('.project-grid');
     await expect(projectGrid).toBeVisible({ timeout: 10000 });
   });
@@ -67,5 +79,12 @@ test.describe('Project Management', () => {
     await createButton.click();
 
     await expect(page).toHaveURL(/\/[^/]+\/[^/]+\//);
+
+    await page.goto('/');
+    await waitForUserProjects(page);
+    await expect(page.locator('.project-card-link').filter({ hasText: projectName })).toBeVisible();
+
+    await page.locator('button[mat-button]').filter({ hasText: 'Select Project' }).click();
+    await expect(page.locator('a[mat-menu-item]').filter({ hasText: projectName })).toBeVisible();
   });
 });

@@ -29,7 +29,7 @@ export function withProjectAuth<T>(
       if (requestedProjectId && requestedProjectId !== apiAuth.projectId) {
         return res.status(403).json({ error: 'API key is not valid for the requested project' })
       }
-      
+
       const payload = (req.body || {}) as T
       return fn(req, res, { 
         ...payload, 

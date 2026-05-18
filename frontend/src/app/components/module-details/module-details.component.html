@@ -1,1 +1,84 @@
-<p>module-details works!</p>
+@if (module(); as selectedModule) {
+	<section class="module-details">
+		<header class="module-details__header">
+			<div>
+				<p class="module-details__eyebrow">Module</p>
+				<h1>{{ selectedModule.name || selectedModule.id }}</h1>
+				@if (selectedModule.version || selectedModule.type) {
+					<p class="module-details__summary">
+						@if (selectedModule.version) {
+							<span>v{{ selectedModule.version }}</span>
+						}
+						@if (selectedModule.version && selectedModule.type) {
+							<span>&middot;</span>
+						}
+						@if (selectedModule.type) {
+							<span>{{ selectedModule.type }}</span>
+						}
+					</p>
+				}
+			</div>
+			@if (selectedModule.url) {
+				<a mat-stroked-button [href]="selectedModule.url" target="_blank" rel="noopener noreferrer">
+					Open in new tab
+				</a>
+			}
+		</header>
+
+		<section class="module-details__actions">
+			@if (isApproved()) {
+				<p class="module-details__status">Approved</p>
+			} @else {
+				<button mat-flat-button (click)="approveModule()" [disabled]="isApproving()">
+					{{ isApproving() ? 'Approving...' : 'Approve' }}
+				</button>
+			}
+			@if (approvalError()) {
+				<p class="module-details__error">{{ approvalError() }}</p>
+			}
+		</section>
+
+		@if (canPreview() && previewUrl(); as safePreviewUrl) {
+			<section class="module-details__panel">
+				<h2>Preview</h2>
+				<iframe
+					class="module-details__preview"
+					title="Module preview"
+					[src]="safePreviewUrl"
+					sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+					referrerpolicy="no-referrer"
+				></iframe>
+			</section>
+		}
+
+		<section class="module-details__panel">
+			<h2>Details</h2>
+			<dl class="module-details__metadata">
+				@for (field of metadata(); track field.label) {
+					<div class="module-details__metadata-row">
+						<dt>{{ field.label }}</dt>
+						<dd>{{ formatFieldValue(field) }}</dd>
+					</div>
+				}
+			</dl>
+		</section>
+
+		@if (!canPreview() && selectedModule.url) {
+			<section class="module-details__panel module-details__note">
+				<p>This module has a hosted URL, but inline preview is only enabled for hosted web modules.</p>
+			</section>
+		}
+
+		@if ((extraData() | json) !== '{}') {
+			<section class="module-details__panel">
+				<h2>Additional Data</h2>
+				<pre>{{ extraData() | json }}</pre>
+			</section>
+		}
+	</section>
+} @else {
+	<section class="module-details module-details--empty">
+		<h1>Module unavailable</h1>
+		<p>This module was not found in the loaded project data.</p>
+	</section>
+}

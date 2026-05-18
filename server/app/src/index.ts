@@ -19,6 +19,7 @@ import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
 import { registerGithubRoutes } from './githubRoutes'
 import { markNotificationRead, deleteNotification } from './api/notifications'
+import { apiLimiter, publicIpLimiter } from './rateLimit'
 
 const version = require('../package.json').version
 
@@ -32,32 +33,14 @@ const port = process.env.API_PORT ?? 5999
 
 const app = express()
 app.set('trust proxy', 1)
-app.use(express.json())
+app.use((req, res, next) => {
+  if (req.path === '/api/github/webhook') return next()
+  express.json()(req, res, next)
+})
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
-
-import rateLimit from 'express-rate-limit'
-
-// Rate limiters for different endpoints
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per 15 minutes for general API endpoints
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-const mcpLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // 50 requests per 15 minutes
-  standardHeaders: true,
-  legacyHeaders: false,
-})
-
-app.use('/api/', (req, res, next) => {
-  if (req.path === '/github/webhook') return next()
-  return apiLimiter(req, res, next)
-})
+app.use('/api/', apiLimiter)
 
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
@@ -79,7 +62,16 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version, buildSha: imageVersionTag })
 })
 
-app.get('/config', (req, res) => {
+// MCP JSON-RPC 2.0 endpoints
+app.post('/mcp', publicIpLimiter, handleMcpRequest)
+app.get('/mcp/sse', publicIpLimiter, handleMcpSseRequest)
+app.post('/mcp/messages', publicIpLimiter, handleMcpSseMessage)
+
+// Serve frontend static files (after API routes)
+app.use(express.static('/app/frontend'))
+
+// Catch-all route for Angular SPA (must be last)
+app.get('/config', publicIpLimiter, (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600')
   const protocol = req.get('x-forwarded-proto') || req.protocol;
   const host = req.get('x-forwarded-host') || req.get('host');
@@ -93,16 +85,8 @@ app.get('/config', (req, res) => {
   })
 })
 
-// MCP JSON-RPC 2.0 endpoints
-app.post('/mcp', mcpLimiter, handleMcpRequest)
-app.get('/mcp/sse', mcpLimiter, handleMcpSseRequest)
-app.post('/mcp/messages', mcpLimiter, handleMcpSseMessage)
-
-// Serve frontend static files (after API routes)
-app.use(express.static('/app/frontend'))
-
 // Catch-all route for Angular SPA (must be last)
-app.get('/{*path}', apiLimiter, (req, res) => {
+app.get('/{*path}', publicIpLimiter, (req, res) => {
   res.sendFile('/app/frontend/index.html')
 })
 

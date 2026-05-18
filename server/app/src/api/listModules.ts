@@ -17,6 +17,7 @@ export async function getModulesList(projectId: string) {
   const moduleCollection = await firestore.collection(path).get()
   const modules = moduleCollection.docs.map((doc: QueryDocumentSnapshot) => {
     const module = doc.data()
+    module.id = doc.id
     module.moduleDocumentPath = doc.ref.path
     return module
   })

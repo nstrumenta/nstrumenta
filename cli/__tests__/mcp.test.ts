@@ -222,6 +222,60 @@ describe('McpClient', () => {
     });
   });
 
+  describe('approveModule', () => {
+    it('should call approve_module tool', async () => {
+      const mockFetch = mock.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          result: {
+            content: [{ text: '{"moduleId":"module-1","approved":true,"approvedAt":123,"approvedBy":"test-user"}' }],
+          },
+        }),
+      } as Response));
+      global.fetch = mockFetch as any;
+
+      const client = new McpClient();
+      const result = await client.approveModule('my-module', { version: '2.0.0' });
+
+      assert.strictEqual(result.moduleId, 'module-1');
+      assert.strictEqual(result.approved, true);
+      const call = (mockFetch as any).mock.calls[0];
+      const body = JSON.parse(call.arguments[1].body as string);
+      assert.strictEqual(body.params.name, 'approve_module');
+      assert.strictEqual(body.params.arguments.moduleName, 'my-module');
+      assert.strictEqual(body.params.arguments.moduleVersion, '2.0.0');
+    });
+  });
+
+  describe('publishModule', () => {
+    it('should call publish_module tool', async () => {
+      const mockFetch = mock.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          result: {
+            structuredContent: { success: true },
+          },
+        }),
+      } as Response));
+      global.fetch = mockFetch as any;
+
+      const client = new McpClient();
+      const result = await client.publishModule({
+        path: 'modules/flyimal-1.2.3.tar.gz',
+        name: 'flyimal',
+        version: '1.2.3',
+        type: 'web',
+      });
+
+      assert.strictEqual(result.success, true);
+      const call = (mockFetch as any).mock.calls[0];
+      const body = JSON.parse(call.arguments[1].body as string);
+      assert.strictEqual(body.params.name, 'publish_module');
+      assert.strictEqual(body.params.arguments.name, 'flyimal');
+      assert.strictEqual(body.params.arguments.version, '1.2.3');
+    });
+  });
+
   describe('cloudRun', () => {
     it('should call cloud_run tool with all options', async () => {
       const mockFetch = mock.fn(async () => ({

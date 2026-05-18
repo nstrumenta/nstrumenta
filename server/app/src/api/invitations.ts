@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { getAuth } from 'firebase-admin/auth'
 import { firestore } from '../authentication/ServiceAccount'
 import { withFirebaseAuth, FirebaseAuthResult } from '../authentication/firebaseAuth'
+import { userProjectMembershipPath } from '../shared/utils'
 
 const INVITATION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
@@ -295,6 +296,11 @@ const acceptProjectInvitationBase = async (
       status: 'accepted',
       acceptedAt: Date.now(),
       acceptedBy: userId,
+    })
+
+    await firestore.doc(userProjectMembershipPath(userId, `${orgId}/${projectId}`)).set({
+      projectId: `${orgId}/${projectId}`,
+      addedAt: Date.now(),
     })
 
     const notificationsRef = firestore.collection(`users/${userId}/notifications`)

@@ -105,7 +105,7 @@ export class NotificationsComponent {
         projectId,
         invitationId: notification.invitationId,
       });
-      // Server deletes the pending notification; nothing else needed here
+      this.firebaseDataService.refreshUserProjects();
     } catch (err) {
       console.error('Failed to accept invite:', err);
       alert('Failed to accept: ' + (err instanceof Error ? err.message : String(err)));

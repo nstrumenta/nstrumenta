@@ -8,6 +8,7 @@ import { AuthService } from '../../auth/auth.service';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { FirebaseDataService } from '../../services/firebase-data.service';
 
 @Component({
   selector: 'app-accept-invite',
@@ -58,6 +59,7 @@ export class AcceptInviteComponent {
   private apiService = inject(ApiService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private firebaseDataService = inject(FirebaseDataService);
 
   private orgId = this.route.snapshot.queryParamMap.get('orgId');
   private projectId = this.route.snapshot.queryParamMap.get('projectId');
@@ -118,6 +120,7 @@ export class AcceptInviteComponent {
         projectId: this.projectId,
         invitationId: this.invitationId,
       });
+      this.firebaseDataService.refreshUserProjects();
       this.statusMessage = 'Invitation accepted. Redirecting to project settings...';
       await this.router.navigate(['/', this.orgId, this.projectId, 'settings']);
     } catch (error: any) {

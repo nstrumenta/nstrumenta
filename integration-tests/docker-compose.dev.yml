@@ -1,6 +1,11 @@
 # Local dev stack: server + Angular hot-reload frontend.
 # Start via: ./dev.sh
 # Stop via:  docker compose -f integration-tests/docker-compose.dev.yml down
+#
+# File sync is handled by Docker Compose Watch (not inotify bind mounts), so
+# hot-reload works correctly inside DinD devcontainers.
+# dev.sh runs `docker compose watch` which triggers tsx watch restarts via the
+# daemon sync path rather than inotify.
 name: nstrumenta-dev
 
 services:
@@ -19,13 +24,18 @@ services:
       - FIREBASE_APP_ID=${FIREBASE_APP_ID}
       - NSTRUMENTA_API_KEY_PEPPER=${NSTRUMENTA_API_KEY_PEPPER}
       - NST_API_URL=http://localhost:5999
-      - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
+      - GITHUB_APP_INSTALL_URL=${GITHUB_APP_INSTALL_URL}
     volumes:
       - ${HOME}/.config/gcloud:/root/.config/gcloud:ro
-      - ../server/app/src:/build/server/app/src
     working_dir: /build/server/app
     command: npx tsx watch --inspect=0.0.0.0:9229 src/index.ts
+    develop:
+      watch:
+        - action: sync
+          path: ../server/app/src
+          target: /build/server/app/src
+        - action: rebuild
+          path: ../server/app/package.json
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://localhost:5999/health').then(() => process.exit(0)).catch(() => process.exit(1))"]
       interval: 2s

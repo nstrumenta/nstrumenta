@@ -10,9 +10,15 @@ Angular web application for project management, data visualization, and real-tim
 
 ## Development
 
+If you are an agent, use one of these paths:
+
+- Full-stack hot reload: run `./dev.sh` from the repo root. This is the default when you may touch both frontend and server code.
+- Frontend only: run `npm start` in `frontend/` when you only need the Angular app on `http://localhost:5008`.
+- Playwright watch mode: use `frontend-dev` only for E2E iteration.
+
 ```shell
 npm install
-npm run serve
+npm start
 ```
 
 Open http://localhost:5008. Add `localhost` to Firebase authorized domains.
@@ -31,11 +37,13 @@ E2E tests live in `integration-tests/frontend/tests/` and run against a full ser
 
 ### Fast iteration (watch mode — recommended for frontend work)
 
-Start the watch stack once (`frontend-e2e-watch.sh` handles credentials automatically after this):
+This stack hot-reloads the Angular app for Playwright and depends on a separate `server` container. It is not the primary full-stack `./dev.sh` workflow.
+
+Start the watch stack once with the wrapper script. It handles credential activation for you:
 
 ```shell
 cd /workspaces/nstrumenta/integration-tests
-docker compose -f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml up -d server frontend-dev
+./frontend-e2e-watch.sh up
 ```
 
 Then use `frontend-e2e-watch.sh` to run tests. The stack stays running between runs:
@@ -44,11 +52,11 @@ Then use `frontend-e2e-watch.sh` to run tests. The stack stays running between r
 /workspaces/nstrumenta/integration-tests/frontend-e2e-watch.sh tests/record.spec.js
 ```
 
-`frontend-e2e-watch.sh` builds the frontend, sets up test credentials, runs Playwright, and prints timing and a report link. The server container persists between runs — tear it down manually when done:
+`frontend-e2e-watch.sh` starts the watch stack, sets up test credentials, runs Playwright, and prints timing and a report link. The watch stack persists between runs — tear it down with the wrapper when done:
 
 ```shell
 cd /workspaces/nstrumenta/integration-tests
-docker compose -f docker-compose.e2e.yml -f docker-compose.e2e.watch.yml down
+./frontend-e2e-watch.sh down
 ```
 
 ### Full run (same as CI)

@@ -10,6 +10,7 @@ import { signal } from '@angular/core';
 import { AuthService } from 'src/app/auth/auth.service';
 import { MatDialog } from '@angular/material/dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog.component';
+import { FirebaseDataService } from 'src/app/services/firebase-data.service';
 
 const AuthServiceStub = {
   currentUser: signal({ uid: 'mock', email: 'mock@example.com' }),
@@ -40,6 +41,7 @@ describe('NavbarAccountComponent', () => {
       providers: [
         { provide: AuthService, useValue: AuthServiceStub },
         { provide: MatDialog, useClass: MatDialogMock },
+        { provide: FirebaseDataService, useValue: { notifications: signal([]) } },
       ],
     }).compileComponents();
   });

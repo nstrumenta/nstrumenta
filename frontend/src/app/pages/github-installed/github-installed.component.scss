@@ -1,0 +1,22 @@
+.github-installed {
+  display: grid;
+  gap: 1rem;
+  max-width: 42rem;
+}
+
+.github-installed h1,
+.github-installed p,
+.github-installed ul {
+  margin: 0;
+}
+
+.github-installed__eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.github-installed__error {
+  color: #b3261e;
+}

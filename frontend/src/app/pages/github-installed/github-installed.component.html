@@ -1,0 +1,26 @@
+<section class="github-installed">
+  <p class="github-installed__eyebrow">GitHub</p>
+  <h1>Installation Callback</h1>
+
+  @if (status() === 'linking') {
+    <p>{{ message() }}</p>
+  }
+
+  @if (status() === 'success') {
+    <p>{{ message() }}</p>
+    @if (linkedRepos().length > 0) {
+      <p><strong>Successfully linked:</strong></p>
+      <ul>
+        @for (repo of linkedRepos(); track repo) {
+          <li>{{ repo }}</li>
+        }
+      </ul>
+    }
+    <a mat-flat-button [routerLink]="returnRoute()">Return to repositories</a>
+  }
+
+  @if (status() === 'error') {
+    <p class="github-installed__error">{{ message() }}</p>
+    <a mat-stroked-button [routerLink]="returnRoute()">Back to project</a>
+  }
+</section>

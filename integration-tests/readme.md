@@ -6,7 +6,7 @@ End-to-end tests for nstrumenta, running in isolated Docker Compose environments
 
 - Docker (DinD in devcontainer, or native)
 - ADC configured (`gcloud auth application-default login`)
-- Environment variables from `source credentials/activate.sh`
+- GitHub auth configured (`gh auth login`)
 
 ## Local Dev Seeding
 
@@ -25,10 +25,22 @@ Credentials are written to `integration-tests/.seed-output` (gitignored, mode 06
 ## Running Tests
 
 ```shell
-source credentials/activate.sh && npm run test:e2e -- --rebuild-frontend
+source ../credentials/activate.sh && ./frontend-e2e.sh --rebuild-frontend
 ```
 
+`frontend-e2e.sh` handles test-user setup, API-key creation, Docker Compose, and cleanup. It expects credentials to already be loaded.
+
 The `--rebuild-frontend` flag forces a frontend build before running. Omit it in CI where `frontend/dist` is built fresh as part of the pipeline.
+
+For fast frontend iteration, use watch mode instead:
+
+```shell
+./frontend-e2e-watch.sh up
+./frontend-e2e-watch.sh tests/record.spec.js
+./frontend-e2e-watch.sh down
+```
+
+`frontend-e2e-watch.sh` sources `../credentials/activate.sh` internally for both `up` and test runs, so no separate `source` step is required when you use the script.
 
 Each test run creates an ephemeral user with randomised credentials via `globalSetup.ts`
 and deletes them on teardown — no manual seeding required for CI.

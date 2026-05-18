@@ -107,6 +107,16 @@ export class McpClient {
     });
   }
 
+  async approveModule(
+    moduleName: string,
+    options: { version?: string } = {}
+  ): Promise<{ moduleId: string; approved: boolean; approvedAt: number; approvedBy: string }> {
+    return this.callTool('approve_module', {
+      moduleName,
+      moduleVersion: options.version,
+    });
+  }
+
   async cloudRun(
     moduleName: string,
     options: { version?: string; args?: string[]; image?: string } = {}
@@ -229,6 +239,17 @@ export class McpClient {
     entry?: string;
   }): Promise<{ success: boolean }> {
     return this.callTool('index_module', params);
+  }
+
+  async publishModule(params: {
+    path: string;
+    name: string;
+    version: string;
+    size?: string;
+    type?: string;
+    entry?: string;
+  }): Promise<{ success: boolean }> {
+    return this.callTool('publish_module', params);
   }
 
   async watchAction(actionId: string, timeout?: number): Promise<{ status: string; error?: string }> {

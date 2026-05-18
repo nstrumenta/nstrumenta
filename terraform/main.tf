@@ -22,17 +22,6 @@ variable "support_email" {
   type        = string
 }
 
-variable "GITHUB_CLIENT_ID" {
-  description = "GitHub OAuth App Client ID"
-  type        = string
-}
-
-variable "GITHUB_CLIENT_SECRET" {
-  description = "GitHub OAuth App Client Secret"
-  type        = string
-  sensitive   = true
-}
-
 variable "custom_domain" {
   description = "Custom domain for this workspace (e.g. nstrumenta.com or ci-nst.nstrumenta.com)"
   type        = string
@@ -170,8 +159,8 @@ resource "google_identity_platform_default_supported_idp_config" "github" {
   project       = google_project.fs.project_id
   enabled       = true
   idp_id        = "github.com"
-  client_id     = var.GITHUB_CLIENT_ID
-  client_secret = var.GITHUB_CLIENT_SECRET
+  client_id     = data.google_secret_manager_secret_version.github_client_id.secret_data
+  client_secret = data.google_secret_manager_secret_version.github_client_secret.secret_data
   depends_on    = [google_identity_platform_config.auth]
 }
 
@@ -437,6 +426,35 @@ resource "google_secret_manager_secret_iam_member" "server_webhook_secret" {
   secret_id = google_secret_manager_secret.github_webhook_secret.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${data.google_app_engine_default_service_account.default.email}"
+}
+
+# GitHub OAuth App client ID and secret (populated manually via: gcloud secrets versions add GITHUB_CLIENT_ID --data-file=-)
+resource "google_secret_manager_secret" "github_client_id" {
+  secret_id = "GITHUB_CLIENT_ID"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.fs]
+}
+
+data "google_secret_manager_secret_version" "github_client_id" {
+  project = google_project.fs.project_id
+  secret  = google_secret_manager_secret.github_client_id.secret_id
+}
+
+resource "google_secret_manager_secret" "github_client_secret" {
+  secret_id = "GITHUB_CLIENT_SECRET"
+  project   = google_project.fs.project_id
+  replication {
+    auto {}
+  }
+  depends_on = [google_project_service.fs]
+}
+
+data "google_secret_manager_secret_version" "github_client_secret" {
+  project = google_project.fs.project_id
+  secret  = google_secret_manager_secret.github_client_secret.secret_id
 }
 
 # GitHub App private key (populated manually: download from github.com/settings/apps/nstrumenta-github-ci or -github)
@@ -810,3 +828,5 @@ output "github_app_private_key_secret_name" {
   description = "After apply, populate this secret with the .pem downloaded from the GitHub App settings."
   value       = google_secret_manager_secret.github_app_private_key.name
 }
+
+
