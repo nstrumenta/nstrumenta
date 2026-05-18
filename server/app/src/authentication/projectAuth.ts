@@ -3,7 +3,6 @@ import { auth } from './index'
 import { firebaseAuth } from './firebaseAuth'
 import { firestore } from './ServiceAccount'
 import { orgProjectPath, parseOrgProject } from '../shared/utils'
-import { applyAuthenticatedRateLimit, firebaseRateLimitIdentity, projectRateLimitIdentity } from '../rateLimit'
 
 export type ProjectAuthResult =
   | { authenticated: true; type: 'api-key'; projectId: string; apiKey: string; userId?: never }
@@ -31,10 +30,6 @@ export function withProjectAuth<T>(
         return res.status(403).json({ error: 'API key is not valid for the requested project' })
       }
 
-      if (!applyAuthenticatedRateLimit(res, projectRateLimitIdentity(apiAuth.projectId))) {
-        return
-      }
-      
       const payload = (req.body || {}) as T
       return fn(req, res, { 
         ...payload, 
@@ -70,10 +65,6 @@ export function withProjectAuth<T>(
 
       if (!projectDoc.exists || !isProjectMember) {
         return res.status(403).json({ error: 'Not a member of this project' })
-      }
-
-      if (!applyAuthenticatedRateLimit(res, firebaseRateLimitIdentity(userAuth.userId))) {
-        return
       }
 
       const payload = (req.body || {}) as T

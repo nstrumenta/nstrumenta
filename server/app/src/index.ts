@@ -19,7 +19,7 @@ import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
 import { registerGithubRoutes } from './githubRoutes'
 import { markNotificationRead, deleteNotification } from './api/notifications'
-import { publicIpLimiter } from './rateLimit'
+import { apiLimiter, publicIpLimiter } from './rateLimit'
 
 const version = require('../package.json').version
 
@@ -40,6 +40,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
+app.use('/api/', apiLimiter)
 
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)

@@ -43,7 +43,7 @@ async function createApiKey() {
   
   // Salt for scrypt
   const salt = crypto.randomBytes(16).toString('hex');
-  console.error(`Pepper length: ${pepper.length}`);
+  console.error(`Pepper present: ${pepper.length > 0}`);
   
   // Hash the secret part
   const hash = crypto.scryptSync(secretAccessKey, salt + pepper, 64).toString('hex');
