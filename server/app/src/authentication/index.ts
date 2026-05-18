@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { Request, Response } from 'express'
 import { firestore } from './ServiceAccount'
 import { parseOrgProject } from '../shared/utils'
+import { applyAuthenticatedRateLimit, projectRateLimitIdentity } from '../rateLimit'
 
 export type AuthResult =
   | { authenticated: false; projectId: string; message?: string }
@@ -133,6 +134,10 @@ export function withAuth<T>(
 
     if (!authentication.authenticated) {
       return res.status(401).send('not authenticated')
+    }
+
+    if (!applyAuthenticatedRateLimit(res, projectRateLimitIdentity(authentication.projectId))) {
+      return
     }
     return fn(req, res, { ...args, ...authentication })
   }

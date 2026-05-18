@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { initializeApp, applicationDefault, getApps } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
+import { applyAuthenticatedRateLimit, firebaseRateLimitIdentity } from '../rateLimit'
 
 if (getApps().length === 0) {
   initializeApp({
@@ -55,6 +56,10 @@ export function withFirebaseAuth<T>(
 
     if (!authentication.authenticated) {
       return res.status(401).json({ message: authentication.message || 'Authentication failed' })
+    }
+
+    if (!applyAuthenticatedRateLimit(res, firebaseRateLimitIdentity(authentication.userId))) {
+      return
     }
 
     const args = {

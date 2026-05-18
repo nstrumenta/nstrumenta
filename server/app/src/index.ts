@@ -19,7 +19,7 @@ import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
 import { registerGithubRoutes } from './githubRoutes'
 import { markNotificationRead, deleteNotification } from './api/notifications'
-import { isAuthenticatedRequest } from './rateLimiting'
+import { publicIpLimiter } from './rateLimit'
 
 const version = require('../package.json').version
 
@@ -41,18 +41,6 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cors())
 
-import rateLimit from 'express-rate-limit'
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: isAuthenticatedRequest,
-})
-
-app.use('/api/', apiLimiter)
-
 // API routes first (before static files to prevent shadowing)
 registerOAuthRoutes(app)
 registerOrgRoutes(app)
@@ -73,7 +61,16 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', version, buildSha: imageVersionTag })
 })
 
-app.get('/config', (req, res) => {
+// MCP JSON-RPC 2.0 endpoints
+app.post('/mcp', handleMcpRequest)
+app.get('/mcp/sse', handleMcpSseRequest)
+app.post('/mcp/messages', handleMcpSseMessage)
+
+// Serve frontend static files (after API routes)
+app.use(publicIpLimiter, express.static('/app/frontend'))
+
+// Catch-all route for Angular SPA (must be last)
+app.get('/config', publicIpLimiter, (req, res) => {
   res.setHeader('Cache-Control', 'public, max-age=3600')
   const protocol = req.get('x-forwarded-proto') || req.protocol;
   const host = req.get('x-forwarded-host') || req.get('host');
@@ -87,16 +84,8 @@ app.get('/config', (req, res) => {
   })
 })
 
-// MCP JSON-RPC 2.0 endpoints
-app.post('/mcp', apiLimiter, handleMcpRequest)
-app.get('/mcp/sse', apiLimiter, handleMcpSseRequest)
-app.post('/mcp/messages', apiLimiter, handleMcpSseMessage)
-
-// Serve frontend static files (after API routes)
-app.use(express.static('/app/frontend'))
-
 // Catch-all route for Angular SPA (must be last)
-app.get('/{*path}', apiLimiter, (req, res) => {
+app.get('/{*path}', publicIpLimiter, (req, res) => {
   res.sendFile('/app/frontend/index.html')
 })
 

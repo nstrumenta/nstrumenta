@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { auth } from './authentication';
 import { firebaseAuth } from './authentication/firebaseAuth';
 import { firestore } from './authentication/ServiceAccount';
+import { applyAuthenticatedRateLimit, firebaseRateLimitIdentity, projectRateLimitIdentity } from './rateLimit';
 import { getModulesList } from './api/listModules';
 import { getAgentsList } from './api/listAgents';
 import { getDataList } from './api/listStorageObjects';
@@ -1602,6 +1603,13 @@ export async function handleMcpRequest(req: Request, res: Response) {
             );
         }
 
+        const rateLimitIdentity = authResult.authType === 'firebase' && authResult.userId
+            ? firebaseRateLimitIdentity(authResult.userId)
+            : projectRateLimitIdentity(authResult.projectId);
+        if (!applyAuthenticatedRateLimit(res, rateLimitIdentity)) {
+            return;
+        }
+
         await requestContext.run({
             projectId: authResult.projectId,
             userId: authResult.userId,
@@ -1680,6 +1688,13 @@ export async function handleMcpSseRequest(req: Request, res: Response) {
              return respondUnauthorized(res, authResult.message || 'Authentication required');
         }
 
+        const rateLimitIdentity = authResult.authType === 'firebase' && authResult.userId
+            ? firebaseRateLimitIdentity(authResult.userId)
+            : projectRateLimitIdentity(authResult.projectId);
+        if (!applyAuthenticatedRateLimit(res, rateLimitIdentity)) {
+            return;
+        }
+
         const context: McpRequestContext = {
             projectId: authResult.projectId,
             userId: authResult.userId,
@@ -1710,6 +1725,13 @@ export async function handleMcpSseMessage(req: Request, res: Response) {
     const session = sseSessions.get(sessionId);
     if (!session) {
         return res.status(404).send("Session not found");
+    }
+
+    const rateLimitIdentity = session.context.authType === 'firebase' && session.context.userId
+        ? firebaseRateLimitIdentity(session.context.userId)
+        : projectRateLimitIdentity(session.context.projectId);
+    if (!applyAuthenticatedRateLimit(res, rateLimitIdentity)) {
+        return;
     }
 
     await requestContext.run(session.context, async () => {
