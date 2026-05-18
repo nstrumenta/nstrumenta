@@ -340,6 +340,11 @@ async function handlePullRequest(action: string, installationId: string, repoFul
 
 export function registerGithubRoutes(app: express.Application) {
   app.post('/api/github/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    if (!Buffer.isBuffer(req.body)) {
+      console.error('[github webhook] Error: req.body is not a Buffer. Found:', typeof req.body);
+      res.status(500).json({ error: 'internal server error: invalid body format' });
+      return;
+    }
     const sig = req.headers['x-hub-signature-256'] as string | undefined
     if (!verifySignature(req.body as Buffer, sig)) {
       res.status(401).json({ error: 'invalid signature' })
