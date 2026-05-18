@@ -34,7 +34,7 @@ const port = process.env.API_PORT ?? 5999
 const app = express()
 app.set('trust proxy', 1)
 app.use((req, res, next) => {
-  if (req.path === '/api/github/webhook') return next()
+  if (req.path.replace(/\/$/, '') === '/api/github/webhook') return next()
   express.json()(req, res, next)
 })
 app.use(express.urlencoded({ extended: true }))
