@@ -192,6 +192,7 @@ jobs:
       - name: Run Playwright tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+          GITHUB_APP_INSTALL_URL: ${{ vars.CI_GITHUB_APP_INSTALL_URL }}
         run: cd integration-tests && ./frontend-e2e.sh
 
   cli-e2e:
@@ -229,6 +230,7 @@ jobs:
       - name: Run CLI E2E tests
         env:
           GOOGLE_CLOUD_PROJECT: ${{ env.CI_PROJECT_ID }}
+          GITHUB_APP_INSTALL_URL: ${{ vars.CI_GITHUB_APP_INSTALL_URL }}
         run: cd integration-tests && ./cli-e2e.sh
 
   # ---------------------------------------------------------------------------
