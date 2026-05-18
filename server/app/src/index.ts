@@ -19,6 +19,7 @@ import { registerUserRoutes } from './userRoutes'
 import { registerAdminRoutes } from './adminRoutes'
 import { registerGithubRoutes } from './githubRoutes'
 import { markNotificationRead, deleteNotification } from './api/notifications'
+import { isAuthenticatedRequest } from './rateLimiting'
 
 const version = require('../package.json').version
 
@@ -47,6 +48,7 @@ const apiLimiter = rateLimit({
   max: 500,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: isAuthenticatedRequest,
 })
 
 app.use('/api/', apiLimiter)
