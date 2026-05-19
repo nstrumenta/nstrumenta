@@ -22,6 +22,62 @@ jobs:
         with:
           workload_identity_provider: ${{ env.CI_WIF_PROVIDER }}
           service_account: ${{ env.CI_SERVICE_ACCOUNT }}
+      - name: Remove preview domain from Firebase Auth
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          ACCESS_TOKEN=$(gcloud auth print-access-token)
+          export ACCESS_TOKEN CI_PROJECT_ID PR_NUMBER
+          node <<'EOF'
+          const accessToken = process.env.ACCESS_TOKEN;
+          const projectId = process.env.CI_PROJECT_ID;
+          const prNumber = process.env.PR_NUMBER;
+          const endpoint = `https://identitytoolkit.googleapis.com/admin/v2/projects/${projectId}/config`;
+          const previewDomainMarker = `--pr-${prNumber}-`;
+
+          async function readConfig() {
+            const response = await fetch(endpoint, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to read Firebase Auth config: ${response.status} ${await response.text()}`);
+            }
+            return response.json();
+          }
+
+          async function updateAuthorizedDomains(authorizedDomains) {
+            const response = await fetch(`${endpoint}?updateMask=authorizedDomains`, {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ authorizedDomains }),
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to update Firebase Auth authorized domains: ${response.status} ${await response.text()}`);
+            }
+          }
+
+          async function main() {
+            const config = await readConfig();
+            const authorizedDomains = Array.isArray(config.authorizedDomains) ? config.authorizedDomains : [];
+            const filteredDomains = authorizedDomains.filter((domain) => !domain.includes(previewDomainMarker));
+
+            if (filteredDomains.length === authorizedDomains.length) {
+              console.log(`No Firebase Auth preview domains found for PR ${prNumber}`);
+              return;
+            }
+
+            await updateAuthorizedDomains(filteredDomains);
+            console.log(`Removed Firebase Auth preview domains for PR ${prNumber}`);
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF
       - name: Delete Firebase Hosting preview channel
         run: |
           npm install -g firebase-tools
