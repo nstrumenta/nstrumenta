@@ -24,23 +24,25 @@
   }
 
   <section class="repositories__section">
-    <h2 class="mat-title-medium section-title">Linked Repositories</h2>
+    <h2 class="mat-title-medium section-title">Connected Installations</h2>
     
-    @if (linkedInstallations().length === 0) {
+    @if (connectedInstallations().length === 0) {
       <div class="empty-state">
         <mat-icon>link_off</mat-icon>
-        <p class="mat-body-1">No GitHub repositories are linked to this project yet.</p>
-        <p class="mat-body-2 hint-text">Repositories linked via the GitHub App will appear here.</p>
+        <p class="mat-body-1">No GitHub installations are connected to this project yet.</p>
+        <p class="mat-body-2 hint-text">After connecting the GitHub App, choose which repositories this project should use.</p>
       </div>
     } @else {
       <div class="repositories__grid">
-        @for (installation of linkedInstallations(); track installation.installationId) {
+        @for (installation of connectedInstallations(); track installation.installationId) {
           <mat-card class="installation-card">
             <mat-card-header>
               <mat-icon mat-card-avatar>corporate_fare</mat-icon>
               <mat-card-title>{{ installation.account.login || 'Installation ' + installation.installationId }}</mat-card-title>
               <mat-card-subtitle>
-                @if (installation.updatedAt) {
+                @if (installation.installationId === selectedInstallationId()) {
+                  Ready to choose repositories.
+                } @else if (installation.updatedAt) {
                   Synced {{ installation.updatedAt | date:'mediumDate' }}
                 } @else {
                   Installed App ID: {{ installation.installationId }}
@@ -49,24 +51,63 @@
             </mat-card-header>
             
             <mat-card-content>
-              <mat-list>
-                @for (repository of installation.repositories; track repository.fullName) {
-                  <mat-list-item>
-                    <mat-icon matListItemIcon>book</mat-icon>
-                    <div matListItemTitle>
-                      <a class="repo-link" [href]="githubUrl(repository.fullName)" target="_blank" rel="noopener noreferrer">
-                        {{ repository.fullName }}
-                      </a>
-                    </div>
-                  </mat-list-item>
-                }
-              </mat-list>
+              <h3 class="mat-title-small">Linked to this project</h3>
+              @if (installation.linkedRepositories.length === 0) {
+                <p class="mat-body-2 hint-text">No repositories linked from this installation yet.</p>
+              } @else {
+                <mat-list>
+                  @for (repository of installation.linkedRepositories; track repository.fullName) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>book</mat-icon>
+                      <div matListItemTitle>
+                        <a class="repo-link" [href]="githubUrl(repository.fullName)" target="_blank" rel="noopener noreferrer">
+                          {{ repository.fullName }}
+                        </a>
+                      </div>
+                      <button
+                        mat-button
+                        type="button"
+                        (click)="unlinkRepository(installation.installationId, repository.fullName)"
+                        [disabled]="unlinkingRepositoryKey() === repoActionKey(installation.installationId, repository.fullName)"
+                      >
+                        {{ unlinkingRepositoryKey() === repoActionKey(installation.installationId, repository.fullName) ? 'Unlinking...' : 'Unlink' }}
+                      </button>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              }
+
+              <h3 class="mat-title-small">Available from GitHub</h3>
+              @if (installation.availableRepositories.length === 0) {
+                <p class="mat-body-2 hint-text">All shared repositories from this installation are already linked to this project.</p>
+              } @else {
+                <mat-list>
+                  @for (repository of installation.availableRepositories; track repository.fullName) {
+                    <mat-list-item>
+                      <mat-icon matListItemIcon>book_outlined</mat-icon>
+                      <div matListItemTitle>
+                        <a class="repo-link" [href]="githubUrl(repository.fullName)" target="_blank" rel="noopener noreferrer">
+                          {{ repository.fullName }}
+                        </a>
+                      </div>
+                      <button
+                        mat-flat-button
+                        type="button"
+                        (click)="linkRepository(installation.installationId, repository.fullName)"
+                        [disabled]="linkingRepositoryKey() === repoActionKey(installation.installationId, repository.fullName)"
+                      >
+                        {{ linkingRepositoryKey() === repoActionKey(installation.installationId, repository.fullName) ? 'Linking...' : 'Link' }}
+                      </button>
+                    </mat-list-item>
+                  }
+                </mat-list>
+              }
             </mat-card-content>
             
             <mat-card-actions align="end">
               <button mat-button color="warn" (click)="unlinkInstallation(installation.installationId)" [disabled]="unlinkingInstallationId() === installation.installationId">
                 <mat-icon>link_off</mat-icon>
-                {{ unlinkingInstallationId() === installation.installationId ? 'Unlinking...' : 'Unlink Installation' }}
+                {{ unlinkingInstallationId() === installation.installationId ? 'Disconnecting...' : 'Disconnect Installation' }}
               </button>
             </mat-card-actions>
           </mat-card>

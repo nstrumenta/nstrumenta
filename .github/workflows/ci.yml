@@ -463,6 +463,60 @@ jobs:
           fi
           echo "channel_url=$CHANNEL_URL" >> "$GITHUB_OUTPUT"
           rm firebase.json
+      - name: Authorize preview domain for Firebase Auth
+        env:
+          FIREBASE_PROJECT_ID: ${{ env.CI_PROJECT_ID }}
+          CHANNEL_URL: ${{ steps.deploy-hosting.outputs.channel_url }}
+        run: |
+          PREVIEW_HOST=$(node -p "new URL(process.env.CHANNEL_URL).hostname")
+          ACCESS_TOKEN=$(gcloud auth print-access-token)
+          export ACCESS_TOKEN FIREBASE_PROJECT_ID PREVIEW_HOST
+          node <<'EOF'
+          const projectId = process.env.FIREBASE_PROJECT_ID;
+          const previewHost = process.env.PREVIEW_HOST;
+          const accessToken = process.env.ACCESS_TOKEN;
+          const endpoint = `https://identitytoolkit.googleapis.com/admin/v2/projects/${projectId}/config`;
+
+          async function readConfig() {
+            const response = await fetch(endpoint, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to read Firebase Auth config: ${response.status} ${await response.text()}`);
+            }
+            return response.json();
+          }
+
+          async function updateAuthorizedDomains(authorizedDomains) {
+            const response = await fetch(`${endpoint}?updateMask=authorizedDomains`, {
+              method: 'PATCH',
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ authorizedDomains }),
+            });
+            if (!response.ok) {
+              throw new Error(`Failed to update Firebase Auth authorized domains: ${response.status} ${await response.text()}`);
+            }
+          }
+
+          async function main() {
+            const config = await readConfig();
+            const authorizedDomains = Array.isArray(config.authorizedDomains) ? config.authorizedDomains : [];
+            if (authorizedDomains.includes(previewHost)) {
+              console.log(`Preview host already authorized: ${previewHost}`);
+              return;
+            }
+            await updateAuthorizedDomains([...authorizedDomains, previewHost]);
+            console.log(`Authorized preview host for Firebase Auth: ${previewHost}`);
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF
       - name: Comment preview URL on PR
         uses: actions/github-script@v7
         env:

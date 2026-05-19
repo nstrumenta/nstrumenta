@@ -1,11 +1,19 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { FirebaseDataService } from 'src/app/services/firebase-data.service';
-import { ApiService, GithubInstallation } from 'src/app/services/api.service';
+import { ApiService, GithubInstallation, GithubInstallationRepository } from 'src/app/services/api.service';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatListModule } from '@angular/material/list';
+import { map } from 'rxjs';
+
+type InstallationView = GithubInstallation & {
+  linkedRepositories: GithubInstallationRepository[]
+  availableRepositories: GithubInstallationRepository[]
+}
 
 @Component({
     selector: 'app-repositories',
@@ -14,6 +22,7 @@ import { MatListModule } from '@angular/material/list';
   imports: [MatButton, MatIcon, MatCardModule, MatListModule, DatePipe]
 })
 export class RepositoriesComponent {
+  private route = inject(ActivatedRoute);
   private firebaseDataService = inject(FirebaseDataService);
   private apiService = inject(ApiService);
 
@@ -22,16 +31,28 @@ export class RepositoriesComponent {
   readonly isConnecting = signal(false);
   readonly error = signal('');
   readonly unlinkingInstallationId = signal('');
+  readonly linkingRepositoryKey = signal('');
+  readonly unlinkingRepositoryKey = signal('');
   readonly projectId = computed(() => this.firebaseDataService.projectId());
+  readonly selectedInstallationId = toSignal(
+    this.route.queryParamMap.pipe(map((params) => params.get('installationId') ?? '')),
+    { initialValue: this.route.snapshot.queryParamMap.get('installationId') ?? '' },
+  )
 
-  readonly linkedInstallations = computed(() => {
+  readonly connectedInstallations = computed<InstallationView[]>(() => {
     const projectId = this.projectId();
     return this.installations()
       .map((installation) => ({
         ...installation,
-        repositories: installation.repositories.filter((repository) => repository.linkedProjectId === projectId),
+        linkedRepositories: installation.repositories.filter((repository) => repository.linkedProjectId === projectId),
+        availableRepositories: installation.repositories.filter((repository) => repository.linkedProjectId !== projectId),
       }))
-      .filter((installation) => installation.repositories.length > 0);
+      .sort((left, right) => {
+        const selectedInstallationId = this.selectedInstallationId()
+        if (left.installationId === selectedInstallationId) return -1
+        if (right.installationId === selectedInstallationId) return 1
+        return (right.updatedAt ?? 0) - (left.updatedAt ?? 0)
+      })
   });
 
   constructor() {
@@ -72,6 +93,10 @@ export class RepositoriesComponent {
 
   githubUrl(fullName: string): string {
     return `https://github.com/${fullName}`;
+  }
+
+  repoActionKey(installationId: string, fullName: string): string {
+    return `${installationId}:${fullName}`;
   }
 
   private async refreshInstallations() {
@@ -117,6 +142,40 @@ export class RepositoriesComponent {
       this.error.set(error instanceof Error ? error.message : 'Failed to unlink installation');
     } finally {
       this.unlinkingInstallationId.set('');
+    }
+  }
+
+  async linkRepository(installationId: string, fullName: string): Promise<void> {
+    const projectId = this.projectId();
+    const actionKey = this.repoActionKey(installationId, fullName);
+    if (!projectId || this.linkingRepositoryKey()) return;
+
+    this.linkingRepositoryKey.set(actionKey);
+    this.error.set('');
+    try {
+      await this.apiService.linkGithubInstallation(projectId, installationId, { selectedRepoFullNames: [fullName] });
+      await this.refreshInstallations();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Failed to link repository');
+    } finally {
+      this.linkingRepositoryKey.set('');
+    }
+  }
+
+  async unlinkRepository(installationId: string, fullName: string): Promise<void> {
+    const projectId = this.projectId();
+    const actionKey = this.repoActionKey(installationId, fullName);
+    if (!projectId || this.unlinkingRepositoryKey()) return;
+
+    this.unlinkingRepositoryKey.set(actionKey);
+    this.error.set('');
+    try {
+      await this.apiService.unlinkSelectedGithubRepositories(projectId, installationId, [fullName]);
+      await this.refreshInstallations();
+    } catch (error) {
+      this.error.set(error instanceof Error ? error.message : 'Failed to unlink repository');
+    } finally {
+      this.unlinkingRepositoryKey.set('');
     }
   }
 }
