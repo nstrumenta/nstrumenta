@@ -42,7 +42,7 @@ test.describe('File Upload', () => {
 
     // Always create a fresh project for this test to ensure membership
     await page.goto('/');
-    const fabButton = page.locator('button#fab mat-icon:has-text("add")');
+    const fabButton = page.locator('button#fab');
     await expect(fabButton).toBeVisible();
     await fabButton.click();
 
