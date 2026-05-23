@@ -17,6 +17,7 @@ export class GithubInstalledComponent implements OnInit {
   readonly message = signal('Connecting GitHub installation...')
   readonly linkedRepos = signal<string[]>([])
   readonly projectId = signal('')
+  readonly installationId = signal('')
   
   readonly returnRoute = computed(() => {
     const projectId = this.projectId()
@@ -41,6 +42,7 @@ export class GithubInstalledComponent implements OnInit {
     const stateToken = state.slice(separatorIndex + 1)
     
     this.projectId.set(projectId)
+    this.installationId.set(installationId)
 
     if (!installationId) {
       this.status.set('error')
@@ -48,19 +50,19 @@ export class GithubInstalledComponent implements OnInit {
       return
     }
 
-    this.apiService.linkGithubInstallation(projectId, installationId, stateToken)
+    this.apiService.linkGithubInstallation(projectId, installationId, { stateToken, selectedRepoFullNames: [] })
       .then((response) => {
         this.linkedRepos.set(response.linkedRepos)
         this.status.set('success')
         this.message.set(
           setupAction === 'update'
-            ? 'GitHub installation updated and linked successfully.'
-            : 'GitHub installation linked successfully.',
+            ? 'GitHub installation updated. Choose which repositories to link to this project.'
+            : 'GitHub installation connected. Choose which repositories to link to this project.',
         )
       })
       .catch((error) => {
         this.status.set('error')
-        this.message.set(error instanceof Error ? error.message : 'Failed to link GitHub installation')
+        this.message.set(error instanceof Error ? error.message : 'Failed to connect GitHub installation')
       })
   }
 }

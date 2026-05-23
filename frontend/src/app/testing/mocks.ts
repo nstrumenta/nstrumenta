@@ -107,6 +107,7 @@ export class MockApiService {
   approveModule() { return Promise.resolve({ moduleId: 'module-1', approved: true, approvedAt: Date.now(), approvedBy: 'test-user' }); }
   listGithubInstallations() { return Promise.resolve({ installations: [] }); }
   linkGithubInstallation() { return Promise.resolve({ ok: true, linkedRepos: [] }); }
+  unlinkSelectedGithubRepositories() { return Promise.resolve({ ok: true, unlinkedRepos: [] }); }
   unlinkGithubInstallation() { return Promise.resolve({ ok: true, unlinkedRepos: [] }); }
   deleteFile() { return Promise.resolve(); }
   uploadFileToPath() { return Promise.resolve(of(100)); }

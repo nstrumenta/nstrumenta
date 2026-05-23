@@ -120,6 +120,11 @@ export interface LinkGithubInstallationResponse {
   linkedRepos: string[];
 }
 
+export interface LinkGithubInstallationRequest {
+  stateToken?: string;
+  selectedRepoFullNames?: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -435,18 +440,48 @@ export class ApiService {
     return response;
   }
 
-  async linkGithubInstallation(projectId: string, installationId: string, stateToken?: string): Promise<LinkGithubInstallationResponse> {
+  async linkGithubInstallation(
+    projectId: string,
+    installationId: string,
+    request: LinkGithubInstallationRequest = {},
+  ): Promise<LinkGithubInstallationResponse> {
     const apiUrl = await this.getApiUrl();
     const headers = await this.buildMcpHeaders(projectId);
 
     const response = await this.http.post<LinkGithubInstallationResponse>(
       `${apiUrl}/api/github/installations/link`,
-      { installationId, projectId, ...(stateToken ? { stateToken } : {}) },
+      {
+        installationId,
+        projectId,
+        ...(request.stateToken ? { stateToken: request.stateToken } : {}),
+        ...(request.selectedRepoFullNames ? { selectedRepoFullNames: request.selectedRepoFullNames } : {}),
+      },
       { headers },
     ).toPromise().catch((error) => this.rethrowHttpError(error));
 
     if (!response) {
       throw new Error('Empty response from GitHub installation link endpoint');
+    }
+
+    return response;
+  }
+
+  async unlinkSelectedGithubRepositories(
+    projectId: string,
+    installationId: string,
+    selectedRepoFullNames: string[],
+  ): Promise<{ ok: boolean; unlinkedRepos: string[] }> {
+    const apiUrl = await this.getApiUrl();
+    const headers = await this.buildMcpHeaders(projectId);
+
+    const response = await this.http.post<{ ok: boolean; unlinkedRepos: string[] }>(
+      `${apiUrl}/api/github/installations/${installationId}/unlink-selected`,
+      { selectedRepoFullNames },
+      { headers },
+    ).toPromise().catch((error) => this.rethrowHttpError(error));
+
+    if (!response) {
+      throw new Error('Empty response from GitHub selected repository unlink endpoint');
     }
 
     return response;

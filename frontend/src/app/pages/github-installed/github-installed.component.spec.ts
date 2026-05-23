@@ -57,6 +57,6 @@ describe('GithubInstalledComponent', () => {
 
   it('should link the installation from the callback params', () => {
     expect(component.status()).toBe('success');
-    expect(component.linkedRepos()).toContain('tbryant/flyimal');
+    expect(component.message()).toContain('Choose which repositories to link');
   });
 });
